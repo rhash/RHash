@@ -57,14 +57,6 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_freeHashObject
 
 /*
  * Class:     org_sf_rhash_Bindings
- * Method:    cloneHashObject
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_cloneHashObject
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     org_sf_rhash_Bindings
  * Method:    rhash_is_base32
  * Signature: (I)Z
  */

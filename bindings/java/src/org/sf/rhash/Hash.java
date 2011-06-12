@@ -20,7 +20,7 @@ package org.sf.rhash;
 /**
  * Hash sum.
  */
-public final class Hash extends Pointer implements Cloneable {
+public final class Hash extends Pointer {
 
 	static final int RAW = 0x1;
 	static final int HEX = 0x2;
@@ -123,15 +123,6 @@ public final class Hash extends Pointer implements Cloneable {
 	@Override
 	public String toString() {
 		return (Bindings.rhash_is_base32(type.hashId())) ? base32() : hex();
-	}
-
-	/**
-	 * Creates verbatim copy of this object.
-	 * @return  copy of this object
-	 */
-	@Override
-	public Hash clone() {
-		return new Hash(Bindings.cloneHashObject(getAddr()), type);
 	}
 
 	/**
