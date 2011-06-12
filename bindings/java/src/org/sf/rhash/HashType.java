@@ -22,102 +22,65 @@ package org.sf.rhash;
  * MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 хэш, GOST R 34.11-94, RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool и Snefru-128/256.
  */
 public enum HashType {
-
 	/** CRC32 checksum. */
-	CRC32,
+	CRC32(1),
 	/** MD4 hash. */
-	MD4,
+	MD4(1 << 1),
 	/** MD5 hash. */
-	MD5,
+	MD5(1 << 2),
 	/** SHA-1 hash. */
-	SHA1,
+	SHA1(1 << 3),
 	/** Tiger hash. */
-	TIGER,
+	TIGER(1 << 4),
 	/** Tiger tree hash */
-	TTH,
+	TTH(1 << 5),
 	/** BitTorrent info hash. */
-	BTIH,
+	BTIH(1 << 6),
 	/** EDonkey 2000 hash. */
-	ED2K,
+	ED2K(1 << 7),
 	/** eMule AICH. */
-	AICH,
+	AICH(1 << 8),
 	/** Whirlpool hash. */
-	WHIRLPOOL,
+	WHIRLPOOL(1 << 9),
 	/** RIPEMD-160 hash. */
-	RIPEMD160,
+	RIPEMD160(1 << 10),
 	/** GOST R 34.11-94. */
-	GOST,
-	GOST_CRYPTOPRO,
+	GOST(1 << 11),
+	GOST_CRYPTOPRO(1 << 12),
 	/** HAS-160 hash. */
-	HAS160,
+	HAS160(1 << 13),
 	/** Snefru-128 hash. */
-	SNEFRU128,
+	SNEFRU128(1 << 14),
 	/** Snefru-256 hash. */
-	SNEFRU256,
+	SNEFRU256(1 << 15),
 	/** SHA-224 hash. */
-	SHA224,
+	SHA224(1 << 16),
 	/** SHA-256 hash. */
-	SHA256,
+	SHA256(1 << 17),
 	/** SHA-384 hash. */
-	SHA384,
+	SHA384(1 << 18),
 	/** SHA-512 hash. */
-	SHA512,
+	SHA512(1 << 19),
 	/** EDON-R 256. */
-	EDONR256,
+	EDONR256(1 << 20),
 	/** EDON-R 512. */
-	EDONR512;
-	
+	EDONR512(1 << 21);
+
+    private int hashId; // hash_id for the native API
+
+    /**
+     * Construct HashType for specified native hash_id
+     * @param hashId hash identifier for native API
+     */
+    private HashType(int hashId) {
+        this.hashId = hashId;
+    }
+
 	/**
 	 * Returns hash_id for the native API.
-	 */
+     * @return hash identifier
+     */
 	int hashId() {
-		switch (this) {
-			case CRC32:
-				return 1;
-			case MD4:
-				return 1 << 1;
-			case MD5:
-				return 1 << 2;
-			case SHA1:
-				return 1 << 3;
-			case TIGER:
-				return 1 << 4;
-			case TTH:
-				return 1 << 5;
-			case BTIH:
-				return 1 << 6;
-			case ED2K:
-				return 1 << 7;
-			case AICH:
-				return 1 << 8;
-			case WHIRLPOOL:
-				return 1 << 9;
-			case RIPEMD160:
-				return 1 << 10;
-			case GOST:
-				return 1 << 11;
-			case GOST_CRYPTOPRO:
-				return 1 << 12;
-			case HAS160:
-				return 1 << 13;
-			case SNEFRU128:
-				return 1 << 14;
-			case SNEFRU256:
-				return 1 << 15;
-			case SHA224:
-				return 1 << 16;
-			case SHA256:
-				return 1 << 17;
-			case SHA384:
-				return 1 << 18;
-			case SHA512:
-				return 1 << 19;
-			case EDONR256:
-				return 1 << 20;
-			case EDONR512:
-				return 1 << 21;
-			default:
-				return 0;
-		}
+	    return hashId;
 	}
 }
