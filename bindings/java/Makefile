@@ -17,6 +17,7 @@
 
 
 MAKE = make
+JAVA = java
 JAVAC = javac
 JAVADOC = javadoc
 JAVAH = javah
@@ -29,12 +30,15 @@ CSRC_DIR    = native
 DEST_DIR    = dist
 CLASSES_DIR = classes
 JAVADOC_DIR = javadoc
+TEST_DIR    = test
 
-all: jar jni
+JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
+
+all: jar jni test
 
 jar: compile-classes
 	mkdir -p $(DEST_DIR)
-	$(JAR) cf $(DEST_DIR)/rhash-$(VERSION).jar -C $(CLASSES_DIR) org/
+	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
 
 compile-classes:
 	mkdir -p $(CLASSES_DIR)
@@ -54,7 +58,11 @@ javadoc: clean-javadoc
 	           -d $(JAVADOC_DIR) \
 	           -link http://java.sun.com/j2se/1.5.0/docs/api
 
-clean: clean-javadoc clean-jni clean-classes
+test: jar jni
+	$(JAVAC) -classpath $(JARFILE) $(TEST_DIR)/Test.java
+	$(JAVA) -classpath $(TEST_DIR):$(JARFILE) -Djava.library.path=dist Test
+
+clean: clean-javadoc clean-jni clean-classes clean-test
 
 clean-javadoc:
 	rm -rf $(JAVADOC_DIR)
@@ -64,6 +72,9 @@ clean-classes:
 
 clean-jni:
 	$(MAKE) -C $(CSRC_DIR) clean
+	
+clean-test:
+	rm -f $(TEST_DIR)/*.class
 	
 distclean:
 	rm -rf $(DEST_DIR)
