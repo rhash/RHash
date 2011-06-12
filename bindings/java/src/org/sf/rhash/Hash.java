@@ -130,7 +130,7 @@ public final class Hash extends Pointer implements Cloneable {
 	 * @return  copy of this object
 	 */
 	@Override
-	public Object clone() {
+	public Hash clone() {
 		return new Hash(Bindings.cloneHashObject(getAddr()), type);
 	}
 
