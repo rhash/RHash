@@ -70,11 +70,6 @@ final class Bindings {
 	static native void freeHashObject(long hash);
 
 	/**
-	 * Creates new copy of native hash object.
-	 */
-	static native long cloneHashObject(long hash);
-
-	/**
 	 * Tests whether given default hash algorithm output is base32.
 	 * @param  hash_id  id of hash function
 	 * @return <code>true</code> if default output for hash algorithm is base32,

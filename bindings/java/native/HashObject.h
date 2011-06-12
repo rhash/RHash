@@ -33,12 +33,6 @@ typedef HashStruct *HashObject;
 void freeHashObject(HashObject obj);
 
 /**
- * Allocates new HashObject that is exact copy of parameter.
- * @param  obj  object to clone
- */
-HashObject cloneHashObject(HashObject obj);
-
-/**
  * Compares two HashObject instances.
  * @param  obj1  first object to compare
  * @param  obj2  second object to compare

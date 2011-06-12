@@ -25,15 +25,6 @@ void freeHashObject(HashObject obj) {
 	free(obj);
 }
 
-HashObject cloneHashObject(HashObject obj) {
-	HashObject newobj = malloc(sizeof(HashStruct));
-	newobj->hash_id  = obj->hash_id;
-	newobj->hash_len = obj->hash_len;
-	newobj->hash_data = malloc(obj->hash_len);
-	memcpy(newobj->hash_data, obj->hash_data, obj->hash_len);
-	return newobj;
-}
-
 int compareHashObjects(HashObject o1, HashObject o2) {
 	if (o1->hash_len != o2->hash_len) return 0;
 	return memcmp(o1->hash_data, o2->hash_data, o1->hash_len) == 0;
