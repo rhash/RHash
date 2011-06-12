@@ -1,0 +1,42 @@
+ 
+                         === RHash program ===
+
+RHash is a console utility for calculation and verification of magnet links
+and a wide range of hash sums like CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
+HAS-160, EDON-R, Whirlpool and Snefru.
+
+Hash sums are used to ensure and verify integrity of large volumes of data
+for a long-term storing or transferring.
+
+Features:
+ * Output in a predefined (SFV, BSD-like) or a user-defined format.
+ * Can calculate Magnet links and EDonkey 2000 links.
+ * Updating hash files (adding hash sums of files missing in the hash file).
+ * Ability to process directories recursively.
+ * Portability: the program works the same on Linux, *BSD or Windows.
+
+
+                      === The LibRHash library ===
+
+LibRHash is a professional, portable, thread-safe C library for computing
+a wide variety of hash sums, such as CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160
+HAS-160, EDON-R, Whirlpool and Snefru.
+Hash sums are used to ensure and verify integrity of large volumes of data
+for a long-term storing or transferring.
+
+Features:
+ * Small and easy to learn interface.
+ * Hi-level and Low-level API.
+ * Allows calculating of several hash functions simultaniously.
+ * Portability: the library works on Linux, *BSD and Windows.
+
+
+                      === About hash functions ===
+
+ * RHash hash functions descriptions http://rhash.anz.ru/hashes.php
+ * Table of the supported by RHash hash functions
+   https://sourceforge.net/apps/mediawiki/rhash/index.php?title=Hash_sums 
+ * ECRYPT: The Hash Function Zoo
+   http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo
