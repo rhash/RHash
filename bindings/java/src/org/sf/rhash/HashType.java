@@ -66,7 +66,8 @@ public enum HashType {
 	/** EDON-R 512. */
 	EDONR512(1 << 21);
 
-    private int hashId; // hash_id for the native API
+	/** hash_id for the native API */
+    private int hashId;
 
     /**
      * Construct HashType for specified native hash_id
