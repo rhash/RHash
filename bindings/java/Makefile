@@ -53,7 +53,8 @@ jni:
 	cp $(CSRC_DIR)/*rhash-jni* $(DEST_DIR)
 
 javadoc: clean-javadoc
-	$(JAVADOC) -sourcepath src \
+	$(JAVADOC) -windowtitle 'RHash' \
+	           -sourcepath src \
 	           -subpackages org \
 	           -d $(JAVADOC_DIR) \
 	           -link http://java.sun.com/j2se/1.5.0/docs/api
