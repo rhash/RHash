@@ -1,0 +1,31 @@
+
+Linux Installation:
+===================
+
+You need GCC (or Intel Compiler) and GNU Make. 
+
+To compile and install the program just type
+  'make install'
+
+To test the compiled program run 'make test'.
+
+RPM package can be created by commands
+  'make rpm' or 'setarch i586 make rpm'.
+
+To compile with openssl support use the following flags
+  make ADDCFLAGS="-DUSE_OPENSSL -rdynamic" ADDLDFLAGS=-ldl
+
+The LibRHash library can be compiled using
+  'make lib-static' or 'make lib-shared'
+
+
+Windows Installation:
+=====================
+
+You need MinGW compiler and MSYS enviropment.
+To compile the program run 'make'.
+
+Otionally you can run 'make test'.
+
+The LibRHash DLL can be created by
+  cd librhash && make dll test-dll

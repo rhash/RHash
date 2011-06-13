@@ -66,9 +66,9 @@ final class Bindings {
 	static native boolean rhash_is_base32(int hash_id);
 
 	/**
-	 * 
-	 * @param hash_id
-	 * @return
+	 * Returns size of binary message digest.
+	 * @param hash_id  id of hash function
+	 * @return  size of message digest
 	 */
 	static native int rhash_get_digest_size(int hash_id);
 
