@@ -25,7 +25,7 @@ JNI_INCLUDES = /usr/lib/jvm/default-java/include
 LIB_PREFIX = lib
 LIB_SUFFIX = .so
 
-OBJECTS = bindings.o HashObject.o
+OBJECTS = bindings.o digest.o
 LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
 
 all: $(LIBRARY)
@@ -33,7 +33,7 @@ all: $(LIBRARY)
 bindings.o: bindings.c bindings.h
 	$(CC) $(CFLAGS) -I$(JNI_INCLUDES) -c $< -o $@
 
-HashObject.o: HashObject.c HashObject.h
+digest.o: digest.c digest.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LIBRARY): $(OBJECTS)
