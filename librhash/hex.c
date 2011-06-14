@@ -1,10 +1,13 @@
 /* hex.c - conversion for hexadecimal and base32 strings.
  *
- * Copyleft:
- * I, the author, hereby release this code into the public domain.
- * This applies worldwide. I grant any entity the right to use this work for
- * ANY PURPOSE, without any conditions, unless such conditions are required
- * by law.
+ * Copyright: 2008 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 #include "hex.h"
 
@@ -147,19 +150,3 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 	/* NOTE: supported parsing only for even len */
 	for(; len>=2; len-=2, str+=2) *(bin++) = (HEX2DIGIT(str[0])<<4) | HEX2DIGIT(str[1]);
 }
-
-#if 0
-/**
- * Convert a hex string to an integer.
- *
- * @param str string to parse
- * @return parsed unsigned
- */
-unsigned rhash_hex_to_uint(const char* str)
-{
-	register unsigned res = 0;
-	const char *e;
-	for(e=str+8; str<e; str++) res = (res<<4) | HEX2DIGIT(*str);
-	return res;
-}
-#endif

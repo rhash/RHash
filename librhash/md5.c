@@ -1,12 +1,13 @@
-/* md5.c - an implementation of MD5 Message-Digest Algorithm
- * based on RFC 1321.
+/* md5.c - an implementation of the MD5 algorithm, based on RFC 1321.
  *
- * Implementation written by Alexei Kravchenko.
+ * Copyright: 2007 Alexey Kravchenko <rhash.admin@gmail.com>
  *
- * Copyleft:
- * I hereby release this code into the public domain. This applies worldwide.
- * I grant any entity the right to use this work for ANY PURPOSE,
- * without any conditions, unless such conditions are required by law.
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 
 #include <string.h>
@@ -40,22 +41,22 @@ void rhash_md5_init(md5_ctx *ctx)
 
 /* transformations for rounds 1, 2, 3, and 4. */
 #define MD5_ROUND1(a, b, c, d, x, s, ac) { \
-	(a) += MD5_F((b), (c), (d)) + (x) + (unsigned)(ac); \
+	(a) += MD5_F((b), (c), (d)) + (x) + (ac); \
 	(a) = ROTL32((a), (s)); \
 	(a) += (b); \
 }
 #define MD5_ROUND2(a, b, c, d, x, s, ac) { \
-	(a) += MD5_G((b), (c), (d)) + (x) + (unsigned)(ac); \
+	(a) += MD5_G((b), (c), (d)) + (x) + (ac); \
 	(a) = ROTL32((a), (s)); \
 	(a) += (b); \
 }
 #define MD5_ROUND3(a, b, c, d, x, s, ac) { \
-	(a) += MD5_H((b), (c), (d)) + (x) + (unsigned)(ac); \
+	(a) += MD5_H((b), (c), (d)) + (x) + (ac); \
 	(a) = ROTL32((a), (s)); \
 	(a) += (b); \
 }
 #define MD5_ROUND4(a, b, c, d, x, s, ac) { \
-	(a) += MD5_I((b), (c), (d)) + (x) + (unsigned)(ac); \
+	(a) += MD5_I((b), (c), (d)) + (x) + (ac); \
 	(a) = ROTL32((a), (s)); \
 	(a) += (b); \
 }

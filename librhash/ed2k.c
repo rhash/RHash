@@ -1,13 +1,16 @@
 /* ed2k.c - an implementation of EDonkey 2000 Hash Algorithm.
- * Written by Alexei Kravchenko.
  *
- * Copyleft:
- * I hereby release this code into the public domain. This applies worldwide.
- * I grant any entity the right to use this work for ANY PURPOSE,
- * without any conditions, unless such conditions are required by law.
+ * Copyright: 2006 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  *
  * This file implements eMule-compatible version of algorithm.
- * Note that eDonkey and eMule ed2k hashes are different for
+ * Note that eDonkey and eMule ed2k hashes are different only for
  * files containing exactly multiple of 9728000 bytes.
  * 
  * The file data is divided into full chunks of 9500 KiB (9728000 bytes) plus
@@ -89,8 +92,8 @@ void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16])
 	/* check if hashed message size is greater or equal to ED2K_CHUNK_SIZE */
 	if( ctx->md4_context.length ) {
 
-		/* note: weird eMule algorithm always here flushes the md4_context_inner,
-		* no matter if it contains data or is empty */
+		/* note: weird eMule algorithm always processes the inner
+		 * md4 context, no matter if it contains data or is empty */
 
 		/* if any data are left in the md4_context_inner */
 		if( (size_t)ctx->md4_context_inner.length > 0 || !ctx->not_emule)

@@ -1,12 +1,14 @@
 /* sha256.c - an implementation of SHA-256/224 hash functions
  * based on FIPS 180-3 (Federal Information Processing Standart).
  *
- * Implementation written by Alexei Kravchenko.
+ * Copyright: 2010 Alexey Kravchenko <rhash.admin@gmail.com>
  *
- * Copyleft:
- * I hereby release this code into the public domain. This applies worldwide.
- * I grant any entity the right to use this work for ANY PURPOSE,
- * without any conditions, unless such conditions are required by law.
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 
 #include <string.h>
@@ -18,7 +20,7 @@
  * roots of the first 64 prime numbers. */
 static const unsigned rhash_k256[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
-	0x923f82a4, 0xab1c5ed5,  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+	0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
 	0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 
 	0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
 	0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,

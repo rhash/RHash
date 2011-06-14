@@ -36,7 +36,16 @@ Features:
                       === About hash functions ===
 
  * RHash hash functions descriptions http://rhash.anz.ru/hashes.php
- * Table of the supported by RHash hash functions
+ * Table of the hash functions supported by RHash
    https://sourceforge.net/apps/mediawiki/rhash/index.php?title=Hash_sums 
  * ECRYPT: The Hash Function Zoo
    http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo
+
+
+                     === Notes on RHash License ===
+
+The RHash program and LibRHash library are distributed under  RHash License,
+see the COPYING file for details.  In particluar,  the program,  the library
+and  source code  can be  used  free of charge  under  the  MIT,  BSD,  GPL,
+commercial or freeware license without additional restrictions.  In the case
+the OSI-approved license is required the  MIT license should be used.
