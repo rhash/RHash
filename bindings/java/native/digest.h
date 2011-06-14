@@ -15,41 +15,37 @@
  * FOR A PARTICULAR PURPOSE. Use it at your own risk!
  */
 
-#ifndef HashObject_H
-#define HashObject_H
+/* This is convenient structure to hold message digest. */
+
+#ifndef DIGEST_H
+#define DIGEST_H
 
 typedef struct {
 	int hash_id;
 	size_t hash_len;
-	unsigned char* hash_data;
-} HashStruct;
+	unsigned char *hash_data;
+} DigestStruct;
 
-typedef HashStruct *HashObject;
+typedef DigestStruct* Digest;
 
 /**
- * Frees memory occupated by HashObject.
+ * Frees memory occupated by Digest.
  * @param  obj  object to free
  */
-void freeHashObject(HashObject obj);
+void freeDigest(Digest obj);
 
 /**
- * Allocates new HashObject that is exact copy of parameter.
- * @param  obj  object to clone
- */
-HashObject cloneHashObject(HashObject obj);
-
-/**
- * Compares two HashObject instances.
+ * Compares two Digest instances.
  * @param  obj1  first object to compare
  * @param  obj2  second object to compare
  * @return  1 if objects are equal, 0 otherwise
  */
-int compareHashObjects(HashObject obj1, HashObject obj2);
+int compareDigests(Digest obj1, Digest obj2);
 
 /**
- * Calculates hashcode for HashObject.
+ * Calculates hashcode for Digest.
  * @param  obj  object to calculate hash code
  */
-int hashcodeForHashObject(HashObject obj);
+int hashcodeForDigest(Digest obj);
 
-#endif /* HashObject_H */
+#endif /* DIGEST_H */

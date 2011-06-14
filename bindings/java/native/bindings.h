@@ -33,35 +33,11 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1msg
 
 /*
  * Class:     org_sf_rhash_Bindings
- * Method:    rhash_file
- * Signature: (ILjava/lang/String;)J
- */
-JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1file
-  (JNIEnv *, jclass, jint, jstring);
-
-/*
- * Class:     org_sf_rhash_Bindings
  * Method:    rhash_print_bytes
  * Signature: (JI)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1bytes
   (JNIEnv *, jclass, jlong, jint);
-
-/*
- * Class:     org_sf_rhash_Bindings
- * Method:    freeHashObject
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_freeHashObject
-  (JNIEnv *, jclass, jlong);
-
-/*
- * Class:     org_sf_rhash_Bindings
- * Method:    cloneHashObject
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_cloneHashObject
-  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     org_sf_rhash_Bindings
@@ -73,18 +49,87 @@ JNIEXPORT jboolean JNICALL Java_org_sf_rhash_Bindings_rhash_1is_1base32
 
 /*
  * Class:     org_sf_rhash_Bindings
- * Method:    compareHashObjects
+ * Method:    rhash_get_digest_size
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_rhash_1get_1digest_1size
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_init
+ * Signature: (I)J
+ */
+JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1init
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_update
+ * Signature: (J[BII)V
+ */
+JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1update
+  (JNIEnv *, jclass, jlong, jbyteArray, jint, jint);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_final
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1final
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+<<<<<<< HEAD
+ * Method:    rhash_reset
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1reset
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_print
+ * Signature: (JI)J
+=======
+ * Method:    rhash_is_base32
+ * Signature: (I)Z
+>>>>>>> 1734edff86668db01f0d27fd3e662874161934e5
+ */
+JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1print
+  (JNIEnv *, jclass, jlong, jint);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_free
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1free
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    compareDigests
  * Signature: (JJ)Z
  */
-JNIEXPORT jboolean JNICALL Java_org_sf_rhash_Bindings_compareHashObjects
+JNIEXPORT jboolean JNICALL Java_org_sf_rhash_Bindings_compareDigests
   (JNIEnv *, jclass, jlong, jlong);
 
 /*
  * Class:     org_sf_rhash_Bindings
- * Method:    hashcodeForHashObject
+ * Method:    hashcodeForDigest
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_hashcodeForHashObject
+JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_hashcodeForDigest
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    freeDigest
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_freeDigest
   (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus

@@ -18,9 +18,9 @@
 package org.sf.rhash;
 
 /**
- * Hash sum.
+ * Message digest.
  */
-public final class Hash extends Pointer implements Cloneable {
+public final class Digest {
 
 	static final int RAW = 0x1;
 	static final int HEX = 0x2;
@@ -31,19 +31,22 @@ public final class Hash extends Pointer implements Cloneable {
 
 	private final HashType type;
 
+	/** Pointer to native structure. */
+	private final long digest_ptr;
+
 	/**
-	 * Creates new Hash object.
+	 * Creates new <code>Digest</code>.
 	 * @param ptr   pointer to the native object
 	 * @param type  hash type
 	 */
-	Hash(long ptr, HashType type) {
-		super(ptr);
+	Digest(long ptr, HashType type) {
+		this.digest_ptr = ptr;
 		this.type = type;
 	}
 	
 	/**
 	 * Returns type of hashing algorithm that produced
-	 * this hash sum.
+	 * this digest.
 	 * 
 	 * @return type of hashing algorithm
 	 */
@@ -52,53 +55,53 @@ public final class Hash extends Pointer implements Cloneable {
 	}
 
 	/**
-	 * Returns value of this hash sum as raw bytes.
+	 * Returns value of this digest as raw bytes.
 	 * This method allocates new byte array, modifying it
-	 * has no effect on this <code>Hash</code> object.
+	 * has no effect on this <code>Digest</code>.
 	 *
-	 * @return  value of this hash sum as raw bytes
+	 * @return  value of this digest as raw bytes
 	 * @see #hex()
 	 * @see #base32()
 	 * @see #base64() 
 	 */
 	public byte[] raw() {
-		return Bindings.rhash_print_bytes(getAddr(), RAW);
+		return Bindings.rhash_print_bytes(digest_ptr, RAW);
 	}
 
 	/**
-	 * Returns value of this hash sum as hexadecimal string.
+	 * Returns value of this digest as hexadecimal string.
 	 *
-	 * @return value of the hash sum as hexadecimal string
+	 * @return value of the digest as hexadecimal string
 	 * @see #raw()
 	 * @see #base32()
 	 * @see #base64() 
 	 */
 	public String hex() {
-		return new String(Bindings.rhash_print_bytes(getAddr(), HEX));
+		return new String(Bindings.rhash_print_bytes(digest_ptr, HEX));
 	}
 
 	/**
-	 * Returns value of this hash sum as base32 string.
+	 * Returns value of this digest as base32 string.
 	 *
-	 * @return value of the hash sum as base32 string
+	 * @return value of the digest as base32 string
 	 * @see #raw()
 	 * @see #hex()
 	 * @see #base64()
 	 */
 	public String base32() {
-		return new String(Bindings.rhash_print_bytes(getAddr(), BASE32));
+		return new String(Bindings.rhash_print_bytes(digest_ptr, BASE32));
 	}
 
 	/**
-	 * Returns value of this hash sum as base64 string.
+	 * Returns value of this digest as base64 string.
 	 *
-	 * @return value of the hash sum as base64 string
+	 * @return value of the digest as base64 string
 	 * @see #raw()
 	 * @see #hex()
 	 * @see #base32()
 	 */
 	public String base64() {
-		return new String(Bindings.rhash_print_bytes(getAddr(), BASE64));
+		return new String(Bindings.rhash_print_bytes(digest_ptr, BASE64));
 	}
 	
 	/**
@@ -106,7 +109,7 @@ public final class Hash extends Pointer implements Cloneable {
 	 */
 	@Override
 	protected void finalize() {
-		Bindings.freeHashObject(getAddr());
+		Bindings.freeDigest(digest_ptr);
 	}
 
 	/**
@@ -126,29 +129,20 @@ public final class Hash extends Pointer implements Cloneable {
 	}
 
 	/**
-	 * Creates verbatim copy of this object.
-	 * @return  copy of this object
-	 */
-	@Override
-	public Object clone() {
-		return new Hash(Bindings.cloneHashObject(getAddr()), type);
-	}
-
-	/**
 	 * Tests whether this object equals to another one
 	 * @param  obj  object to compare to
 	 * @return
-	 *   <code>true</code> if <code>obj</code> is <code>Hash</code>
+	 *   <code>true</code> if <code>obj</code> is <code>Digest</code>
 	 *   instance with the same <code>HashType</code> and value;
 	 *   otherwise <code>false</code>
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (!(obj instanceof Hash)) return false;
-		final Hash other = (Hash)obj;
+		if (!(obj instanceof Digest)) return false;
+		final Digest other = (Digest)obj;
 		if (!this.hashType().equals(other.hashType())) return false;
-		if (this.getAddr() == other.getAddr()) return true;
-		return Bindings.compareHashObjects(this.getAddr(), other.getAddr());
+		if (this.digest_ptr == other.digest_ptr) return true;
+		return Bindings.compareDigests(this.digest_ptr, other.digest_ptr);
 	}
 
 	/**
@@ -157,7 +151,6 @@ public final class Hash extends Pointer implements Cloneable {
 	 */
 	@Override
 	public int hashCode() {
-		return Bindings.hashcodeForHashObject(getAddr());
+		return Bindings.hashcodeForDigest(digest_ptr);
 	}
 }
-

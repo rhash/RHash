@@ -18,28 +18,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "HashObject.h"
+#include "digest.h"
 
-void freeHashObject(HashObject obj) {
+void freeDigest(Digest obj) {
 	free(obj->hash_data);
 	free(obj);
 }
 
-HashObject cloneHashObject(HashObject obj) {
-	HashObject newobj = malloc(sizeof(HashStruct));
-	newobj->hash_id  = obj->hash_id;
-	newobj->hash_len = obj->hash_len;
-	newobj->hash_data = malloc(obj->hash_len);
-	memcpy(newobj->hash_data, obj->hash_data, obj->hash_len);
-	return newobj;
-}
-
-int compareHashObjects(HashObject o1, HashObject o2) {
+int compareDigests(Digest o1, Digest o2) {
 	if (o1->hash_len != o2->hash_len) return 0;
 	return memcmp(o1->hash_data, o2->hash_data, o1->hash_len) == 0;
 }
 
-int hashcodeForHashObject(HashObject obj) {
+int hashcodeForDigest(Digest obj) {
 	int hash = 123321, i;
 	for (i = 0; i < obj->hash_len; i++) {
 		switch (i % 3) {

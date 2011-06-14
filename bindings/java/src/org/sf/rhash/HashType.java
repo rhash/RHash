@@ -19,7 +19,9 @@ package org.sf.rhash;
 
 /**
  * Type of hashing algorithm.
- * MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 хэш, GOST R 34.11-94, RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool и Snefru-128/256.
+ * Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
+ * DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
+ * RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
  */
 public enum HashType {
 	/** CRC32 checksum. */
@@ -66,7 +68,8 @@ public enum HashType {
 	/** EDON-R 512. */
 	EDONR512(1 << 21);
 
-    private int hashId; // hash_id for the native API
+	/** hash_id for the native API */
+    private int hashId;
 
     /**
      * Construct HashType for specified native hash_id
@@ -82,5 +85,34 @@ public enum HashType {
      */
 	int hashId() {
 	    return hashId;
+	}
+
+	/**
+	 * Returns lowest <code>HashType</code> for given id mask.
+	 * Used by <code>RHash.getDigest()</code>.
+	 * @param flags  mask of hash identifiers
+	 * @return  <code>HashType</code> object or <code>null</code>
+	 *   if no <code>HashType</code> for given mask exists
+	 */
+	static HashType forHashFlags(int flags) {
+		if (flags == 0) return null;
+		int lowest = 0;
+		while ((flags % 2) == 0) {
+			flags >>>= 1;
+			lowest++;
+		}
+		for (HashType t : HashType.values()) {
+			if (t.hashId == (1 << lowest)) return t;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns size of binary digest for this type.
+	 * @return size of binary digest, in bytes
+	 */
+	public int getDigestSize() {
+		//TODO: rhash_get_digest_size
+		return -1;
 	}
 }
