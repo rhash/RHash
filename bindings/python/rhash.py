@@ -1,4 +1,4 @@
-# This file is a part of Java Bindings for Librhash
+# Python Bindings for Librhash
 # Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>
 # Librhash is (c) 2011, Alexey S Kravchenko <rhash.admin@gmail.com>
 # 
@@ -15,11 +15,41 @@
 
 '''Python bindings for librhash
 
-librhash is a library for computing and verifying hash sums.
+Librhash is a library for computing and verifying hash sums
+that supports many hashing algorithms. This module provides
+class for incremental hashing, usage of which can  be  seen
+from the following example:
+
+>>> hasher = RHash(CRC32, MD5)
+>>> hasher.update('Hello, ')
+>>> hasher.update('world!')
+>>> hasher.finish()
+>>> print hasher.HEX(CRC32)
+EBE6C6E6
+>>> print hasher.hex(MD5)
+6cd3556deb0da54bca060b4c39479839
+
+In this example RHash object is first created for a set  of
+hashing  algorithms.  Supported values are CRC32, MD4, MD5,
+SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL,  RIPEMD160,
+GOST, GOST_CRYPTOPRO, HAS160, SNEFRU128, SNEFRU256, SHA224,
+SHA256,  SHA384,  SHA512, EDONR256 and EDONR512. Or you can
+just use RHash(ALL) to process all of them at once.
+
+Next, data for hashing is  given  in  chunks  with  methods
+update(message)  and  update_file(filename).  Finally, call
+finish() to end up all remaining calculations.
+
+To receive text represenation of the message digest use one
+of  methods  hex(), HEX(), base32(), BASE32(), base64() and
+BASE64(). Binary message digest may be obtained with raw().
+All of these methods accept algorithm value as argument. It
+may be omitted if RHash was created  to  compute  hash  for
+only a single hashing algorithm.
 '''
 
 # public API
-__all__ = ['CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
+__all__ = ['ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
 	'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
 	'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
 	'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
@@ -54,6 +84,7 @@ SHA384    = 0x40000
 SHA512    = 0x80000
 EDONR256  = 0x100000
 EDONR512  = 0x200000
+ALL       = EDONR512*2 - 1
 
 
 #rhash_print values
@@ -65,11 +96,15 @@ RHPR_UPPERCASE = 8
 
 
 class RHash(object):
-	def __init__(self, hash_flags):
-		self._ctx = librhash.rhash_init(hash_flags)
-		self._flags = hash_flags
-		if self._ctx == 0:
+	'Incremental hasher'
+	
+	def __init__(self, *hash_ids):
+		flags = 0
+		for hash_id in hash_ids:
+			flags |= hash_id
+		if flags == 0:
 			raise ValueError('Invalid argument')
+		self._ctx = librhash.rhash_init(flags)
 	
 	def __del__(self):
 		librhash.rhash_free(self._ctx)
@@ -80,6 +115,14 @@ class RHash(object):
 	def update(self, message):
 		message = str(message)
 		librhash.rhash_update(self._ctx, message, len(message))
+	
+	def update_file(self, filename):
+		f = open(filename, 'rb')
+		buf = f.read(8192)
+		while len(buf) > 0:
+			self.update(buf)
+			buf = f.read(8192)
+		f.close()
 	
 	def finish(self):
 		librhash.rhash_final(self._ctx, None)
@@ -95,18 +138,18 @@ class RHash(object):
 	def hex(self, hash_id = 0):
 		return self._print(hash_id, RHPR_HEX)
 	
-	def HEX(self, hash_id = 0)
+	def HEX(self, hash_id = 0):
 		return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
 	
-	def base32(self, hash_id = 0)
+	def base32(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE32)
 	
-	def BASE32(self, hash_id = 0)
+	def BASE32(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
 	
-	def base64(self, hash_id = 0)
+	def base64(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE64)
 	
-	def BASE64(self, hash_id = 0)
+	def BASE64(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
 
