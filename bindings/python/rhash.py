@@ -17,8 +17,8 @@
 
 Librhash is a library for computing and verifying hash sums
 that supports many hashing algorithms. This module provides
-class for incremental hashing, usage of which can  be  seen
-from the following example:
+class for incremental hashing, sample usage of it  you  can
+see from the following example:
 
 >>> hasher = RHash(CRC32, MD5)
 >>> hasher.update('Hello, ')
