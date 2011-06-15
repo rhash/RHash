@@ -33,7 +33,7 @@ Program features:
 %setup
 
 %build
-make OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" ADDCFLAGS="-DUSE_OPENSSL -rdynamic" ADDLDFLAGS=-ldl
+make OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl all test
 
 %install
 rm -rf "$RPM_BUILD_ROOT"

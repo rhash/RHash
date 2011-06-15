@@ -13,7 +13,7 @@ RPM package can be created by commands
   'make rpm' or 'setarch i586 make rpm'.
 
 To compile with openssl support use the following flags
-  make ADDCFLAGS="-DUSE_OPENSSL -rdynamic" ADDLDFLAGS=-ldl
+  make ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS="-ldl"
 
 The LibRHash library can be compiled using
   'make lib-static' or 'make lib-shared'

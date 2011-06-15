@@ -1,2 +1,2 @@
 /* config.h */
-#define OPENSSL_RUNTIME
+/*#define OPENSSL_RUNTIME*/

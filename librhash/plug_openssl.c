@@ -57,7 +57,7 @@ OS_METHOD(WHIRLPOOL);
 #define HASH_INFO_METHODS(name) 0, 0, wrap##name##_Final, 0
 #else /* non-runtime linking */
 #define CALL_FINAL(name, result, ctx) name##_Final(result, ctx)
-#define HASH_INFO_METHODS(name) (pinit_t)name##_Init, (pupdate_t)name##_Update, wrap##name##_fin, 0
+#define HASH_INFO_METHODS(name) (pinit_t)name##_Init, (pupdate_t)name##_Update, wrap##name##_Final, 0
 #endif
 
 
