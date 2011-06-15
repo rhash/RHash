@@ -55,10 +55,15 @@ __all__ = ['ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
 	'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
 	'RHash']
 
+import sys
 from ctypes import *
 
 # initialization
-librhash = CDLL('librhash.so.1.2')
+if sys.platform == 'win32':
+	libname = 'librhash.dll'
+else:
+	libname = 'librhash.so.0'
+librhash = CDLL(libname)
 librhash.rhash_library_init()
 
 # hash_id values
