@@ -1,0 +1,482 @@
+Tue Jun 14 2011 Aleksey
+	* === Version 1.2.6 ===
+
+Sat Jun 11 2011 Aleksey
+	* allowed options to be intermixed with file names in arbitrary order
+	* switched option -G and the '%G' printf pattern to print GOST hash
+	* Bugfix: --output failed for cyrillic file name
+
+Wed Jun  8 2011 Aleksey
+	* librhash: better shared library compilation/testing support
+
+Mon Jun  6 2011 Aleksey
+	* librhash: exported benchmarking functions in the shared library
+	* librhash: added prefix to all functions to avoid poluting linker namespace
+	* librhash: fixed rare alignment bugs in rhash_print and EDON-R 512
+
+Sat May 28 2011 Aleksey
+	* librhash: loading openssl at runtime if it is present
+	* Bugfix: LLVM GOST amd64 asm compilation error
+
+Wed May 18 2011 Aleksey
+	* === Version 1.2.5 ===
+	* option --openssl allows to replace some algorithms by the OpenSSL ones
+	* Bugfix: incorrect recursive traversing of very long UTF-8 filepaths
+
+Wed Apr 27 2011 Aleksey
+	* Bugfix: corrected calculation of BTIH hash and torrent files
+
+Fri Apr 15 2011 Aleksey
+	* === Version 1.2.4 ===
+	* option --benchmark-raw for machine-readable benchmark output format
+	* on Intel/AMD CPUs benchmark now prints the clocks-per-byte value
+
+Tue Apr  5 2011 Aleksey
+	* changed config file locations
+
+Fri Apr  1 2011 Aleksey
+	* Bugfix: repaired --path-separator on linux/unix
+
+Sun Mar 27 2011 Aleksey
+	* === Version 1.2.3 ===
+
+Fri Mar 25 2011 Aleksey
+	* one-line percent for linux/unix
+
+Mon Mar 14 2011 Aleksey
+	* added printf modificator %{mtime} to print the last modified date of a file
+
+Thu Feb 17 2011 Aleksey
+	* Bugfix: verification of base2-like formated md5 hash sums
+
+Fri Jan 14 2011 Aleksey
+	* === Version 1.2.2 ===
+	* one-line percents (windows only)
+
+Tue Jan 11 2011 Aleksey
+	* supported EDON-R 256/512 hash sums
+
+Sun Dec 19 2010 Aleksey
+	* increased process priority when benchmarking on windows
+
+Thu Dec 16 2010 Aleksey
+	* Bugfix: eight hash sums were broken on PowerPC
+	* Bugfix: --accept/--crc-accept were not working since 1.1.9
+
+Tue Dec 14 2010 Aleksey
+	* === Version 1.2.1 ===
+	* Bugfix: GOST broken on OpenSolaris since 1.2.0
+	* option --list-hashes: list names of all supported hashes, one per line
+
+Mon Nov 29 2010 Aleksey
+	* SHA 224/256/384/512 hash functions supported
+	* Bugfix: broken asm compilation on openbsd and freebsd
+
+Wed Nov 24 2010 Aleksey
+	* option --path-separator=<character> for directories scanning
+
+Sun Nov 14 2010 Aleksey
+	* === Version 1.2.0 ===
+	* --gost-cryptopro option: calculate GOST with CryptoPro parameters
+	* --gost-reverse option: reverse bytes in GOST hash sum
+	* Bugfix: btih/gost/ripemd/has160/snefru were not verified correctly in bsd and magnet formats
+
+Fri Oct 29 2010 Aleksey
+	* Bugfix: rhash compiled by MS VC skipped files of size >4Gb
+
+Fri Oct 15 2010 Aleksey
+	* === Version 1.1.9 ===
+	* new interface for internal library librhash
+
+Mon Jul  5 2010 Ruslan Nikolaev
+	* GOST algorithm x86-64 assembler optimization
+
+Sun Apr 25 2010 Aleksey
+	* new options --uppercase and --lowercase
+	* Bugfix: GOST worked incorrectly when compiled by GCC with `-O0'
+
+Wed Apr 21 2010 Aleksey
+	* windows distribution updated
+
+Fri Apr 16 2010 Aleksey
+	* BugFix: options with string values were incorrectly loaded from config
+
+Wed Apr 14 2010 Aleksey
+	* === Version 1.1.8 ===
+	* option --template=<file> to read printf-like template from <file>
+
+Mon Apr 12 2010 Xiangli Huang
+	* BugFix: `--recursive *' traversed parent directory .. under windows
+	* BugFix: `--check <dirname>' reported strange warning for dirs
+
+Mon Apr 12 2010 Aleksey
+	* printf-directives starting with capital letter print upper-cased hashes, e.g. %{Gost}
+	* %u directive switched to print url-encoded filename (alias for %{urlname})
+	* ed2k links verification supported
+
+Fri Apr  9 2010 Aleksey
+	* BugFix: linking problem on OpenSolaris
+	* filenames in urls are now always utf8-encoded (Windows only fix)
+
+Wed Apr  7 2010 Aleksey
+	* '%B','%@' modifiers to print base64/raw representation of any hash (e.g. '%BM')
+
+Wed Mar 31 2010 Aleksey
+	* === Version 1.1.7 ===
+	* option --btih to print BitTorrent infohash
+	* option --torrent to create torrent file
+	* option --bt-private for private torrents
+	* option --bt-piece-length to change torrent piece length
+	* option --bt-announce to set torrent announcement url
+
+Tue Mar 30 2010 Aleksey
+	* the -m option made to be an alias for --magnet
+
+Mon Mar 29 2010 Xiangli Huang
+	* print program version, when benchmarking
+
+Fri Mar 26 2010 Aleksey
+	* Bugfix: infite loop while recursively updating hash files under Windows
+
+Thu Mar  4 2010 Aleksey
+	* maxdepth parameter now is checked to be a number
+
+Thu Feb 25 2010 Aleksey
+	* output tiger hash in the big-endian order
+
+Wed Feb 24 2010 Aleksey
+	* === Version 1.1.6 ===
+	* man page updated
+	* now all supported hashes are verified when cheking magnet links
+	* benchmark now reports the size of the hashed message
+
+Fri Feb 19 2010 Aleksey
+	* Bugfix: fixed GOST for big-endian systems
+
+Wed Feb 17 2010 Aleksey
+	* Bugfix: buffer owerflow while parsing long command line under Windows
+
+Sun Feb 14 2010 Aleksey
+	* Bugfix: fixed HAS-160 for big-endian systems
+
+Wed Feb  3 2010 Aleksey
+	* Bugfix: crash while printing sfv header for files modified before 1970
+
+Fri Jan 29 2010 Aleksey
+	* Bugfix: sfv-hash symlink now sets default print format to SFV
+	* Bugfix: ed2k-link symlink did not work as expected
+
+Thu Jan 28 2010 Aleksey
+	* === Version 1.1.5 ===
+	* option --utf8 under Windows, also UTF8 now is the default encoding
+	* Bugfix: non-existing files were reported twice in `-r --sfv' mode
+
+Wed Jan 27 2010 Aleksey
+	* option --embed-crc-delimiter=<char> to insert <char> before a crc sum in -e mode
+	* alias -e for --embed-crc
+	* alias -B for --benchmark
+
+Mon Jan 11 2010 Aleksey
+	* Bugfix: percents output fixed for files of more than 4Gb of data
+
+Fri Dec 18 2009 Aleksey
+	* AICH algorithm has been re-written to process files of unknown size like stdin, pipes, sockets
+	* ED2K switched to use eMule algorithm when filesize is an exact multiple of 9728000 bytes
+
+Thu Dec 17 2009 Aleksey
+	* Bugfix: buffer overflow when printing eDonkey links for 0-sized files
+	* Bugfix: --ripemd160 and --md4 option were broken
+	* added `%R' printf entity for RIPEMD-160
+
+Mon Dec 14 2009 Aleksey
+	* === Version 1.1.4 ===
+	* supported algorithms: RIPEMD-160, HAS-160, GOST, MD4, SNEFRU-128, SNEFRU-256
+	* long printf format entities, e.g. %{md4}, %{has160}, %{gost}, %{snefru256}
+	* `u' printf modifier for uppercase hashes, e.g. %u{gost}
+	* switched to %{urlname} printf-entity for url-encoded file name
+	* useful symlinks are installed by `make install-symlinks'
+
+Sun Dec  6 2009 Aleksey
+	* WHIRLPOOL hash function supported, option --whirlpool
+
+Wed Dec  2 2009 Aleksey
+	* print file checking statistics when --check-embedded specified
+
+Sun Nov 29 2009 Aleksey
+	* === Version 1.1.3 ===
+	* forbid simultaneous usage of --check, --update and --check-embedded options
+
+Sun Nov 22 2009 Aleksey
+	* Bugfix: Checking of md5 file always reported OK
+	* --check-embedded option to verify files by crc32 sum embedded in their names.
+	* --embed-crc option to rename processed files by embedding crc32 sum into name.
+
+Mon Nov  9 2009 Aleksey
+	* --benchmark option now prints names of tested hash sums
+	* use magnet format as default if the program name contains 'magnet'
+
+Wed Jun 24 2009 Aleksey
+	* supported checking of files containing a single hash sum without a filename
+
+Mon Jun 15 2009 Aleksey
+	* === Version 1.1.2 ===
+	* verification of files with magnet links supported
+
+Wed May 20 2009 Aleksey
+	* Bugfix: --skip-ok was broken since 1.1.0
+
+Fri May 15 2009 Aleksey
+	* Bugfix: checking of ed2k hashes was broken since version 1.1.0
+	* Bugfix: --verbose lead to crash under OpenSolaris when config file not present
+
+Mon Mar 23 2009 Aleksey
+	* === Version 1.1.1 ===
+	* config file described in the man page
+	* Bugfix: buffer owerflow when printing tiger hash
+
+Sat Mar 21 2009 Aleksey
+	* Bugfix: some options couldn't be read from config file
+
+Sat Mar 14 2009 Aleksey
+	* === Version 1.1.0 ===
+	* various small changes and refactoring
+
+Tue Mar 10 2009 Aleksey
+	* option --speed to print per-file and total speed statistics
+
+Thu Mar  5 2009 Aleksey
+	* option --output to write calculation and check results to a file
+	* option --log to log percents, speed and verbose messages
+
+Wed Mar  4 2009 Aleksey
+	* option --percents to show wget-like percents
+
+Tue Feb 26 2009 Aleksey
+	* Bugfix: fixed processing of unaligned messages in the get_crc32() function
+
+Sat Feb 14 2009 Aleksey
+	* === Version 1.0.8 ===
+	* --magnet option supported to format sums as a magnet link
+	* Bugfix: printf option from config conflicted with command line
+
+Sun Dec 14 2008 Aleksey
+	* === Version 1.0.7 ===
+	* config file supported to load default options values
+	* if --verbose, report verification errors as "sum is XXXXXXXX, should be YYYYYYYY"
+	* '%h' modifier changed to '%x'
+
+Fri Nov 14 2008 Aleksey
+	* === Version 1.0.6 ===
+	* reg-file for FAR user menu
+
+Thu Oct  9 2008 Aleksey
+	* interpret '#' symbol as a comment
+
+Sat Sep 20 2008 ivan386
+	* under windows skip files openned for writing
+	* Bugfix: printf arguments %p and %f corrected
+
+Sun Sep 14 2008 Aleksey
+	* === Version 1.0.5 ===
+
+Wed Aug  6 2008 Aleksey
+	* '%b','%h' modifiers to print base32/hex representation of any hash (e.g. '%bH')
+	* supported -p '\0' symbol
+	* supported setting width for filesizes (e.g. -p '%12s')
+
+Tue Jul 22 2008 Aleksey
+	* --verbose prints read speed statistics to stderr after each file
+	* read buffer increased to 2 MiB
+
+Wed Jul 9 2008 Aleksey
+	* === Version 1.0.4 ===
+	* '%u' prints URL-encoded filename
+	* EDonkey links now have URL-encoded filename and contain AICH hash
+
+Mon Jul 7 2008 Aleksey
+	* AICH hashsums supported, option --aich
+
+Sat Jun 28 2008 Aleksey
+	* === Version 1.0.3 ===
+	* ed2k calculation fixed for files with 9728000 < filesize <= 9732096
+	* Big-endian processors supported for all sums
+
+Sat Jun 14 2008 Aleksey
+	* === Version 1.0.2 ===
+
+Fri Jun 6 2008 Aleksey
+	* --benchmark option added
+	* skip locked files under win32 when calculating 'em sums
+
+Tue May 20 2008 Aleksey
+	* Bugfix: updating of md5 files was broken
+	* Bugfix: more rigid parsing of base32/hex hash sums
+
+Wed May 15 2008 Aleksey
+	* === Version 1.0.1 ===
+	* Bugfix: last line without '\n' couldn't be parsed
+
+Wed May 14 2008 Aleksey
+	* Bugfix: empty lines were not skipped, when verifying a crc file
+	* option '--skip-ok' to skip OK messages for successfuly verified files
+
+Tue Jan 22 2008 Aleksey
+	* option '-a' to print all supported hash sums
+	* Changed default behavior: if no formating option are set, sfv header is printed only for --crc32
+
+Wed Dec 19 2007 Aleksey
+	* Bugfix: fixed buffer overflow for command line -p '%%%%d'
+	* Bugfix: fixed size calculation for stdin (rhash -p '%s' - <file)
+
+Fri Dec 14 2007 Aleksey
+	* === Version 1.0 ===
+	* large files (more then 4Gb) supported
+
+Thu Sep 13 2007 Aleksey
+	* === Version 0.9.2 ===
+
+Tue Sep 11 2007 Aleksey
+	* Checking of TTH sums supported
+
+Mon Sep 10 2007 Aleksey
+	* Bugfix: ignore path delimiters at the end of filenames under win32
+
+Sun May 27 2007 Aleksey
+	* === Version 0.9.1 ===
+	* Tiger option changed to -G
+	* Supported parsing of windows-style paths in crc files under linux
+
+Sat May 26 2007 Aleksey
+	* TTH hash function supported (see -T option)
+
+Thu May 17 2007 Aleksey
+	* Bugfix: --printf="%f" under Windows printed paths instead of filenames
+
+Sun May 13 2007 Aleksey
+	* === Version 0.9 ===
+	* program renamed to rhash
+	* md5/sha1/ed2k code rewrited and slightly optimized
+	* Bugfix: repaired parsing of crc files with tiger hash
+
+Fri May 11 2007 Aleksey
+	* === Version 0.8.9 ===
+	* Bugfix: fixed broken md5 and ed2k sums verification
+
+Sun May 06 2007 Aleksey
+	* Bugfix: fixed wrong Tiger hash calculation for files with (file_size % 64) >= 56
+	* Tiger hash optimised to be 5% faster
+
+Wed May 02 2007 Aleksey
+	* === Version 0.8.8 ===
+
+Sun Apr 22 2007 Aleksey
+	* added options --accept and --crc-accept
+	* added --verbose option
+	* added --maxdepth option
+	* added check before verifying a crc file that it isn't a binary file
+
+Mon Apr 16 2007 Aleksey
+	* === Version 0.8.7 ===
+	* Tiger hash sum optimised for IA32
+
+Tue Apr 10 2007 Aleksey
+	* Bugfix: --update of sfv files worked incorrectly under windows
+
+Mon Apr 09 2007 Aleksey
+	* implemented Tiger hash function
+
+Sun Apr 01 2007 Aleksey
+	* added check before updating a crc file that it isn't a binary file
+
+Mon Mar 26 2007 Aleksey
+	* === Version 0.8.6 ===
+	* Ctrl+C now prints a message and partitial statistics
+
+Sat Mar 24 2007 Aleksey
+	* default format changed to SFV
+
+Mon Mar 19 2007 Aleksey
+	* updating of crc files supported
+
+Wed Jan 31 2007 Aleksey
+	* === Version 0.8.5 ===
+	* supported many short options as one argument, e.g. '-MCEr'
+	* option -S (--sha1) changed to -H
+	* Bugfix: program crashed under BSD while printing SFV file header
+
+Sun Nov 05 2006 Aleksey
+	* === Version 0.8.4 ===
+	* Bugfix: errors/miss stats calculation corrected
+
+Sun Oct 29 2006 Aleksey
+	* supported "-c -" option to check hash sums from stdin
+	* added stdout flushing after each processed file
+	* the program returns exit code 0 on success and 1 if an error occurred
+
+Fri Sep 08 2006 Aleksey
+	* corrected parsing of md5-like files with star-prepended filenames
+
+Wed Apr 19 2006 Aleksey
+	* checking of md5/sha1 files in *BSD format supported
+	* improved I/O errors handling 
+
+Mon Apr 10 2006 Aleksey
+	* === Version 0.8.3 ===
+	* cheking of files in standart md5sum/sha1sum format supported
+	* default output format for md5/sha1/ed2k sums changed
+	* man page rewrited
+
+Thu Mar 30 2006 Aleksey
+	* === Version 0.8.2 ===
+	* GCC 2.96 supported
+
+Thu Feb 23 2006 Aleksey
+	* Bugfix: files with .SFV extension (in uppercase) were skiped while recursive checking
+
+Wed Jan 25 2006 Aleksey
+	* === Version 0.8.1 ===
+	* option --check now works with --recursive
+	* Bugfix: corrected output format when checking files
+	* Bugfix: files wasn't opened as binary on Windows when checking sums
+
+Mon Jan 23 2006 Aleksey
+	* === Version 0.8 ===
+	* documentation now distributed with windows version
+	* some *.bat files added to windows version
+
+Sun Jan 22 2006 Aleksey
+	* --check option added, to check hash sums files
+	* --ansi option added (for Windows version only)
+	* program name is parsed now to specify default sums to compute
+
+Sat Jan 14 2006 Aleksey
+	* Bugfix: console windows version now uses OEM (DOS) character set for output
+	
+	* === Version 0.7 ===
+	* some fixes in sfv format output
+
+Fri Sep 16 2005 Aleksey
+	* --recursive option added
+	* --ed2k-link option added
+
+Fri Sep 02 2005 Aleksey
+	* === Version 0.6 ===
+
+Sun Aug 28 2005 Aleksey
+	* Bugfix: files wasn't opened as binary on win32
+	* --sfv format now implies uppercase hashes
+
+Wed Aug 24 2005 Aleksey
+	* added .spec file and Makefile 'rpm' target
+
+Sun Aug 14 2005 Aleksey
+	* === Version 0.5 ===
+	* the first public version
+	* win32 platform supported
+
+Mon Aug 08 2005 Aleksey
+	* Bugfix: fixed calculation of md5/ed2k hashes for AMD64
+
+Fri Aug 05 2005 Aleksey
+	* === Version 0.06 ===
+	* initial linux version supporting crc32, md5, ed2k and sha1

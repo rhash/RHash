@@ -64,10 +64,7 @@ void rhash_md4_init(md4_ctx *ctx)
 static void rhash_md4_process_block(unsigned state[4], const unsigned* x)
 {
 	register unsigned a, b, c, d;
-	a = state[0];
-	b = state[1];
-	c = state[2];
-	d = state[3];
+	a = state[0], b = state[1], c = state[2], d = state[3];
 
 	MD4_ROUND1(a, b, c, d, x[ 0],  3);
 	MD4_ROUND1(d, a, b, c, x[ 1],  7);
@@ -120,10 +117,7 @@ static void rhash_md4_process_block(unsigned state[4], const unsigned* x)
 	MD4_ROUND3(c, d, a, b, x[ 7], 11);
 	MD4_ROUND3(b, c, d, a, x[15], 15);
 
-	state[0] += a;
-	state[1] += b;
-	state[2] += c;
-	state[3] += d;
+	state[0] += a, state[1] += b, state[2] += c, state[3] += d;
 }
 
 /**

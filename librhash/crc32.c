@@ -27,10 +27,10 @@ void rhash_crc32_init_table(void)
 	int i, j;
 
 	poly = 0xEDB88320;
-	for(i=0; i<256; i++) {
+	for(i = 0; i < 256; i++) {
 		crc = i;
-		for(j=8; j>0; j--) {
-			if(crc&1) crc = (crc >> 1) ^ poly;
+		for(j = 8; j > 0; j--) {
+			if(crc & 1) crc = (crc >> 1) ^ poly;
 			else crc >>= 1;
 		}
 		rhash_crc32_table[i] = crc;

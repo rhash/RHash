@@ -1,0 +1,25 @@
+; The RHash config file config
+
+; crc32 is the default hash sum
+#crc32=on
+#md5=on
+#sha1=on
+
+; use windows code page (useful only under windows)
+#ansi=on
+
+; ignore case in filenames, when verifying crc files
+#ignore-case=on
+
+; directories are not scanned recursively by default
+#recursive=on
+
+; OK messages are printed by default
+#skip-ok=on
+
+; accept only *.sfv files while recursively checking directories
+#crc-accept=.sfv
+#crc-accept=.sfv,.md5,.sha1,.tiger,.tth,.aich
+
+; percents are switched off by default
+#percents=on

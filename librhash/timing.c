@@ -159,7 +159,7 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
  * Benchmark a hash algorithm.
  *
  * @param hash_id hash algorithm identifier
- * @param flags benchmark flags, can be BENCHMARK_QUIET and BENCHMARK_CPB
+ * @param flags benchmark flags, can be RHASH_BENCHMARK_QUIET and RHASH_BENCHMARK_CPB
  * @param output the stream to print results
  */
 void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
@@ -205,7 +205,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 		time = rhash_timer_stop(&timer);
 		total_time += time;
 
-		if((flags & (BENCHMARK_QUIET|BENCHMARK_RAW)) == 0) {
+		if((flags & (RHASH_BENCHMARK_QUIET | RHASH_BENCHMARK_RAW)) == 0) {
 			fprintf(output, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
 			fflush(output);
 		}
@@ -213,7 +213,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 
 #if defined(HAVE_TSC)
 	/* measure the CPU "clocks per byte" speed */
-	if(flags & BENCHMARK_CPB) {
+	if(flags & RHASH_BENCHMARK_CPB) {
 		unsigned int c1 = -1, c2 = -1;
 		unsigned volatile long long cy0, cy1, cy2;
 		int msg_size = 128*1024;
@@ -237,17 +237,17 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	}
 #endif /* HAVE_TSC */
 
-	if(flags & BENCHMARK_RAW) {
+	if(flags & RHASH_BENCHMARK_RAW) {
 		/* output result in a "raw" machine-readable format */
 		fprintf(output, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(output, "\t%.2f", cpb);
+		if(flags & RHASH_BENCHMARK_CPB) fprintf(output, "\t%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(output, "\n");
 	} else {
 		fprintf(output, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(output, ", CPB=%.2f", cpb);
+		if(flags & RHASH_BENCHMARK_CPB) fprintf(output, ", CPB=%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(output, "\n");
 	}
