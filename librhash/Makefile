@@ -170,7 +170,7 @@ test-dll: $(DLLNAME) test_sums.o
 $(SONAME): $(SOURCES)
 #	rm -f $@
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
-	$(CC) -fpic -shared $(CFLAGS) -Wl,--version-script,exports.sym,-soname,$@ $(OPTLDFLAGS) $(SOURCES) -o $@
+	$(CC) -fpic -shared $(CFLAGS) -Wl,--version-script,exports.sym,-soname,$@ $(OPTLDFLAGS) $(ADDLDFLAGS) $(SOURCES) -o $@
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
 $(LIBRARY): $(OBJECTS)
