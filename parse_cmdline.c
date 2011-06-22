@@ -633,12 +633,12 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	int argc;
 	int n_files = 0, b_opt_end = 0;
 	rhash_tchar** files;
-	rhash_tchar **parg;
+	rhash_tchar **parg, **end_arg;
 	parsed_option_t *next_opt;
 
 #ifdef _WIN32
 	parg = cmd_line->warg = CommandLineToArgvW(GetCommandLineW(), &argc);
-	if( NULL == parg ) {
+	if( NULL == parg || argc < 1) {
 		die("CommandLineToArgvW failed\n");
 	}
 #else
@@ -648,9 +648,10 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 
 	/* allocate array for files */
 	files = (rhash_tchar**)rsh_malloc(argc * sizeof(rhash_tchar*));
+	end_arg = parg + argc;
 
 	/* loop by program arguments */
-	for(parg++; *parg != NULL; parg++)
+	for(parg++; parg < end_arg; parg++)
 	{
 		/* if argument is not an option */
 		if((*parg)[0] != RSH_T('-') || (*parg)[1] == 0 || b_opt_end) {
