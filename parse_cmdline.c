@@ -539,7 +539,6 @@ static int read_config(void)
 
 #ifdef _WIN32
 	if( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= (conf_opt.flags & OPT_ENCODING);
-	if( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= OPT_UTF8;
 #endif
 	return (res == 0 ? 0 : -1);
 }
@@ -908,6 +907,12 @@ void read_options(char *argv[])
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
 	read_config();
+	
+#ifdef _WIN32
+	/* set default encoding if no encoding options were specified, */
+	/* this should be done here, even if config file was not found. */
+	if( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= OPT_UTF8;
+#endif
 
 	/* note: encoding and -o/-l options are already applied */
 	IF_WINDOWS(setup_console());

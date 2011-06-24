@@ -1,11 +1,19 @@
 #!/bin/sed
-/^\.IP "--sfv"/ {
-i \
-.IP "--ansi"\
+# insert encoding options before sfv
+/^\.IP "\\-\\-sfv"/ {
+i\
+.IP "\\-\\-ansi"\
 Use Windows codepage for output.\
-.IP "--oem"\
+.IP "\\-\\-oem"\
 Use DOS (OEM) codepage for output.\
-.IP "--utf8"\
-Use UTF8 codepage for output.
+.IP "\\-\\-utf8"\
+Use UTF\\-8 codepage for output.
 }
-/^\$HOME/s/.*rhashrc/%APPDATA%\\RHash\\rhashrc and %HOMEDRIVE%%HOMEPATH%\\rhashrc/
+
+/ looks for a config file/ {
+a\
+on Windows at\
+%APPDATA%\\\\RHash\\\\rhashrc, %HOMEDRIVE%%HOMEPATH%\\\\rhashrc\
+\
+and on Linux/Unix
+}

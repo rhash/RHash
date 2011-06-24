@@ -10,10 +10,10 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.
 .SH DESCRIPTION
 .B RHash
 (Recursive Hasher)
-computes and verifies various message digests (hash sums) of files. 
-Supported message digests include CRC32, MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH,
-BitTorrent BTIH, AICH, ED2K, GOST R 34.11\-94, RIPEMD\-160, 
-HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
+computes and verifies various message digests (hash sums) of files.
+Supported message digests include CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+Tiger, DC++ TTH, BitTorrent BTIH, AICH, ED2K, GOST R 34.11\-94,
+RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links 
 and eDonkey ed2k:// links, see \-\-magnet and \-\-ed2k\-link options.
@@ -221,48 +221,60 @@ URL\(hyencoded filename.
 File's size in bytes.
 .IP %{mtime}
 File's last modification time.
+.IP "%a or %A"
+AICH hash sum. 
 .IP "%c or %C"
 CRC32 hash sum. 
 Use %c for lowercase and %C for uppercase characters.
-.IP "%m or %M"
-MD5 hash.
-.IP "%h or %H"
-SHA1 hash.
 .IP "%g or %G"
 GOST R 34.11\-94 hash.
+.IP "%h or %H"
+SHA1 hash.
+.IP "%e or %E"
+ED2K hash sum.
+.IP "%l or %L"
+EDonkey ed2k://... link.
+.IP "%m or %M"
+MD5 hash.
+.IP "%r or %R"
+RIPEMD-160 hash.
 .IP "%t or %T"
 TTH sum.
-.IP "%e or %E"
-eDonkey hash sum.
-.IP "%l or %L"
-eDonkey ed2k://... link.
 .IP "%w or %W"
 Whirlpool hash.
-.IP "%{md4}, %{btih}, %{tiger}, %{has160}, %{ripemd160}, %{snefru128}, %{snefru256}, ..."
-Print specified <hash sum>. Actually the %{<hash sum>} directive can print
-any supported hash sum. Start <hash sum> with capital letter to print uppercased hash
-e.g. %{TTH}, %{Md4}.
+.IP "%{md4}, %{sha224}, %{sha256}, %{sha384}, %{sha512}, %{tiger}, %{btih}, %{gost\-cryptopro}, %{has160}, %{snefru128}, %{snefru256}, %{edon\-r256}, %{edon\-r512}"
+Print specified hash sum. Actually the %{<hash sum>} directive can print any
+supported hash sum. If a hash sum name starts with a capital letter then the
+hash is printed in uppercase, e.g. %{TTH}, %{Sha512}.
 .IP "%x<hash>, %b<hash>, %B<hash>, %@<hash>"
 Use one of these prefixes to output a hash sum in hexadecimal, base32,
 base64 or raw (binary) format respectively, e.g. %b{md4}, %BH or %xT.
 .RE
 
 .SH CONFIG FILE
-RHash looks for config file at
-$HOME/.rhashrc and /etc/rhashrc
+RHash looks for a config file
+at $HOME/.rhashrc and /etc/rhashrc.
 
-The syntax of the config file line is
+The config file consists of lines formated as
 .RS 
 variable = value
 .RE
 
-where variables are the names of options, such as
+where the 
+.I variable can be a text part of any command line option, like
 .I magnet, 
 .I printf, 
-.I percents. 
+.I percents, e.t.c.
 Simple boolean values can be set using `1', `on' or `yes'.
 
 Empty lines and lines starting with `#' or `;' are ignored.
+
+Example config file:
+.nf
+# This is a comment line
+percents = on
+crc-accept = .sfv,.md5,.sha1,.sha256,.sha512,.tth,.magnet
+.fi
 
 .SH AUTHOR
 Aleksey Kravchenko <rhash.admin@gmail.com>

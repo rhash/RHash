@@ -63,13 +63,12 @@ INSTALL_DATA    = $(INSTALL) -m 644
 all: $(TARGET)
 install: install-program install-symlinks
 uninstall: uninstall-program uninstall-symlinks
-check: check-version
 
 # creating archives
 dist: gzip
-gzip: check-version $(ARCHIVE_GZIP)
-bzip: check-version $(ARCHIVE_BZIP)
-7z:   check-version $(ARCHIVE_7Z)
+gzip: check $(ARCHIVE_GZIP)
+bzip: check $(ARCHIVE_BZIP)
+7z:   check $(ARCHIVE_7Z)
 zip : $(ARCHIVE_ZIP)
 win-dist : $(ARCHIVE_ZIP)
 
@@ -113,12 +112,15 @@ test: $(TARGET) test-hashes
 version.h : Makefile
 	echo "#define VERSION \"$(VERSION)\"" > version.h
 
-check-version: version.h
+check: version.h
+# check version
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
-	grep -q "^- === Version $(VERSION) ===" rhash.spec.in
+#	grep -q "^- === Version $(VERSION) ===" rhash.spec.in
 #	[ ! -f debian/changelog ] || grep -q '^rhash ($(VERSION)-' debian/changelog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
 	[ -s rhash.1.txt -a -s rhash.1.html ]
+	grep -q "utf8" dist/rhash.1.html
+	grep -q "APPDATA" dist/rhash.1.html
 
 $(LIBRHASH): $(LIBRHASH_FILES)
 	cd librhash && make lib-static
