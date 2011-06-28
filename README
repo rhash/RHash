@@ -1,29 +1,29 @@
- 
-                         === RHash program ===
+                           === RHash program ===
 
-RHash is a console utility for calculation and verification of magnet links
-and a wide range of hash sums like CRC32, MD4, MD5, SHA1, SHA256, SHA512,
-AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
+RHash is a console utility for calculation  and verification of magnet links
+and a wide range of hash sums like  CRC32,  MD4, MD5,  SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger,  DC++ TTH,  BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
 HAS-160, EDON-R, Whirlpool and Snefru.
 
-Hash sums are used to ensure and verify integrity of large volumes of data
+Hash sums are used to  ensure and verify integrity  of large volumes of data
 for a long-term storing or transferring.
 
 Features:
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
  * Can calculate Magnet links and EDonkey 2000 links.
  * Updating hash files (adding hash sums of files missing in the hash file).
+ * Calculates several hash sums in one pass
  * Ability to process directories recursively.
  * Portability: the program works the same on Linux, *BSD or Windows.
 
 
-                      === The LibRHash library ===
+                        === The LibRHash library ===
 
-LibRHash is a professional, portable, thread-safe C library for computing
-a wide variety of hash sums, such as CRC32, MD4, MD5, SHA1, SHA256, SHA512,
-AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160
+LibRHash is a professional,  portable,  thread-safe  C library for computing
+a wide variety of hash sums, such as  CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger,  DC++ TTH,  BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
 HAS-160, EDON-R, Whirlpool and Snefru.
-Hash sums are used to ensure and verify integrity of large volumes of data
+Hash sums are used  to ensure and verify integrity of  large volumes of data
 for a long-term storing or transferring.
 
 Features:
@@ -33,7 +33,7 @@ Features:
  * Portability: the library works on Linux, *BSD and Windows.
 
 
-                      === About hash functions ===
+                        === About hash functions ===
 
  * RHash hash functions descriptions http://rhash.anz.ru/hashes.php
  * Table of the hash functions supported by RHash
@@ -42,7 +42,13 @@ Features:
    http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo
 
 
-                     === Notes on RHash License ===
+                         === Project information ===
+
+ * Home Page: http://rhash.sourceforge.net/
+ * Oficial Releases: https://sourceforge.net/projects/rhash/files/rhash/
+ * The Latest Source Code: https://github.com/rhash/RHash/
+
+                       === Notes on RHash License ===
 
 The RHash program and LibRHash library are distributed under  RHash License,
 see the COPYING file for details.  In particluar,  the program,  the library

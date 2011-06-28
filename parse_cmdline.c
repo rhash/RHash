@@ -164,8 +164,7 @@ static void accept_video(options_t *o)
 static void nya(void)
 {
 	assert(rhash_data.out != NULL);
-	fprintf(rhash_data.out, "\n  /\\___/\\   _\n = ' T ' = //\n"
-		"  |     |\\//\n  | | | | )\n  \"\"  \"\" \"\n");
+	fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) Purrr...\n  (_uu__)\n");
 	rsh_exit(0);
 }
 
@@ -232,108 +231,108 @@ static void set_path_separator(options_t *o, char* sep, unsigned param)
  */
 typedef struct cmdline_opt_t
 {
-	char  type;           /* how to porcess option, see below */
+	unsigned short type;  /* how to process the option, see option_type_t below */
 	char  short1, short2; /* short option names */
 	char* long_name;      /* long option name */
 	void* ptr;            /* accessorial pointer, e.g. to an opt field */
 	unsigned param;       /* optional integer parameter */
 } cmdline_opt_t;
 
-/* The 'type' character of cmdline_opt_t determines how option will be processed:
- * u - set a bit flag in a uint32_t field of the opt structure
- * s - store the second parameter into a char* field
- * P - store file path (without a codepage conversion)
- * F - call a function to process the following string parameter
- * f - call a function for complex option processing
- * p - print a constant string and exit
- * Note, that only option of types 's', 'P', 'F' require a second parameter.
- */
+enum option_type_t
+{
+	F_NEED_PARAM = 16, /* flag: option needs a parameter */
+	F_OUTPUT_OPT = 32, /* flag: option changes program output */
+	F_UFLG = 1, /* set a bit flag in a uint32_t field */
+	F_UENC = 1 | F_OUTPUT_OPT, /* an encoding changing option */
+	F_CSTR = 2 | F_NEED_PARAM, /* store parameter as a C string */
+	F_OPTH = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
+	F_VFNC = 4, /* just call a function */
+	F_PFNC = 5 | F_NEED_PARAM, /* process option parameter by calling a handler */
+	F_PRNT = 6, /* print a constant C-string and exit */
+};
+
+#define is_param_required(option_type) ((option_type) & F_NEED_PARAM)
+#define is_output_modifier(option_type) ((option_type) & F_OUTPUT_OPT)
 
 /* supported program options */
 cmdline_opt_t cmdline_opt[] = {
 	/* program modes */
-	{ 'u', 'c',   0, "check",  &opt.mode, MODE_CHECK },
-	{ 'u',   0,   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
-	{ 'u', 'u',   0, "update", &opt.mode, MODE_UPDATE },
-	{ 'u', 'B',   0, "benchmark", &opt.mode, MODE_BENCHMARK },
-	{ 'u',   0,   0, "torrent", &opt.mode, MODE_TORRENT },
-	{ 'f',   0,   0, "list-hashes", list_hashes, 0 },
-	{ 'f', 'h',   0, "help",   print_help, 0 },
-	{ 'p', 'V',   0, "version", VERSION_STRING, 0 },
+	{ F_UFLG, 'c',   0, "check",  &opt.mode, MODE_CHECK },
+	{ F_UFLG,   0,   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
+	{ F_UFLG, 'u',   0, "update", &opt.mode, MODE_UPDATE },
+	{ F_UFLG, 'B',   0, "benchmark", &opt.mode, MODE_BENCHMARK },
+	{ F_UFLG,   0,   0, "torrent", &opt.mode, MODE_TORRENT },
+	{ F_VFNC,   0,   0, "list-hashes", list_hashes, 0 },
+	{ F_VFNC, 'h',   0, "help",   print_help, 0 },
+	{ F_PRNT, 'V',   0, "version", VERSION_STRING, 0 },
+
 	/* hash sums options */
-	{ 'u', 'a',   0, "all",    &opt.sum_flags, RHASH_ALL_HASHES },
-	{ 'u', 'C',   0, "crc32",  &opt.sum_flags, RHASH_CRC32 },
-	{ 'u',   0,   0, "md4",    &opt.sum_flags, RHASH_MD4 },
-	{ 'u', 'M',   0, "md5",    &opt.sum_flags, RHASH_MD5 },
-	{ 'u', 'H',   0, "sha1",   &opt.sum_flags, RHASH_SHA1 },
-	{ 'u',   0,   0, "sha224", &opt.sum_flags, RHASH_SHA224 },
-	{ 'u',   0,   0, "sha256", &opt.sum_flags, RHASH_SHA256 },
-	{ 'u',   0,   0, "sha384", &opt.sum_flags, RHASH_SHA384 },
-	{ 'u',   0,   0, "sha512", &opt.sum_flags, RHASH_SHA512 },
-	{ 'u',   0,   0, "tiger",  &opt.sum_flags, RHASH_TIGER },
-	{ 'u', 'T',   0, "tth",    &opt.sum_flags, RHASH_TTH },
-	{ 'u',   0,   0, "btih",   &opt.sum_flags, RHASH_BTIH },
-	{ 'u', 'E',   0, "ed2k",   &opt.sum_flags, RHASH_ED2K },
-	{ 'u', 'A',   0, "aich",   &opt.sum_flags, RHASH_AICH },
-	{ 'u', 'G',   0, "gost",   &opt.sum_flags, RHASH_GOST },
-	{ 'u',   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST_CRYPTOPRO },
-	{ 'u', 'W',   0, "whirlpool", &opt.sum_flags, RHASH_WHIRLPOOL },
-	{ 'u',   0,   0, "ripemd160", &opt.sum_flags, RHASH_RIPEMD160 },
-	{ 'u',   0,   0, "has160",    &opt.sum_flags, RHASH_HAS160 },
-	{ 'u',   0,   0, "snefru128", &opt.sum_flags, RHASH_SNEFRU128 },
-	{ 'u',   0,   0, "snefru256", &opt.sum_flags, RHASH_SNEFRU256 },
-	{ 'u',   0,   0, "edonr256",  &opt.sum_flags, RHASH_EDONR256 },
-	{ 'u',   0,   0, "edonr512",  &opt.sum_flags, RHASH_EDONR512 },
-	{ 'u', 'L',   0, "ed2k-link", &opt.sum_flags, OPT_ED2K_LINK },
+	{ F_UFLG, 'a',   0, "all",    &opt.sum_flags, RHASH_ALL_HASHES },
+	{ F_UFLG, 'C',   0, "crc32",  &opt.sum_flags, RHASH_CRC32 },
+	{ F_UFLG,   0,   0, "md4",    &opt.sum_flags, RHASH_MD4 },
+	{ F_UFLG, 'M',   0, "md5",    &opt.sum_flags, RHASH_MD5 },
+	{ F_UFLG, 'H',   0, "sha1",   &opt.sum_flags, RHASH_SHA1 },
+	{ F_UFLG,   0,   0, "sha224", &opt.sum_flags, RHASH_SHA224 },
+	{ F_UFLG,   0,   0, "sha256", &opt.sum_flags, RHASH_SHA256 },
+	{ F_UFLG,   0,   0, "sha384", &opt.sum_flags, RHASH_SHA384 },
+	{ F_UFLG,   0,   0, "sha512", &opt.sum_flags, RHASH_SHA512 },
+	{ F_UFLG,   0,   0, "tiger",  &opt.sum_flags, RHASH_TIGER },
+	{ F_UFLG, 'T',   0, "tth",    &opt.sum_flags, RHASH_TTH },
+	{ F_UFLG,   0,   0, "btih",   &opt.sum_flags, RHASH_BTIH },
+	{ F_UFLG, 'E',   0, "ed2k",   &opt.sum_flags, RHASH_ED2K },
+	{ F_UFLG, 'A',   0, "aich",   &opt.sum_flags, RHASH_AICH },
+	{ F_UFLG, 'G',   0, "gost",   &opt.sum_flags, RHASH_GOST },
+	{ F_UFLG,   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST_CRYPTOPRO },
+	{ F_UFLG, 'W',   0, "whirlpool", &opt.sum_flags, RHASH_WHIRLPOOL },
+	{ F_UFLG,   0,   0, "ripemd160", &opt.sum_flags, RHASH_RIPEMD160 },
+	{ F_UFLG,   0,   0, "has160",    &opt.sum_flags, RHASH_HAS160 },
+	{ F_UFLG,   0,   0, "snefru128", &opt.sum_flags, RHASH_SNEFRU128 },
+	{ F_UFLG,   0,   0, "snefru256", &opt.sum_flags, RHASH_SNEFRU256 },
+	{ F_UFLG,   0,   0, "edonr256",  &opt.sum_flags, RHASH_EDONR256 },
+	{ F_UFLG,   0,   0, "edonr512",  &opt.sum_flags, RHASH_EDONR512 },
+	{ F_UFLG, 'L',   0, "ed2k-link", &opt.sum_flags, OPT_ED2K_LINK },
+
 	/* output formats */
-	{ 'u',   0,   0, "sfv",     &opt.fmt, FMT_SFV },
-	{ 'u',   0,   0, "bsd",     &opt.fmt, FMT_BSD },
-	{ 'u',   0,   0, "simple",  &opt.fmt, FMT_SIMPLE },
-	{ 'u', 'm',   0, "magnet",  &opt.fmt, FMT_MAGNET },
-	{ 'u',   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
-	{ 'u',   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
-	{ 's',   0,   0, "template",  &opt.template_file, 0 },
-	{ 's', 'p',   0, "printf",  &opt.printf, 0 },
+	{ F_UFLG,   0,   0, "sfv",     &opt.fmt, FMT_SFV },
+	{ F_UFLG,   0,   0, "bsd",     &opt.fmt, FMT_BSD },
+	{ F_UFLG,   0,   0, "simple",  &opt.fmt, FMT_SIMPLE },
+	{ F_UFLG, 'm',   0, "magnet",  &opt.fmt, FMT_MAGNET },
+	{ F_UFLG,   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
+	{ F_UFLG,   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
+	{ F_CSTR,   0,   0, "template",  &opt.template_file, 0 },
+	{ F_CSTR, 'p',   0, "printf",  &opt.printf, 0 },
+
 	/* other options */
-	{ 'u', 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
-	{ 'u', 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
-	{ 'u',   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
-	{ 'u',   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },
-	{ 'u', 'i',   0, "ignore-case", &opt.flags, OPT_IGNORE_CASE },
-	{ 'u',   0,   0, "percents", &opt.flags, OPT_PERCENTS },
-	{ 'u',   0,   0, "speed",  &opt.flags, OPT_SPEED },
-	{ 'u', 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
-	{ 's',   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },
-	{ 'F',   0,   0, "path-separator", set_path_separator, 0 },
-	{ 'P', 'o',   0, "output", &opt.output, 0 },
-	{ 'P', 'l',   0, "log",    &opt.log,    0 },
-	{ 'F', 'q',   0, "accept", crc_accept, 0 },
-	{ 'F', 't',   0, "crc-accept", crc_accept, 1 },
-	{ 'f',   0,   0, "video",  accept_video, 0 },
-	{ 'f',   0,   0, "nya",  nya, 0 },
-	{ 'F',   0,   0, "maxdepth", set_max_depth, 0 },
-	{ 'u',   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
-	{ 'F',   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
-	{ 's',   0,   0, "bt-announce", &opt.bt_announce, 0 },
-	{ 'u',   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
-	{ 'F',   0,   0, "openssl", openssl_flags, 0 },
-#ifdef _WIN32 /* code pages */
-	{ 'u',   0,   0, "utf8", &opt.flags, OPT_UTF8 },
-	{ 'u',   0,   0, "ansi", &opt.flags, OPT_ANSI },
-	{ 'u',   0,   0, "oem",  &opt.flags, OPT_OEM },
+	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
+	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
+	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
+	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },
+	{ F_UFLG, 'i',   0, "ignore-case", &opt.flags, OPT_IGNORE_CASE },
+	{ F_UFLG,   0,   0, "percents", &opt.flags, OPT_PERCENTS },
+	{ F_UFLG,   0,   0, "speed",  &opt.flags, OPT_SPEED },
+	{ F_UFLG, 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
+	{ F_CSTR,   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },
+	{ F_PFNC,   0,   0, "path-separator", set_path_separator, 0 },
+	{ F_OPTH, 'o',   0, "output", &opt.output, 0 },
+	{ F_OPTH, 'l',   0, "log",    &opt.log,    0 },
+	{ F_PFNC, 'q',   0, "accept", crc_accept, 0 },
+	{ F_PFNC, 't',   0, "crc-accept", crc_accept, 1 },
+	{ F_VFNC,   0,   0, "video",  accept_video, 0 },
+	{ F_VFNC,   0,   0, "nya",  nya, 0 },
+	{ F_PFNC,   0,   0, "maxdepth", set_max_depth, 0 },
+	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
+	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
+	{ F_CSTR,   0,   0, "bt-announce", &opt.bt_announce, 0 },
+	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
+	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
+
+#ifdef _WIN32 /* code pages (windows only) */
+	{ F_UENC,   0,   0, "utf8", &opt.flags, OPT_UTF8 },
+	{ F_UENC,   0,   0, "ansi", &opt.flags, OPT_ANSI },
+	{ F_UENC,   0,   0, "oem",  &opt.flags, OPT_OEM },
 #endif
 	{ 0,0,0,0,0,0 }
 };
-
-/**
- * Return non-zero if given option has a required parameter
- *
- * @param type the type of option to check
- */
-static int is_param_required(char type)
-{
-	return (type == 's' || type == 'P' || type == 'F');
-}
 
 /**
  * Log a message and exit the program.
@@ -375,23 +374,18 @@ typedef struct parsed_option_t
 static void apply_option(options_t *opts, parsed_option_t* option)
 {
 	cmdline_opt_t* o = option->o;
-	char type = o->type;
-	char* value;
-
-	if(type == 'u') {
-		*(unsigned*)((char*)opts + ((char*)o->ptr - (char*)&opt)) |= o->param;
-	}
-	else if(type == 's' || type == 'F' || type == 'P')
-	{
-		/* option requires a parameter */
+	char option_type = o->type;
+	char* value = NULL;
+	
+	/* check if option requires a parameter */
+	if(is_param_required(option_type)) {
 		if(!option->parameter) {
 			log_msg(PROGRAM_NAME ": argument is required for option %s\n", option->name);
 			rsh_exit(2);
 		}
-
 #ifdef _WIN32
 		/* convert from UTF-16 if not a filepath */
-		if(type != 'P') {
+		if(option_type != F_OPTH) {
 			value = w2c((wchar_t*)option->parameter);
 			rsh_vector_add_ptr(opt.mem, value);
 		} else 
@@ -399,19 +393,32 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		{
 			value = (char*)option->parameter;
 		}
+	}
 
-		if(type == 'F') {
-			/* call option parameter handler */
-			( ( void(*)(options_t *, char*, unsigned) )o->ptr )(opts, value, o->param);
-		} else {
-			/* save the option parameter */
-			*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
-		}
-	} else if(o->type == 'f') {
+	/* process option, choosing the method by type */
+	switch(option_type) {
+	case F_UFLG:
+	case F_UENC:
+		*(unsigned*)((char*)opts + ((char*)o->ptr - (char*)&opt)) |= o->param;
+		break;
+	case F_CSTR:
+	case F_OPTH:
+		/* save the option parameter */
+		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
+		break;
+	case F_PFNC:
+		/* call option parameter handler */
+		( ( void(*)(options_t *, char*, unsigned) )o->ptr )(opts, value, o->param);
+		break;
+	case F_VFNC:
 		( ( void(*)(options_t *) )o->ptr )(opts); /* call option handler */
-	} else if(o->type == 'p') {
+		break;
+	case F_PRNT:
 		log_msg("%s", (char*)o->ptr);
 		rsh_exit(0);
+		break;
+	default:
+		assert(0); /* impossible option type */
 	}
 }
 
@@ -566,7 +573,7 @@ static void parse_long_option(parsed_option_t* option, rhash_tchar ***parg)
 	char* name;
 
 #ifdef _WIN32
-	rhash_tchar* wname = **parg; /* skip "--" */
+	rhash_tchar* wname = **parg; /* "--<option name>" */
 	int fail = 0;
 	assert((**parg)[0] == L'-' && (**parg)[1] == L'-');
 
@@ -614,6 +621,7 @@ static void parse_long_option(parsed_option_t* option, rhash_tchar ***parg)
 struct parsed_cmd_line_t
 {
 	blocks_vector_t options; /* array of parsed options */
+	int  argc;
 	char **argv;
 	int n_files;
 	rhash_tchar** files;
@@ -641,8 +649,8 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		die("CommandLineToArgvW failed\n");
 	}
 #else
+	argc = cmd_line->argc;
 	parg = cmd_line->argv;
-	for(argc = 0; parg[argc]; argc++); /* compute argc for files[] size */
 #endif
 
 	/* allocate array for files */
@@ -678,11 +686,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 			t = next_opt->o;
 
 			/* process encoding and -o/-l options early */
-			if(
-#ifdef _WIN32
-			(t->type == 'u' && t->ptr == &opt.flags && (t->param & OPT_ENCODING) != 0) ||
-#endif
-				(t->type == 'P' && (t->ptr == &opt.output || t->ptr == &opt.log))) {
+			if(is_output_modifier(t->type)) {
 				apply_option(&opt, next_opt);
 			}
 		} else if((*parg)[1] != 0) {
@@ -723,11 +727,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 				}
 
 				/* process encoding and -o/-l options early */
-				if(
-#ifdef _WIN32
-				(t->type == 'u' && t->ptr == &opt.flags && (t->param & OPT_ENCODING) != 0) ||
-#endif
-					(t->type == 'P' && (t->ptr == &opt.output || t->ptr == &opt.log))) {
+				if(is_output_modifier(t->type)) {
 					apply_option(&opt, next_opt);
 				}
 				if(next_opt->parameter) break;  /* a parameter ends the short options string */
@@ -754,7 +754,10 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		parsed_option_t* o = (parsed_option_t*)rsh_blocks_vector_get_ptr(
 			&cmd_line->options, i, 16, sizeof(parsed_option_t));
 
-		apply_option(&opt, o); /* process the option */
+		/* process the option, if it was not applied early */
+		if(!is_output_modifier(o->o->type)) {
+			apply_option(&opt, o);
+		}
 	}
 
 	/* copy formating options from config if not specified at command line */
@@ -887,7 +890,7 @@ static void make_final_options_checks(void)
  *
  * @param argv program arguments
  */
-void read_options(char *argv[])
+void read_options(int argc, char *argv[])
 {
 	struct parsed_cmd_line_t cmd_line;
 #ifdef _WIN32
@@ -903,6 +906,7 @@ void read_options(char *argv[])
 	memset(&cmd_line, 0, sizeof(cmd_line));
 	rsh_blocks_vector_init(&cmd_line.options);
 	cmd_line.argv = argv;
+	cmd_line.argc = argc;
 
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
@@ -918,7 +922,7 @@ void read_options(char *argv[])
 	IF_WINDOWS(setup_console());
 	setup_output(); /* setup program output */
 
-	apply_cmdline_options(&cmd_line);
+	apply_cmdline_options(&cmd_line); /* process the rest of command options */
 
 	/* options were processed, so we don't need them anymore */
 	rsh_blocks_vector_destroy(&cmd_line.options);

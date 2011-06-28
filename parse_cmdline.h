@@ -87,7 +87,7 @@ struct options_t {
 };
 extern struct options_t opt;
 
-void read_options(char *argv[]);
+void read_options(int argc, char *argv[]);
 void options_destroy(struct options_t*);
 
 #ifdef _WIN32

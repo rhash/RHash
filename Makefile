@@ -115,8 +115,6 @@ version.h : Makefile
 check: version.h
 # check version
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
-#	grep -q "^- === Version $(VERSION) ===" rhash.spec.in
-#	[ ! -f debian/changelog ] || grep -q '^rhash ($(VERSION)-' debian/changelog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
 	[ -s rhash.1.txt -a -s rhash.1.html ]
 	grep -q "utf8" dist/rhash.1.html
@@ -220,11 +218,11 @@ $(ARCHIVE_7Z): $(DIST_FILES)
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
-$(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.html rhash.1.txt
+$(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.html
 	[ -s dist/rhash.1.html -a -x $(TARGET) ]
 	-rm -rf $(WIN_ZIP_DIR)
 	mkdir $(WIN_ZIP_DIR)
-	cp $(TARGET).exe dist/rhash.1.html rhash.1.txt ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
+	cp $(TARGET).exe dist/rhash.1.html ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	-[ -f $(OUTDIR)libeay32.dll ] && cp $(OUTDIR)libeay32.dll $(WIN_ZIP_DIR)/
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)

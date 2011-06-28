@@ -247,13 +247,12 @@ void rhash_destroy(struct rhash_t* ptr)
  */
 int main(int argc, char *argv[])
 {
-	(void)argc;
 	setlocale(LC_ALL, ""); /* set locale according to the environment */
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	init_hash_info_table();
 
-	read_options(argv); /* load config and parse command line options */
+	read_options(argc, argv); /* load config and parse command line options */
 	prev_sigint_handler = signal(SIGINT, ctrl_c_handler); /* install SIGINT handler */
 	rhash_library_init();
 
