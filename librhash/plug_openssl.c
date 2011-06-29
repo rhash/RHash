@@ -25,7 +25,6 @@
 #endif
 
 #include "algorithms.h"
-#include "byte_order.h"
 #include "plug_openssl.h"
 
 #if defined(OPENSSL_RUNTIME)
@@ -92,14 +91,14 @@ static void wrapWHIRLPOOL_Final(void* ctx, unsigned char* result)
 
 /* The table of supported OpenSSL hash functions */
 rhash_hash_info rhash_openssl_methods[] = {
-	{ { RHASH_MD4,       F_BE32, 16, "MD4"  }, sizeof(MD4_CTX), offsetof(MD4_CTX, A), HASH_INFO_METHODS(MD4) }, /* 128 bit */
-	{ { RHASH_MD5,       F_BE32, 16, "MD5"  }, sizeof(MD5_CTX), offsetof(MD5_CTX, A), HASH_INFO_METHODS(MD5) }, /* 128 bit */
-	{ { RHASH_SHA1,      F_LE32, 20, "SHA1" }, sizeof(SHA_CTX), offsetof(SHA_CTX, h0),  HASH_INFO_METHODS(SHA1) }, /* 160 bit */
-	{ { RHASH_RIPEMD160, F_BE32, 20, "RIPEMD-160" }, sizeof(RIPEMD160_CTX), offsetof(RIPEMD160_CTX, A), HASH_INFO_METHODS(RIPEMD160) }, /* 160 bit */
-	{ { RHASH_SHA224,    F_LE32, 28, "SHA-224" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA224) }, /* 224 bit */
-	{ { RHASH_SHA256,    F_LE32, 32, "SHA-256" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA256) }, /* 256 bit */
-	{ { RHASH_SHA384,    F_LE64, 48, "SHA-384" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA384) }, /* 384 bit */
-	{ { RHASH_SHA512,    F_LE64, 64, "SHA-512" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA512) }, /* 512 bit */
+	{ { RHASH_MD4,       F_LE32, 16, "MD4"  }, sizeof(MD4_CTX), offsetof(MD4_CTX, A), HASH_INFO_METHODS(MD4) }, /* 128 bit */
+	{ { RHASH_MD5,       F_LE32, 16, "MD5"  }, sizeof(MD5_CTX), offsetof(MD5_CTX, A), HASH_INFO_METHODS(MD5) }, /* 128 bit */
+	{ { RHASH_SHA1,      F_BE32, 20, "SHA1" }, sizeof(SHA_CTX), offsetof(SHA_CTX, h0),  HASH_INFO_METHODS(SHA1) }, /* 160 bit */
+	{ { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160" }, sizeof(RIPEMD160_CTX), offsetof(RIPEMD160_CTX, A), HASH_INFO_METHODS(RIPEMD160) }, /* 160 bit */
+	{ { RHASH_SHA224,    F_BE32, 28, "SHA-224" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA224) }, /* 224 bit */
+	{ { RHASH_SHA256,    F_BE32, 32, "SHA-256" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA256) }, /* 256 bit */
+	{ { RHASH_SHA384,    F_BE64, 48, "SHA-384" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA384) }, /* 384 bit */
+	{ { RHASH_SHA512,    F_BE64, 64, "SHA-512" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA512) }, /* 512 bit */
 #ifdef USE_OPENSSL_WHIRLPOOL
 	{ { RHASH_WHIRLPOOL, 0, 64, "WHIRLPOOL" }, sizeof(WHIRLPOOL_CTX), offsetof(WHIRLPOOL_CTX, H.c), HASH_INFO_METHODS(WHIRLPOOL) }, /* 512 bit */
 #endif

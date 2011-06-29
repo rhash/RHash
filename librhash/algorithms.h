@@ -4,6 +4,7 @@
 
 #include <stddef.h> /* for ptrdiff_t */
 #include "rhash.h"
+#include "byte_order.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,7 +42,7 @@ extern unsigned rhash_uninitialized_algorithms;
 #define F_SWAP64 4
 
 /* define endianness flags */
-#ifdef CPU_LITTLE_ENDIAN
+#ifndef CPU_BIG_ENDIAN
 #define F_LE32 0
 #define F_LE64 0
 #define F_BE32 F_SWAP32
