@@ -79,7 +79,7 @@ void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
 		/* copy memory as dwords */
 		const uint32_t* src = (const uint32_t*)from; 
 		const uint32_t* end = (const uint32_t*)((const char*)src + length);
-		uint32_t* dst = (uint32_t*)to;
+		uint32_t* dst = (uint32_t*)((char*)to + index);
 		while(src < end) *(dst++) = bswap_32( *(src++) );
 	} else {
 		const char* src = (const char*)from;
@@ -103,7 +103,7 @@ void rhash_u64_swap_copy(void* to, int index, const void* from, size_t length)
 		/* copy aligned memory block as 64-bit integers */
 		const uint64_t* src = (const uint64_t*)from; 
 		const uint64_t* end = (const uint64_t*)((const char*)src + length);
-		uint64_t* dst = (uint64_t*)to;
+		uint64_t* dst = (uint64_t*)((char*)to + index);
 		while(src < end) *(dst++) = bswap_64( *(src++) );
 	} else {
 		const char* src = (const char*)from;
