@@ -167,12 +167,14 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	unsigned char ALIGN_ATTR(16) message[8192]; /* 8 KiB */
 	timedelta_t timer;
 	int i, j;
-	/*int msg_size = 1073741824; unsigned sz_mb;*/
 	size_t sz_mb, msg_size;
-	double time, total_time = 0, cpb = 0;
+	double time, total_time = 0;
 	const int rounds = 4;
 	const char* hash_name;
 	unsigned char out[130];
+#ifdef HAVE_TSC
+	double cpb = 0;
+#endif /* HAVE_TSC */
 
 #ifdef _WIN32
 	benchmark_cpu_init(); /* set cpu affinity to improve test results */

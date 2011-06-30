@@ -85,7 +85,7 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ { RHASH_TIGER,     F_LE64, 24, "TIGER" }, sizeof(tiger_ctx), dgshft(tiger), iuf(rhash_tiger), 0 }, /* 192 bit */
 	{ { RHASH_TTH,       F_BS32, 24, "TTH" }, sizeof(tth_ctx), dgshft2(tth, tiger.hash), iuf(rhash_tth), 0 }, /* 192 bit */
 	{ { RHASH_BTIH,      0, 20, "BTIH" }, sizeof(torrent_ctx), dgshft2(torrent, btih), iuf(rhash_torrent), (pcleanup_t)rhash_torrent_cleanup }, /* 160 bit */
-	{ { RHASH_ED2K,      F_LE32, 16, "ED2K" }, sizeof(ed2k_ctx), dgshft2(ed2k, md4_context_inner.hash), iuf(rhash_ed2k), 0 }, /* 128 bit */
+	{ { RHASH_ED2K,      0, 16, "ED2K" }, sizeof(ed2k_ctx), dgshft2(ed2k, md4_context_inner.hash), iuf(rhash_ed2k), 0 }, /* 128 bit */
 	{ { RHASH_AICH,      F_BS32, 20, "AICH" }, sizeof(aich_ctx), dgshft2(aich, sha1_context.hash), iuf(rhash_aich), (pcleanup_t)rhash_aich_cleanup }, /* 160 bit */
 	{ { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL" }, sizeof(whirlpool_ctx), dgshft(whirlpool), iuf(rhash_whirlpool), 0 }, /* 512 bit */
 	{ { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160" }, sizeof(ripemd160_ctx), dgshft(ripemd160), iuf(rhash_ripemd160), 0 }, /* 160 bit */
