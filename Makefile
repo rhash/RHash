@@ -79,8 +79,8 @@ install-program: all
 	sed -e 's/\x0D//g' dist/rhashrc.sample > rhashrc && $(INSTALL_DATA) rhashrc $(DESTDIR)/etc/rhashrc
 	rm -f rhashrc
 
-install-symlinks:
-	test -x $(DESTDIR)$(BINDIR)/$(PROGNAME)
+# dependencies should be properly set, otherwise 'make -j<n>' can run install targets in parallel
+install-symlinks: install-program
 	for f in $(SYMLINKS); do ln -s rhash $(DESTDIR)$(BINDIR)/$$f; done
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -s rhash.1* $$f.1; done
 
