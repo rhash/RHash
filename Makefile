@@ -21,7 +21,7 @@ OUTDIR   =
 PROGNAME = rhash
 TARGET   = $(OUTDIR)$(PROGNAME)
 SYMLINKS = sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash ed2k-link magnet-link
-SPECFILE = $(PROGNAME).spec
+SPECFILE = dist/rhash.spec
 LIN_DIST_FILES = Makefile ChangeLog INSTALL COPYING README $(SPECFILE) $(SPECFILE).in \
   $(SOURCES) $(HEADERS) tests/test_rhash.sh rhash.1 rhash.1.win.sed rhash.1.html rhash.1.txt
 WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
@@ -117,8 +117,6 @@ check: version.h
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
 	[ -s rhash.1.txt -a -s rhash.1.html ]
-	grep -q "utf8" dist/rhash.1.html
-	grep -q "APPDATA" dist/rhash.1.html
 
 $(LIBRHASH): $(LIBRHASH_FILES)
 	cd librhash && make lib-static
@@ -180,6 +178,9 @@ win_utils.o: win_utils.c common_func.h librhash/util.h version.h \
 dist/rhash.1.html: rhash.1 rhash.1.win.sed
 	sed -f rhash.1.win.sed rhash.1 | rman -fHTML -roff | \
 	sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > dist/rhash.1.html
+#	verify the result
+	grep -q "utf8" dist/rhash.1.html
+	grep -q "APPDATA" dist/rhash.1.html
 
 rhash.1.html: rhash.1
 	-which rman &>/dev/null && (rman -fHTML -roff rhash.1 | sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > rhash.1.html)
@@ -231,7 +232,7 @@ $(ARCHIVE_DEB_GZ) : $(DIST_FILES)
 	make $(ARCHIVE_GZIP)
 	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
 
-# packaging
+# rpm packaging
 $(SPECFILE): $(SPECFILE).in Makefile
 	sed -e 's/@VERSION@/$(VERSION)/' $(SPECFILE).in > $(SPECFILE)
 
@@ -239,7 +240,7 @@ rpm: gzip
 	-for i in $(RPMDIRS); do mkdir -p $(RPMTOP)/$$i; done
 	cp -f $(ARCHIVE_GZIP) $(RPMTOP)/SOURCES
 	rpmbuild -ba --clean --define "_topdir `pwd`/$(RPMTOP)" $(SPECFILE)
-	mv -f `find $(RPMTOP) -name "rhash-*$(VERSION)*.rpm"` .
+	mv -f `find $(RPMTOP) -name "*rhash*-$(VERSION)*.rpm"` .
 	rm -rf $(RPMTOP)
 
 dist-clean: clean

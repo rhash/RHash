@@ -1,6 +1,6 @@
 %define version @VERSION@
-# major is the part of the library name after the .so
-%define major
+# major is the part of the shared library name after the .so
+%define major 0
 %define libname    %mklibname rhash %{major}
 %define devlibname %mklibname -d rhash
 
@@ -20,29 +20,26 @@ URL:            http://rhash.sourceforge.net/
 Source:         http://downloads.sourceforge.net/rhash/rhash-%{version}-src.tar.gz
 BuildRoot:      %{_builddir}/%{name}-%{version}-root
 BuildRequires:  gcc, libopenssl1.0.0-devel
-
 %description
-RHash (Recurcive Hasher) is a console utility for computing 
-and verifying magnet links and hash sums of files.
-It supports CRC32, MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH,
-BitTorrent BTIH, AICH, eDonkey hash, GOST R 34.11-94, RIPEMD-160, 
-HAS-160, EDON-R, Whirlpool and Snefru hash algorithms.
+RHash is a console utility for calculation and verification of magnet links
+and a wide range of hash sums like CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
+HAS-160, EDON-R, Whirlpool and Snefru.
 Hash sums are used to ensure and verify integrity of large volumes of data
 for a long-term storing or transferring.
 
-Program features:
- * Calculation of Magnet links and EDonkey 2000 links.
+Features:
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
- * Updating crc files (adding hash sums of files missing in the crc file).
+ * Can calculate Magnet links and EDonkey 2000 links.
+ * Updating hash files (adding hash sums of files missing in the hash file).
  * Ability to process directories recursively.
- * Portability: the program works the same under Linux, *BSD or Windows.
+ * Portability: the program works the same on Linux, *BSD or Windows.
 
 # LibRHash shared library, contains librhash.so.[major] only
 %package -n %{libname}
 Summary:        LibRHash shared library
 Group:          System/Libraries
 Provides:       librhash = %{version}-%{release}
-
 %description -n %{libname}
 LibRHash is a professional, portable, thread-safe C library for computing
 a wide variety of hash sums, such as CRC32, MD4, MD5, SHA1, SHA256, SHA512,
@@ -57,41 +54,52 @@ Group:          Development/C
 Requires:       %{libname} = %{version}
 #(!) MANDATORY
 Provides:       librhash-devel = %{version}-%{release}
+%description -n %{devlibname}
+LibRHash is a professional, portable, thread-safe C library for computing
+a wide variety of hash sums, such as CRC32, MD4, MD5, SHA1, SHA256, SHA512,
+AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160
+HAS-160, EDON-R, Whirlpool and Snefru.
+Hash sums are used to ensure and verify integrity of large volumes of data
+for a long-term storing or transferring.
 
 %prep
 %setup
 
 %build
-make OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl all test
+%{__make} OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" OPTLDFLAGS= ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl lib-shared all
+
+%check
+%{__make} OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl test
 
 %install
-rm -rf "$RPM_BUILD_ROOT"
-make PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" install install-lib-static install-lib-shared
+%{__make} PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" install install-lib-static install-lib-shared
 
-#%clean
+%clean
+rm -rf "$RPM_BUILD_ROOT"
 
 %files
 %defattr(-,root,root)
 %doc COPYING INSTALL ChangeLog rhash.1.html
-
 /usr/bin/*
 /etc/rhashrc
 %{_mandir}/man1/
 
-%files -n %{libname}
-%defattr(-,root,root)
-%{_libdir}/librhash.so.%{major}
-
-#%if %{mdkversion} <= 200900
-%post   -n %{libname} -p /sbin/ldconfig
-%postun -n %{libname} -p /sbin/ldconfig
-#%endif
-
 %files -n %{devlibname}
 %defattr(-,root,root)
 %{_libdir}/librhash.a
+%{_libdir}/librhash.so
 %{_includedir}/rhash/*.h
 
+%files -n %{libname}
+%defattr(-,root,root)
+%doc COPYING INSTALL ChangeLog
+%{_libdir}/librhash.so.%{major}
+
+%post   -n %{libname}
+ldconfig
+
+%postun -n %{libname}
+ldconfig
 
 %changelog
 * Tue Jun 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.6-1mdk
