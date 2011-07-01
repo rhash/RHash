@@ -103,9 +103,10 @@ void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16])
 			rhash_md4_final(&ctx->md4_context_inner, md4_digest_inner);
 			rhash_md4_update(&ctx->md4_context, md4_digest_inner, 16);
 		}
+		/* first call final to flush md4 buffer and finalize the hash value */
+		rhash_md4_final(&ctx->md4_context, result);
 		/* store the calculated ed2k hash in the md4_context_inner.hash */
-		rhash_md4_final(&ctx->md4_context, (unsigned char*)ctx->md4_context_inner.hash);
-		if(result) memcpy(result, ctx->md4_context_inner.hash, md4_hash_size);
+		memcpy(&ctx->md4_context_inner.hash, &ctx->md4_context.hash, md4_hash_size);
 	} else {
 		/* return just the message MD4 hash */
 		if(result) rhash_md4_final(&ctx->md4_context_inner, result);
