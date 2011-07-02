@@ -160,6 +160,7 @@ find_file.o: find_file.c common_func.h librhash/util.h win_utils.h \
 
 output.o: output.c librhash/rhash.h common_func.h librhash/util.h \
  calc_sums.h parse_cmdline.h rhash_main.h output.h
+
 parse_cmdline.o: parse_cmdline.c librhash/rhash.h common_func.h \
  librhash/util.h win_utils.h file_mask.h output.h rhash_main.h version.h \
  parse_cmdline.h
@@ -171,8 +172,8 @@ rhash_main.o: rhash_main.c librhash/torrent.h common_func.h \
  output.h rhash_main.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-win_utils.o: win_utils.c common_func.h librhash/util.h version.h \
- parse_cmdline.h rhash_main.h win_utils.h
+win_utils.o: win_utils.c common_func.h librhash/util.h parse_cmdline.h \
+ rhash_main.h win_utils.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 dist/rhash.1.html: rhash.1 rhash.1.win.sed

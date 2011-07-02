@@ -10,7 +10,6 @@
 #include <errno.h>
 
 #include "common_func.h"
-#include "version.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "win_utils.h"
