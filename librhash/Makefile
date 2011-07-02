@@ -27,7 +27,7 @@ LIBDIR  = $(PREFIX)/lib
 LIBRARY = librhash.a
 SONAME  = librhash.so.0
 SOLINK  = librhash.so
-TEST_TARGET = test_sums
+TEST_TARGET = test_hashes
 TEST_SHARED = test_shared
 # Set variables according to GNU coding standard
 INSTALL = install
@@ -125,8 +125,8 @@ sha512.o: sha512.c byte_order.h config.h sha512.h
 snefru.o: snefru.c byte_order.h config.h snefru.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-test_sums.o: test_sums.c byte_order.h config.h timing.h rhash.h \
- test_sums.h
+test_hashes.o: test_hashes.c byte_order.h config.h timing.h rhash.h \
+ test_hashes.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 tiger.o: tiger.c byte_order.h config.h tiger.h
@@ -163,8 +163,8 @@ $(DLLNAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
 	$(CC) -shared -DRHASH_EXPORTS $(CFLAGS) -Wl,--version-script,exports.sym,-soname,$@ $(OPTLDFLAGS) $(SOURCES) -o $@
 
-test-dll: $(DLLNAME) test_sums.o
-	$(CC) test_sums.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
+test-dll: $(DLLNAME) test_hashes.o
+	$(CC) test_hashes.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
 
 # shared and static libraries
 $(SONAME): $(SOURCES)
@@ -177,14 +177,14 @@ $(LIBRARY): $(OBJECTS)
 	$(AR) cqs $@ $(OBJECTS)
 #	$(AR) cr $(LIBRARY) $(OBJECTS) && runlib $(LIBRARY)
 
-$(TEST_TARGET): $(LIBRARY) test_sums.o
-	$(CC) test_sums.o $(LDFLAGS) -o $@
+$(TEST_TARGET): $(LIBRARY) test_hashes.o
+	$(CC) test_hashes.o $(LDFLAGS) -o $@
 
-#$(TEST_SHARED): $(DLLNAME) test_sums.o
-#	$(CC) test_sums.o $(DLLNAME) -o $@
+#$(TEST_SHARED): $(DLLNAME) test_hashes.o
+#	$(CC) test_hashes.o $(DLLNAME) -o $@
 
-test-shared: $(SONAME) test_sums.o
-	$(CC) test_sums.o $(SONAME) $(LDFLAGS) -o $(TEST_SHARED)
+test-shared: $(SONAME) test_hashes.o
+	$(CC) test_hashes.o $(SONAME) $(LDFLAGS) -o $(TEST_SHARED)
 	LD_LIBRARY_PATH=. ./$(TEST_SHARED)
 
 test: $(TEST_TARGET)

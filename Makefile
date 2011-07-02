@@ -38,8 +38,8 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/sha256.c librhash/sha256.h librhash/sha512.c librhash/sha512.h \
   librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h \
   librhash/tiger_sbox.c librhash/tth.c librhash/tth.h librhash/whirlpool.c \
-  librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_sums.c \
-  librhash/test_sums.h librhash/torrent.h librhash/torrent.c \
+  librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_hashes.c \
+  librhash/test_hashes.h librhash/torrent.h librhash/torrent.c \
   librhash/util.c librhash/util.h librhash/config.h librhash/Makefile
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES)
 WIN_SUFFIX     = win32

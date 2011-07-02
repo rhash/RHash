@@ -1,4 +1,4 @@
-/* test_sums.c - unit tests and benchmark for LibRHash algorithms
+/* test_hashes.c - unit tests and benchmark for LibRHash algorithms
  *
  * Copyright: 2008 Alexey Kravchenko <rhash.admin@gmail.com>
  *
@@ -24,7 +24,7 @@
 # define RHASH_API __declspec(dllimport)
 #endif
 #include "rhash.h"
-#include "test_sums.h"
+#include "test_hashes.h"
 
 /*=======================================================================*
  *                         Data for tests                                *

@@ -1,4 +1,4 @@
-/* test_sums.h - detect compiler defines */
+/* test_hashes.h - detect compiler defines */
 
 /* first some magic to convert a macro value to a string */
 #define STRINGIZE_ARG(x) #x
