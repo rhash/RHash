@@ -1,0 +1,4 @@
+*.[ao]
+*.dll
+*.exe
+dist/rhash.spec

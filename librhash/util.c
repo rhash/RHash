@@ -1,11 +1,13 @@
 /* util.c - memory, vector and strings utility functions
- * written by Alexei Kravchenko.
  *
- * Copyleft:
- * I, the author, hereby release this code into the public domain.
- * This applies worldwide. I grant any entity the right to use this work for
- * ANY PURPOSE, without any conditions, unless such conditions are required
- * by law.
+ * Copyright: 2010 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 
 #include <unistd.h>

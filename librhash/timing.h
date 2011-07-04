@@ -27,9 +27,9 @@ RHASH_API void rhash_timer_start(timedelta_t* timer);
 RHASH_API double rhash_timer_stop(timedelta_t* timer);
 
 /* flags for running a benchmark */
-#define BENCHMARK_QUIET 1
-#define BENCHMARK_CPB 2
-#define BENCHMARK_RAW 4
+#define RHASH_BENCHMARK_QUIET 1
+#define RHASH_BENCHMARK_CPB 2
+#define RHASH_BENCHMARK_RAW 4
 
 RHASH_API void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output);
 

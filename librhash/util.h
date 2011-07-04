@@ -30,8 +30,8 @@ struct vector_t* rsh_vector_new(void (*destructor)(void*));
 struct vector_t* rsh_vector_new_simple(void);
 void rsh_vector_free(struct vector_t* vect);
 void rsh_vector_destroy(struct vector_t* vect);
-void rsh_vector_add_ptr (struct vector_t* vect, void *item);
-void rsh_vector_sort(struct vector_t* vect, int (*compare)(const void *rec1, const void *rec2));
+void rsh_vector_add_ptr(struct vector_t* vect, void *item);
+/*void rsh_vector_sort(struct vector_t* vect, int (*compare)(const void *rec1, const void *rec2));*/
 void rsh_vector_item_add_empty(struct vector_t* vect, size_t item_size);
 #define rsh_vector_add_uint32(vect, item) { \
 	rsh_vector_item_add_empty(vect, item_size); \
@@ -58,8 +58,14 @@ void rsh_blocks_vector_destroy(struct blocks_vector_t* vect);
 	(&((unsigned char*)((bvector)->blocks.array[(index) / (blocksize)]))[(item_size) * ((index) % (blocksize))])
 #define rsh_blocks_vector_add(bvector, item, blocksize, item_size) { \
 	if(((bvector)->size % (blocksize)) == 0) \
-			rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc((item_size) * (blocksize))); \
+		rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc((item_size) * (blocksize))); \
 	memcpy(rsh_blocks_vector_get_ptr((bvector), (bvector)->size, (blocksize), (item_size)), (item), (item_size)); \
+	(bvector)->size++; \
+}
+#define rsh_blocks_vector_add_ptr(bvector, ptr, blocksize) { \
+	if(((bvector)->size % (blocksize)) == 0) \
+		rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc(sizeof(void*) * (blocksize))); \
+	((void***)(bvector)->blocks.array)[(bvector)->size / (blocksize)][(bvector)->size % (blocksize)] = (void*)ptr; \
 	(bvector)->size++; \
 }
 #define rsh_blocks_vector_add_empty(bvector, blocksize, item_size) { \

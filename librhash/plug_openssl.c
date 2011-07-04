@@ -1,11 +1,13 @@
 /* plug_openssl.c - plug-in openssl algorithms
- * written by Alexei Kravchenko.
  *
- * Copyleft:
- * I, the author, hereby place this code into the public domain.
- * This applies worldwide. I grant any entity the right to use this work for
- * ANY PURPOSE, without any conditions, unless such conditions are required
- * by law.
+ * Copyright: 2011 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 #ifdef USE_OPENSSL
 
@@ -54,7 +56,7 @@ OS_METHOD(WHIRLPOOL);
 #define HASH_INFO_METHODS(name) 0, 0, wrap##name##_Final, 0
 #else /* non-runtime linking */
 #define CALL_FINAL(name, result, ctx) name##_Final(result, ctx)
-#define HASH_INFO_METHODS(name) (pinit_t)name##_Init, (pupdate_t)name##_Update, wrap##name##_fin, 0
+#define HASH_INFO_METHODS(name) (pinit_t)name##_Init, (pupdate_t)name##_Update, wrap##name##_Final, 0
 #endif
 
 

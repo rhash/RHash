@@ -1,11 +1,14 @@
-/* crc32.c - an implementation of 32bit CRC hash function
- * Implementation written by Alexei Kravchenko.
+/* crc32.c - an implementation of CRC32 hash function
  *
- * Copyleft:
- * I hereby release this code into the public domain. This applies worldwide.
- * I grant any entity the right to use this work for ANY PURPOSE,
- * without any conditions, unless such conditions are required by law.
-*/
+ * Copyright: 2006 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
+ */
 
 #include <string.h>
 #include "byte_order.h"
@@ -24,10 +27,10 @@ void rhash_crc32_init_table(void)
 	int i, j;
 
 	poly = 0xEDB88320;
-	for(i=0; i<256; i++) {
+	for(i = 0; i < 256; i++) {
 		crc = i;
-		for(j=8; j>0; j--) {
-			if(crc&1) crc = (crc >> 1) ^ poly;
+		for(j = 8; j > 0; j--) {
+			if(crc & 1) crc = (crc >> 1) ^ poly;
 			else crc >>= 1;
 		}
 		rhash_crc32_table[i] = crc;

@@ -1,19 +1,21 @@
-/* snefru.c - an implementation of Snefru-128 and Snefru-256 Message-Digest Algorithms
+/* snefru.c - an implementation of Snefru-128/256 Message-Digest Algorithms
  *
- * Implementation written by Alexei Kravchenko.
+ * Copyright: 2009 Alexey Kravchenko <rhash.admin@gmail.com>
  *
- * Copyleft:
- * I hereby release this code into the public domain. This applies worldwide.
- * I grant any entity the right to use this work for ANY PURPOSE,
- * without any conditions, unless such conditions are required by law.
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  *
  * Specification: Ralph C. Merkle, A Fast Software One-Way Hash Function,
  *   J. Cryptology, Vol. 3, No 1, pp. 43-58, 1990
  *
- * Info from wikipedia:
- * Snefru is a cryptographic hash function invented by Ralph Merkle in 1989
- * which supports 128-bit and 256-bit output. It was named after the Egyptian
- * Pharaoh Sneferu, continuing the tradition of the Khufu and Khafre block ciphers.
+ * Info from wikipedia:  Snefru is a cryptographic hash function invented
+ * by Ralph Merkle in 1989 which supports 128-bit and 256-bit output.  It
+ * was named after the Egyptian Pharaoh Sneferu, continuing the tradition
+ * of the Khufu and Khafre block ciphers.
  * 
  * The original design of Snefru was shown to be insecure by Eli Biham and
  * Adi Shamir who were able to use differential cryptanalysis to find hash

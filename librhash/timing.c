@@ -1,11 +1,13 @@
 /* timing.c - functions to benchmark hash algorithms,
- * written by Alexei Kravchenko.
  *
- * Copyleft:
- * I, the author, hereby release this code into the public domain.
- * This applies worldwide. I grant any entity the right to use this work for
- * ANY PURPOSE, without any conditions, unless such conditions are required
- * by law.
+ * Copyright: 2010 Alexey Kravchenko <rhash.admin@gmail.com>
+ *
+ * Permission is hereby granted,  free of charge,  to any person  obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction,  including without limitation
+ * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
+ * and/or sell copies  of  the Software,  and to permit  persons  to whom the
+ * Software is furnished to do so.
  */
 
 /* modifier for Windows dll */
@@ -157,7 +159,7 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
  * Benchmark a hash algorithm.
  *
  * @param hash_id hash algorithm identifier
- * @param flags benchmark flags, can be BENCHMARK_QUIET and BENCHMARK_CPB
+ * @param flags benchmark flags, can be RHASH_BENCHMARK_QUIET and RHASH_BENCHMARK_CPB
  * @param output the stream to print results
  */
 void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
@@ -165,12 +167,14 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	unsigned char ALIGN_ATTR(16) message[8192]; /* 8 KiB */
 	timedelta_t timer;
 	int i, j;
-	/*int msg_size = 1073741824; unsigned sz_mb;*/
 	size_t sz_mb, msg_size;
-	double time, total_time = 0, cpb = 0;
+	double time, total_time = 0;
 	const int rounds = 4;
 	const char* hash_name;
 	unsigned char out[130];
+#ifdef HAVE_TSC
+	double cpb = 0;
+#endif /* HAVE_TSC */
 
 #ifdef _WIN32
 	benchmark_cpu_init(); /* set cpu affinity to improve test results */
@@ -203,7 +207,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 		time = rhash_timer_stop(&timer);
 		total_time += time;
 
-		if((flags & (BENCHMARK_QUIET|BENCHMARK_RAW)) == 0) {
+		if((flags & (RHASH_BENCHMARK_QUIET | RHASH_BENCHMARK_RAW)) == 0) {
 			fprintf(output, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
 			fflush(output);
 		}
@@ -211,7 +215,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 
 #if defined(HAVE_TSC)
 	/* measure the CPU "clocks per byte" speed */
-	if(flags & BENCHMARK_CPB) {
+	if(flags & RHASH_BENCHMARK_CPB) {
 		unsigned int c1 = -1, c2 = -1;
 		unsigned volatile long long cy0, cy1, cy2;
 		int msg_size = 128*1024;
@@ -235,17 +239,17 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	}
 #endif /* HAVE_TSC */
 
-	if(flags & BENCHMARK_RAW) {
+	if(flags & RHASH_BENCHMARK_RAW) {
 		/* output result in a "raw" machine-readable format */
 		fprintf(output, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(output, "\t%.2f", cpb);
+		if(flags & RHASH_BENCHMARK_CPB) fprintf(output, "\t%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(output, "\n");
 	} else {
 		fprintf(output, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(output, ", CPB=%.2f", cpb);
+		if(flags & RHASH_BENCHMARK_CPB) fprintf(output, ", CPB=%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(output, "\n");
 	}
