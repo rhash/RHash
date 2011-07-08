@@ -30,7 +30,7 @@ for a long-term storing or transferring.
 
 Features:
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
- * Can calculate Magnet links and EDonkey 2000 links.
+ * Calculation of Magnet links and EDonkey 2000 links.
  * Updating hash files (adding hash sums of files missing in the hash file).
  * Ability to process directories recursively.
  * Portability: the program works the same on Linux, *BSD or Windows.
