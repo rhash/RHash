@@ -120,6 +120,10 @@ class RHash(object):
 	def update(self, message):
 		message = str(message)
 		librhash.rhash_update(self._ctx, message, len(message))
+		return self
+		
+	def __lshift__(self, message):
+		return self.update(message)
 	
 	def update_file(self, filename):
 		f = open(filename, 'rb')
