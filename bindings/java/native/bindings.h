@@ -81,7 +81,6 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1final
 
 /*
  * Class:     org_sf_rhash_Bindings
-<<<<<<< HEAD
  * Method:    rhash_reset
  * Signature: (J)V
  */
@@ -92,10 +91,6 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1reset
  * Class:     org_sf_rhash_Bindings
  * Method:    rhash_print
  * Signature: (JI)J
-=======
- * Method:    rhash_is_base32
- * Signature: (I)Z
->>>>>>> 1734edff86668db01f0d27fd3e662874161934e5
  */
 JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1print
   (JNIEnv *, jclass, jlong, jint);
