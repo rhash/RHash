@@ -427,7 +427,7 @@ static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size,
 		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
 	}
 #endif
-	
+
 	for(left = msg_size; left > 0; left -= size) {
 		size = (left > chunk_size ? chunk_size : left);
 		rhash_update(ctx, (const unsigned char*)chunk, size);

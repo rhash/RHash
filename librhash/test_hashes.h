@@ -5,7 +5,7 @@
 #define EXPAND_TO_STRING(x) STRINGIZE_ARG(x)
 
 /* the string containing defined macros */
-char* compiler_flags = "Compile-time flags:" 
+char* compiler_flags = "Compile-time flags:"
 #ifdef i386
 	" i386"
 #endif
@@ -172,6 +172,7 @@ char* compiler_flags = "Compile-time flags:"
 	" sel"
 #endif
 
+/* detect compiler and OS */
 #ifdef _MSC_VER
 	" _MSC_VER=" EXPAND_TO_STRING(_MSC_VER)
 #endif
@@ -181,14 +182,20 @@ char* compiler_flags = "Compile-time flags:"
 #if defined(__GNUC__) && defined(__VERSION__)
 	" GCC=" __VERSION__
 #endif
-#ifdef __STRICT_ANSI__
-	" __STRICT_ANSI__"
+#ifdef __INTEL_COMPILER
+	" __INTEL_COMPILER=" EXPAND_TO_STRING(__INTEL_COMPILER)
 #endif
-#ifdef __64BIT__
-	" __64BIT__"
+#ifdef __clang__
+	" __clang__"
 #endif
-#ifdef __PIC__
-	" __PIC__"
+#ifdef __llvm__
+	" __llvm__"
+#endif
+#ifdef __TINYC__ /* tcc */
+	" __TINYC__"
+#endif
+#ifdef __MINGW32__
+	" __MINGW32__"
 #endif
 #ifdef _WIN32
 	" _WIN32"
@@ -196,8 +203,50 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef _WIN64
 	" _WIN64"
 #endif
+#ifdef __linux
+	" __linux"
+#endif
+#ifdef __sun /* Solaris */
+	" __sun"
+#endif
+#ifdef __FreeBSD__
+	" __FreeBSD__"
+#endif
+#ifdef __OpenBSD__
+	" __OpenBSD__"
+#endif
+#ifdef __NetBSD__
+	" __NetBSD__"
+#endif
+#ifdef __APPLE__
+	" __APPLE__"
+#endif
+#ifdef __MACH__ /* Mac OS X = __APPLE__ & __MACH__ on gcc/icc */
+	" __MACH__"
+#endif
+
+#include <limits.h>
+#ifdef __GLIBC__ /* GLIBC >= 6 */
+	" __GLIBC__"
+#endif
+#ifdef __UCLIBC__
+	" __UCLIBC__"
+#endif
+
+
+
+/* other defines */
+#ifdef __STDC_VERSION__
+	" __STDC_VERSION__=" EXPAND_TO_STRING(__STDC_VERSION__)
+#endif
 #ifdef _UNICODE
 	" _UNICODE"
+#endif
+#ifdef __STRICT_ANSI__
+	" __STRICT_ANSI__"
+#endif
+#ifdef __PIC__
+	" __PIC__"
 #endif
 #ifdef USE_RHASH_DLL
 	" USE_RHASH_DLL"
@@ -205,13 +254,14 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef USE_OPENSSL
 	" USE_OPENSSL"
 #endif
-#ifdef CPU_LITTLE_ENDIAN /* Endianness */
+
+/* detect endianness */
+#ifdef CPU_LITTLE_ENDIAN
 	" CPU_LITTLE_ENDIAN"
 #endif
 #ifdef CPU_BIG_ENDIAN
 	" CPU_BIG_ENDIAN"
 #endif
-
 #if defined(__BYTE_ORDER)
 #if (__BYTE_ORDER==__LITTLE_ENDIAN)
 	" (__BYTE_ORDER==__LITTLE_ENDIAN)"

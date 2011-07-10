@@ -29,6 +29,10 @@
 #include "hex.h"
 #include "rhash.h" /* RHash library interface */
 
+#define STATE_ACTIVE  0xb01dbabe
+#define STATE_STOPED  0xdeadbeef
+#define STATE_DELETED 0xdecea5ed
+
 /**
  * Initialize static data of rhash algorithms
  */
@@ -60,12 +64,12 @@ int RHASH_API rhash_count(void)
 	return rhash_info_size;
 }
 
-/* basic (lo-level) rhash library functions */
+/* Lo-level rhash library functions */
 
 /**
- * Allocate and initialize RHASH library context.
- * After Initializing one should call rhash_update/rhash_final functions.
- * The context must be later freed by calling rhash_free.
+ * Allocate and initialize RHash context for calculating hash(es).
+ * After initializing rhash_update()/rhash_final() functions should be used.
+ * Then the context must be freed by calling rhash_free().
  *
  * @param hash_id union of bit flags, containing ids of hashes to calculate.
  * @return initialized rhash context
@@ -121,6 +125,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	/* initialize common fields of the rhash context */
 	rctx->msg_size = 0;
 	rctx->hash_id = hash_id;
+	rctx->state = STATE_ACTIVE;
 	rctx->hash_vector_size = num;
 	rctx->callback = rctx->callback_data = NULL;
 
@@ -165,6 +170,7 @@ void rhash_free(rhash ctx)
 	unsigned i;
 	if(!ctx) return;
 	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
+	ctx->state = STATE_DELETED; /* mark memory block as being removed */
 
 	/* clean the hash functions, which require additional clean up */
 	for(i = 0; i < ctx->hash_vector_size; i++) {
@@ -187,6 +193,7 @@ RHASH_API void rhash_reset(rhash ctx)
 {
 	unsigned i;
 	assert(ctx->hash_vector_size > 0 && ctx->hash_vector_size < RHASH_HASH_COUNT);
+	ctx->state = STATE_ACTIVE; /* re-activate the structure */
 
 	/* re-initialize every hash in a loop */
 	for(i = 0; i < ctx->hash_vector_size; i++) {
@@ -213,6 +220,8 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)
 {
 	unsigned i;
 	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
+	if(ctx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
+
 	ctx->msg_size += length;
 
 	/* call update method for every algorithm */
@@ -348,6 +357,7 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	unsigned char *buffer, *pmem;
 	size_t length = 0, align8;
 	int res = 0;
+	if(ctx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
 
 	if(ctx == NULL) {
 		errno = EINVAL;
@@ -359,6 +369,8 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	buffer = pmem + align8;
 
 	while(!feof(fd)) {
+		if(ctx->state != STATE_ACTIVE) break; /* stop if canceled */
+
 		length = fread(buffer, 1, block_size, fd);
 		/* read can return -1 on error */
 		if(length == (size_t)-1) {
@@ -649,6 +661,8 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
 	return 0;
 }
 
+#define PVOID2UPTR(p) ((rhash_uptr_t)((char*)p - 0))
+
 /**
  * Process a rhash message.
  *
@@ -660,12 +674,11 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
  */
 RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata)
 {
-#define PVOID2UPTR(p) ((rhash_uptr_t)((char*)p - 0))
+	rhash ctx = (rhash)dst; /* for messages working with rhash context */
 
 	switch(msg_id) {
 	case RMSG_GET_CONTEXT:
 		{
-			rhash ctx = (rhash)dst;
 			unsigned i;
 			for(i = 0; i < ctx->hash_vector_size; i++) {
 				struct rhash_hash_info* info = ctx->vector[i].hash_info;
@@ -674,6 +687,14 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 			}
 			return (rhash_uptr_t)0;
 		}
+
+	case RMSG_CANCEL:
+		/* mark rhash context as canceled, in a multithreaded program */
+		atomic_compare_and_swap(&ctx->state, STATE_ACTIVE, STATE_STOPED);
+		return 0;
+
+	case RMSG_IS_CANCELED:
+		return (ctx->state == STATE_STOPED);
 
 		/* openssl related messages */
 #ifdef USE_OPENSSL

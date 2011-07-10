@@ -1,5 +1,8 @@
+Mon Jul 11 2011 Aleksey
+	* librhash: rhash_cancel() macro to cancel hashing from another thread
+
 Fri Jun 24 2011 Aleksey
-	* Bugfix: default output encoding should be UTF-8 on Windows
+	* Bugfix: repaired default output encoding to be UTF-8 on Windows
 
 Wed Jun 22 2011 Aleksey
 	* Bugfix: crash on WinXP

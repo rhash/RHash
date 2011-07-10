@@ -167,7 +167,7 @@ int rhash_plug_openssl(void)
 	int i, bit_index;
 
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
-	
+
 	if( (rhash_openssl_hash_mask & OPENSSL_SUPPORTED_HASHES_MASK) == 0) {
 		return 1; /* do not load openssl */
 	}

@@ -16,7 +16,7 @@ extern "C" {
 /**
  * Identifiers of supported hash functions.
  * The rhash_init() function allows mixing several ids using
- * binary OR, to calculate several hash funtions for one message.
+ * binary OR, to calculate several hash functions for one message.
  */
 enum rhash_ids
 {
@@ -63,9 +63,10 @@ typedef struct rhash_context
 	unsigned long long msg_size;
 	unsigned hash_id;
 	unsigned hash_vector_size; /* number of contained hash sums */
+	unsigned long state;
 	void *callback, *callback_data;
 	void *bt_ctx;
-	rhash_vector_item vector[1]; /* contexes of contained hash sums */
+	rhash_vector_item vector[1]; /* contexts of contained hash sums */
 } rhash_context;
 
 typedef struct rhash_context* rhash;
@@ -145,6 +146,8 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ld
 
 /* rhash message constants */
 #define RMSG_GET_CONTEXT 1
+#define RMSG_CANCEL      2
+#define RMSG_IS_CANCELED 3
 #define RMSG_SET_OPENSSL_MASK 10
 #define RMSG_GET_OPENSSL_MASK 11
 
@@ -159,8 +162,10 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ld
 #define RHASH_BT_OPT_PRIVATE 1
 #define RHASH_BT_OPT_INFOHASH_ONLY 2
 
-/* helper macro */
+/* helper macros */
 #define rhash_get_context_ptr(ctx, hash_id) ((void*)rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
+#define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
+#define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
 
 /* set the mask of algorithms to be used from openssl library */
 #define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0);
