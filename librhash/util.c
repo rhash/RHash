@@ -17,15 +17,21 @@
 #include <string.h>
 #include "util.h"
 
-/* program control and error reporting functions */
+/* program exit and error reporting functions */
 
-static void report_error_default(const char* srcfile, int srcline, const char* format, ...);
+static void report_error_default(const char* srcfile, int srcline,
+	const char* format, ...);
 
 void (*rsh_exit)(int code) = exit;
-void (*rsh_report_error)(const char* srcfile, int srcline, const char* format, ...) = report_error_default;
+void (*rsh_report_error)(const char* srcfile, int srcline,
+	const char* format, ...) = report_error_default;
 
 /**
- * Print given library failure to stderr
+ * Print given library failure to stderr.
+ *
+ * @param srcfile source file to report error on fail
+ * @param srcline source code line to be reported on fail
+ * @param format printf-formated error message
  */
 static void report_error_default(const char* srcfile, int srcline, const char* format, ...)
 {
@@ -39,7 +45,7 @@ static void report_error_default(const char* srcfile, int srcline, const char* f
 /* MEMORY FUNCTIONS */
 
 /**
- * Allocates a buffer via malloc with reporting memory errors to stderr.
+ * Allocates a buffer via malloc with reporting memory error to stderr.
  *
  * @param size size of the block to allocate
  * @param srcfile source file to report error on fail
@@ -50,14 +56,34 @@ void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 {
 	void* res = malloc(size);
 	if(!res) {
-		rsh_report_error(srcfile, srcline, "malloc(%u) failed\n", (unsigned)size);
+		rsh_report_error(srcfile, srcline, "%s(%u) failed\n", "malloc", (unsigned)size);
 		rsh_exit(2);
 	}
 	return res;
 }
 
 /**
- * Duplicate c-string with reporting memory errors to stderr.
+ * Allocates a buffer via calloc with reporting memory error to stderr.
+ *
+ * @param num number of elements to be allocated
+ * @param size size of elements
+ * @param srcfile source file to report error on fail
+ * @param srcline source code line to be reported on fail
+ * @return allocated block
+ */
+void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline)
+{
+	void* res = calloc(num, size);
+	if(!res) {
+		rsh_report_error(srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
+		rsh_exit(2);
+	}
+	return res;
+}
+
+
+/**
+ * Duplicate c-string with reporting memory error to stderr.
  *
  * @param str the zero-terminated string to duplicate
  * @param srcfile source file to report error on fail
@@ -69,7 +95,7 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 #ifndef __STRICT_ANSI__
 	char* res = strdup(str);
 #else
-	char* res = malloc(strlen(str)+1);
+	char* res = (char*)malloc(strlen(str)+1);
 	if(res) strcpy(res, str);
 #endif
 
@@ -81,9 +107,34 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 }
 
 /**
- * Reallocates a buffer via realloc with reporting memory errors to stderr.
+ * Duplicate wide string with reporting memory error to stderr.
+ *
+ * @param str the zero-terminated string to duplicate
+ * @param srcfile source file to report error on fail
+ * @param srcline source code line to be reported on fail
+ * @return allocated memory buffer with copied string
+ */
+wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
+{
+#ifndef __STRICT_ANSI__
+	wchar_t* res = wcsdup(str);
+#else
+	wchar_t* res = (wchar_t*)malloc((wcslen(str) + 1) * sizeof(wchar_t));
+	if(res) wcscpy(res, str);
+#endif
+
+	if(!res) {
+		rsh_report_error(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
+		rsh_exit(2);
+	}
+	return res;
+}
+
+/**
+ * Reallocates a buffer via realloc with reporting memory error to stderr.
  *
  * @param mem a memory block to re-allocate
+ * @param size the new size of the block
  * @param srcfile source file to report error on fail
  * @param srcline source code line to be reported on fail
  * @return re-allocated memory buffer
@@ -263,7 +314,7 @@ void rsh_str_ensure_size(strbuf_t *str, size_t new_size)
  * Append a sequence of single-byte characters of the specified length to
  * string buffer. The array is fully copied even if it contains the '\0'
  * character. The function ensures the string buffer still contains
- * null-termited string.
+ * null-terminated string.
  *
  * @param str pointer to the string buffer
  * @param text the text to append

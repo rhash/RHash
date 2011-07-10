@@ -8,10 +8,14 @@ extern "C" {
 
 /* clever malloc with error detection */
 #define rsh_malloc(size) rhash_malloc(size, __FILE__, __LINE__)
+#define rsh_calloc(num, size) rhash_calloc(num, size, __FILE__, __LINE__)
 #define rsh_strdup(str)  rhash_strdup(str,  __FILE__, __LINE__)
+#define rsh_wcsdup(str)  rhash_wcsdup(str,  __FILE__, __LINE__)
 #define rsh_realloc(mem, size) rhash_realloc(mem, size, __FILE__, __LINE__)
-void* rhash_malloc(size_t size, const char* srcfile, int srcline);    
+void* rhash_malloc(size_t size, const char* srcfile, int srcline);
+void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline);
 char* rhash_strdup(const char* str, const char* srcfile, int srcline);
+wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 
 extern void (*rsh_exit)(int code);
@@ -31,7 +35,6 @@ struct vector_t* rsh_vector_new_simple(void);
 void rsh_vector_free(struct vector_t* vect);
 void rsh_vector_destroy(struct vector_t* vect);
 void rsh_vector_add_ptr(struct vector_t* vect, void *item);
-/*void rsh_vector_sort(struct vector_t* vect, int (*compare)(const void *rec1, const void *rec2));*/
 void rsh_vector_item_add_empty(struct vector_t* vect, size_t item_size);
 #define rsh_vector_add_uint32(vect, item) { \
 	rsh_vector_item_add_empty(vect, item_size); \
@@ -91,6 +94,22 @@ void rsh_str_append(strbuf_t *str, const char* text);
 	if((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);
 #define rsh_wstr_ensure_length(str, len) \
 	if((size_t)((len) + 2) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 2);
+
+#if defined(_WIN32)
+# include <intrin.h>
+# define atomic_compare_and_swap(ptr, oldval, newval) _InterlockedCompareExchange(ptr, newval, oldval)
+#elif (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ > 4 || __GNUC_MINOR__ >= 1) && !defined(__arm__)) || defined(__INTEL_COMPILER)
+/* atomic operations are defined by ICC and GCC >= 4.1, but by the later one supposedly not for ARM */
+/* note: ICC on ia64 platform possibly require ia64intrin.h, need testing */
+# define atomic_compare_and_swap(ptr, oldval, newval) __sync_val_compare_and_swap(ptr, oldval, newval)
+#elif defined(__sun)
+# include <atomic.h>
+# define atomic_compare_and_swap(ptr, oldval, newval) atomic_cas_32(ptr, oldval, newval);
+#else
+/* pray that it will work */
+# define atomic_compare_and_swap(ptr, oldval, newval) { if(*(ptr) == (oldval)) *(ptr) = (newval); }
+# define NO_ATOMIC_BUILTINS
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
