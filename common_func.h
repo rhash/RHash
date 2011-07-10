@@ -51,6 +51,8 @@ char* make_path(const char* dir, const char* filename);
 # define rsh_fopen_bin(path, mode) win_fopen_bin(path, mode)
 # define is_utf8() win_is_utf8()
 # define to_utf8(str) win_to_utf8(str)
+typedef wchar_t rsh_tchar;
+# define RSH_T(str) L##str
 #else /* non _WIN32 part */
 # define IF_WINDOWS(code)
 # define SYS_PATH_SEPARATOR '/'
@@ -59,6 +61,8 @@ char* make_path(const char* dir, const char* filename);
   /* stub for utf8 */
 # define is_utf8() 1
 # define to_utf8(str) NULL
+typedef  char rsh_tchar;
+# define RSH_T(str) str
 #endif /* _WIN32 */
 
 /* rhash stat function */

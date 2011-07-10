@@ -103,6 +103,10 @@ static void list_hashes(void)
 
 /**
  * Process --accept and --crc-accept options.
+ *
+ * @param o pointer to the options structure to update
+ * @param accept_string comma delimited string to parse
+ * @param type non-zero for the crc_accept option
  */
 static void crc_accept(options_t *o, char* accept_string, unsigned type)
 {
@@ -113,6 +117,10 @@ static void crc_accept(options_t *o, char* accept_string, unsigned type)
 
 /**
  * Process an --openssl option.
+ *
+ * @param o pointer to the options structure to update
+ * @param openssl_hashes comma delimited string with hash names
+ * @param type ignored
  */
 static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 {
@@ -152,6 +160,8 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 
 /**
  * Process --video option.
+ *
+ * @param o pointer to the options structure to update
  */
 static void accept_video(options_t *o)
 {
@@ -172,7 +182,7 @@ static void nya(void)
  * Process on --maxdepth option.
  *
  * @param o pointer to the processed option
- * @param number string containing the max-depth number
+ * @param number the string containing the max-depth number
  * @param param unused parameter
  */
 static void set_max_depth(options_t *o, char* number, unsigned param)
@@ -186,7 +196,7 @@ static void set_max_depth(options_t *o, char* number, unsigned param)
 }
 
 /**
- * Set bittorent file piece-length
+ * Set BitTorrent file piece-length
  *
  * @param o pointer to the processed option
  * @param number string containing the bt-piece-length number
@@ -215,7 +225,7 @@ static void set_path_separator(options_t *o, char* sep, unsigned param)
 	if((*sep == '/' || *sep == '\\') && sep[1] == 0) {
 		o->path_separator = *sep;
 #if defined(_WIN32)
-		/* MSYS enviropment changes '/' in command line to HOME, see http://www.mingw.org/wiki/FAQ */
+		/* MSYS environment changes '/' in command line to HOME, see http://www.mingw.org/wiki/FAQ */
 	} else if(getenv("MSYSTEM") || getenv("TERM")) {
 		log_msg("warning: wrong path-separator, use '//' instead of '/' on MSYS\n");
 		o->path_separator = '/';
@@ -255,7 +265,8 @@ enum option_type_t
 #define is_output_modifier(option_type) ((option_type) & F_OUTPUT_OPT)
 
 /* supported program options */
-cmdline_opt_t cmdline_opt[] = {
+cmdline_opt_t cmdline_opt[] =
+{
 	/* program modes */
 	{ F_UFLG, 'c',   0, "check",  &opt.mode, MODE_CHECK },
 	{ F_UFLG,   0,   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
@@ -368,7 +379,7 @@ typedef struct parsed_option_t
 /**
  * Process given command line option
  *
- * @param opts the sructure to store results of option processing
+ * @param opts the structure to store results of option processing
  * @param option option to process
  */
 static void apply_option(options_t *opts, parsed_option_t* option)
@@ -550,30 +561,22 @@ static int read_config(void)
 	return (res == 0 ? 0 : -1);
 }
 
-#ifdef _WIN32
-typedef wchar_t rhash_tchar;
-#define RSH_T(str) L##str
-#else
-typedef char rhash_tchar;
-#define RSH_T(str) str
-#endif
-
 /**
- * Find long option info, by it's name and retrive its parameter if required.
- * Error is reported for unknow options.
+ * Find long option info, by it's name and retrieve its parameter if required.
+ * Error is reported for unknown options.
  *
- * @param option structure to recieve the parsed option info
+ * @param option structure to receive the parsed option info
  * @param parg pointer to a command line argument
  */
-static void parse_long_option(parsed_option_t* option, rhash_tchar ***parg)
+static void parse_long_option(parsed_option_t* option, rsh_tchar ***parg)
 {
 	size_t length;
-	rhash_tchar* eq_sign;
+	rsh_tchar* eq_sign;
 	cmdline_opt_t *t;
 	char* name;
 
 #ifdef _WIN32
-	rhash_tchar* wname = **parg; /* "--<option name>" */
+	rsh_tchar* wname = **parg; /* "--<option name>" */
 	int fail = 0;
 	assert((**parg)[0] == L'-' && (**parg)[1] == L'-');
 
@@ -618,15 +621,18 @@ static void parse_long_option(parsed_option_t* option, rhash_tchar ***parg)
 	}
 }
 
+/**
+ * Parsed program command line.
+ */
 struct parsed_cmd_line_t
 {
 	blocks_vector_t options; /* array of parsed options */
 	int  argc;
 	char **argv;
-	int n_files;
-	rhash_tchar** files;
+	int n_files; /* the number of files */
+	rsh_tchar** files; /* array of files specified by command line */
 #ifdef _WIN32
-	rhash_tchar** warg;
+	rsh_tchar** warg; /* program arguments in Unicode */
 #endif
 };
 
@@ -639,8 +645,8 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 {
 	int argc;
 	int n_files = 0, b_opt_end = 0;
-	rhash_tchar** files;
-	rhash_tchar **parg, **end_arg;
+	rsh_tchar** files;
+	rsh_tchar **parg, **end_arg;
 	parsed_option_t *next_opt;
 
 #ifdef _WIN32
@@ -654,7 +660,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 #endif
 
 	/* allocate array for files */
-	files = (rhash_tchar**)rsh_malloc(argc * sizeof(rhash_tchar*));
+	files = (rsh_tchar**)rsh_malloc(argc * sizeof(rsh_tchar*));
 	end_arg = parg + argc;
 
 	/* loop by program arguments */
@@ -662,10 +668,11 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	{
 		/* if argument is not an option */
 		if((*parg)[0] != RSH_T('-') || (*parg)[1] == 0 || b_opt_end) {
-			/* file encountered, note that '-' is interpreted as stdin */
+			/* it's a file, note that '-' is interpreted as stdin */
 			files[n_files++] = *parg;
 			continue;
 		}
+
 		assert((*parg)[0] == RSH_T('-') && (*parg)[1] != 0);
 		
 		if((*parg)[1] == L'-' && (*parg)[2] == 0) {
@@ -691,7 +698,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 			}
 		} else if((*parg)[1] != 0) {
 			/* found '-'<some string> */
-			rhash_tchar* ptr;
+			rsh_tchar* ptr;
 			
 			/* parse short options. A string of several characters is interpreted
 			 * as separate short options */
