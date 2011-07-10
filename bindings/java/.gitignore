@@ -1,0 +1,4 @@
+classes/*
+dist/*
+*.so
+*.class
