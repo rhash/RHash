@@ -113,7 +113,7 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
 	char i;
 #endif
 
-	x0=le2me_64(block[0]); x1=le2me_64(block[1]); 
+	x0=le2me_64(block[0]); x1=le2me_64(block[1]);
 	x2=le2me_64(block[2]); x3=le2me_64(block[3]);
 	x4=le2me_64(block[4]); x5=le2me_64(block[5]);
 	x6=le2me_64(block[6]); x7=le2me_64(block[7]);
@@ -175,7 +175,7 @@ void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
 	}
 	while(size >= tiger_block_size) {
 		if(IS_ALIGNED_64(msg)) {
-			/* the most common case is processing of an already aligned message 
+			/* the most common case is processing of an already aligned message
 			without copying it */
 			rhash_tiger_process_block(ctx->hash, (uint64_t*)msg);
 		} else {

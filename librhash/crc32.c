@@ -101,7 +101,7 @@ unsigned rhash_get_crc32(unsigned crcinit, const unsigned char *msg, size_t size
 	const unsigned char *e;
 
 	/* process not aligned message head */
-	for(; (3 & (msg - (unsigned char*)0)) && size>0; msg++, size--) 
+	for(; (3 & (msg - (unsigned char*)0)) && size>0; msg++, size--)
 		crc = rhash_crc32_table[(crc ^ *msg) & 0xFF] ^ (crc >> 8);
 
 	/* fast CRC32 calculation of a DWORD-aligned message */

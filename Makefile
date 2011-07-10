@@ -53,7 +53,7 @@ ARCHIVE_DEB_GZ = ../rhash_$(VERSION).orig.tar.gz
 ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
 ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
 WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
-DESTDIR = 
+DESTDIR =
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/share/man
 RPMTOP  = rpms
@@ -196,7 +196,7 @@ dist/rhash.1.txt: dist/rhash.1
 cpp-doc:
 	cppdoc_cmd -title=RHash -company=Animegorodok -classdir=classdoc -module="cppdoc-standard" -overwrite -extensions="c,h" -languages="c=cpp,h=cpp" -generate-deprecations-list=false $(SOURCES) $(HEADERS) ./Documentation/CppDoc/index.html
 
-permissions: 
+permissions:
 	chmod -x $(DIST_FILES)
 	chmod +x tests/test_$(PROGNAME).sh
 

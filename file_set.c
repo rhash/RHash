@@ -21,7 +21,7 @@
  * @param filepath a filepath to initialize the file_item
  * @return allocated file_item structure
  */
-file_item* file_item_new(const char* filepath) 
+file_item* file_item_new(const char* filepath)
 {
   file_item *item = (file_item*)rsh_malloc(sizeof(file_item));
   memset(item, 0, sizeof(file_item));
@@ -30,7 +30,7 @@ file_item* file_item_new(const char* filepath)
     if(!file_item_set_filepath(item, filepath)) {
       free(item);
       return NULL;
-    }  
+    }
   }
   return item;
 }
@@ -85,7 +85,7 @@ static int crc_pp_rec_compare(const void *pp_rec1, const void *pp_rec2)
   return strcmp(rec1->search_filepath, rec2->search_filepath);
 }
 
-/** 
+/**
  * Sort given file_set using hashes of search_filepath for fast binary search.
  *
  * @param set the file_set to sort
@@ -95,7 +95,7 @@ void file_set_sort(file_set *set)
   if(set->array) qsort(set->array, set->size, sizeof(file_item*), crc_pp_rec_compare);
 }
 
-/** 
+/**
  * Create and add a file_item with given filepath to given file_set
  *
  * @param set the file_set to add the item to
@@ -122,22 +122,22 @@ file_item* file_set_find(file_set *set, const char* filepath)
 
   if(!set->size) return NULL;
   /*assert(set->array);*/
-  
+
   /* apply str_tolower if case shall be ignored */
-  search_filepath = 
+  search_filepath =
     ( opt.flags&OPT_IGNORE_CASE ? str_tolower(filepath) : (char*)filepath );
 
   /* generate hash to speedup the search */
   hash = rhash_get_crc32_str(0, search_filepath);
 
-  /* fast binary search */  
+  /* fast binary search */
   for(a = -1, b = set->size; (a + 1) < b;) {
     file_item *item;
     int cmp;
 
     c = (a + b) / 2;
     /*assert(0 <= c && c < (int)set->size);*/
-    
+
     item = (file_item*)set->array[c];
     if(hash != item->hash) {
       cmp = (hash < item->hash ? -1 : 1);
@@ -217,7 +217,7 @@ static int test_hash_string(char **ptr, char *end, int *p_len)
 
 
   if(len == 32 && char_type) {
-    hash_type = (char_type == F_BASE32 ? RHASH_AICH : 
+    hash_type = (char_type == F_BASE32 ? RHASH_AICH :
         char_type == F_HEX ? RHASH_MD5_ED2K_MIXED_UP : RHASH_MD5_AICH_MIXED_UP | RHASH_MD5);
   } else if((char_type & F_BASE32) != 0 && len == 39) {
     hash_type = RHASH_TTH;
@@ -231,7 +231,7 @@ static int test_hash_string(char **ptr, char *end, int *p_len)
   return hash_type;
 }
 
-/** 
+/**
  * Store a sum into sums structure (its type is guessed by sum length).
  *
  * @param sums the structure to store hash sum to
@@ -278,8 +278,8 @@ static void put_hash_sum(struct rhash_sums_t* sums, const char* str, unsigned ha
 }
 
 #ifndef _WIN32
-/** 
- * Convert a windows file path to a unix one, replacing backslashes 
+/**
+ * Convert a windows file path to a unix one, replacing backslashes
  * by shlashes.
  *
  * @param path the path to convert
@@ -297,7 +297,7 @@ static void process_backslashes(char* path)
 
 /**
  * Try to parse a bsd-formated line.
- * (md5|sha1|crc32|tiger|tth|whirlpool|ed2k|aich) \( <filename> \) = ... 
+ * (md5|sha1|crc32|tiger|tth|whirlpool|ed2k|aich) \( <filename> \) = ...
  *
  * @param line the line to parse
  * @param sum the rhash_sums_t structure to store parsed hash sums
@@ -589,7 +589,7 @@ int parse_crc_file_line(char* line, const char** filename, struct rhash_sums_t* 
   /* parse lines with filename preceding hash sums */
   for(count = 0; e > p;) {
     int len;
-    
+
     /* search for hash sum from the end of the line */
     unsigned hash_type = test_hash_string(&e, p, &len);
     int stop = (!hash_type || e <= p || !isspace(*e));
@@ -602,7 +602,7 @@ int parse_crc_file_line(char* line, const char** filename, struct rhash_sums_t* 
 
     /* skip hash sum and preceding white spaces */
     while(isspace(*e) && e > p) *(e--) = 0;
-    
+
     *filename = line;
   }
 
@@ -617,7 +617,7 @@ int parse_crc_file_line(char* line, const char** filename, struct rhash_sums_t* 
   e = p + strlen(p) - 1;
   for(count = 0; p < e; count++) {
     int len;
-      
+
     /* search for hash sum */
     unsigned hash_type = test_hash_string(&p, e, &len);
 
@@ -626,7 +626,7 @@ int parse_crc_file_line(char* line, const char** filename, struct rhash_sums_t* 
 
     /* skip processed hash sum and following white spaces */
     while(isspace(*p) && p < e) p++;
-    
+
     /* remove preceding star '*' from filename */
     if(p && *p == '*') p++;
     *filename = p;

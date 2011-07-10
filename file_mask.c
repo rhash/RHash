@@ -32,7 +32,7 @@ file_mask_array* file_mask_new_from_list(const char* comma_separated_list)
 }
 
 /**
- * Parse string consisting of comma-delimited list of elements an 
+ * Parse string consisting of comma-delimited list of elements an
  * add them to array.
  *
  * @param array the array to put parsed elements to
@@ -68,7 +68,7 @@ int file_mask_match(file_mask_array* arr, const char* name)
   char* buf;
   /* all names should match against an empty array */
   if(!arr || !arr->size) return 1;
-  
+
   /* get a lowercase name version to ignore case when matching */
   buf = str_tolower(name);
   namelen = strlen(buf);

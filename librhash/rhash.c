@@ -134,7 +134,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	assert(phash_ctx >= (char*)&rctx->vector[num]);
 
 	/* initialize context for every hash in a loop */
-	for(bit_index = tail_bit_index, id = 1 << tail_bit_index, i = 0; 
+	for(bit_index = tail_bit_index, id = 1 << tail_bit_index, i = 0;
 		id <= hash_id; bit_index++, id = id << 1)
 	{
 		/* check if a hash function with given id shall be included into rctx */
@@ -259,7 +259,7 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 }
 
 /**
- * Store digest for given hash_id. 
+ * Store digest for given hash_id.
  * If hash_id is zero, function stores digest for a hash with the lowest id found in the context.
  * For nonzero hash_id the context must contain it, otherwise function siliently does nothing.
  *
@@ -301,7 +301,7 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 }
 
 /**
- * Set the callback function to be called from the 
+ * Set the callback function to be called from the
  * rhash_file() and rhash_file_update() functions
  * on processing every file block. The file block
  * size is set internaly by rhash and now is 8 KiB.
@@ -343,7 +343,7 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
 /**
  * Hash a file or stream. Multiple hashes can be computed.
  * First, inintialize ctx parameter with rhash_init() before calling
- * rhash_file_update(). Then use rhash_final() and rhash_print() 
+ * rhash_file_update(). Then use rhash_final() and rhash_print()
  * to retrive hash values. Finaly call rhash_free() on ctx
  * to free allocated memory or call rhash_reset() to reuse ctx.
  *
@@ -500,7 +500,7 @@ RHASH_API int rhash_get_digest_size(unsigned hash_id)
 RHASH_API int rhash_get_hash_length(unsigned hash_id)
 {
 	rhash_info* info = rhash_info_by_id(hash_id);
-	return (int)(info ? (info->flags & F_BS32 ? 
+	return (int)(info ? (info->flags & F_BS32 ?
 		BASE32_LENGTH(info->digest_size) : info->digest_size * 2) : 0);
 }
 
@@ -524,7 +524,7 @@ RHASH_API const char* rhash_get_name(unsigned hash_id)
  * @param output a buffer to print the hash to
  * @param context algorithms state
  * @param hash_id id of the sum to print
- * @param flags  controls how to print the sum, can contain flags 
+ * @param flags  controls how to print the sum, can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, e.t.c.
  * @return number of writen characters on success, 0 on fail
  */
@@ -564,7 +564,7 @@ size_t rhash_print_bytes(char* output, unsigned char* bytes, size_t size, int fl
  * @param context algorithms state
  * @param hash_id id of the hash sum to print or 0 to print the first hash
  *                saved in the context.
- * @param flags  controls how to print the sum, can contain flags 
+ * @param flags  controls how to print the sum, can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, e.t.c.
  * @return number of writen characters on success, 0 on fail
  */

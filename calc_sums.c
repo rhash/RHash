@@ -76,12 +76,12 @@ static int calc_sums(struct file_info *info)
     if(rsh_stat(info->full_path, &stat_buf) < 0) {
       return -1;
     }
-    
+
     if((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && S_ISDIR(stat_buf.st_mode)) {
       errno = EISDIR;
       return -1;
     }
-    
+
     info->size = stat_buf.st_size; /* total size, in bytes */
     IF_WINDOWS(win32_set_filesize64(info->full_path, &info->size)); /* set correct filesize for large files under win32 */
 
@@ -93,7 +93,7 @@ static int calc_sums(struct file_info *info)
       return -1;
     }
   }
-  
+
   assert(info->rctx == 0);
   info->rctx = rhash_init(info->sums.flags);
 
@@ -282,7 +282,7 @@ static void save_torrent(struct file_info* info)
   size_t path_len = strlen(info->full_path);
   size_t text_len;
   char* path = (char*)rsh_malloc(path_len + 9);
-  
+
   /* append .torrent extension to the file path */
   memcpy(path, info->full_path, path_len);
   memcpy(path + path_len, ".torrent", 9);
@@ -290,7 +290,7 @@ static void save_torrent(struct file_info* info)
   /* get torrent file content */
   text_len = rhash_transmit(RMSG_BT_GET_TEXT, info->rctx, (unsigned long)&str, 0);
   assert(text_len != RHASH_ERROR);
-  
+
   if(rsh_stat(path, &stat_buf) >= 0) {
     errno = EEXIST;
     log_file_error(path);
@@ -326,7 +326,7 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
   info.size = 0;
 
   info.sums.flags = opt.sum_flags;
-  
+
   if( IS_DASH_STR(full_path) ) {
     print_path = "(stdin)";
     memset(&info.stat_buf, 0, sizeof(info.stat_buf));
@@ -497,7 +497,7 @@ static void fill_sums_struct(struct file_info *info)
 /**
  * Forward and reverse compare. Compares two byte strings using
  * directed and reversed byte order. The function is used to compare
- * GOST hashes which can be reversed, because byte order of 
+ * GOST hashes which can be reversed, because byte order of
  * an output string is not specified by GOST standart.
  * The function acts almost the same way as memcmp, by returning
  * always 1 for different strings.
@@ -549,7 +549,7 @@ static int verify_sums(struct file_info *info)
   }
   fill_sums_struct(info);
   info->time = rhash_timer_stop(&timer);
-  
+
   /* compare the sums and fill info->wrong_sums flags */
   if((orig_sums.flags & RHASH_CRC32) && info->sums.crc32.be != orig_sums.crc32.be) {
     info->wrong_sums |= RHASH_CRC32;
@@ -630,7 +630,7 @@ static int verify_sums(struct file_info *info)
   if(opt.flags & OPT_EMBED_CRC) {
     unsigned crc32_be;
     if(find_embedded_crc32(info->print_path, &crc32_be)) {
-      if(crc32_be != info->sums.crc32.be) 
+      if(crc32_be != info->sums.crc32.be)
         info->wrong_sums |= RHASH_EMBEDDED_CRC32;
     }
   }
@@ -695,7 +695,7 @@ int check_crc_file(const char* crc_file_path, int chdir)
   /* initialize statistics */
   rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
   rhash_data.total_size = 0;
-  
+
   if( IS_DASH_STR(crc_file_path) ) {
     fd = stdin;
     crc_file_path = "<stdin>";
@@ -703,20 +703,20 @@ int check_crc_file(const char* crc_file_path, int chdir)
     log_file_error(crc_file_path);
     return -1;
   }
-  
+
   pos = strlen(crc_file_path)+16;
   ralign = str_set(buf, '-', (pos < 80 ? 80 - (int)pos : 2));
   fprintf(rhash_data.out, "\n--( Verifying %s )%s\n", crc_file_path, ralign);
   fflush(rhash_data.out);
   rhash_timer_start(&timer);
-  
+
   /* mark dirname part of the path, by setting pos */
   if(chdir) {
     pos = strlen(crc_file_path);
     for(; pos > 0 && !IS_PATH_SEPARATOR(crc_file_path[pos]); pos--);
     if(IS_PATH_SEPARATOR(crc_file_path[pos])) pos++;
   } else pos = 0;
-  
+
   /* read crc file line by line */
   for(line_num = 0; fgets(buf, 2048, fd); line_num++)
   {
@@ -725,7 +725,7 @@ int check_crc_file(const char* crc_file_path, int chdir)
 
     /* skip unicode BOM */
     if(line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
-    
+
     if(*line == 0) continue; /* skip empty lines */
 
     if(is_binary_string(line)) {
@@ -733,7 +733,7 @@ int check_crc_file(const char* crc_file_path, int chdir)
       if(fd != stdin) fclose(fd);
       return -1;
     }
-    
+
     /* skip comments and empty lines */
     if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
@@ -782,7 +782,7 @@ int check_crc_file(const char* crc_file_path, int chdir)
     free(path_without_ext);
   }
   time = rhash_timer_stop(&timer);
-  
+
   fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
   print_check_stats();
 

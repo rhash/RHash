@@ -15,8 +15,8 @@ typedef struct whirlpool_ctx
 	uint64_t hash[8];    /* 512-bit algorithm internal hashing state */
 	unsigned char message[whirlpool_block_size]; /* 512-bit buffer to hash */
 
-	/* Note: original algorith uses 256-bit counter, allowing to hash up to 
-	   2^256 bits sized message. For optimization we use here 64-bit counter, 
+	/* Note: original algorith uses 256-bit counter, allowing to hash up to
+	   2^256 bits sized message. For optimization we use here 64-bit counter,
 	   thus reducing maximal message size to 2^64 bits = 2 Exbibytes = 2^21 TiB) */
 	uint64_t length;     /* number of processed bytes */
 } whirlpool_ctx;

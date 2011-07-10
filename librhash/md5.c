@@ -177,7 +177,7 @@ void rhash_md5_update(md5_ctx *ctx, const unsigned char* msg, size_t size)
 	while(size >= md5_block_size) {
 		unsigned* aligned_message_block;
 		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
-			/* the most common case is processing a 32-bit aligned message 
+			/* the most common case is processing a 32-bit aligned message
 			on a little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

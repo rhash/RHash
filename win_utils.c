@@ -86,7 +86,7 @@ char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
 }
 
 /**
- * Convert wide string to multi-byte c-string using codepage specified 
+ * Convert wide string to multi-byte c-string using codepage specified
  * by command line options.
  *
  * @param wstr the wide string to convert
@@ -98,7 +98,7 @@ char* w2c(const wchar_t* wstr)
 }
 
 /**
- * Convert given C-string from encoding specified by 
+ * Convert given C-string from encoding specified by
  * command line options to utf8.
  *
  * @param str the string to convert
@@ -399,7 +399,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 	memset(d, 0, sizeof(WIN_DIR));
 
 	wpath = c2w(path, 0);
-	d->hFind = (wpath != NULL ? 
+	d->hFind = (wpath != NULL ?
 		FindFirstFileW(wpath, &d->findFileData) : INVALID_HANDLE_VALUE);
 	free(wpath);
 	
@@ -495,7 +495,7 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 		}
 		d->state++;
 
-		if(d->findFileData.cFileName[0] == L'.' && 
+		if(d->findFileData.cFileName[0] == L'.' &&
 			(d->findFileData.cFileName[1] == 0 ||
 			(d->findFileData.cFileName[1] == L'.' &&
 			d->findFileData.cFileName[2] == 0))) {
@@ -507,7 +507,7 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 
 		if(filename && !failed) {
 			d->dir.d_wname = d->findFileData.cFileName;
-			d->dir.d_isdir = (0 != (d->findFileData.dwFileAttributes & 
+			d->dir.d_isdir = (0 != (d->findFileData.dwFileAttributes &
 				FILE_ATTRIBUTE_DIRECTORY));
 			return &d->dir;
 		}

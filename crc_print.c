@@ -94,7 +94,7 @@ static char parse_escaped_char(const char **pformat)
         int ch = *((*pformat)++) - '0';
         if('0' <= **pformat && **pformat <= '7') {
           ch = ch * 8 + *((*pformat)++) - '0';
-          if('0' <= **pformat && **pformat <= '7') 
+          if('0' <= **pformat && **pformat <= '7')
             ch = ch * 8 + *((*pformat)++) - '0';
         }
         return (char)ch;
@@ -283,7 +283,7 @@ print_item* parse_percent_item(const char** str)
   item = new_print_item(modifier_flags, hash_id, NULL);
   item->width = width;
   *str = ++format;
-  return item;  
+  return item;
 }
 
 /**
@@ -430,7 +430,7 @@ void free_print_list(print_item* list)
 }
 
 /**
- * Initialize information about hashes, stored in the 
+ * Initialize information about hashes, stored in the
  * hash_info_table global variable.
  */
 void init_hash_info_table(void)
@@ -480,7 +480,7 @@ void init_printf_format(strbuf_t* out)
     /* print sfv header for crc32 or if no sums options specified */
     opt.fmt = (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags ? FMT_SFV : FMT_SIMPLE);
   }
-  uppercase = ((opt.flags & OPT_UPPERCASE) || 
+  uppercase = ((opt.flags & OPT_UPPERCASE) ||
     (!(opt.flags & OPT_LOWERCASE) && (opt.fmt & FMT_SFV)));
   up_flag = (uppercase ? ~0x20 : 0xFF);
 
@@ -535,10 +535,10 @@ void init_printf_format(strbuf_t* out)
             out->str[out->len++] = '}';
           }
           break;
-        case 2: 
+        case 2:
           rsh_str_append(out, info->urn);
           break;
-        case 3: 
+        case 3:
           rsh_str_append(out, info->name);
           i = (int)strlen(info->name);
           for(i = (i < 5 ? 6 - i : 1); i > 0; i--) out->str[out->len++] = ' ';

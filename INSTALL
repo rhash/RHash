@@ -2,7 +2,7 @@
 Linux Installation:
 ===================
 
-You need GCC (or Intel Compiler) and GNU Make. 
+You need GCC (or Intel Compiler) and GNU Make.
 
 To compile and install the program just type
   'make install'

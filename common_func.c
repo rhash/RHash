@@ -39,7 +39,7 @@ void sprintI64(char *dst, uint64_t number, int max_width)
 
 /**
  * Calculate length of decimal representation of given 64-bit integer.
- * 
+ *
  * @param num integer to calculate the length for
  * @return length of decimal representation
  */
@@ -55,7 +55,7 @@ int int_len(uint64_t num)
 
 /**
  * URL-encode given string.
- * 
+ *
  * @param dst buffer to recieve result or NULL to calculate encoded string size
  * @param filename the file name
  * @return the length of the result string
@@ -115,7 +115,7 @@ char* str_trim(char* str)
 }
 
 /**
- * Fill a buffer with NULL-terminated string consisting 
+ * Fill a buffer with NULL-terminated string consisting
  * solely of a given repeated character.
  *
  * @param buf  the modifiable buffer to fill
@@ -233,7 +233,7 @@ char* make_path(const char* dir_path, const char* filename)
   strcpy(buf, dir_path);
 
   /* separate directory from filename */
-  if(len > 0 && !IS_PATH_SEPARATOR(buf[len-1])) 
+  if(len > 0 && !IS_PATH_SEPARATOR(buf[len-1]))
     buf[len++] = SYS_PATH_SEPARATOR;
 
   /* append filename */
@@ -254,7 +254,7 @@ void print_time(FILE *out, time_t time)
   if(t == NULL) {
     /* if strange day, then print `00:00.00 1900-01-00' */
     t = &zero_tm;
-    t->tm_hour = t->tm_min = t->tm_sec = 
+    t->tm_hour = t->tm_min = t->tm_sec =
     t->tm_year = t->tm_mon = t->tm_mday = 0;
   }
   fprintf(out, "%02u:%02u.%02u %4u-%02u-%02u", t->tm_hour, t->tm_min,
@@ -267,7 +267,7 @@ void print_time(FILE *out, time_t time)
 
 /**
  * Return ticks in milliseconds for time intervals measurement.
- * This function should be not precise but the fastest one 
+ * This function should be not precise but the fastest one
  * to retrive internal clock value.
  *
  * @return ticks count in milliseconds

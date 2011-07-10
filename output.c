@@ -213,8 +213,8 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 	if( (offset % pt_size) != 0 ) return;
 
 	if(percents.points == 0) {
-		fprintf(rhash_data.log, "\n%s %s\n", 
-			(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED) ? "Checking" : "Processing"), 
+		fprintf(rhash_data.log, "\n%s %s\n",
+			(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED) ? "Checking" : "Processing"),
 			info->print_path);
 		fflush(rhash_data.log);
 	}
@@ -323,7 +323,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 		dwCursorPosition.X = percents.cur_x;
 		dwCursorPosition.Y = percents.cur_y;
 		SetConsoleCursorPosition(percents.hOut, dwCursorPosition);
-	} else 
+	} else
 #endif
 	{
 		fprintf(rhash_data.log, "\r%-51s ", info->print_path);
@@ -371,7 +371,7 @@ struct percents_output_info_t p_perc = {
 	p_init_percents, p_update_percents, p_finish_percents, "digits"
 };
 
-/** 
+/**
  * Initialize pointers to output functions.
  */
 void setup_output(void)
@@ -434,7 +434,7 @@ void print_check_stats(void)
 /**
  * Print file processing times.
  */
-void print_file_time_stats(struct file_info* info) 
+void print_file_time_stats(struct file_info* info)
 {
 	print_time_stats(info->time, info->size, 0);
 }
@@ -442,7 +442,7 @@ void print_file_time_stats(struct file_info* info)
 /**
  * Print processing time statistics.
  */
-void print_time_stats(double time, uint64_t size, int total) 
+void print_time_stats(double time, uint64_t size, int total)
 {
 	double speed = (time == 0 ? 0 : (double)(int64_t)size / 1048576.0 / time);
 	fprintf(rhash_data.log, "%s %.3f sec, %4.2f MBps\n",

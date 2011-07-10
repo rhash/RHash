@@ -24,7 +24,7 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 static int fix_sfv_header(const char* crc_filepath);
 
 /**
- * Update given crc file, by adding to it hashes of files from the same 
+ * Update given crc file, by adding to it hashes of files from the same
  * directory, but which the crc file doesn't contain yet.
  *
  * @param crc_file_path the path to the crc file
@@ -34,14 +34,14 @@ int update_crc_file(const char* crc_file_path)
   file_set* crc_entries;
   timedelta_t timer;
   int res;
-  
+
   if(opt.flags & OPT_VERBOSE) {
     log_msg("Updating: %s\n", crc_file_path);
   }
-  
+
   crc_entries = file_set_new();
   res = file_set_load_from_crc_file(crc_entries, crc_file_path);
-  
+
   if(opt.flags & OPT_SPEED) rhash_timer_start(&timer);
   rhash_data.total_size = 0;
   rhash_data.processed  = 0;
@@ -50,7 +50,7 @@ int update_crc_file(const char* crc_file_path)
     /* add the crc file itself to the set of excluded from re-calculation files */
     file_set_add_name(crc_entries, get_basename(crc_file_path));
     file_set_sort(crc_entries);
-    
+
     /* update crc file with sums of files not present in the crc_entries */
     res = add_new_crc_entries(crc_file_path, crc_entries);
   }
@@ -60,17 +60,17 @@ int update_crc_file(const char* crc_file_path)
     double time = rhash_timer_stop(&timer);
     print_time_stats(time, rhash_data.total_size, 1);
   }
-  
+
   return res;
 }
 
-/** 
+/**
  * Load a set of files from given crc file.
  *
  * @param set the file set to store loaded files
  * @param crc_file_path the crc file to load
  */
-static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path) 
+static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 {
   FILE *fd;
   int line_num;
@@ -96,10 +96,10 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
     }
 
     if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
-    
+
     item = file_item_new(NULL);
     parse_crc_file_line(line, &filepath, &item->sums, !feof(fd));
-    
+
     /* store file info to the file set */
     if(filepath) {
       file_item_set_filepath(item, filepath);
@@ -164,7 +164,7 @@ static int add_sums_to_file(const char* crc_file_path, char* dir_path, file_set 
       fprintf(fd, "\n");
     }
   }
-  
+
   /* append hash sums to the updated crc file */
   for(i = 0; i < files_to_add->size; i++, rhash_data.processed++) {
     char *allocated = 0;
@@ -212,8 +212,8 @@ static void sort_file_set_by_path(file_set *set)
   qsort(set->array, set->size, sizeof(file_item*), name_compare);
 }
 
-/** 
- * Read a directory and load files not present in the crc_entries file-set 
+/**
+ * Read a directory and load files not present in the crc_entries file-set
  * into the files_to_add file-set.
  *
  * @param dir_path the path of the directory to load files from
@@ -250,12 +250,12 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
     /* skip unstat-able files and directories
      * as well as files not accepted by current file filter
      * and files already present in the crc_entries file set */
-    if( res < 0 || S_ISDIR(st.st_mode) || 
+    if( res < 0 || S_ISDIR(st.st_mode) ||
         !file_mask_match(opt.files_accept, de->d_name) ||
         file_set_find(crc_entries, de->d_name) ) {
       continue;
     }
-    
+
     item = file_item_new(de->d_name);
     file_set_add(files_to_add, item);
   }
@@ -265,7 +265,7 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 /**
  * Calculate and add to the given hash-file the hash-sums for all files
  * from the same diriector as the hash-file, but absent from given
- * crc_entries file-set. 
+ * crc_entries file-set.
  *
  * <p/>If SFV format was specified by a command line switch, the after adding
  * hash sums SFV header of the file is fixed by moving all lines starting
@@ -291,10 +291,10 @@ static int add_new_crc_entries(const char* crc_file_path, file_set *crc_entries)
   if(files_to_add->size > 0) {
     /* sort files by path */
     sort_file_set_by_path(files_to_add);
-    
+
     /* calculate and write crc sums to the file */
     res = add_sums_to_file(crc_file_path, dir_path, files_to_add);
-  
+
     if(res == 0 && opt.fmt == FMT_SFV) {
       /* move sfv header from the end of updated file to its head */
       res = fix_sfv_header(crc_file_path);
@@ -337,7 +337,7 @@ static int fix_sfv_header(const char* crc_file_path)
     fclose(in);
     return -1;
   }
-  
+
   /* The first, output all commented lines to the file header */
   while(fgets(line, 2048, in)) {
     if(*line == ';') {
@@ -361,10 +361,10 @@ static int fix_sfv_header(const char* crc_file_path)
     log_file_error(tmp_file);
     err = 1;
   }
-  
+
   fclose(in);
   fclose(out);
-  
+
   /* overwrite crc file with a new one */
   if( !err ) {
 #ifdef _WIN32

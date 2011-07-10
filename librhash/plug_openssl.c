@@ -62,7 +62,7 @@ OS_METHOD(WHIRLPOOL);
 
 /* The openssl * _Update functions have the same signature as RHash ones:
  * void update_func(void *ctx, const void* msg, size_t size),
- * so we can use them in RHash directly. But the _Final functions 
+ * so we can use them in RHash directly. But the _Final functions
  * have different order of arguments, so we need to wrap them. */
 #define WRAP_FINAL(name) WRAP_FINAL2(name, name##_CTX)
 #define WRAP_FINAL2(name, CTX_TYPE) \
@@ -105,7 +105,7 @@ rhash_hash_info rhash_openssl_methods[] = {
 };
 
 /* The rhash_openssl_hash_info static array initialized by rhash_plug_openssl() replaces
- * rhash internal algorithms table. It is kept in an unitialized-data segment 
+ * rhash internal algorithms table. It is kept in an unitialized-data segment
  * taking no space in the executable. */
 rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 

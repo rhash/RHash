@@ -25,7 +25,7 @@ extern "C" {
 };*/
 
 int find_file(const char* start_dir,
-  int (*call_back)(const char* filepath, int type, void* data), 
+  int (*call_back)(const char* filepath, int type, void* data),
   int options, int max_depth, void* call_back_data);
 
 #ifdef __cplusplus

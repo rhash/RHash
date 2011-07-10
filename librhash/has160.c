@@ -9,11 +9,11 @@
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
  *
- * HAS-160 is a cryptographic hash function designed for use with the 
- * Korean KCDSA digital signature algorithm. It derives from SHA-1, 
- * with assorted changes intended to increase its security. 
+ * HAS-160 is a cryptographic hash function designed for use with the
+ * Korean KCDSA digital signature algorithm. It derives from SHA-1,
+ * with assorted changes intended to increase its security.
  * It produces a 160-bit message digest.
- * 
+ *
  * HAS-160 was developed in 1998 by KISA
  * (Korea Information Security Agency) + Academic.
  */
@@ -219,7 +219,7 @@ void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size)
 	while(size >= has160_block_size) {
 		unsigned* aligned_message_block;
 		if(IS_ALIGNED_32(msg)) {
-			/* the most common case is processing a 32-bit aligned message 
+			/* the most common case is processing a 32-bit aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

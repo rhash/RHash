@@ -427,7 +427,7 @@ Fri Sep 08 2006 Aleksey
 
 Wed Apr 19 2006 Aleksey
 	* checking of md5/sha1 files in *BSD format supported
-	* improved I/O errors handling 
+	* improved I/O errors handling
 
 Mon Apr 10 2006 Aleksey
 	* === Version 0.8.3 ===

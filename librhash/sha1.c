@@ -135,7 +135,7 @@ void rhash_sha1_update(sha1_ctx *ctx, const unsigned char* msg, size_t size)
 	while(size >= sha1_block_size) {
 		unsigned* aligned_message_block;
 		if(IS_ALIGNED_32(msg)) {
-			/* the most common case is processing of an already aligned message 
+			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

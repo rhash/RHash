@@ -23,12 +23,12 @@
 #endif
 
 /* from perl manual File::Find
- * These are functions for searching through directory trees doing work on 
- * each file found, similarly to the Unix find command. 
- * File::Find exports two functions, "find" and "finddepth". 
- * They work similarly but have subtle differences. 
- * 1. find() does a breadth-first search over the given @directories in the order they are given. 
- *    In essence, it works from the top down. 
+ * These are functions for searching through directory trees doing work on
+ * each file found, similarly to the Unix find command.
+ * File::Find exports two functions, "find" and "finddepth".
+ * They work similarly but have subtle differences.
+ * 1. find() does a breadth-first search over the given @directories in the order they are given.
+ *    In essence, it works from the top down.
  * 2. finddepth() works just like find() except it does a depth-first search.
  *    It works from the bottom of the directory tree up. */
 
@@ -49,14 +49,14 @@ typedef struct dir_entry
  * @param type type of dir_entry
  * @return allocated dir_entry
  */
-static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type) 
+static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
 {
 	dir_entry* e = (dir_entry*)malloc(sizeof(dir_entry));
 	if(!e) return NULL;
 	if(filename) {
 		e->filename = rsh_strdup(filename);
-		if(!e->filename) { 
-			free(e); 
+		if(!e->filename) {
+			free(e);
 			return NULL;
 		}
 	} else {
@@ -112,7 +112,7 @@ typedef struct dir_iterator
  * @param call_back_data a pointer to pass to callback
  */
 int find_file(const char* start_dir,
-  int (*call_back)(const char* filepath, int type, void* data), 
+  int (*call_back)(const char* filepath, int type, void* data),
   int options, int max_depth, void* call_back_data)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
@@ -130,7 +130,7 @@ int find_file(const char* start_dir,
 	}
 
 	/* check that start_dir is a drectory */
-	if(rsh_stat(start_dir, &st) < 0) { 
+	if(rsh_stat(start_dir, &st) < 0) {
 		return -1; /* errno is already set by stat */
 	}
 	if( !S_ISDIR(st.st_mode) ) {
@@ -189,7 +189,7 @@ int find_file(const char* start_dir,
 		it[level].prev_dir = dir_path;
 
 		if( options&FIND_WALK_DEPTH_FIRST ) {
-			/* check if we should skip the directory */    
+			/* check if we should skip the directory */
 			if( !call_back(dir_path, FIND_IFDIR, call_back_data) )
 				continue;
 		}

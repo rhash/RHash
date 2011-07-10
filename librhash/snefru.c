@@ -16,7 +16,7 @@
  * by Ralph Merkle in 1989 which supports 128-bit and 256-bit output.  It
  * was named after the Egyptian Pharaoh Sneferu, continuing the tradition
  * of the Khufu and Khafre block ciphers.
- * 
+ *
  * The original design of Snefru was shown to be insecure by Eli Biham and
  * Adi Shamir who were able to use differential cryptanalysis to find hash
  * collisions. The design was then modified by increasing the number of
@@ -25,10 +25,10 @@
  * complexity than brute force search (a certificational weakness), the attack
  * requires 2^88.5 operations and is thus not currently feasible in practice.
  *
- * The algorithm can also be run with a variable number of "rounds" of the 
+ * The algorithm can also be run with a variable number of "rounds" of the
  * internal algorithm. However, analysis by several cryptographers has shown
- * that SNEFRU has weaknesses that can be exploited, and that you can find 
- * arbitrary messages that hash to a given 128-bit value if the 4-round 
+ * that SNEFRU has weaknesses that can be exploited, and that you can find
+ * arbitrary messages that hash to a given 128-bit value if the 4-round
  * version is used. Dr. Merkle currently recommends that only 8-round SNEFRU
  * be used, but this algorithm is significantly slower than the MD5 or HAVAL
  * algorithms.
@@ -773,17 +773,17 @@ static void rhash_snefru_process_block(snefru_ctx* ctx, unsigned *block)
 		W[2] = ctx->hash[2], W[3] = ctx->hash[3];
 
 		if(ctx->digest_length == snefru256_hash_length) {
-			W[4] = ctx->hash[4], W[5] = ctx->hash[5]; 
+			W[4] = ctx->hash[4], W[5] = ctx->hash[5];
 			W[6] = ctx->hash[6], W[7] = ctx->hash[7];
 		} else {
-			W[4] = be2me_32(block[0]), W[5] = be2me_32(block[1]); 
+			W[4] = be2me_32(block[0]), W[5] = be2me_32(block[1]);
 			W[6] = be2me_32(block[2]), W[7] = be2me_32(block[3]);
 			block += 4;
 		}
 
-		W[ 8] = be2me_32(block[0]), W[ 9] = be2me_32(block[1]); 
+		W[ 8] = be2me_32(block[0]), W[ 9] = be2me_32(block[1]);
 		W[10] = be2me_32(block[2]), W[11] = be2me_32(block[3]);
-		W[12] = be2me_32(block[4]), W[13] = be2me_32(block[5]); 
+		W[12] = be2me_32(block[4]), W[13] = be2me_32(block[5]);
 		W[14] = be2me_32(block[6]), W[15] = be2me_32(block[7]);
 	}
 
@@ -868,7 +868,7 @@ void rhash_snefru_update(snefru_ctx *ctx, const unsigned char* msg, size_t size)
 		unsigned* aligned_message_block;
 
 		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
-			/* the most common case is processing of an already aligned message 
+			/* the most common case is processing of an already aligned message
 			on a little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

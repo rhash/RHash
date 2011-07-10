@@ -103,7 +103,7 @@ static void ctrl_c_handler(int signum)
 
 #define MAX_TEMPLATE_SIZE 65536
 
-/** 
+/**
  * Load printf-template from file, specified by options or config.
  */
 static int load_printf_template(void)

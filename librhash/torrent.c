@@ -58,7 +58,7 @@ void rhash_torrent_init(torrent_ctx* ctx)
 }
 
 /**
- * Clean up torrent context by freeing all dynamically 
+ * Clean up torrent context by freeing all dynamically
  * allocated memory.
  */
 void rhash_torrent_cleanup(torrent_ctx *ctx)
@@ -262,7 +262,7 @@ static void bt_bencode_pieces(strbuf_t *out, torrent_ctx* ctx)
 
 /**
  * Calculate default torrent piece length, using uTorrent algorithm.
- * Algorithm: 
+ * Algorithm:
  *  length = 64K for total_size < 64M,
  *  length = 4M for total_size >= 2G,
  *  length = top_bit(total_size) / 512 otherwise.

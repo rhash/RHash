@@ -178,7 +178,7 @@ static void rhash_ripemd160_process_block(unsigned *hash, const unsigned* X)
 	R1(B, C, D, E, A, X[ 3], 12);
 	R1(A, B, C, D, E, X[12],  6);
 
-	R2(E, A, B, C, D, X[ 6],  9); 
+	R2(E, A, B, C, D, X[ 6],  9);
 	R2(D, E, A, B, C, X[11], 13);
 	R2(C, D, E, A, B, X[ 3], 15);
 	R2(B, C, D, E, A, X[ 7],  7);
@@ -284,7 +284,7 @@ void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t
 	while(size >= ripemd160_block_size) {
 		unsigned* aligned_message_block;
 		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
-			/* the most common case is processing of an already aligned message 
+			/* the most common case is processing of an already aligned message
 			on little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

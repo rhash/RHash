@@ -154,7 +154,7 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 /**
  * Allocate an empty vector.
  *
- * @param destructor pointer to the cleanup/deallocate function called 
+ * @param destructor pointer to the cleanup/deallocate function called
  *                   on each element when the vector is destructed
  * @return allocated vector
  */
@@ -181,7 +181,7 @@ struct vector_t* rsh_vector_new_simple(void)
  * Release memory allocated by vector, but the vector structure itself.
  *
  * @param vect the vector to free
- * @param destructor function to free vector items, 
+ * @param destructor function to free vector items,
  *                   NULL if items doesn't need to be freed
  */
 void rsh_vector_destroy(vector_t* vect)
@@ -200,7 +200,7 @@ void rsh_vector_destroy(vector_t* vect)
  * Release all memory allocated by vector.
  *
  * @param vect the vector to free
- * @param destructor function to free vector items, 
+ * @param destructor function to free vector items,
  *                   NULL if items doesn't need to be freed
  */
 void rsh_vector_free(vector_t* vect)

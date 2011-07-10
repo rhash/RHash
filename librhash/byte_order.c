@@ -35,7 +35,7 @@ unsigned rhash_ctz(unsigned x)
 
 /**
  * Count number of non-zero bits in x, where x is in 0b0..01..11 form.
- * For details see 
+ * For details see
  * http://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
  *
  * @param x the number in which the number of unities is counted
@@ -79,7 +79,7 @@ void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
 	/* if all pointers and length are 32-bits aligned */
 	if( 0 == (( (int)((char*)to - (char*)0) | ((char*)from - (char*)0) | index | length ) & 3) ) {
 		/* copy memory as dwords */
-		const uint32_t* src = (const uint32_t*)from; 
+		const uint32_t* src = (const uint32_t*)from;
 		const uint32_t* end = (const uint32_t*)((const char*)src + length);
 		uint32_t* dst = (uint32_t*)((char*)to + index);
 		while(src < end) *(dst++) = bswap_32( *(src++) );
@@ -103,7 +103,7 @@ void rhash_u64_swap_copy(void* to, int index, const void* from, size_t length)
 	/* if all pointers and length are 64-bits aligned */
 	if( 0 == (( (int)((char*)to - (char*)0) | ((char*)from - (char*)0) | index | length ) & 7) ) {
 		/* copy aligned memory block as 64-bit integers */
-		const uint64_t* src = (const uint64_t*)from; 
+		const uint64_t* src = (const uint64_t*)from;
 		const uint64_t* end = (const uint64_t*)((const char*)src + length);
 		uint64_t* dst = (uint64_t*)((char*)to + index);
 		while(src < end) *(dst++) = bswap_64( *(src++) );

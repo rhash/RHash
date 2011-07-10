@@ -427,7 +427,7 @@ void rhash_edonr256_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg))
 #endif
 		{
-			/* the most common case is processing a 32-bit aligned message 
+			/* the most common case is processing a 32-bit aligned message
 			on a little-endian CPU without copying it */
 			size_t count = size / edonr256_block_size;
 			rhash_edonr256_process_block(ctx->u.data256.hash, (unsigned*)msg, count);
@@ -520,7 +520,7 @@ void rhash_edonr512_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 		if(IS_LITTLE_ENDIAN && IS_ALIGNED_64(msg))
 #endif
 		{
-			/* the most common case is processing a 64-bit aligned message 
+			/* the most common case is processing a 64-bit aligned message
 			on a little-endian CPU without copying it */
 			size_t count = size / edonr512_block_size;
 			rhash_edonr512_process_block(ctx->u.data512.hash, (uint64_t*)msg, count);

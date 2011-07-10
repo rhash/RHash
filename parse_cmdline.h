@@ -17,7 +17,7 @@ enum {
 	OPT_ED2K_LINK = 0x10000000,
 
 	/* program modes */
-	MODE_CHECK     = 0x1, 
+	MODE_CHECK     = 0x1,
 	MODE_CHECK_EMBEDDED = 0x2,
 	MODE_UPDATE    = 0x4,
 	MODE_BENCHMARK = 0x8,

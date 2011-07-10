@@ -12,13 +12,13 @@
  * This file implements eMule-compatible version of algorithm.
  * Note that eDonkey and eMule ed2k hashes are different only for
  * files containing exactly multiple of 9728000 bytes.
- * 
+ *
  * The file data is divided into full chunks of 9500 KiB (9728000 bytes) plus
- * a remainder chunk, and a separate 128-bit MD4 hash is computed for each. 
- * If the file length is an exact multiple of 9500 KiB, the remainder zero 
- * size chunk is still used at the end of the hash list. The ed2k hash is 
- * computed by concatenating the chunks' MD4 hashes in order and hashing the 
- * result using MD4. Although, if the file is composed of a single non-full 
+ * a remainder chunk, and a separate 128-bit MD4 hash is computed for each.
+ * If the file length is an exact multiple of 9500 KiB, the remainder zero
+ * size chunk is still used at the end of the hash list. The ed2k hash is
+ * computed by concatenating the chunks' MD4 hashes in order and hashing the
+ * result using MD4. Although, if the file is composed of a single non-full
  * chunk, its MD4 hash is returned with no further modifications.
  *
  * See http://en.wikipedia.org/wiki/EDonkey_network for algorithm description.
@@ -56,7 +56,7 @@ void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
 	unsigned blockleft = ED2K_CHUNK_SIZE - (unsigned)ctx->md4_context_inner.length;
 
 	/* note: eMule-compatible algorithm hashes by md4_inner
-	* the messages which sizes are multiple of 9728000 
+	* the messages which sizes are multiple of 9728000
 	* and then processes obtained hash by external md4 */
 
 	while( size >= blockleft )

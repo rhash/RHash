@@ -399,7 +399,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		if(option_type != F_OPTH) {
 			value = w2c((wchar_t*)option->parameter);
 			rsh_vector_add_ptr(opt.mem, value);
-		} else 
+		} else
 #endif
 		{
 			value = (char*)option->parameter;
@@ -435,7 +435,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 
 /**
  * Search for config file.
- * 
+ *
  * @return the relative path to config file
  */
 static const char* find_conf_file(void)

@@ -21,7 +21,7 @@
 static const unsigned rhash_k256[64] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
 	0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-	0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 
+	0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
 	0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
 	0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
 	0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
@@ -89,7 +89,7 @@ void rhash_sha224_init(struct sha256_ctx *ctx)
 	 * bits from 33th to 64th of the fractional parts of the square
 	 * roots of ninth through sixteenth prime numbers. */
 	static const unsigned SHA224_H0[8] = {
-		0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 
+		0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
 		0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4
 	};
 
@@ -183,7 +183,7 @@ void rhash_sha256_update(sha256_ctx *ctx, const unsigned char *msg, size_t size)
 	while(size >= sha256_block_size) {
 		unsigned* aligned_message_block;
 		if(IS_ALIGNED_32(msg)) {
-			/* the most common case is processing of an already aligned message 
+			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {

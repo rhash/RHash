@@ -33,7 +33,7 @@
 /* the MSVC assembler implementation */
 static inline volatile uint64_t read_tsc(void) {
 	unsigned long lo, hi;
-	__asm cpuid __asm rdtsc __asm mov [lo],eax __asm mov [hi],edx ; 
+	__asm cpuid __asm rdtsc __asm mov [lo],eax __asm mov [hi],edx ;
 	return (((uint64_t)hi) << 32) + lo;
 }
 #endif

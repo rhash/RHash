@@ -108,13 +108,13 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 
 	/* check main assumptions */
 	assert(ctx->chunk_table == 0 || ctx->chunk_table[index-1] != 0); /* table is empty or full */
-	assert(index <= ctx->allocated); 
+	assert(index <= ctx->allocated);
 
 	/* check if there is enough space allocated */
 	if(index >= ctx->allocated) {
 		/* resize the table by allocating some extra space */
 		int new_size = (ctx->allocated==0 ? 64 : ctx->allocated * 2);
-		assert(index == ctx->allocated); 
+		assert(index == ctx->allocated);
 
 		/* re-allocate the chunk table to contain new_size void*-pointers */
 		ctx->chunk_table = (void**)realloc(ctx->chunk_table, new_size * sizeof(void*));
@@ -128,7 +128,7 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	}
 
 	/* add new hash_pairs_group_t block to the table */
-	assert(index < ctx->allocated); 
+	assert(index < ctx->allocated);
 	assert(ctx->chunk_table[index] == 0);
 
 	ctx->chunk_table[index] = malloc(sizeof(hash_pairs_group_t));
@@ -163,7 +163,7 @@ void rhash_aich_cleanup(aich_ctx* ctx)
 #define AICH_HASH_RIGHT_BRANCH 2
 
 /**
- * Calculate an AICH tree hash, based ether on hashes of 180KB parts 
+ * Calculate an AICH tree hash, based ether on hashes of 180KB parts
  * (for an ed2k chunk) or on stored ed2k chunks (for the whole tree hash).
  *
  * @param ctx algorithm context
@@ -186,7 +186,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 	assert(type == AICH_HASH_FULL_TREE ? ctx->chunk_table != 0 : ctx->block_hashes != 0);
 
 	/* calculate number of leafs in the tree */
-	blocks_stack[0] = blocks = (type == AICH_HASH_FULL_TREE ? 
+	blocks_stack[0] = blocks = (type == AICH_HASH_FULL_TREE ?
 		ctx->chunks_number : (ctx->index + FULL_BLOCK_SIZE - 1) / FULL_BLOCK_SIZE);
 
 	while(1) {
@@ -241,7 +241,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 
 /**
  * Calculate and store a hash for a 180K/140K block.
- * Also, if it is the last block of a 9.2MiB ed2k chunk or of the hashed message, 
+ * Also, if it is the last block of a 9.2MiB ed2k chunk or of the hashed message,
  * then also calculate the AICH tree-hash of the current ed2k chunk.
  *
  * @param ctx algorithm context
@@ -368,7 +368,7 @@ void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
 	/* if there is unprocessed data left in the last 180K block */
 	if((ctx->index % FULL_BLOCK_SIZE) > 0) {
 		/* then process the last block */
-		rhash_aich_process_block(ctx, ctx->block_hashes != NULL ? 
+		rhash_aich_process_block(ctx, ctx->block_hashes != NULL ?
 			AICH_PROCESS_FINAL_BLOCK | AICH_PROCESS_FLUSH_BLOCK : AICH_PROCESS_FLUSH_BLOCK);
 	}
 
