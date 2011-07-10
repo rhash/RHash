@@ -10,12 +10,15 @@
 extern "C" {
 #endif
 
+/* encoding conversion functions */
 wchar_t* c2w(const char* str, int try_no);
 char* w2c(const wchar_t* wstr);
 char* win_to_utf8(const char* str);
 #define win_is_utf8() (opt.flags & OPT_UTF8)
+#define WIN_DEFAULT_ENCODING -1
+char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed);
+
 void expand_wildcards(struct vector_t* vect, wchar_t* filepath);
-void win_convert_cmdline_to_internal_encoding(void);
 
 /* file functions */
 FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
@@ -25,28 +28,24 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
 int win_stat(const char* path, struct rsh_stat_struct *buffer);
 int can_open_exclusive(const char* path);
 void win32_set_filesize64(const char* path, uint64_t *pSize);
+wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
 
 void set_benchmark_cpu_affinity(void);
 void setup_console(void);
 void restore_console(void);
 
 /* readdir structures and functions */
-
-/* the maximum filename length is 260 two-byte UTF-8 characters */
-#define WIN_FILENAME_MAX 520
 #define DIR WIN_DIR
-#define DIR_t WIN_DIR_t
 #define dirent win_dirent
-
 #define opendir  win_opendir
 #define readdir  win_readdir
 #define closedir win_closedir
 
+/* dirent struct for windows to traverse directory content */
 struct win_dirent {
-	char*           d_name;    /* File name */
-	/*unsigned short  d_namlen;*/  /* Length of name in d_name */
-	wchar_t*        d_wname;   /* File name in UTF-16 */
-	int             d_isdir;
+	char*     d_name;   /* file name */
+	wchar_t*  d_wname;  /* file name in Unicode (UTF-16) */
+	int       d_isdir;  /* non-zero if file is a directory */
 };
 
 struct WIN_DIR_t;

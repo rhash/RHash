@@ -35,6 +35,7 @@ static wchar_t* cstr_to_wchar(const char* str, int codepage)
 /**
  * Convert c-string to wide string using primary or secondary codepage.
  *
+ * @param str the C-string to convert
  * @param try_no 0 for primary codepage, 1 for a secondary one
  * @return converted wide string on success, NULL on error
  */
@@ -46,8 +47,9 @@ wchar_t* c2w(const char* str, int try_no)
 }
 
 /**
- * Convert UTF8-encoded string to wide string.
+ * Convert a UTF8-encoded string to wide string.
  *
+ * @param str the UTF8-encoded string to convert
  * @return wide string on success, NULL on error
  */
 static wchar_t* utf8_to_wchar(const char* utf8_str)
@@ -56,19 +58,30 @@ static wchar_t* utf8_to_wchar(const char* utf8_str)
 }
 
 /**
- * Convert a wide character string to c-string using given codepage
+ * Convert a wide character string to c-string using given codepage.
+ * Optionally set a flag if conversion failed.
  *
- * @param wstr the string to convert
+ * @param wstr the wide string to convert
  * @param codepage the codepage to use
+ * @param failed pointer to the flag, to on failed conversion, can be NULL
  * @return converted string on success, NULL on fail
  */
-static char* wchar_to_cstr(const wchar_t* wstr, int codepage)
+char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
 {
-	int size = WideCharToMultiByte(codepage, 0, wstr, -1, 0, 0, 0, 0);
+	int size;
 	char *buf;
+	BOOL bUsedDefChar, *lpUsedDefaultChar;
+	if(codepage == -1) {
+		codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_OEM) ? CP_OEMCP : CP_ACP);
+	}
+	/* note: lpUsedDefaultChar must be NULL for CP_UTF8, otrherwise WideCharToMultiByte() will fail */
+	lpUsedDefaultChar = (failed && codepage != CP_UTF8 ? &bUsedDefChar : NULL);
+
+	size = WideCharToMultiByte(codepage, 0, wstr, -1, 0, 0, 0, 0);
 	if(size == 0) return NULL; /* conversion failed */
 	buf = (char*)rsh_malloc(size);
-	WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, 0);
+	WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, lpUsedDefaultChar);
+	if(failed) *failed = (lpUsedDefaultChar && *lpUsedDefaultChar);
 	return buf;
 }
 
@@ -76,16 +89,16 @@ static char* wchar_to_cstr(const wchar_t* wstr, int codepage)
  * Convert wide string to multi-byte c-string using codepage specified 
  * by command line options.
  *
+ * @param wstr the wide string to convert
  * @return c-string on success, NULL on fail
  */
 char* w2c(const wchar_t* wstr)
 {
-	int codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags&OPT_OEM) ? CP_OEMCP : CP_ACP);
-	return wchar_to_cstr(wstr, codepage);
+	return wchar_to_cstr(wstr, -1, NULL);
 }
 
 /**
- * Convert given c-string from encoding specified by 
+ * Convert given C-string from encoding specified by 
  * command line options to utf8.
  *
  * @param str the string to convert
@@ -100,13 +113,13 @@ char* win_to_utf8(const char* str)
 	if(opt.flags & OPT_UTF8) return rsh_strdup(str);
 
 	if((buf = c2w(str, 0)) == NULL) return NULL;
-	res = wchar_to_cstr(buf, CP_UTF8);
+	res = wchar_to_cstr(buf, CP_UTF8, NULL);
 	free(buf);
 	return res;
 }
 
 /**
- * fopen with encoding and shared access support.
+ * Open file path given in the current encoding, using desired shared access.
  *
  * @param path file path
  * @param mode string specifying file opening mode
@@ -133,8 +146,10 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
 }
 
 /**
- * stat() with encoding support.
+ * stat() a file with encoding support.
  *
+ * @param path the file path
+ * @param buffer pointer to the buffer to store file properties to
  * @return 0 on success, -1 on error
  */
 int win_stat(const char* path, struct rsh_stat_struct *buffer)
@@ -158,12 +173,12 @@ int win_stat(const char* path, struct rsh_stat_struct *buffer)
  */
 void win32_set_filesize64(const char* path, uint64_t *pSize)
 {
-	int i;
-	for(i = 0; i < 2; i++) {
+	int try_no;
+	for(try_no = 0; try_no < 2; try_no++) {
 		HANDLE hFile;
 		DWORD fileSizeLow, fileSizeHigh;
 
-		wchar_t* wpath = c2w(path, i);
+		wchar_t* wpath = c2w(path, try_no);
 		if(wpath == NULL) continue;
 		hFile = CreateFileW(wpath, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		free(wpath);
@@ -186,7 +201,7 @@ void win32_set_filesize64(const char* path, uint64_t *pSize)
 }
 
 /**
- * Check if given file can be opened with exclusive write access
+ * Check if given file can be opened with exclusive write access.
  *
  * @param path path to the file
  * @return 1 if file can be opened, 0 otherwise
@@ -215,7 +230,7 @@ int can_open_exclusive(const char* path)
  * @param dir_len length of directory path in characters
  * @param filename the file name to append to the directory
  */
-static wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
+wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 {
 	wchar_t* res;
 	size_t len;
@@ -224,12 +239,14 @@ static wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* fil
 	len = wcslen(filename);
 
 	if(!dir_path) dir_len = 0;
+	else if(dir_len == (size_t)-1) dir_len = wcslen(dir_path);
 	
 	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
 	if(dir_len > 0) {
 		memcpy(res, dir_path, dir_len * sizeof(wchar_t));
 		res[dir_len++] = (wchar_t)SYS_PATH_SEPARATOR;
 	}
+
 	/* append filename */
 	memcpy(res + dir_len, filename, (len + 1) * sizeof(wchar_t));
 	return res;
@@ -265,11 +282,17 @@ void expand_wildcards(vector_t* vect, wchar_t* filepath)
 			do {
 				wchar_t* wpath;
 				char* cstr;
+				int failed;
 				if((0 == wcscmp(d.cFileName, L".")) || (0 == wcscmp(d.cFileName, L".."))) continue;
-				wpath = make_pathw(parent, index + 1, d.cFileName);
-				cstr = w2c(wpath);
+				if(NULL == (wpath = make_pathw(parent, index + 1, d.cFileName))) continue;
+				cstr = wchar_to_cstr(wpath, WIN_DEFAULT_ENCODING, &failed);
 				/* note: just quietly skip unconvertible file names */
-				if(cstr) rsh_vector_add_ptr(vect, cstr);
+				if(!cstr || failed) {
+					free(cstr);
+					free(wpath);
+					continue;
+				}
+				rsh_vector_add_ptr(vect, cstr);
 				added++;
 			} while(FindNextFileW(h, &d));
 			FindClose(h);
@@ -331,7 +354,7 @@ void restore_console(void)
 
 	hOut = GetStdHandle(STD_ERROR_HANDLE);
 	if(hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
-		/* restore cusor size and visibility */
+		/* restore cursor size and visibility */
 		cci.dwSize = rhash_data.saved_cursor_size;
 		cci.bVisible = 1;
 		SetConsoleCursorInfo(hOut, &cci);
@@ -401,7 +424,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 }
 
 /**
- * Open directory iterator for reading the directory content.
+ * Open a directory for reading its content.
  * For simplicity the function supposes that dir_path points to an
  * existing directory and doesn't check for this error.
  * The Unicode version of the function.
@@ -414,11 +437,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 	WIN_DIR* d;
 
 	/* append '\*' to the dir_path */
-	/*size_t len = wcslen(dir_path);
-	wchar_t *wpath = (wchar_t*)rsh_malloc(sizeof(wchar_t) * (len + 3));
-	wcscpy(wpath, dir_path);
-	wcscpy(wpath + len, L"\\*");*/
-	wchar_t *wpath = make_pathw(dir_path, wcslen(dir_path), L"*");
+	wchar_t *wpath = make_pathw(dir_path, (size_t)-1, L"*");
 	d = (WIN_DIR*)rsh_malloc(sizeof(WIN_DIR));
 
 	d->hFind = FindFirstFileW(wpath, &d->findFileData);
@@ -436,7 +455,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 }
 
 /**
- * Close directory iterator.
+ * Close a directory iterator.
  *
  * @param d pointer to the directory iterator
  */
@@ -450,7 +469,7 @@ void win_closedir(WIN_DIR* d)
 }
 
 /**
- * Iterate over directory content.
+ * Read a directory content.
  *
  * @param d pointer to the directory iterator
  * @return directory entry or NULL if no entries left
@@ -458,6 +477,7 @@ void win_closedir(WIN_DIR* d)
 struct win_dirent* win_readdir(WIN_DIR* d)
 {
 	char* filename;
+	int failed;
 
 	if(d->state == -1) return NULL;
 	if(d->dir.d_name != NULL) {
@@ -479,23 +499,23 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 			(d->findFileData.cFileName[1] == 0 ||
 			(d->findFileData.cFileName[1] == L'.' &&
 			d->findFileData.cFileName[2] == 0))) {
-				/* this simplified implementation skips '.' and '..' dirs */
+				/* simplified implementation, skips '.' and '..' names */
 				continue;
 		}
 
-		d->dir.d_name = filename = w2c(d->findFileData.cFileName);
+		d->dir.d_name = filename = wchar_to_cstr(d->findFileData.cFileName, WIN_DEFAULT_ENCODING, &failed);
 
-		if(filename) {
+		if(filename && !failed) {
 			d->dir.d_wname = d->findFileData.cFileName;
 			d->dir.d_isdir = (0 != (d->findFileData.dwFileAttributes & 
 				FILE_ATTRIBUTE_DIRECTORY));
-			/*strcpy(d->dir.d_name, filename);*/
-			/*d->dir.d_namlen = (unsigned short)strlen(filename);*/
-			/*free(filename);*/
 			return &d->dir;
 		}
-		/* skip invalid filenames and repeat the search */
-		/*free(filename);*/
+		/* quietly skip an invalid filename and repeat the search */
+		if(filename) {
+			free(filename);
+			d->dir.d_name = NULL;
+		}
 	}
 }
 
