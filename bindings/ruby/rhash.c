@@ -12,6 +12,9 @@ static VALUE rh_update(VALUE self, VALUE msg) {
 	rhash ctx;
 	Data_Get_Struct(self, rhash, ctx);
 	
+	//converting to string
+	msg = rb_funcall(msg, rb_intern("to_s"), 0);
+	
 	int len;
 	char *data = rb_str2cstr(msg, &len);
 	
@@ -37,24 +40,40 @@ static VALUE rh_print(VALUE self, VALUE type, int flags) {
 	char buf[130];
 	rhash ctx;
 	Data_Get_Struct(self, rhash, ctx);
-	int len = rhash_print(buf, ctx, FIX2INT(type), flags);
+	int len = rhash_print(buf, ctx, type == Qnil ? 0 : FIX2INT(type), flags);
 	return rb_str_new(buf, len);
 }
 
-static VALUE rh_to_raw(VALUE self, VALUE type) {
+static VALUE rh_to_raw(int argc, VALUE* argv, VALUE self) {
+	VALUE type;
+	rb_scan_args(argc, argv, "01", &type);
 	return rh_print(self, type, RHPR_RAW);
 }
 
-static VALUE rh_to_hex(VALUE self, VALUE type) {
+static VALUE rh_to_hex(int argc, VALUE* argv, VALUE self) {
+	VALUE type;
+	rb_scan_args(argc, argv, "01", &type);
 	return rh_print(self, type, RHPR_HEX);
 }
 
-static VALUE rh_to_base32(VALUE self, VALUE type) {
+static VALUE rh_to_base32(int argc, VALUE* argv, VALUE self) {
+	VALUE type;
+	rb_scan_args(argc, argv, "01", &type);
 	return rh_print(self, type, RHPR_BASE32);
 }
 
-static VALUE rh_to_base64(VALUE self, VALUE type) {
+static VALUE rh_to_base64(int argc, VALUE* argv, VALUE self) {
+	VALUE type;
+	rb_scan_args(argc, argv, "01", &type);
 	return rh_print(self, type, RHPR_BASE64);
+}
+
+static VALUE rh_to_s(VALUE self) {
+	return rh_print(self, 0, 0);
+}
+
+static VALUE rh_is_base32(VALUE self, VALUE type) {
+	return rhash_is_base32(FIX2INT(type)) ? Qtrue : Qfalse;
 }
 
 static VALUE rh_init(int argc, VALUE *argv, VALUE self) {
@@ -79,23 +98,26 @@ void Init_rhash() {
 	cRHash = rb_define_class("RHash", rb_cObject);
 	
 	rb_define_singleton_method(cRHash, "new", rh_new, -1);
+	rb_define_singleton_method(cRHash, "base32?", rh_is_base32, 1);
 	
 	rb_define_method(cRHash, "initialize", rh_init,  -1);
 	rb_define_method(cRHash, "update",     rh_update, 1);
 	rb_define_method(cRHash, "<<",         rh_update, 1);
 	rb_define_method(cRHash, "finish",     rh_finish, 0);
 	rb_define_method(cRHash, "reset",      rh_reset,  0);
-	rb_define_method(cRHash, "to_raw",     rh_to_raw, 1);
-	rb_define_method(cRHash, "to_hex",     rh_to_hex, 1);
-	rb_define_method(cRHash, "to_base32",  rh_to_base32, 1);
-	rb_define_method(cRHash, "to_base64",  rh_to_base64, 1);
+	rb_define_method(cRHash, "to_raw",     rh_to_raw, -1);
+	rb_define_method(cRHash, "to_hex",     rh_to_hex, -1);
+	rb_define_method(cRHash, "to_base32",  rh_to_base32, -1);
+	rb_define_method(cRHash, "to_base64",  rh_to_base64, -1);
+	rb_define_method(cRHash, "to_s",       rh_to_s, 0);
 	
 	rb_eval_string(
 "class RHash \n\
   def update_file(filename) \n\
-    f = File.open filename, 'rb' \n\
-    f.each_char {|c| update c.to_s} \n\
-    f.close \n\
+    f = File.open(filename, 'rb') \n\
+    while block = f.read(4096) \n\
+      self.update(block) \n\
+    end \n\
     self \n\
   end \n\
 end");
