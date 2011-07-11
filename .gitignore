@@ -1,6 +1,8 @@
-*.[ao]
-*.dll
-*.exe
 /dist/rhash.spec
 /dist/rhash.1.*
 /librhash/exports.sym
+*.[ao]
+*.exe
+*.dll
+*.so
+*.log
