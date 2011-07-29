@@ -1,6 +1,6 @@
 /* find_file.h - declaration of find_file function.
  *
- * find_file function searces through a directory tree calling a call_back on
+ * find_file function searches through a directory tree calling a call_back on
  * each file.
  */
 #ifndef FIND_FILE_H
@@ -20,13 +20,13 @@ extern "C" {
 #define FIND_IFFIRST 0x10
 
 /*struct find_file_options {
-  unsigned flags;
-  int max_depth;
+	unsigned flags;
+	int max_depth;
 };*/
 
 int find_file(const char* start_dir,
-  int (*call_back)(const char* filepath, int type, void* data),
-  int options, int max_depth, void* call_back_data);
+	int (*call_back)(const char* filepath, int type, void* data),
+	int options, int max_depth, void* call_back_data);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -304,7 +304,7 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
  * Set the callback function to be called from the
  * rhash_file() and rhash_file_update() functions
  * on processing every file block. The file block
- * size is set internaly by rhash and now is 8 KiB.
+ * size is set internally by rhash and now is 8 KiB.
  *
  * @param ctx rhash context
  * @param callback pointer to the callback function
@@ -325,7 +325,7 @@ RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* ca
  * @param hash_id id of hash sum to compute
  * @param message the message to process
  * @param length message length
- * @param result buffer to recieve bynary hash string
+ * @param result buffer to receive binary hash string
  * @return 0 on success, -1 on error
  */
 RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result)

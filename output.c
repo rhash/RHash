@@ -74,7 +74,7 @@ static struct percents_t percents;
 
 /**
  * Print file path and result of its verification by hash.
- * Also if error occured, print error message.
+ * Also if error occurred, print error message.
  *
  * @param info pointer to the file-info structure
  * @param print_name set to non-zero to print file path
@@ -109,7 +109,7 @@ static void print_check_result(struct file_info *info, int print_name, int print
 			}
 			if(RHASH_EMBEDDED_CRC32 & info->wrong_sums) {
 				rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-				fprintf(rhash_data.out, ", embedded sum should be %s", expected);
+				fprintf(rhash_data.out, ", embedded CRC32 should be %s", expected);
 			}
 			fprintf(rhash_data.out, "\n");
 		}

@@ -42,7 +42,7 @@ typedef struct dir_entry
 } dir_entry;
 
 /**
- * Allocate and intialize a dir_entry.
+ * Allocate and initialize a dir_entry.
  *
  * @param next next dir_entry in list
  * @param filename a filename to store in the dir_entry
@@ -108,12 +108,12 @@ typedef struct dir_iterator
  *
  * @param start_dir path to the directory to walk recursively
  * @param callback the function to call on each file/directory
- * @param options specifying howto walk the directory tree
+ * @param options specifying how to walk the directory tree
  * @param call_back_data a pointer to pass to callback
  */
 int find_file(const char* start_dir,
-  int (*call_back)(const char* filepath, int type, void* data),
-  int options, int max_depth, void* call_back_data)
+	int (*call_back)(const char* filepath, int type, void* data),
+	int options, int max_depth, void* call_back_data)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
@@ -129,7 +129,7 @@ int find_file(const char* start_dir,
 		return 0;
 	}
 
-	/* check that start_dir is a drectory */
+	/* check that start_dir is a directory */
 	if(rsh_stat(start_dir, &st) < 0) {
 		return -1; /* errno is already set by stat */
 	}

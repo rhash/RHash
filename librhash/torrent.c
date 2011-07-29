@@ -164,7 +164,7 @@ void rhash_torrent_final(torrent_ctx *ctx, unsigned char result[20])
 	if(result) memcpy(result, ctx->btih, btih_hash_size);
 }
 
-/* bittorrent functions */
+/* BitTorrent functions */
 
 /**
  * Print 64-bit number with trailing '\0' to a string buffer.

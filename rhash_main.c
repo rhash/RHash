@@ -55,10 +55,10 @@ static int find_file_callback(const char* filepath, int type, void* data)
 			if(!file_mask_match(masks, filepath)) return 0;
 
 			if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-				res = check_crc_file(filepath, 1);
+				res = check_hash_file(filepath, 1);
 			} else {
 				if(opt.mode & MODE_UPDATE) {
-					res = update_crc_file(filepath);
+					res = update_hash_file(filepath);
 				} else {
 					/* default mode: calculate hash */
 					if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
@@ -204,9 +204,9 @@ static void process_files(void)
 		}
 
 		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			res = check_crc_file(*opt.files, 0);
+			res = check_hash_file(*opt.files, 0);
 		} else if(opt.mode & MODE_UPDATE) {
-			res = update_crc_file(*opt.files);
+			res = update_hash_file(*opt.files);
 		} else {
 			res = calculate_and_print_sums(rhash_data.out, *opt.files, *opt.files, &stat_buf);
 			rhash_data.processed++;

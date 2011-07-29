@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-int update_crc_file(const char* filepath);
+int update_hash_file(const char* filepath);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -9,14 +9,15 @@ extern "C" {
 #endif
 
 struct file_info;
-struct timeval;
 
+/**
+ * A 'method' to output percents.
+ */
 struct percents_output_info_t {
-  /* methods to output percents */
-  int  (*init)(struct file_info *info);
-  void (*update)(struct file_info *info, uint64_t offset);
-  void (*finish)(struct file_info *info, int process_res);
-  const char* name;
+	int  (*init)(struct file_info *info);
+	void (*update)(struct file_info *info, uint64_t offset);
+	void (*finish)(struct file_info *info, int process_res);
+	const char* name;
 };
 
 /* pointer to the selected percents output method */
@@ -25,14 +26,7 @@ extern struct percents_output_info_t *percents_output;
 #define update_percents(info, offset) percents_output->update(info, offset)
 #define finish_percents(info, process_res) percents_output->finish(info, process_res)
 
-/* pointers to functions to print percents and file info */
-#if 0
-extern int  (*init_percents)(struct file_info *info);
-extern void (*update_percents)(struct file_info *info, uint64_t offset);
-extern void (*finish_percents)(struct file_info *info, int process_res);
-#endif
-
-/* method to initialize pointers to output methods */
+/* initialization of percents output method */
 void setup_output(void);
 
 void log_msg(const char* format, ...);
