@@ -14,13 +14,18 @@
 #include "parse_cmdline.h"
 
 /**
- * Print a 0-terminated string representation of a 64-bit number to char buffer.
+ * Print a 0-terminated string representation of a 64-bit number to
+ * a string buffer.
+ *
+ * @param dst the string buffer to write the number to
+ * @param number the 64-bit number to output
+ * @param min_width the minimum width, the number must take
  */
-void sprintI64(char *dst, uint64_t number, int max_width)
+void sprintI64(char *dst, uint64_t number, int min_width)
 {
-	char buf[24];
+	char buf[24]; /* internal buffer to output the number to */
 	size_t len;
-	char *p = buf + 23;
+	char *p = buf + 23; /* start filling from the buffer end */
 	*(p--) = 0; /* last symbol should be '\0' */
 	if(number == 0) {
 		*(p--) = '0';
@@ -30,11 +35,11 @@ void sprintI64(char *dst, uint64_t number, int max_width)
 		}
 	}
 	len = buf + 22 - p;
-	if((size_t)max_width > len) {
-		memset(dst, 0x20, max_width - len);
-		dst += max_width - len;
+	if((size_t)min_width > len) {
+		memset(dst, 0x20, min_width - len); /* fill by spaces */
+		dst += min_width - len;
 	}
-	memcpy(dst, p+1, len+1);
+	memcpy(dst, p+1, len+1); /* copy the number to the output buffer */
 }
 
 /**

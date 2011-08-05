@@ -75,13 +75,14 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 	FILE *fd;
 	int line_num;
 	char buf[2048];
+	hash_check hc;
+
 	if( !(fd = rsh_fopen_bin(crc_file_path, "rb") )) {
 		/* if file not exist, it will be created */
 		return (errno == ENOENT ? 0 : -1);
 	}
 	for(line_num = 0; fgets(buf, 2048, fd); line_num++) {
 		char* line = buf;
-		const char *filepath;
 		file_item *item;
 
 		/* skip unicode BOM */
@@ -98,11 +99,11 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		item = file_item_new(NULL);
-		parse_crc_file_line(line, &filepath, &item->sums, !feof(fd));
 
-		/* store file info to the file set */
-		if(filepath) {
-			file_item_set_filepath(item, filepath);
+		/* parse a hash file line */
+		if(hash_check_parse_line(line, &hc, !feof(fd))) {
+			/* store file info to the file set */
+			file_item_set_filepath(item, hc.file_path);
 			file_set_add(set, item);
 		} else {
 			log_msg("warning: can't parse line: %s\n", buf);

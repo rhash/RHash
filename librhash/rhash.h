@@ -140,6 +140,7 @@ typedef unsigned long rhash_uptr_t;
 
 #define RHASH_ERROR ((rhash_uptr_t)-1)
 #define RHASH_STR2UPTR(str) ((rhash_uptr_t)(str))
+#define RHASH_UPTR2PVOID(u) ((void*)((char*)0 + (u)))
 
 /* rhash API to set/get data via messages */
 RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ldata, rhash_uptr_t rdata);
@@ -158,12 +159,12 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ld
 #define RMSG_BT_SET_PROGRAM_NAME 36
 #define RMSG_BT_GET_TEXT 37
 
-/* possible BITTORENT OPTIONS for the RMSG_BT_SET_OPTIONS message */
+/* possible BitTorrent options for the RMSG_BT_SET_OPTIONS message */
 #define RHASH_BT_OPT_PRIVATE 1
 #define RHASH_BT_OPT_INFOHASH_ONLY 2
 
 /* helper macros */
-#define rhash_get_context_ptr(ctx, hash_id) ((void*)rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
+#define rhash_get_context_ptr(ctx, hash_id) RHASH_UPTR2PVOID(rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
 #define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
 #define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
 

@@ -12,7 +12,9 @@ extern "C" {
 #define PROGRAM_NAME "RHash"
 #define CMD_FILENAME "rhash"
 
-/* options constants */
+/**
+ * Options bit flags and constants.
+ */
 enum {
 	OPT_ED2K_LINK = 0x10000000,
 
@@ -51,16 +53,11 @@ enum {
 	OPT_FORMAT_MASK = FMT_BSD|FMT_SFV|FMT_SIMPLE|FMT_MAGNET
 };
 
-enum {
-	RHASH_MD5_ED2K_MIXED_UP = 0x10000000,
-	RHASH_MD5_AICH_MIXED_UP = 0x20000000,
-	RHASH_IS_MIXED  = RHASH_MD5_ED2K_MIXED_UP|RHASH_MD5_AICH_MIXED_UP,
-	RHASH_EMBEDDED_CRC32 = 0x40000000
-};
-
 struct vector_t;
 
-/* parsed program options */
+/**
+ * Parsed program options.
+ */
 struct options_t {
 	unsigned flags;      /* program options */
 	unsigned sum_flags;  /* flags to specify what sums will be calculated */
@@ -76,9 +73,9 @@ struct options_t {
 	int   find_max_depth;
 	struct vector_t *files_accept; /* suffixes of files for which sums will be calculated */
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
-	size_t bt_piece_length; /* bittorent piece length */
+	size_t bt_piece_length; /* BitTorrent piece length */
 	char*  bt_announce;
-	unsigned openssl_mask;       /* mask which openssl hashes to use */
+	unsigned openssl_mask;  /* mask which openssl hashes to use */
 
 	char** argv;
 	char** files;

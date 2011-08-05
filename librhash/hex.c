@@ -136,7 +136,7 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 }
 
 
-#define HEX2DIGIT(a) ( (a)<='9' ? (a)&0xF : ((a)-'a'+10)&0xF )
+#define HEX2DIGIT(a) ((a) <= '9' ? (a) & 0xF : ((a) - 'a' + 10) & 0xF)
 
 /**
  * Convert a hex string with even length to a binary string.
@@ -148,5 +148,6 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 {
 	/* NOTE: supported parsing only for even len */
-	for(; len>=2; len-=2, str+=2) *(bin++) = (HEX2DIGIT(str[0])<<4) | HEX2DIGIT(str[1]);
+	for(; len >= 2; len -= 2, str += 2)
+		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
 }

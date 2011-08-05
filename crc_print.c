@@ -298,11 +298,11 @@ static void fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
 {
 	const char *filename = get_basename(file_info_get_utf8_print_path(info));
 	int upper_case = (print_type & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
-	int len = urlencode(NULL, filename) + int_len(info->size) + (info->sums.flags & RHASH_AICH ? 84 : 49);
+	int len = urlencode(NULL, filename) + int_len(info->size) + (info->sums_flags & RHASH_AICH ? 84 : 49);
 	char* buf = (char*)rsh_malloc( len + 1 );
 	char* dst = buf;
 
-	assert(info->sums.flags & (RHASH_ED2K|RHASH_AICH));
+	assert(info->sums_flags & (RHASH_ED2K|RHASH_AICH));
 	assert(info->rctx);
 
 	strcpy(dst, "ed2k://|file|");
@@ -314,7 +314,7 @@ static void fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
 	*dst++ = '|';
 	rhash_print(dst, info->rctx, RHASH_ED2K, upper_case);
 	dst += 32;
-	if((info->sums.flags & RHASH_AICH) != 0) {
+	if((info->sums_flags & RHASH_AICH) != 0) {
 		strcpy(dst, "|h=");
 		rhash_print(dst += 3, info->rctx, RHASH_AICH, RHPR_BASE32 | upper_case);
 		dst += 32;

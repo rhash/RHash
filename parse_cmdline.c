@@ -196,10 +196,10 @@ static void set_max_depth(options_t *o, char* number, unsigned param)
 }
 
 /**
- * Set BitTorrent file piece-length
+ * Set the length of a BitTorrent file piece.
  *
  * @param o pointer to the processed option
- * @param number string containing the bt-piece-length number
+ * @param number string containing the piece length number
  * @param param unused parameter
  */
 static void set_bt_piece_length(options_t *o, char* number, unsigned param)
@@ -244,7 +244,7 @@ typedef struct cmdline_opt_t
 	unsigned short type;  /* how to process the option, see option_type_t below */
 	char  short1, short2; /* short option names */
 	char* long_name;      /* long option name */
-	void* ptr;            /* accessorial pointer, e.g. to an opt field */
+	void* ptr;            /* auxiliary pointer, e.g. to an opt field */
 	unsigned param;       /* optional integer parameter */
 } cmdline_opt_t;
 
@@ -942,7 +942,7 @@ void read_options(int argc, char *argv[])
 		wchar_t* path = cmd_line.files[i];
 		wchar_t* p = wcschr(path, L'\0') - 1;
 
-		/* strip trailing '\','/' symbols (if not preceeded by ':') */
+		/* strip trailing '\','/' symbols (if not preceded by ':') */
 		for(; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--) *p = 0;
 		expand_wildcards(expanded_cnames, path);
 	}

@@ -44,16 +44,6 @@ void rhash_library_init(void)
 #endif
 }
 
-#if 0
-/**
- * Free allocated resources
- */
-void rhash_library_free(void)
-{
-	rhash_free_algorithms();
-}
-#endif
-
 /**
  * Returns the number of supported hash algorithms.
  *
@@ -625,10 +615,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
 #endif
 
 /**
- * Process a bittorent-related rhash message.
+ * Process a BitTorrent-related rhash message.
  *
  * @param msg_id message identifier
- * @param bt bittorent context
+ * @param bt BitTorrent context
  * @param ldata data depending on message
  * @param rdata data depending on message
  * @return message-specific data

@@ -132,14 +132,6 @@ static void rhash_sha512_process_block(uint64_t hash[8], uint64_t block[16])
 
 	A = hash[0], B = hash[1], C = hash[2], D = hash[3];
 	E = hash[4], F = hash[5], G = hash[6], H = hash[7];
-#if 0
-	printf("%016I64x %016I64x %016I64x %016I64x\n", hash[0], hash[1], hash[2], hash[3]);
-	printf("%016I64x %016I64x %016I64x %016I64x\n\n", hash[4], hash[5], hash[6], hash[7]);
-	printf("%016I64x %016I64x %016I64x %016I64x\n", block[0],  block[1],  block[2],  block[3]);
-	printf("%016I64x %016I64x %016I64x %016I64x\n", block[4],  block[5],  block[6],  block[7]);
-	printf("%016I64x %016I64x %016I64x %016I64x\n", block[8],  block[9],  block[10], block[11]);
-	printf("%016I64x %016I64x %016I64x %016I64x\n", block[12], block[13], block[14], block[15]);
-#endif
 
 	/* Compute SHA using alternate Method: FIPS 180-3 6.1.3 */
 	ROUND_1_16(A, B, C, D, E, F, G, H, 0);

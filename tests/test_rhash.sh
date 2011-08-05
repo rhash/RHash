@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [ "$1" = "--full" ]; then FULL_TEST=1; shift; fi
+
 [ -x "$1" ] && rhash="$(cd ${1%/*} && echo $PWD/${1##*/})" || rhash="../rhash";
 cd $(dirname "$0") # chdir after getting absolute path of $1, but before checking for ../rhash
 [ -x "$rhash" ] || rhash="`which rhash`"
@@ -64,7 +66,13 @@ new_test "test with 1Kb data file:    "
 awk 'BEGIN{ for(i=0; i<256*4; i++) { printf("%c", i%256) } }' > test1K.data
 TEST_RESULT=$( $rhash --printf "%f %C %M %H %E %G %T %A %W\n" test1K.data 2>/dev/null )
 TEST_EXPECTED="test1K.data B70B4C26 B2EA9F7FCEA831A4A63B213F41A8855B 5B00669C480D5CFFBDFA8BDBA99561160F2D1B77 5AE257C47E9BE1243EE32AABE408FB6B 890BB3EE5DBE4DA22D6719A14EFD9109B220607E1086C1ABBB51EEAC2B044CBB 4OQY25UN2XHIDQPV5U6BXAZ47INUCYGIBK7LFNI LMAGNHCIBVOP7PP2RPN2TFLBCYHS2G3X D606B7F44BD288759F8869D880D9D4A2F159D739005E72D00F93B814E8C04E657F40C838E4D6F9030A8C9E0308A4E3B450246250243B2F09E09FA5A24761E26B"
-check "$TEST_RESULT" "$TEST_EXPECTED"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+# test reversed GOST hashes and verification of them
+TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data )
+TEST_EXPECTED="test1K.data  bb4c042bacee51bbabc186107e6020b20991fd4ea119672da24dbe5deeb30b89  06cc52d9a7fb5137d01667d1641683620060391722a56222bb4b14ab332ec9d9"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
+match "$TEST_RESULT" "^test1K.data *OK"
 
 # Test the SFV format using test1K.data from the previous test
 new_test "test default format:        "
@@ -88,6 +96,14 @@ TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0\x1\t\\ \x34\r\n' - )
 TEST_EXPECTED=$( printf '\63\1\277\\x0\1\t\\ 4\r\n' )
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
+new_test "test eDonkey link:          "
+TEST_RESULT=$( echo -n "a" | $rhash -p '%f %L %l\n' - )
+TEST_EXPECTED="(stdin) ed2k://|file|(stdin)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(stdin)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+# here we should test checking of ed2k links but it is currently unsupported
+TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
+match "$TEST_RESULT" "^test1K.data *OK"
+
 if [ "$FULL_TEST" = 1 ]; then
   new_test "test all hash options       "
   errors=0
@@ -102,18 +118,9 @@ if [ "$FULL_TEST" = 1 ]; then
   check $errors 0
 fi
 
-new_test "test eDonkey link:          "
-TEST_RESULT=$( echo -n "a" | $rhash -p '%f %L %l\n' - )
-TEST_EXPECTED="(stdin) ed2k://|file|(stdin)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(stdin)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
-check "$TEST_RESULT" "$TEST_EXPECTED" .
-# here we should test checking of ed2k links but it is currently unsupported
-TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
+new_test "test checking all hashes:   "
+TEST_RESULT=$( $rhash --simple -a test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
-
-#new_test "test checking all hashes:  "
-#TEST_RESULT=$( $rhash --simple -a test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
-#TEST_EXPECTED="^test1K.data *OK"
-#match "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test checking magnet link:  "
 TEST_RESULT=$( $rhash --magnet -a test1K.data | $rhash -vc - 2>&1 | grep -i '\(warn\|test1K.data\)' )
@@ -132,14 +139,20 @@ check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test checking embedded crc: "
 echo -n 'A' > 'test_[D3D99E8B].data' && echo -n 'A' > 'test_[D3D99E8C].data'
+# first verify checking an existing crc32 while '--embed-crc' option is set
 TEST_RESULT=$( $rhash -C --simple 'test_[D3D99E8B].data' | $rhash -vc --embed-crc - 2>/dev/null | grep data )
 match "$TEST_RESULT" "^test_.*OK" .
 TEST_RESULT=$( $rhash -C --simple 'test_[D3D99E8C].data' | $rhash -vc --embed-crc - 2>/dev/null | grep data )
-match "$TEST_RESULT" "^test_.*ERROR, embedded sum should be" .
+match "$TEST_RESULT" "^test_.*ERROR, embedded CRC32 should be" .
+# second verify --check-embedded option
 TEST_RESULT=$( $rhash --check-embedded 'test_[D3D99E8B].data' 2>/dev/null | grep data )
 match "$TEST_RESULT" "test_.*OK" .
 TEST_RESULT=$( $rhash --check-embedded 'test_[D3D99E8C].data' 2>/dev/null | grep data )
-match "$TEST_RESULT" "test_.*ERR"
+match "$TEST_RESULT" "test_.*ERR" .
+mv 'test_[D3D99E8B].data' 'test.data'
+# at last test --embed-crc with --embed-crc-delimiter options
+TEST_RESULT=$( $rhash --simple --embed-crc --embed-crc-delimiter=_ 'test.data' 2>/dev/null )
+check "$TEST_RESULT" "d3d99e8b  test_[D3D99E8B].data"
 rm 'test_[D3D99E8B].data' 'test_[D3D99E8C].data'
 
 new_test "test wrong sums detection:  "

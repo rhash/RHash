@@ -16,13 +16,13 @@ typedef struct aich_ctx
 	void *sha_init, *sha_update, *sha_final;
 	unsigned long sha1_length;
 #endif
-	unsigned index;        /* algoritm position in the current ed2k chunk */
+	unsigned index;        /* algorithm position in the current ed2k chunk */
 	unsigned char (*block_hashes)[sha1_hash_size];
 
 	void** chunk_table;    /* table of chunk hashes */
 	size_t allocated;      /* allocated size of the chunk_table */
 	size_t chunks_number;  /* number of ed2k chunks hashed */
-	int error;             /* non-zero if a memory error occured, 0 otherwise */
+	int error;             /* non-zero if a memory error occurred, 0 otherwise */
 } aich_ctx;
 
 /* hash functions */

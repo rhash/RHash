@@ -13,14 +13,11 @@ typedef struct file_item {
 	unsigned hash;
 	char* filepath;
 	char* search_filepath; /* for case-insensitive comparison */
-	struct rhash_sums_t sums;
 } file_item;
 
 /* array to store filenames from a parsed hash file */
 struct vector_t;
 typedef struct vector_t file_set;
-
-int  parse_crc_file_line(char* line, const char** filename, struct rhash_sums_t* sums, int check_eol);
 
 file_item* file_item_new(const char* filepath);
 void file_item_free(file_item *item);

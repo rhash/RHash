@@ -25,6 +25,7 @@ typedef struct print_hash_info
 extern print_hash_info hash_info_table[];
 
 struct file_info;
+struct strbuf_t;
 
 print_item* parse_print_string(const char* format, unsigned *sum_mask);
 void print_line(FILE* out, print_item* list, struct file_info *info);

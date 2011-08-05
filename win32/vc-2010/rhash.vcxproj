@@ -219,6 +219,7 @@
     <ClCompile Include="..\..\file_mask.c" />
     <ClCompile Include="..\..\file_set.c" />
     <ClCompile Include="..\..\find_file.c" />
+    <ClCompile Include="..\..\hash_check.c" />
     <ClCompile Include="..\..\librhash\algorithms.c" />
     <ClCompile Include="..\..\librhash\edonr.c" />
     <ClCompile Include="..\..\librhash\plug_openssl.c" />
@@ -257,6 +258,7 @@
     <ClCompile Include="..\..\librhash\whirlpool_sbox.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\hash_check.h" />
     <ClInclude Include="..\..\librhash\algorithms.h" />
     <ClInclude Include="..\..\librhash\edonr.h" />
     <ClInclude Include="..\..\librhash\plug_openssl.h" />

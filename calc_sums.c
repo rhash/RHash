@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "librhash/hex.h"
+#include "librhash/byte_order.h"
 #include "librhash/rhash.h"
 #include "librhash/timing.h"
 #include "parse_cmdline.h"
@@ -50,7 +51,7 @@ static void init_btih_data(struct file_info *info)
 }
 
 /**
- * Calculate hash sums simultaneously, according to the info->sums.flags.
+ * Calculate hash sums simultaneously, according to the info->sums_flags.
  * Calculated hashes are stored in info->rctx.
  *
  * @param info file data. The info->full_path can be "-" to denote stdin
@@ -85,7 +86,7 @@ static int calc_sums(struct file_info *info)
 		info->size = stat_buf.st_size; /* total size, in bytes */
 		IF_WINDOWS(win32_set_filesize64(info->full_path, &info->size)); /* set correct filesize for large files under win32 */
 
-		if(!info->sums.flags) return 0;
+		if(!info->sums_flags) return 0;
 
 		/* skip files opened with exclusive rights without reporting an error */
 		fd = rsh_fopen_bin(info->full_path, "rb");
@@ -95,10 +96,10 @@ static int calc_sums(struct file_info *info)
 	}
 
 	assert(info->rctx == 0);
-	info->rctx = rhash_init(info->sums.flags);
+	info->rctx = rhash_init(info->sums_flags);
 
 	/* initialize BitTorrent data */
-	if(info->sums.flags & RHASH_BTIH) {
+	if(info->sums_flags & RHASH_BTIH) {
 		init_btih_data(info);
 	}
 
@@ -210,6 +211,7 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32_be)
  * the file extension.
  *
  * @param info pointer to the data of the file to rename.
+ * @return 0 on success, -1 on fail with error code in errno
  */
 int rename_file_to_embed_crc32(struct file_info *info)
 {
@@ -219,20 +221,20 @@ int rename_file_to_embed_crc32(struct file_info *info)
 	char* new_path;
 	char* insertion_point;
 	unsigned crc32_be;
+	assert((info->rctx->hash_id & RHASH_CRC32) != 0);
 
-	/* check that filename doesn't end with this sum */
+	/* check if the filename contains a CRC32 hash sum */
 	if(find_embedded_crc32(info->print_path, &crc32_be)) {
-		char calculated_crc32[9];
-		rhash_print(calculated_crc32, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-
-		if(crc32_be == info->sums.crc32.be) {
-			return 0;
-		} else {
-			log_msg("warning: wrong embedded sum, should be %s\n", calculated_crc32);
-		}
+		/* compare with calculated CRC32 */
+		if(be2me_32(crc32_be) != 
+			*(unsigned*)rhash_get_context_ptr(info->rctx, RHASH_CRC32)) {
+			char crc32_str[9];
+			rhash_print(crc32_str, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
+			log_msg("warning: wrong embedded sum, should be %s\n", crc32_str);
+		} else return 0;
 	}
 
-	/* find file extension (the point to insert the hash sum) */
+	/* find file extension (as the place to insert the hash sum) */
 	for(; c >= info->full_path && !IS_PATH_SEPARATOR(*c); c--) {
 		if(*c == '.') {
 			p = c;
@@ -247,10 +249,10 @@ int rename_file_to_embed_crc32(struct file_info *info)
 	if(opt.embed_crc_delimiter && *opt.embed_crc_delimiter) *(insertion_point++) = *opt.embed_crc_delimiter;
 	rhash_print(insertion_point+1, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 	insertion_point[0] = '[';
-	insertion_point[9] = ']'; /* note: overrides '\0' inserted by rhash_print_sum() */
-	strcpy(insertion_point + 10, p);
+	insertion_point[9] = ']'; /* ']' overrides '\0' inserted by rhash_print_sum() */
+	strcpy(insertion_point + 10, p); /* append file extension */
 
-	/* try to rename */
+	/* rename the file */
 	if(rename(info->full_path, new_path) < 0) {
 		fprintf(rhash_data.log, PROGRAM_NAME ": can't move %s to %s: %s\n", info->full_path, new_path, strerror(errno));
 		free(new_path);
@@ -325,7 +327,7 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 	file_info_set_print_path(&info, print_path);
 	info.size = 0;
 
-	info.sums.flags = opt.sum_flags;
+	info.sums_flags = opt.sum_flags;
 
 	if(IS_DASH_STR(full_path)) {
 		print_path = "(stdin)";
@@ -351,7 +353,7 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 	init_percents(&info);
 	rhash_timer_start(&timer);
 
-	if(info.sums.flags) {
+	if(info.sums_flags) {
 		/* calculate sums */
 		if(calc_sums(&info) < 0) {
 			/* print error unless sharing access error occurred */
@@ -391,131 +393,13 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 			fflush(rhash_data.log);
 		}
 
-		if((opt.flags & OPT_SPEED) && info.sums.flags) {
+		if((opt.flags & OPT_SPEED) && info.sums_flags) {
 			print_file_time_stats(&info);
 		}
 	}
 	free(info.full_path);
 	file_info_destroy(&info);
 	return res;
-}
-
-/**
- * Return pointer to the binary hash by hash sum id.
- *
- * @param sums rhash_sums_t structure holding hashes for all supported algorithms
- * @param hash_id hash sum id
- * @return pointer to the hash sum digest
- */
-unsigned char* rhash_get_digest_ptr(struct rhash_sums_t *sums, unsigned hash_id)
-{
-	switch(hash_id) {
-		case RHASH_CRC32:
-			return sums->crc32.digest;
-		case RHASH_MD4:
-			return sums->md4_digest;
-		case RHASH_MD5:
-			return sums->md5_digest;
-		case RHASH_SHA1:
-			return sums->sha1_digest;
-		case RHASH_TIGER:
-			return sums->tiger_digest;
-		case RHASH_TTH:
-			return sums->tth_digest;
-		case RHASH_ED2K:
-			return sums->ed2k_digest;
-		case RHASH_AICH:
-			return sums->aich_digest;
-		case RHASH_WHIRLPOOL:
-			return sums->whirlpool_digest;
-		case RHASH_RIPEMD160:
-			return sums->ripemd160_digest;
-		case RHASH_GOST:
-			return sums->gost_digest;
-			break;
-		case RHASH_GOST_CRYPTOPRO:
-			return sums->gost_cryptopro_digest;
-			break;
-		case RHASH_SNEFRU256:
-			return sums->snefru256_digest;
-			break;
-		case RHASH_SNEFRU128:
-			return sums->snefru128_digest;
-			break;
-		case RHASH_HAS160:
-			return sums->has160_digest;
-			break;
-		case RHASH_BTIH:
-			return sums->btih_digest;
-			break;
-		case RHASH_SHA224:
-			return sums->sha224_digest;
-			break;
-		case RHASH_SHA256:
-			return sums->sha256_digest;
-			break;
-		case RHASH_SHA384:
-			return sums->sha384_digest;
-			break;
-		case RHASH_SHA512:
-			return sums->sha512_digest;
-			break;
-		case RHASH_EDONR256:
-			return sums->edonr256_digest;
-			break;
-		case RHASH_EDONR512:
-			return sums->edonr512_digest;
-			break;
-		default:
-			assert(0); /* impossible hash_id */
-	}
-	return 0;
-}
-
-/**
- * Retrieve binary values of all calculated hash sums from the info->rctx
- * RHash context and put them into the info->sums structure.
- *
- * @param info information about the file to process
- */
-static void fill_sums_struct(struct file_info *info)
-{
-	unsigned hash_ids = (info->sums.flags & RHASH_ALL_HASHES);
-	unsigned id = hash_ids & -(int)hash_ids;
-	assert(info->rctx != NULL);
-	assert(info->sums.flags != 0);
-	if(!id) return; /* protection, do nothing */
-
-	for(; id <= hash_ids; id <<= 1) {
-		if(id & hash_ids) {
-			char* digest = (char*)rhash_get_digest_ptr(&info->sums, id);
-			rhash_print(digest, info->rctx, id, RHPR_RAW);
-		}
-	}
-}
-
-/**
- * Forward and reverse compare. Compares two byte strings using
- * directed and reversed byte order. The function is used to compare
- * GOST hashes which can be reversed, because byte order of
- * an output string is not specified by GOST standard.
- * The function acts almost the same way as memcmp, by returning
- * always 1 for different strings.
- *
- * @param mem1 the first byte string
- * @param mem2 the second byte string
- * @param size the length of byte strings to much
- * 0 if strings are matched, 1 otherwise.
- */
-static int fr_cmp(const void* mem1, const void* mem2, size_t size)
-{
-	const char *p1, *p2, *pe;
-	if(memcmp(mem1, mem2, size) == 0) return 0;
-	p1 = (const char*)mem1, p2 = ((const char*)mem2) + size - 1;
-	for(pe = ((const char*)mem1) + size / 2; p1 < pe; p1++, p2--) {
-		if(*p1 != *p2) return 1;
-	}
-	return 0;
 }
 
 /**
@@ -526,18 +410,9 @@ static int fr_cmp(const void* mem1, const void* mem2, size_t size)
  */
 static int verify_sums(struct file_info *info)
 {
-	struct rhash_sums_t orig_sums;
 	timedelta_t timer;
 	int res = 0;
-
-	memcpy(&orig_sums, &info->sums, sizeof(orig_sums));
-	info->orig_sums = &orig_sums;
-	info->wrong_sums = 0;
 	errno = 0;
-
-	if(info->sums.flags & RHASH_IS_MIXED) {
-		info->sums.flags |= RHASH_MD5 | RHASH_ED2K;
-	}
 
 	/* initialize percents output */
 	init_percents(info);
@@ -547,101 +422,21 @@ static int verify_sums(struct file_info *info)
 		finish_percents(info, -1);
 		return -1;
 	}
-	fill_sums_struct(info);
 	info->time = rhash_timer_stop(&timer);
 
-	/* compare the sums and fill info->wrong_sums flags */
-	if((orig_sums.flags & RHASH_CRC32) && info->sums.crc32.be != orig_sums.crc32.be) {
-		info->wrong_sums |= RHASH_CRC32;
-	}
-	if((orig_sums.flags & RHASH_SHA1) && memcmp(info->sums.sha1_digest, orig_sums.sha1_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_SHA1;
-	}
-	if((orig_sums.flags & RHASH_TIGER) && memcmp(info->sums.tiger_digest, orig_sums.tiger_digest, 24) != 0) {
-		info->wrong_sums |= RHASH_TIGER;
-	}
-	if((orig_sums.flags & RHASH_TTH) && memcmp(info->sums.tth_digest, orig_sums.tth_digest, 24) != 0) {
-		info->wrong_sums |= RHASH_TTH;
-	}
-	if((orig_sums.flags & RHASH_AICH) && memcmp(info->sums.aich_digest, orig_sums.aich_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_AICH;
-	}
-	if((orig_sums.flags & RHASH_WHIRLPOOL) && memcmp(info->sums.whirlpool_digest, orig_sums.whirlpool_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_WHIRLPOOL;
-	}
-	if((orig_sums.flags & RHASH_GOST) && fr_cmp(info->sums.gost_digest, orig_sums.gost_digest, 32) != 0) {
-		info->wrong_sums |= RHASH_GOST;
-	}
-	if((orig_sums.flags & RHASH_GOST_CRYPTOPRO) && fr_cmp(info->sums.gost_cryptopro_digest, orig_sums.gost_cryptopro_digest, 32) != 0) {
-		info->wrong_sums |= RHASH_GOST_CRYPTOPRO;
-	}
-	if((orig_sums.flags & RHASH_BTIH) && memcmp(info->sums.btih_digest, orig_sums.btih_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_BTIH;
-	}
-	if((orig_sums.flags & RHASH_RIPEMD160) && memcmp(info->sums.ripemd160_digest, orig_sums.ripemd160_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_RIPEMD160;
-	}
-	if((orig_sums.flags & RHASH_HAS160) && memcmp(info->sums.has160_digest, orig_sums.has160_digest, 20) != 0) {
-		info->wrong_sums |= RHASH_HAS160;
-	}
-	if((orig_sums.flags & RHASH_SNEFRU128) && memcmp(info->sums.snefru128_digest, orig_sums.snefru128_digest, 16) != 0) {
-		info->wrong_sums |= RHASH_SNEFRU128;
-	}
-	if((orig_sums.flags & RHASH_SNEFRU256) && memcmp(info->sums.snefru256_digest, orig_sums.snefru256_digest, 32) != 0) {
-		info->wrong_sums |= RHASH_SNEFRU256;
-	}
-	if((orig_sums.flags & RHASH_SHA224) && memcmp(info->sums.sha224_digest, orig_sums.sha224_digest, 28) != 0) {
-		info->wrong_sums |= RHASH_SHA224;
-	}
-	if((orig_sums.flags & RHASH_SHA256) && memcmp(info->sums.sha256_digest, orig_sums.sha256_digest, 32) != 0) {
-		info->wrong_sums |= RHASH_SHA256;
-	}
-	if((orig_sums.flags & RHASH_SHA384) && memcmp(info->sums.sha384_digest, orig_sums.sha384_digest, 48) != 0) {
-		info->wrong_sums |= RHASH_SHA384;
-	}
-	if((orig_sums.flags & RHASH_SHA512) && memcmp(info->sums.sha512_digest, orig_sums.sha512_digest, 64) != 0) {
-		info->wrong_sums |= RHASH_SHA512;
-	}
-	if((orig_sums.flags & RHASH_EDONR256) && memcmp(info->sums.edonr256_digest, orig_sums.edonr256_digest, 32) != 0) {
-		info->wrong_sums |= RHASH_EDONR256;
-	}
-	if((orig_sums.flags & RHASH_EDONR512) && memcmp(info->sums.edonr512_digest, orig_sums.edonr512_digest, 64) != 0) {
-		info->wrong_sums |= RHASH_EDONR512;
+	if((opt.flags & OPT_EMBED_CRC) && find_embedded_crc32(
+		info->print_path, &info->hc.embedded_crc32_be)) {
+			info->hc.flags |= HC_HAS_EMBCRC32;
+			assert(info->hc.hash_mask & RHASH_CRC32);
 	}
 
-	if((orig_sums.flags & RHASH_MD4) && memcmp(info->sums.md4_digest, orig_sums.md4_digest, 16) != 0) {
-		info->wrong_sums |= RHASH_MD4;
-	}
-	if(orig_sums.flags & RHASH_MD5) {
-		if(memcmp(info->sums.md5_digest, orig_sums.md5_digest, 16) != 0 &&
-				((orig_sums.flags & RHASH_MD5_ED2K_MIXED_UP) == 0 ||
-				memcmp(info->sums.ed2k_digest, orig_sums.md5_digest, 16) != 0) ) {
-			info->wrong_sums |= RHASH_MD5;
-		}
-	}
-	if(orig_sums.flags & RHASH_ED2K) {
-		if(memcmp(info->sums.ed2k_digest, orig_sums.ed2k_digest, 16) != 0 &&
-				((orig_sums.flags & RHASH_MD5_ED2K_MIXED_UP) == 0 ||
-				memcmp(info->sums.md5_digest, orig_sums.ed2k_digest, 16) != 0) ) {
-			info->wrong_sums |= RHASH_ED2K;
-		}
-	}
-
-	if(opt.flags & OPT_EMBED_CRC) {
-		unsigned crc32_be;
-		if(find_embedded_crc32(info->print_path, &crc32_be)) {
-			if(crc32_be != info->sums.crc32.be)
-				info->wrong_sums |= RHASH_EMBEDDED_CRC32;
-		}
-	}
-
-	if(info->wrong_sums) {
+	if(!hash_check_verify(&info->hc, info->rctx)) {
 		res = -2;
 	}
 
 	finish_percents(info, res);
 
-	if((opt.flags & OPT_SPEED) && info->sums.flags) {
+	if((opt.flags & OPT_SPEED) && info->sums_flags) {
 		print_file_time_stats(info);
 	}
 	return res;
@@ -674,8 +469,10 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			memset(&info, 0, sizeof(info));
 			info.full_path = rsh_strdup(crc_file_path);
 			file_info_set_print_path(&info, info.full_path);
-			info.sums.flags = RHASH_CRC32;
-			info.sums.crc32.be = crc32_be;
+			info.sums_flags = info.hc.hash_mask = RHASH_CRC32;
+			info.hc.flags = HC_HAS_EMBCRC32;
+			info.hc.embedded_crc32_be = crc32_be;
+
 			res = verify_sums(&info);
 			fflush(rhash_data.out);
 
@@ -738,10 +535,14 @@ int check_hash_file(const char* crc_file_path, int chdir)
 		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		memset(&info, 0, sizeof(info));
-		parse_crc_file_line(line, &info.print_path, &info.sums, !feof(fd));
+
+		if(hash_check_parse_line(line, &info.hc, !feof(fd))) {
+			info.print_path = info.hc.file_path;
+			info.sums_flags = info.hc.hash_mask;
+		} else info.print_path = NULL;
 
 		/* see if crc file contains a hash sum without a filename */
-		if(!info.print_path && info.sums.flags) {
+		if(!info.print_path && info.sums_flags) {
 			char* point;
 			path_without_ext = rsh_strdup(crc_file_path);
 			point = strrchr(path_without_ext, '.');
@@ -752,7 +553,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			}
 		}
 
-		if(!info.print_path || !info.sums.flags) {
+		if(!info.print_path || !info.sums_flags) {
 			log_msg("warning: can't parse line: %s\n", buf);
 		} else {
 			int is_absolute = IS_PATH_SEPARATOR(info.print_path[0]);

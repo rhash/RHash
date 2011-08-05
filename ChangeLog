@@ -1,3 +1,6 @@
+Fri Aug  5 2011 Aleksey
+	* supported verification of sha256, sha512 and other hash sums
+
 Mon Jul 11 2011 Aleksey
 	* librhash: rhash_cancel() macro to cancel hashing from another thread
 
