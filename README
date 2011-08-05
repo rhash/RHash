@@ -33,20 +33,24 @@ Features:
  * Portability: the library works on Linux, *BSD and Windows.
 
 
-                        === About hash functions ===
+                               === Links ===
+
+ * Project Home Page: http://rhash.sourceforge.net/
+ * Oficial Releases: http://sf.net/projects/rhash/files/rhash/
 
  * RHash hash functions descriptions http://rhash.anz.ru/hashes.php
- * Table of the hash functions supported by RHash
-   https://sourceforge.net/apps/mediawiki/rhash/index.php?title=Hash_sums
+ * The table of the hash functions supported by RHash
+   http://sf.net/apps/mediawiki/rhash/index.php?title=Hash_sums
  * ECRYPT: The Hash Function Zoo
    http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo
 
 
-                         === Project information ===
+                     === Getting latest source code ===
 
- * Home Page: http://rhash.sourceforge.net/
- * Oficial Releases: https://sourceforge.net/projects/rhash/files/rhash/
- * The Latest Source Code: https://github.com/rhash/RHash/
+The latest source code can be obtained from Git repository by command:
+
+  git clone git://github.com/rhash/RHash.git
+
 
                        === Notes on RHash License ===
 
