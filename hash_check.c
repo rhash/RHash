@@ -46,6 +46,23 @@ static void urldecode(char *buffer)
 	*wpos = '\0'; /* terminate decoded string */
 }
 
+#ifndef _WIN32
+/**
+ * Convert a windows file path to a unix one, replacing '\\' by '/'.
+ *
+ * @param path the path to convert
+ * @return converted path
+ */
+static void process_backslashes(char* path)
+{
+  for(;*path;path++) {
+    if(*path == '\\') *path = '/';
+  }
+}
+#else /* _WIN32 */
+#define process_backslashes(path)
+#endif /* _WIN32 */
+
 /**
  * Encode a hash function digest size into a small number in {0,...,24}.
  * The digest size must be a positive number not greater then 128.
@@ -455,15 +472,19 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 		return 0;
 	}
 
+	assert(hashes->file_path == 0);
+
 	/* if !single_hash then we shall extract filepath from the line */
 	if(url_name) {
 		hashes->file_path = url_name;
 		url_name[url_length] = '\0';
 		urldecode(url_name); /* decode filename from URL */
-	} else if(hashes->file_path == 0 && !single_hash) {
+		process_backslashes(url_name);
+	} else if(!single_hash) {
 		assert(hs.begin < hs.end);
 		hashes->file_path = hs.begin;
 		*hs.end = '\0';
+		process_backslashes(hs.begin);
 	}
 
 	if(reversed) {

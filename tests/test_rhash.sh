@@ -105,7 +105,7 @@ TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.da
 match "$TEST_RESULT" "^test1K.data *OK"
 
 if [ "$FULL_TEST" = 1 ]; then
-  new_test "test all hash options       "
+  new_test "test all hash options:      "
   errors=0
   for opt in $HASHOPT ; do
     TEST_RESULT=$( echo -n "a" | $rhash --$opt --simple - )

@@ -66,10 +66,10 @@ for a long-term storing or transferring.
 %setup
 
 %build
-%{__make} OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" OPTLDFLAGS= ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl lib-shared all
+%{__make} CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl lib-shared all
 
 %check
-%{__make} OPTFLAGS="$RPM_OPT_FLAGS -DNDEBUG" ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS=-ldl test
+%{__make} CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl test
 
 %install
 %{__make} PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" install install-lib-static install-lib-shared
