@@ -28,6 +28,7 @@ static int fix_sfv_header(const char* crc_filepath);
  * directory, but which the crc file doesn't contain yet.
  *
  * @param crc_file_path the path to the crc file
+ * @return 0 on success, -1 on fail
  */
 int update_hash_file(const char* crc_file_path)
 {
@@ -69,6 +70,7 @@ int update_hash_file(const char* crc_file_path)
  *
  * @param set the file set to store loaded files
  * @param crc_file_path the crc file to load
+ * @return 0 on success, -1 on fail with error code in errno
  */
 static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 {
@@ -83,7 +85,6 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 	}
 	for(line_num = 0; fgets(buf, 2048, fd); line_num++) {
 		char* line = buf;
-		file_item *item;
 
 		/* skip unicode BOM */
 		if(line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
@@ -98,16 +99,12 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 
 		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
-		item = file_item_new(NULL);
-
 		/* parse a hash file line */
 		if(hash_check_parse_line(line, &hc, !feof(fd))) {
 			/* store file info to the file set */
-			file_item_set_filepath(item, hc.file_path);
-			file_set_add(set, item);
+			file_set_add_name(set, hc.file_path);
 		} else {
 			log_msg("warning: can't parse line: %s\n", buf);
-			file_item_free(item);
 		}
 	}
 	fclose(fd);
@@ -192,28 +189,6 @@ static int add_sums_to_file(const char* crc_file_path, char* dir_path, file_set 
 }
 
 /**
- * Compare two file items by filepath.
- *
- * @param rec1 pointer to the first file_item structure
- * @param rec2 pointer to the second file_item structure
- * @return 0 if files have the same filepath, and -1 or 1 (strcmp result) if not
- */
-static int name_compare(const void *rec1, const void *rec2)
-{
-	return strcmp((*(file_item *const *)rec1)->filepath, (*(file_item *const *)rec2)->filepath);
-}
-
-/**
- * Sort files in the specified fileset by file path.
- *
- * @param set the file-set to sort
- */
-static void sort_file_set_by_path(file_set *set)
-{
-	qsort(set->array, set->size, sizeof(file_item*), name_compare);
-}
-
-/**
  * Read a directory and load files not present in the crc_entries file-set
  * into the files_to_add file-set.
  *
@@ -234,7 +209,6 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 
 	while((de = readdir(dp)) != NULL) {
 		char *path;
-		file_item* item;
 		int res;
 
 		/* skip "." and ".." directories */
@@ -251,14 +225,13 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 		/* skip unaccessible files and directories
 		 * as well as files not accepted by current file filter
 		 * and files already present in the crc_entries file set */
-		if( res < 0 || S_ISDIR(st.st_mode) ||
+		if(res < 0 || S_ISDIR(st.st_mode) ||
 				!file_mask_match(opt.files_accept, de->d_name) ||
-				file_set_find(crc_entries, de->d_name) ) {
+				file_set_exist(crc_entries, de->d_name)) {
 			continue;
 		}
 
-		item = file_item_new(de->d_name);
-		file_set_add(files_to_add, item);
+		file_set_add_name(files_to_add, de->d_name);
 	}
 	return 0;
 }
@@ -291,13 +264,13 @@ static int add_new_crc_entries(const char* crc_file_path, file_set *crc_entries)
 
 	if(files_to_add->size > 0) {
 		/* sort files by path */
-		sort_file_set_by_path(files_to_add);
+		file_set_sort_by_path(files_to_add);
 
 		/* calculate and write crc sums to the file */
 		res = add_sums_to_file(crc_file_path, dir_path, files_to_add);
 
 		if(res == 0 && opt.fmt == FMT_SFV) {
-			/* move sfv header from the end of updated file to its head */
+			/* move SFV header from the end of updated file to its head */
 			res = fix_sfv_header(crc_file_path);
 		}
 	}

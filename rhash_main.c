@@ -18,7 +18,6 @@
 #include "librhash/timing.h"
 #include "win_utils.h"
 #include "find_file.h"
-#include "file_set.h"
 #include "calc_sums.h"
 #include "crc_update.h"
 #include "file_mask.h"

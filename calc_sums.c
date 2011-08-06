@@ -17,7 +17,6 @@
 #include "librhash/timing.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
-#include "file_set.h"
 #include "crc_print.h"
 #include "output.h"
 #include "win_utils.h"
