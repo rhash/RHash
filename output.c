@@ -427,12 +427,11 @@ void setup_output(void)
 	rhash_data.log = stderr;
 
 	if(opt.flags & OPT_PERCENTS) {
-		/* we don't use _fileno() cause it is not in ISO C90, and so undefined
-		when compiling with the GCC -ansi option */
+		/* we don't use _fileno() cause it is not in ISO C90, and so
+		 * is incompatible with the GCC -ansi option */
 		if(rhash_data.log == stderr && isatty(2)) {
 			percents_output  = &p_perc;
-		} else
-		{
+		} else {
 			percents_output  = &dots_perc;
 		}
 	} else {

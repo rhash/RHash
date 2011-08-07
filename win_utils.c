@@ -229,6 +229,7 @@ int can_open_exclusive(const char* path)
  * @param dir_path directory path
  * @param dir_len length of directory path in characters
  * @param filename the file name to append to the directory
+ * @return concatenated path
  */
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 {
@@ -328,15 +329,17 @@ void setup_console(void)
 		rsh_exit = rhash_exit;
 	}
 
-	hOut = GetStdHandle(STD_ERROR_HANDLE);
-	if(hOut != INVALID_HANDLE_VALUE) {
-		/* store current cusor size and visibility flag */
-		GetConsoleCursorInfo(hOut, &cci);
-		rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
+	if((opt.flags & OPT_PERCENTS) != 0) {
+		hOut = GetStdHandle(STD_ERROR_HANDLE);
+		if(hOut != INVALID_HANDLE_VALUE) {
+			/* store current cursor size and visibility flag */
+			GetConsoleCursorInfo(hOut, &cci);
+			rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
-		/* now hide cursor */
-		cci.bVisible = 0;
-		SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
+			/* now hide cursor */
+			cci.bVisible = 0;
+			SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
+		}
 	}
 }
 

@@ -37,13 +37,13 @@ struct vector_t* rsh_vector_new_simple(void);
 void rsh_vector_free(struct vector_t* vect);
 void rsh_vector_destroy(struct vector_t* vect);
 void rsh_vector_add_ptr(struct vector_t* vect, void *item);
-void rsh_vector_item_add_empty(struct vector_t* vect, size_t item_size);
+void rsh_vector_add_empty(struct vector_t* vect, size_t item_size);
 #define rsh_vector_add_uint32(vect, item) { \
-	rsh_vector_item_add_empty(vect, item_size); \
+	rsh_vector_add_empty(vect, item_size); \
 	((unsigned*)(vect)->array)[(vect)->size - 1] = item; \
 }
 #define rsh_vector_add_item(vect, item, item_size) { \
-	rsh_vector_item_add_empty(vect, item_size); \
+	rsh_vector_add_empty(vect, item_size); \
 	memcpy(((char*)(vect)->array) + item_size * ((vect)->size - 1), item, item_size); \
 }
 
@@ -55,7 +55,6 @@ typedef struct blocks_vector_t
 } blocks_vector_t;
 
 void rsh_blocks_vector_init(struct blocks_vector_t*);
-/* #define rsh_blocks_vector_init(bvector) memset(bvector, 0, sizeof(*bvector)); */
 void rsh_blocks_vector_destroy(struct blocks_vector_t* vect);
 #define rsh_blocks_vector_get_item(bvector, index, blocksize, item_type) \
 	(&((item_type*)((bvector)->blocks.array[(index) / (blocksize)]))[(index) % (blocksize)])

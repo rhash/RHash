@@ -253,7 +253,7 @@ enum option_type_t
 	F_NEED_PARAM = 16, /* flag: option needs a parameter */
 	F_OUTPUT_OPT = 32, /* flag: option changes program output */
 	F_UFLG = 1, /* set a bit flag in a uint32_t field */
-	F_UENC = 1 | F_OUTPUT_OPT, /* an encoding changing option */
+	F_UENC = F_UFLG | F_OUTPUT_OPT, /* an encoding changing option */
 	F_CSTR = 2 | F_NEED_PARAM, /* store parameter as a C string */
 	F_OPTH = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 4, /* just call a function */
@@ -319,7 +319,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },
 	{ F_UFLG, 'i',   0, "ignore-case", &opt.flags, OPT_IGNORE_CASE },
-	{ F_UFLG,   0,   0, "percents", &opt.flags, OPT_PERCENTS },
+	{ F_UENC,   0,   0, "percents", &opt.flags, OPT_PERCENTS },
 	{ F_UFLG,   0,   0, "speed",  &opt.flags, OPT_SPEED },
 	{ F_UFLG, 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
 	{ F_CSTR,   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },

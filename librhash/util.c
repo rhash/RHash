@@ -235,7 +235,7 @@ void rsh_vector_add_ptr(vector_t* vect, void* item)
  * @param vect pointer to the vector to add item to
  * @param item the size of a vector item
  */
-void rsh_vector_item_add_empty(struct vector_t* vect, size_t item_size)
+void rsh_vector_add_empty(struct vector_t* vect, size_t item_size)
 {
 	/* check if vect contains enough space for next item */
 	if(vect->size >= vect->allocated) {
