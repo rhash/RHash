@@ -102,9 +102,7 @@ static int file_set_load_from_crc_file(file_set *set, const char* crc_file_path)
 		/* parse a hash file line */
 		if(hash_check_parse_line(line, &hc, !feof(fd))) {
 			/* store file info to the file set */
-			file_set_add_name(set, hc.file_path);
-		} else {
-			log_msg("warning: can't parse line: %s\n", buf);
+			if(hc.file_path) file_set_add_name(set, hc.file_path);
 		}
 	}
 	fclose(fd);
@@ -132,7 +130,7 @@ static int add_sums_to_file(const char* crc_file_path, char* dir_path, file_set 
 	int print_banner = (opt.fmt == FMT_SFV);
 	st.st_size = 0;
 	if(rsh_stat(crc_file_path, &st) == 0) {
-			if(print_banner && st.st_size > 0) print_banner = 0;
+		if(print_banner && st.st_size > 0) print_banner = 0;
 	}
 
 	/* open crc_file_path for writing */

@@ -534,14 +534,16 @@ int check_hash_file(const char* crc_file_path, int chdir)
 		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		memset(&info, 0, sizeof(info));
+		rhash_data.processed++;
 
-		if(hash_check_parse_line(line, &info.hc, !feof(fd))) {
-			info.print_path = info.hc.file_path;
-			info.sums_flags = info.hc.hash_mask;
-		} else info.print_path = NULL;
+		if(!hash_check_parse_line(line, &info.hc, !feof(fd))) continue;
+		if(info.hc.hash_mask == 0) continue;
+
+		info.print_path = info.hc.file_path;
+		info.sums_flags = info.hc.hash_mask;
 
 		/* see if crc file contains a hash sum without a filename */
-		if(!info.print_path && info.sums_flags) {
+		if(info.print_path == NULL) {
 			char* point;
 			path_without_ext = rsh_strdup(crc_file_path);
 			point = strrchr(path_without_ext, '.');
@@ -552,9 +554,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			}
 		}
 
-		if(!info.print_path || !info.sums_flags) {
-			log_msg("warning: can't parse line: %s\n", buf);
-		} else {
+		if(info.print_path != NULL) {
 			int is_absolute = IS_PATH_SEPARATOR(info.print_path[0]);
 			IF_WINDOWS(is_absolute = is_absolute || (info.print_path[0] && info.print_path[1] == ':'));
 
@@ -578,7 +578,6 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			if(res == 0) rhash_data.ok++;
 			else if(res == -1 && errno == ENOENT) rhash_data.miss++;
 		}
-		rhash_data.processed++;
 		free(path_without_ext);
 	}
 	time = rhash_timer_stop(&timer);
