@@ -28,13 +28,13 @@
  *     RHash.computeHash("Hello, world!");
  *     RHash.computeHash(new byte[] { 0, 1, 2, 3});
  *     RHash.computeHash(new File("SomeFile.txt"));</pre>
- * These methods return value of type <code>Hash</code> which is
- * a message digest. To convert <code>Hash</code> in human readable
+ * These methods return value of type <code>Digest</code> which is
+ * a message digest. To convert <code>Digest</code> in human readable
  * format you might use one of methods
- * {@link org.sf.rhash.Hash#hex() hex()},
- * {@link org.sf.rhash.Hash#base32() base32()},
- * {@link org.sf.rhash.Hash#base64() base64()} or
- * {@link org.sf.rhash.Hash#raw() raw()}.
+ * {@link org.sf.rhash.Digest#hex() hex()},
+ * {@link org.sf.rhash.Digest#base32() base32()},
+ * {@link org.sf.rhash.Digest#base64() base64()} or
+ * {@link org.sf.rhash.Digest#raw() raw()}.
  * </p><p>
  * Next, <code>RHash</code> allows you to do incremental hashing,
  * processing data given in portions like it was one big byte sequence.
@@ -44,7 +44,7 @@
  * <pre>
  *     RHash hasher = new RHash(HashType.MD5);
  *     hasher.update("Foo").update(new File("Bar.zip")).finish();
- *     Hash result = hasher.getDigest();</pre>
+ *     Digest result = hasher.getDigest();</pre>
  * Method <code>finish()</code> should be called before obtaining
  * digest to end all calculations and generate result.
  * </p><p>
