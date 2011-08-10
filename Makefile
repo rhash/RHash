@@ -255,7 +255,7 @@ rpm: gzip
 	mv -f `find $(RPMTOP) -name "*rhash*-$(VERSION)*.rpm"` .
 	rm -rf $(RPMTOP)
 
-dist-clean: clean
+distclean: clean
 
 clean:
 	cd librhash && make clean
