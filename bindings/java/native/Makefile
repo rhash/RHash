@@ -19,6 +19,7 @@
 CC = gcc
 CFLAGS = -g -O2
 LDFLAGS = -lrhash
+ALLCFLAGS = $(CFLAGS) -fPIC
 
 #Platform dependent
 JNI_INCLUDES = /usr/lib/jvm/default-java/include
@@ -31,10 +32,10 @@ LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
 all: $(LIBRARY)
 
 bindings.o: bindings.c bindings.h
-	$(CC) $(CFLAGS) -I$(JNI_INCLUDES) -c $< -o $@
+	$(CC) $(ALLCFLAGS) -I$(JNI_INCLUDES) -c $< -o $@
 
 digest.o: digest.c digest.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(ALLCFLAGS) -c $< -o $@
 
 $(LIBRARY): $(OBJECTS)
 	$(CC) $(LDFLAGS) -shared -o $@ $(OBJECTS)

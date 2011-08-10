@@ -27,12 +27,12 @@ static void rh_free(rhash ctx) {
 
 static VALUE rh_update(VALUE self, VALUE msg) {
 	rhash ctx;
-	Data_Get_Struct(self, rhash, ctx);
+	Data_Get_Struct(self, struct rhash_context, ctx);
 	
 	//converting to string
 	msg = rb_funcall(msg, rb_intern("to_s"), 0);
 	
-	int len;
+	long len;
 	char *data = rb_str2cstr(msg, &len);
 	
 	rhash_update(ctx, data, len);
@@ -41,14 +41,14 @@ static VALUE rh_update(VALUE self, VALUE msg) {
 
 static VALUE rh_finish(VALUE self) {
 	rhash ctx;
-	Data_Get_Struct(self, rhash, ctx);
+	Data_Get_Struct(self, struct rhash_context, ctx);
 	rhash_final(ctx, NULL);
 	return Qnil;
 }
 
 static VALUE rh_reset(VALUE self) {
 	rhash ctx;
-	Data_Get_Struct(self, rhash, ctx);
+	Data_Get_Struct(self, struct rhash_context, ctx);
 	rhash_reset(ctx);
 	return Qnil;
 }
@@ -56,7 +56,7 @@ static VALUE rh_reset(VALUE self) {
 static VALUE rh_print(VALUE self, VALUE type, int flags) {
 	char buf[130];
 	rhash ctx;
-	Data_Get_Struct(self, rhash, ctx);
+	Data_Get_Struct(self, struct rhash_context, ctx);
 	int len = rhash_print(buf, ctx, type == Qnil ? 0 : FIX2INT(type), flags);
 	return rb_str_new(buf, len);
 }

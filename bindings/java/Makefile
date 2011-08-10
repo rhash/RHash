@@ -61,7 +61,7 @@ javadoc: clean-javadoc
 
 test: jar jni
 	$(JAVAC) -classpath $(JARFILE) $(TEST_DIR)/Test.java
-	$(JAVA) -classpath $(TEST_DIR):$(JARFILE) -Djava.library.path=dist Test
+	$(JAVA) -classpath $(TEST_DIR):$(JARFILE) -Djava.library.path=$(DEST_DIR) Test
 
 clean: clean-javadoc clean-jni clean-classes clean-test
 
@@ -73,11 +73,11 @@ clean-classes:
 
 clean-jni:
 	$(MAKE) -C $(CSRC_DIR) clean
-	
+
 clean-test:
 	rm -f $(TEST_DIR)/*.class
-	
-distclean:
+
+distclean: clean
 	rm -rf $(DEST_DIR)
 
 .PHONY: jar jni javadoc clean clean-javadoc distclean
