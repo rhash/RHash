@@ -23,7 +23,7 @@ JAVADOC = javadoc
 JAVAH = javah
 JAR = jar
 
-VERSION = 1.2.5
+VERSION = $(shell sed -e 's/\(.*\)"\(.*\)"\(.*\)/\2/' ../../version.h)
 
 JAVASRC_DIR = src
 CSRC_DIR    = native
