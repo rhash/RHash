@@ -3,7 +3,7 @@
 # compile for pentiumpro: make OPTFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
 # create rpm with statically linked program: make rpm LDFLAGS="-Llibrhash -lrhash -static -s -Wl,--gc-sections"
 CC      = gcc
-VERSION = 1.2.6
+VERSION = 1.2.7
 PREFIX  = /usr/local
 # we use OPTFLAGS/OPTLDFLAGS for compatibilty with older makefiles
 OPTFLAGS = -O2 -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections
