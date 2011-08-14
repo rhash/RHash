@@ -214,6 +214,7 @@ static int hash_check_find_str(hc_search *search, const char* format)
 	hash_check* hc = search->hc;
 	hash_value hv;
 	int unsaved_hashval = 0;
+	memset(&hv, 0, sizeof(hash_value));
 
 	while(format < fend) {
 		const char *search_str;
@@ -354,9 +355,9 @@ static int hash_check_find_str(hc_search *search, const char* format)
 int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 {
 	hc_search hs;
+	char* le = strchr(line, '\0'); /* set pointer to the end of line */
 	char* url_name = NULL;
-	size_t url_length;
-	char *le = strchr(line, '\0'); /* set pointer to the end of line */
+	size_t url_length = 0;
 	int single_hash = 0;
 	int reversed = 0;
 	int bad = 0;

@@ -374,7 +374,9 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 
 			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
 			assert(len < sizeof(buffer));
-			fwrite(buffer, 1, len, out);
+
+			/* output the hash, exit on fail */
+			if(fwrite(buffer, 1, len, out) != len) break;
 			continue;
 		}
 
