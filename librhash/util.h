@@ -96,7 +96,8 @@ void rsh_str_append(strbuf_t *str, const char* text);
 #define rsh_wstr_ensure_length(str, len) \
 	if((size_t)((len) + 2) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 2);
 
-#if (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ > 4 || __GNUC_MINOR__ >= 1) && !defined(__arm__)) \
+#if (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ > 4 || __GNUC_MINOR__ >= 1) \
+	&& defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) \
 	|| (defined(__INTEL_COMPILER) && !defined(_WIN32))
 /* atomic operations are defined by ICC and GCC >= 4.1, but by the later one supposedly not for ARM */
 /* note: ICC on ia64 platform possibly require ia64intrin.h, need testing */
