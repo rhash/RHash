@@ -78,7 +78,8 @@ struct options_t {
 	unsigned openssl_mask;  /* mask which openssl hashes to use */
 
 	char** argv;
-	char** files;
+	char** files; /* the files to process */
+	int n_files; /* the number of files */
 	struct vector_t *cmd_vec; /* vector for command line arguments */
 	struct vector_t *mem; /* heap variables that should be freed */
 };

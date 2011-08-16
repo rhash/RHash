@@ -145,24 +145,26 @@ static int load_printf_template(void)
  */
 static void print_sfv_file_header(void)
 {
+	int i;
+
 	/* print SFV file header */
 	if(opt.fmt == FMT_SFV && opt.mode == 0) {
-		char **f;
 		print_sfv_banner(rhash_data.out);
 
-		for(f = opt.files; *f != NULL; f++) {
+		for(i = 0; i < opt.n_files; i++) {
+			char *path = opt.files[i];
 			if(opt.flags & OPT_RECURSIVE) {
 				struct rsh_stat_struct stat_buf;
-				if(rsh_stat(*f, &stat_buf) < 0) {
+				if(rsh_stat(path, &stat_buf) < 0) {
 					continue; /* don't report error here, it'll be reported later */
 				}
 				/* if file is a directory, then walk it recursively */
 				if(S_ISDIR(stat_buf.st_mode)) {
-					find_file(*f, find_file_callback, 0, opt.find_max_depth, (void*)1);
+					find_file(path, find_file_callback, 0, opt.find_max_depth, (void*)1);
 					continue;
 				}
 			}
-			print_sfv_header_line(rhash_data.out, *f, *f);
+			print_sfv_header_line(rhash_data.out, path, path);
 		}
 		fflush(rhash_data.out);
 	}
@@ -175,39 +177,40 @@ static void process_files(void)
 {
 	timedelta_t timer;
 	struct rsh_stat_struct stat_buf;
+	int i;
 	rhash_timer_start(&timer);
 	rhash_data.processed = 0;
 
 	/* process filenames */
-	for (;*opt.files != NULL;opt.files++) {
+	for(i = 0; i < opt.n_files; i++) {
 		int res = 0;
+		char* filepath = opt.files[i];
 		stat_buf.st_mode = 0;
 
-		if(!IS_DASH_STR(*opt.files) && rsh_stat(*opt.files, &stat_buf) < 0) {
-			log_file_error(*opt.files);
+		if(!IS_DASH_STR(filepath) && rsh_stat(filepath, &stat_buf) < 0) {
+			log_file_error(filepath);
 			continue;
 		}
 		if(opt.flags & OPT_RECURSIVE) {
 			if(S_ISDIR(stat_buf.st_mode)) {
-				find_file(*opt.files, find_file_callback, 0, opt.find_max_depth, NULL);
+				find_file(filepath, find_file_callback, 0, opt.find_max_depth, NULL);
 				continue;
 			}
-		}
-		else{
+		} else {
 			if(S_ISDIR(stat_buf.st_mode)){
 				if(opt.flags & OPT_VERBOSE){
-					log_msg("warning: %s: is a directory\n", *opt.files);
+					log_msg("warning: %s: is a directory\n", filepath);
 				}
 				continue;
 			}
 		}
 
 		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			res = check_hash_file(*opt.files, 0);
+			res = check_hash_file(filepath, 0);
 		} else if(opt.mode & MODE_UPDATE) {
-			res = update_hash_file(*opt.files);
+			res = update_hash_file(filepath);
 		} else {
-			res = calculate_and_print_sums(rhash_data.out, *opt.files, *opt.files, &stat_buf);
+			res = calculate_and_print_sums(rhash_data.out, filepath, filepath, &stat_buf);
 			rhash_data.processed++;
 		}
 		if(res < 0) rhash_data.error_flag = 1;
@@ -264,7 +267,7 @@ int main(int argc, char *argv[])
 		rsh_exit(0);
 	}
 
-	if (opt.files == NULL || *opt.files == NULL) {
+	if(opt.n_files == 0) {
 		if(argc > 1) {
 			log_msg("warning: no files/directories were specified at command line\n");
 		}

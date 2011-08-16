@@ -946,15 +946,15 @@ void read_options(int argc, char *argv[])
 		for(; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--) *p = 0;
 		expand_wildcards(expanded_cnames, path);
 	}
-	/* the following NULL marks the end of files */
-	if(cmd_line.n_files) rsh_vector_add_ptr(expanded_cnames, NULL);
 
 	opt.cmd_vec = expanded_cnames;
 	opt.files = (char**)expanded_cnames->array;
+	opt.n_files = (int)expanded_cnames->size;
 	free(cmd_line.files);
 	LocalFree(cmd_line.warg);
 #else
 	opt.files = cmd_line.files;
+	opt.n_files = cmd_line.n_files;
 	rsh_vector_add_ptr(opt.mem, opt.files);
 #endif
 
