@@ -241,8 +241,8 @@ int rename_file_to_embed_crc32(struct file_info *info)
 		}
 	}
 
-	/* now p is the point to insert the 10-bytes hash string */
-	new_path = (char*)rsh_malloc(len + 11);
+	/* now p is the point to insert delimiter + hash string in brackets */
+	new_path = (char*)rsh_malloc(len + 12);
 	insertion_point = new_path + (p - info->full_path);
 	memcpy(new_path, info->full_path, p - info->full_path);
 	if(opt.embed_crc_delimiter && *opt.embed_crc_delimiter) *(insertion_point++) = *opt.embed_crc_delimiter;
