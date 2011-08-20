@@ -1,7 +1,4 @@
-# Samples of usage:
-# compile with debug info: make OPTFLAGS=-g LDFLAGS= TARGET=rhash.debug
-# compile for pentiumpro: make OPTFLAGS="-O2 -march=i586 -mcpu=pentiumpro"
-# create rpm with statically linked program: make rpm LDFLAGS="-static -s -Wl,--gc-sections"
+# Makefile for LibRHash
 CC      = gcc
 AR      = ar
 #NOTE: NDEBUG turns off asserts

@@ -1,13 +1,13 @@
-# Samples of usage:
-# compile with debug info: make OPTFLAGS=-g OPTLDFLAGS= TARGET=rhash.debug
-# compile for pentiumpro: make OPTFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
-# create rpm with statically linked program: make rpm LDFLAGS="-Llibrhash -lrhash -static -s -Wl,--gc-sections"
+# Sample usage:
+# compile with debug info: make CFLAGS=-g
+# compile for pentiumpro: make CFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
+# create rpm with statically linked program: make rpm ADDLDFLAGS="-static -s -Wl,--gc-sections"
 CC      = gcc
 VERSION = 1.2.7
 PREFIX  = /usr/local
-# we use OPTFLAGS/OPTLDFLAGS for compatibilty with older makefiles
+# using OPTFLAGS/OPTLDFLAGS for compatibilty with old scripts using this makefile
 OPTFLAGS = -O2 -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections
-OPTLDFLAGS = -s
+OPTLDFLAGS =
 CFLAGS = $(OPTFLAGS)
 LDFLAGS = $(OPTLDFLAGS)
 ADDCFLAGS =
