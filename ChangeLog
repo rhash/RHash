@@ -1,6 +1,7 @@
 Sat Aug 20 2011 Aleksey
-	* Bugfix: Buffer overflow when using --embed-crc-delimiter
-	* Bugfix: Segmentation fault on SUSE Linux
+	* Bugfix: fix broken --openssl option parsing
+	* Bugfix: buffer overflow when using --embed-crc-delimiter
+	* Bugfix: segmentation fault on SUSE Linux
 
 Sun Aug 14 2011 Aleksey
 	* === Version 1.2.7 ===

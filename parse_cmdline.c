@@ -127,7 +127,7 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 #ifdef USE_OPENSSL
 	char *cur, *next;
 	(void)type;
-	o->openssl_mask = 0x80000000;
+	o->openssl_mask = 0x80000000; /* turn off using default mask */
 
 	/* set the openssl_mask */
 	for(cur = openssl_hashes; cur && *cur; cur = next) {
@@ -135,10 +135,10 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 		unsigned bit;
 		size_t length;
 		next = strchr(cur, ',');
-		length = (next != NULL ? (size_t)(next - cur) : strlen(cur));
+		length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
 
 		for(bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
-			if( (bit && OPENSSL_SUPPORTED_HASHES_MASK) &&
+			if( (bit & OPENSSL_SUPPORTED_HASHES_MASK) &&
 				memcmp(cur, info->short_name, length) == 0 &&
 				info->short_name[length] == 0) {
 					o->openssl_mask |= bit;
@@ -146,7 +146,7 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 			}
 		}
 		if(bit > RHASH_ALL_HASHES) {
-			cur[length] = 0;
+			cur[length] = '\0'; /* terminate wrong hash name */
 			log_msg(PROGRAM_NAME " warning: openssl option doesn't support '%s' hash\n", cur);
 		}
 	}
