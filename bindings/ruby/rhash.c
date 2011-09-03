@@ -28,14 +28,12 @@ static void rh_free(rhash ctx) {
 static VALUE rh_update(VALUE self, VALUE msg) {
 	rhash ctx;
 	Data_Get_Struct(self, struct rhash_context, ctx);
-	
-	//converting to string
-	msg = rb_funcall(msg, rb_intern("to_s"), 0);
-	
-	long len;
-	char *data = rb_str2cstr(msg, &len);
-	
-	rhash_update(ctx, data, len);
+
+	if (TYPE(msg) != T_STRING) {
+		msg = rb_obj_as_string(msg); // convert to string
+	}
+
+	rhash_update(ctx, RSTRING_PTR(msg), RSTRING_LEN(msg));
 	return self;
 }
 
@@ -43,14 +41,14 @@ static VALUE rh_finish(VALUE self) {
 	rhash ctx;
 	Data_Get_Struct(self, struct rhash_context, ctx);
 	rhash_final(ctx, NULL);
-	return Qnil;
+	return self;
 }
 
 static VALUE rh_reset(VALUE self) {
 	rhash ctx;
 	Data_Get_Struct(self, struct rhash_context, ctx);
 	rhash_reset(ctx);
-	return Qnil;
+	return self;
 }
 
 static VALUE rh_print(VALUE self, VALUE type, int flags) {
@@ -85,8 +83,10 @@ static VALUE rh_to_base64(int argc, VALUE* argv, VALUE self) {
 	return rh_print(self, type, RHPR_BASE64);
 }
 
-static VALUE rh_to_s(VALUE self) {
-	return rh_print(self, 0, 0);
+static VALUE rh_to_s(int argc, VALUE* argv, VALUE self) {
+	VALUE type;
+	rb_scan_args(argc, argv, "01", &type);
+	return rh_print(self, type, 0);
 }
 
 static VALUE rh_is_base32(VALUE self, VALUE type) {
@@ -126,7 +126,7 @@ void Init_rhash() {
 	rb_define_method(cRHash, "to_hex",     rh_to_hex, -1);
 	rb_define_method(cRHash, "to_base32",  rh_to_base32, -1);
 	rb_define_method(cRHash, "to_base64",  rh_to_base64, -1);
-	rb_define_method(cRHash, "to_s",       rh_to_s, 0);
+	rb_define_method(cRHash, "to_s",       rh_to_s, -1);
 	
 	rb_eval_string(
 "class RHash \n\
