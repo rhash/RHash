@@ -289,7 +289,7 @@ static void save_torrent(struct file_info* info)
 	memcpy(path + path_len, ".torrent", 9);
 
 	/* get torrent file content */
-	text_len = rhash_transmit(RMSG_BT_GET_TEXT, info->rctx, (unsigned long)&str, 0);
+	text_len = rhash_transmit(RMSG_BT_GET_TEXT, info->rctx, RHASH_STR2UPTR(&str), 0);
 	assert(text_len != RHASH_ERROR);
 
 	if(rsh_stat(path, &stat_buf) >= 0) {

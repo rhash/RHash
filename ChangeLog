@@ -1,3 +1,6 @@
+Sat Sep  3 2011 Aleksey
+	* Bugfix: not enough trailing '=' in a base64-encoded hash
+
 Sat Aug 20 2011 Aleksey
 	* Bugfix: fix broken --openssl option parsing
 	* Bugfix: buffer overflow when using --embed-crc-delimiter

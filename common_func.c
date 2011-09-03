@@ -56,7 +56,7 @@ int int_len(uint64_t num)
 }
 
 /* unsafe characters are "<>{}[]%#/|\^~`@:;?=&+ */
-#define IS_GOOD_URL_CHAR(c) (((unsigned char)(c) < 128 && isalnum(c)) || strchr("$-_.!*'(),", c))
+#define IS_GOOD_URL_CHAR(c) (isalnum((unsigned char)c) || strchr("$-_.!'(),", c))
 
 /**
  * URL-encode given string.

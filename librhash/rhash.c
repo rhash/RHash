@@ -516,13 +516,14 @@ RHASH_API const char* rhash_get_name(unsigned hash_id)
  * @param hash_id id of the sum to print
  * @param flags  controls how to print the sum, can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, e.t.c.
- * @return number of writen characters on success, 0 on fail
+ * @return number of writen characters
  */
-size_t rhash_print_bytes(char* output, unsigned char* bytes, size_t size, int flags)
+size_t rhash_print_bytes(char* output, const unsigned char* bytes,
+	size_t size, int flags)
 {
 	size_t str_len;
 	int upper_case = (flags & RHPR_UPPERCASE);
-	int format = (flags & ~(RHPR_UPPERCASE|RHPR_REVERSE));
+	int format = (flags & ~(RHPR_UPPERCASE | RHPR_REVERSE));
 
 	switch(format) {
 	case RHPR_HEX:

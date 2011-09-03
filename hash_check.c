@@ -16,7 +16,6 @@
 #define HV_BIN 0
 #define HV_HEX 1
 #define HV_B32 2
-#define HEX2DIGIT(a) ((a) <= '9' ? (a) & 0xF : ((a) - 'a' + 10) & 0xF)
 
 /**
  * Decode an URL-encoded string in the specified buffer.
@@ -48,7 +47,7 @@ static void urldecode(char *buffer)
 
 #ifndef _WIN32
 /**
- * Convert a windows file path to a unix one, replacing '\\' by '/'.
+ * Convert a windows file path to a UNIX one, replacing '\\' by '/'.
  *
  * @param path the path to convert
  * @return converted path

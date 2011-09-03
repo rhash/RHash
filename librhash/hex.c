@@ -42,7 +42,28 @@ void rhash_byte_to_hex(char *dst, const unsigned char *src, unsigned len, int up
 	while(len-- > 0) {
 		dst = rhash_print_hex_byte(dst, *src++, upper_case);
 	}
-	*dst='\0';
+	*dst = '\0';
+}
+
+/**
+ * Convert a hexadecimal string to a string of bytes.
+ *
+ * @param str string to parse
+ * @param bin result
+ * @param len string length
+ */
+void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
+{
+	/* parse the highest hexadecimal digit */
+	if((len & 1) != 0) {
+		*(bin++) = HEX2DIGIT(*(str++));
+		len--;
+	}
+
+	/* parse the rest - an even-sized hexadecimal string */
+	for(; len >= 2; len -= 2, str += 2) {
+		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
+	}
 }
 
 /**
@@ -101,7 +122,7 @@ void rhash_base32_to_byte(const char* str, unsigned char* bin, int len)
 
 /**
  * Encode a binary string to base64.
- * Encoded output length is alwais a multiple of 4 bytes.
+ * Encoded output length is always a multiple of 4 bytes.
  *
  * @param dst the buffer to store result
  * @param str binary string
@@ -130,24 +151,7 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 	}
 	if(shift > 0) {
 		*dest++ = '=';
-		if(shift == 6) *dest++ = '=';
+		if(shift == 4) *dest++ = '=';
 	}
 	*dest = '\0';
-}
-
-
-#define HEX2DIGIT(a) ((a) <= '9' ? (a) & 0xF : ((a) - 'a' + 10) & 0xF)
-
-/**
- * Convert a hex string with even length to a binary string.
- *
- * @param str string to parse
- * @param bin result
- * @param len string length
- */
-void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
-{
-	/* NOTE: supported parsing only for even len */
-	for(; len >= 2; len -= 2, str += 2)
-		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
 }

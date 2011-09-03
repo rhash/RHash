@@ -241,12 +241,12 @@ print_item* parse_percent_item(const char** str)
 		modifier_flags |= PRINT_FLAG_RAW;
 		format++;
 	}
-	for(; isdigit(*format); format++) width = 10 * width + (*format - '0');
+	for(; isdigit((unsigned char)*format); format++) width = 10 * width + (*format - '0');
 
 	if(*format == '{') {
 		/* parse %{printf-entity} substring */
 		const char* p = ++format;
-		for(; isalnum(*p) || (*p == '-'); p++);
+		for(; isalnum((unsigned char)*p) || (*p == '-'); p++);
 		if(*p == '}') {
 			hash_id = printf_name_to_id(format, (int)(p - (format)), &modifier_flags);
 			format--;

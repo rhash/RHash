@@ -125,8 +125,10 @@ enum rhash_print_sum_flags
 };
 
 /* output hash into given buffer */
-RHASH_API size_t rhash_print_bytes(char* output, unsigned char* bytes, size_t size, int flags);
-RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id, int flags);
+RHASH_API size_t rhash_print_bytes(char* output,
+	const unsigned char* bytes, size_t size, int flags);
+RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
+	int flags);
 
 /* macros for message API */
 

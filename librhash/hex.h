@@ -15,6 +15,7 @@ char* rhash_print_hex_byte(char *dst, const unsigned char byte, int upper_case);
 #define IS_HEX(c) ((c) <= '9' ? (c) >= '0' : (unsigned)(((c) - 'A') & ~0x20) <= ('F' - 'A' + 0U))
 #define IS_BASE32(c) (((c) <= '7' ? ('2' <= (c)) : (unsigned)(((c) - 'A') & ~0x20) <= ('Z' - 'A' + 0U)))
 
+#define HEX2DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
 #define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
 #define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
 #define BASE64_LENGTH(bytes) ((((bytes) + 2) / 3) * 4)
