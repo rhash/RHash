@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "librhash/hex.h"
 #include "librhash/byte_order.h"
 #include "librhash/rhash.h"
 #include "librhash/timing.h"

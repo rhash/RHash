@@ -6,7 +6,6 @@
 #include <ctype.h>  /* isspace */
 #include <assert.h>
 
-#include "librhash/hex.h"
 #include "librhash/crc32.h"
 #include "common_func.h"
 #include "crc_print.h"

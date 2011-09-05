@@ -49,6 +49,13 @@ typedef struct hash_check
 int hash_check_parse_line(char* line, hash_check* hashes, int check_eol);
 int hash_check_verify(hash_check* hashes, struct rhash_context* ctx);
 
+void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);
+void rhash_hex_to_byte(const char* str, unsigned char* bin, int len);
+
+/* note: IS_HEX() is defined on ASCII-8 while isxdigit() only when isascii()==true */
+#define IS_HEX(c) ((c) <= '9' ? (c) >= '0' : (unsigned)(((c) - 'A') & ~0x20) <= ('F' - 'A' + 0U))
+#define IS_BASE32(c) (((c) <= '7' ? ('2' <= (c)) : (unsigned)(((c) - 'A') & ~0x20) <= ('Z' - 'A' + 0U)))
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

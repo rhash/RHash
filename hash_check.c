@@ -4,7 +4,6 @@
 #include <string.h>
 #include <ctype.h>  /* isspace */
 
-#include "librhash/hex.h"
 #include "librhash/byte_order.h"
 #include "librhash/rhash.h"
 #include "output.h"
@@ -13,9 +12,55 @@
 
 #include "hash_check.h"
 
-#define HV_BIN 0
-#define HV_HEX 1
-#define HV_B32 2
+/* hash conversion macros and functions */
+#define HEX2DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
+#define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
+#define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
+
+/**
+ * Convert a hexadecimal string to a string of bytes.
+ *
+ * @param str string to parse
+ * @param bin result
+ * @param len string length
+ */
+void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
+{
+	/* parse the highest hexadecimal digit */
+	if((len & 1) != 0) {
+		*(bin++) = HEX2DIGIT(*(str++));
+		len--;
+	}
+
+	/* parse the rest - an even-sized hexadecimal string */
+	for(; len >= 2; len -= 2, str += 2) {
+		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
+	}
+}
+
+#if 0
+/**
+ * Parse given base32 string and store result to bin.
+ *
+ * @param str string to parse
+ * @param bin result
+ * @param len string length
+ */
+void rhash_base32_to_byte(const char* str, unsigned char* bin, int len)
+{
+	const char* e = str + len;
+	unsigned shift = 0;
+	unsigned char b;
+	for(; str<e; str++) {
+		b = BASE32_TO_DIGIT(*str);
+		shift = (shift + 5) % 8;
+		if(shift < 5) {
+			*bin++ |= (b >> shift);
+		}
+		*bin |= b << (8 - shift);
+	}
+}
+#endif
 
 /**
  * Decode an URL-encoded string in the specified buffer.
@@ -103,6 +148,10 @@ static unsigned hash_check_mask_by_digest_size(int digest_size)
 	code = code_digest_size(digest_size);
 	return (code <= 24 ? mask[code] : 0);
 }
+
+#define HV_BIN 0
+#define HV_HEX 1
+#define HV_B32 2
 
 /**
  * Test if a character is a hexadecimal/base32 digit.

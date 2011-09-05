@@ -12,7 +12,8 @@
 #include "hex.h"
 
 /**
- * Store hexadecimal representation of a byte to given buffer.
+* Convert a byte to a hexadecimal string. The result, consisting of two
+* hexadecimal digits is stored into a buffer.
  *
  * @param dst  the buffer to receive two symbols of hex representation
  * @param byte the byte to decode
@@ -21,11 +22,11 @@
  */
 char* rhash_print_hex_byte(char *dst, const unsigned char byte, int upper_case)
 {
-	const char add = (upper_case ? 'A'-10 : 'a'-10);
+	const char add = (upper_case ? 'A' - 10 : 'a' - 10);
 	unsigned char c = (byte >> 4) & 15;
-	*dst++ = (c>9 ? c+add : c+'0');
+	*dst++ = (c > 9 ? c + add : c + '0');
 	c = byte & 15;
-	*dst++ = (c>9 ? c+add : c+'0');
+	*dst++ = (c > 9 ? c + add : c + '0');
 	return dst;
 }
 
@@ -43,27 +44,6 @@ void rhash_byte_to_hex(char *dst, const unsigned char *src, unsigned len, int up
 		dst = rhash_print_hex_byte(dst, *src++, upper_case);
 	}
 	*dst = '\0';
-}
-
-/**
- * Convert a hexadecimal string to a string of bytes.
- *
- * @param str string to parse
- * @param bin result
- * @param len string length
- */
-void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
-{
-	/* parse the highest hexadecimal digit */
-	if((len & 1) != 0) {
-		*(bin++) = HEX2DIGIT(*(str++));
-		len--;
-	}
-
-	/* parse the rest - an even-sized hexadecimal string */
-	for(; len >= 2; len -= 2, str += 2) {
-		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
-	}
 }
 
 /**
@@ -96,28 +76,6 @@ void rhash_byte_to_base32(char* dest, const unsigned char* src, unsigned len, in
 		*dest++ = ( word < 26 ? word + a : word + '2' - 26 );
 	}
 	*dest = '\0';
-}
-
-/**
- * Parse given base32 string and store result to bin.
- *
- * @param str string to parse
- * @param bin result
- * @param len string length
- */
-void rhash_base32_to_byte(const char* str, unsigned char* bin, int len)
-{
-	const char* e = str + len;
-	unsigned shift = 0;
-	unsigned char b;
-	for(; str<e; str++) {
-		b = BASE32_TO_DIGIT(*str);
-		shift = (shift + 5) % 8;
-		if(shift < 5) {
-			*bin++ |= (b >> shift);
-		}
-		*bin |= b << (8 - shift);
-	}
 }
 
 /**

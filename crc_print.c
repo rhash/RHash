@@ -7,7 +7,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include "librhash/hex.h"
 #include "librhash/byte_order.h"
 #include "calc_sums.h"
 #include "parse_cmdline.h"
