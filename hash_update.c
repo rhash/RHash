@@ -18,6 +18,8 @@
 #include "calc_sums.h"
 #include "hash_update.h"
 
+#define _(str) (str)
+
 /* first define some internal functions, implemented later in this file */
 static int add_new_crc_entries(const char* filepath, file_set *crc_entries);
 static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path);
@@ -37,7 +39,7 @@ int update_hash_file(const char* hash_file_path)
 	int res;
 
 	if(opt.flags & OPT_VERBOSE) {
-		log_msg("Updating: %s\n", hash_file_path);
+		log_msg(_("Updating: %s\n"), hash_file_path);
 	}
 
 	crc_entries = file_set_new();
@@ -92,7 +94,7 @@ static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path
 		if(*line == 0) continue; /* skip empty lines */
 
 		if(is_binary_string(line)) {
-			log_error("skipping binary file %s\n", hash_file_path);
+			log_error(_("skipping binary file %s\n"), hash_file_path);
 			fclose(fd);
 			return -1;
 		}
@@ -182,7 +184,7 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 		free(allocated);
 	}
 	fclose(fd);
-	log_msg("Updated: %s\n", hash_file_path);
+	log_msg(_("Updated: %s\n"), hash_file_path);
 	return 0;
 }
 
@@ -344,7 +346,7 @@ static int fix_sfv_header(const char* hash_file_path)
 		unlink(hash_file_path);
 #endif
 		if(rename(tmp_file, hash_file_path) < 0) {
-			log_error("can't move %s to %s: %s\n", 
+			log_error(_("can't move %s to %s: %s\n"), 
 				tmp_file, hash_file_path, strerror(errno));
 			err = 1;
 		}

@@ -29,6 +29,8 @@
 #include <io.h>
 #endif
 
+#define _(str) (str)
+
 /* global pointer to the selected method of percents output */
 struct percents_output_info_t *percents_output = NULL;
 
@@ -123,17 +125,17 @@ static void print_verbose_error(struct file_info *info)
 	char actual[130], expected[130];
 	assert(HC_FAILED(info->hc.flags));
 
-	fprintf(rhash_data.out, "ERROR");
+	fprintf(rhash_data.out, _("ERROR"));
 
 	if(HC_WRONG_FILESIZE & info->hc.flags) {
 		sprintI64(actual, info->rctx->msg_size, 0);
 		sprintI64(expected, info->hc.file_size, 0);
-		fprintf(rhash_data.out, ", size is %s should be %s", actual, expected);
+		fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected);
 	}
 
 	if(HC_WRONG_EMBCRC32 & info->hc.flags) {
 		rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-		fprintf(rhash_data.out, ", embedded CRC32 should be %s", expected);
+		fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected);
 	}
 
 	if(HC_WRONG_HASHES & info->hc.flags) {
@@ -163,7 +165,7 @@ static void print_verbose_error(struct file_info *info)
 			pflags = (hv->length == (rhash_get_digest_size(hid) * 2) ?
 				(RHPR_HEX | RHPR_UPPERCASE) : (RHPR_BASE32 | RHPR_UPPERCASE));
 			rhash_print(actual, info->rctx, hid, pflags);
-			fprintf(rhash_data.out, ", %s is %s should be %s", 
+			fprintf(rhash_data.out, _(", %s is %s should be %s"),
 				rhash_get_name(hid), actual, expected_hash);
 		}
 	}
@@ -191,7 +193,7 @@ static void print_check_result(struct file_info *info, int print_name, int print
 			fprintf(rhash_data.out, "%s\n", strerror(errno));
 		} else if(!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			/* using 3 characters to overwrite percent */
-			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? "OK \n" : "ERR\n") );
+			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") : _("ERR\n")) );
 		} else {
 			print_verbose_error(info);
 		}
@@ -278,7 +280,7 @@ static void dots_finish_percents(struct file_info *info, int process_res)
 	info->error = process_res;
 
 	if((percents.points % 74) != 0) {
-		log_msg("%s 100%%\n", str_set(buf, ' ', 74 - (percents.points%74) ));
+		log_msg(_("%s 100%%\n"), str_set(buf, ' ', 74 - (percents.points%74) ));
 	}
 	print_results_on_check(info, 0);
 }
@@ -295,9 +297,11 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 	if( (offset % pt_size) != 0 ) return;
 
 	if(percents.points == 0) {
-		fprintf(rhash_data.log, "\n%s %s\n",
-			(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED) ? "Checking" : "Processing"),
-			info->print_path);
+		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+			fprintf(rhash_data.log, _("\nChecking %s\n"), info->print_path);
+		} else {
+			fprintf(rhash_data.log, _("\nProcessing %s\n"), info->print_path);
+		}
 		fflush(rhash_data.log);
 	}
 	putc('.', rhash_data.log);
@@ -501,9 +505,9 @@ void print_check_stats(void)
 {
 	if(rhash_data.processed == rhash_data.ok) {
 		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
-		fprintf(rhash_data.out, "Everything OK\n");
+		fprintf(rhash_data.out, _("Everything OK\n"));
 	} else {
-		fprintf(rhash_data.out, "Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n", rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
+		fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"), rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
 	}
 	fflush(rhash_data.out);
 }
@@ -522,7 +526,10 @@ void print_file_time_stats(struct file_info* info)
 void print_time_stats(double time, uint64_t size, int total)
 {
 	double speed = (time == 0 ? 0 : (double)(int64_t)size / 1048576.0 / time);
-	fprintf(rhash_data.log, "%s %.3f sec, %4.2f MBps\n",
-		(total ? "Total" : "Calculated in"), time, speed);
+	if (total) {
+		fprintf(rhash_data.log, _("Total %.3f sec, %4.2f MBps\n"), time, speed);
+	} else {
+		fprintf(rhash_data.log, _("Calculated in %.3f sec, %4.2f MBps\n"), time, speed);
+	}
 	fflush(rhash_data.log);
 }

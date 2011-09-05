@@ -28,6 +28,8 @@
 
 #include "rhash_main.h"
 
+#define _(str) (str)
+
 struct rhash_t rhash_data;
 
 /**
@@ -83,7 +85,7 @@ void (*prev_sigint_handler)(int) = NULL;
 static void ctrl_c_handler(int signum)
 {
 	fflush(rhash_data.out);
-	fprintf(rhash_data.log, "Interrupted by user...\n");
+	fprintf(rhash_data.log, _("Interrupted by user...\n"));
 	fflush(rhash_data.log);
 
 	/* print intermediate check results if process was interrupted */
@@ -125,7 +127,7 @@ static int load_printf_template(void)
 		if(len == (size_t)-1) break;
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if(rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
-			log_msg("%s: too big template file\n", opt.template_file);
+			log_msg(_("%s: too big template file\n"), opt.template_file);
 			error = 1;
 		}
 	}
@@ -199,7 +201,7 @@ static void process_files(void)
 		} else {
 			if(S_ISDIR(stat_buf.st_mode)){
 				if(opt.flags & OPT_VERBOSE){
-					log_warning("%s: is a directory\n", filepath);
+					log_warning(_("%s: is a directory\n"), filepath);
 				}
 				continue;
 			}
@@ -265,7 +267,7 @@ int main(int argc, char *argv[])
 	if(opt.mode & MODE_BENCHMARK) {
 		unsigned flags = (opt.flags & OPT_BENCH_RAW ? RHASH_BENCHMARK_CPB | RHASH_BENCHMARK_RAW : RHASH_BENCHMARK_CPB);
 		if((opt.flags & OPT_BENCH_RAW) == 0) {
-			fprintf(rhash_data.out, "%s v%s benchmarking...\n", PROGRAM_NAME, VERSION);
+			fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, VERSION);
 		}
 		rhash_run_benchmark(opt.sum_flags, flags, rhash_data.out);
 		rsh_exit(0);
@@ -273,12 +275,12 @@ int main(int argc, char *argv[])
 
 	if(opt.n_files == 0) {
 		if(argc > 1) {
-			log_warning("no files/directories were specified at command line\n");
+			log_warning(_("no files/directories were specified at command line\n"));
 		}
 
 		/* print short usage help */
-		log_msg("Usage: " CMD_FILENAME " [OPTION...] <FILE>...\n\n"
-			"Run `" CMD_FILENAME " --help' for more help.\n");
+		log_msg(_("Usage: %s [OPTION...] <FILE>...\n\n"
+			"Run `%s --help' for more help.\n"), CMD_FILENAME, CMD_FILENAME);
 		rsh_exit(0);
 	}
 
@@ -294,7 +296,7 @@ int main(int argc, char *argv[])
 
 		if(opt.flags & OPT_VERBOSE) {
 			char* str = rsh_strdup(rhash_data.printf);
-			log_msg("Format string is: %s\n", str_trim(str));
+			log_msg(_("Format string is: %s\n"), str_trim(str));
 			free(str);
 		}
 	}

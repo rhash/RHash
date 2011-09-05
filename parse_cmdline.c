@@ -22,6 +22,8 @@
 
 #define VERSION_STRING PROGRAM_NAME " v" VERSION "\n"
 
+#define _(str) (str)
+
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
 struct options_t opt;      /* command line options */
@@ -34,12 +36,12 @@ static void print_help(void)
 	assert(rhash_data.out != NULL);
 
 	/* print program version and usage */
-	fprintf(rhash_data.out, "%s\n%s", VERSION_STRING,
-		"Usage: " CMD_FILENAME " [OPTION...] [FILE | -]...\n"
-		"       " CMD_FILENAME " --printf=<format string> [FILE | -]...\n\n");
+	fprintf(rhash_data.out, _("%s\n"
+		"Usage: %s [OPTION...] [FILE | -]...\n"
+		"       %s --printf=<format string> [FILE | -]...\n\n"), VERSION_STRING, CMD_FILENAME, CMD_FILENAME);
 
-	fprintf(rhash_data.out, "%s",
-		"Options:\n"
+	fprintf(rhash_data.out, "%s%s%s",
+		_("Options:\n"
 		"  -V, --version Print program version and exit.\n"
 		"  -h, --help    Print this help screen.\n"
 		"  -C, --crc32   Calculate CRC32 hash sum.\n"
@@ -79,13 +81,15 @@ static void print_help(void)
 		"      --bsd     Print hash sums, using BSD-like format.\n"
 		"      --simple  Print hash sums, using simple format.\n"
 		"  -m, --magnet  Print hash sums  as magnet links.\n"
-		"      --torrent Create torrent files.\n"
+		"      --torrent Create torrent files.\n"),
 #ifdef _WIN32
-		"      --ansi    Use Windows codepage for output (Windows only).\n"
+		_("      --ansi    Use Windows codepage for output (Windows only).\n"),
+#else
+		"",
 #endif
-		"      --template=<file> Load a printf-like template from the <file>\n"
+		_("      --template=<file> Load a printf-like template from the <file>\n"
 		"  -p, --printf=<format string>  Format and print hash sums.\n"
-		"                See the RHash manual for details.\n"
+		"                See the RHash manual for details.\n")
 		);
 	rsh_exit(0);
 }
@@ -149,14 +153,14 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 		}
 		if(bit > RHASH_ALL_HASHES) {
 			cur[length] = '\0'; /* terminate wrong hash name */
-			log_warning("openssl option doesn't support '%s' hash\n", cur);
+			log_warning(_("openssl option doesn't support '%s' hash\n"), cur);
 		}
 	}
 #else
 	(void)type;
 	(void)openssl_hashes;
 	(void)o;
-	log_warning("compiled without openssl support\n");
+	log_warning(_("compiled without openssl support\n"));
 #endif
 }
 
@@ -175,7 +179,7 @@ static void accept_video(options_t *o)
  */
 static void nya(void)
 {
-	fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) Purrr...\n  (_uu__)\n");
+	fprintf(rhash_data.out, _("  /\\__/\\\n (^ _ ^.) Purrr...\n  (_uu__)\n"));
 	rsh_exit(0);
 }
 
@@ -190,7 +194,7 @@ static void set_max_depth(options_t *o, char* number, unsigned param)
 {
 	(void)param;
 	if(strspn(number, "0123456789") < strlen(number)) {
-		log_error("maxdepth parameter is not a number: %s\n", number);
+		log_error(_("maxdepth parameter is not a number: %s\n"), number);
 		rsh_exit(2);
 	}
 	o->find_max_depth = atoi(number);
@@ -207,7 +211,7 @@ static void set_bt_piece_length(options_t *o, char* number, unsigned param)
 {
 	(void)param;
 	if(strspn(number, "0123456789") < strlen(number)) {
-		log_error("bt-piece-length parameter is not a number: %s\n", number);
+		log_error(_("bt-piece-length parameter is not a number: %s\n"), number);
 		rsh_exit(2);
 	}
 	o->bt_piece_length = (size_t)atoi(number);
@@ -228,11 +232,11 @@ static void set_path_separator(options_t *o, char* sep, unsigned param)
 #if defined(_WIN32)
 		/* MSYS environment changes '/' in command line to HOME, see http://www.mingw.org/wiki/FAQ */
 	} else if(getenv("MSYSTEM") || getenv("TERM")) {
-		log_warning("wrong path-separator, use '//' instead of '/' on MSYS\n");
+		log_warning(_("wrong path-separator, use '//' instead of '/' on MSYS\n"));
 		o->path_separator = '/';
 #endif
 	} else {
-		log_error("path-separator is not '/' or '\\': %s\n", sep);
+		log_error(_("path-separator is not '/' or '\\': %s\n"), sep);
 		rsh_exit(2);
 	}
 }
@@ -364,7 +368,7 @@ static void die(const char* msg)
  */
 static void fail_on_unknow_option(const char* option_name)
 {
-	log_error("unknown option: %s", (option_name ? option_name : "?"));
+	log_error(_("unknown option: %s"), (option_name ? option_name : "?"));
 	rsh_exit(2);
 }
 
@@ -392,7 +396,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 	/* check if option requires a parameter */
 	if(is_param_required(option_type)) {
 		if(!option->parameter) {
-			log_error("argument is required for option %s\n", option->name);
+			log_error(_("argument is required for option %s\n"), option->name);
 			rsh_exit(2);
 		}
 #ifdef _WIN32
@@ -520,7 +524,7 @@ static int read_config(void)
 		/* search for '=' */
 		index = strcspn(line, "=");
 		if(line[index] == 0) {
-			log_warning("%s: can't parse line \"%s\"\n", conf_opt.config_file, line);
+			log_warning(_("%s: can't parse line \"%s\"\n"), conf_opt.config_file, line);
 			continue;
 		}
 		line[index] = 0;
@@ -533,7 +537,7 @@ static int read_config(void)
 		}
 
 		if(!t->type) {
-			log_warning("%s: unknown option \"%s\"\n", conf_opt.config_file, line);
+			log_warning(_("%s: unknown option \"%s\"\n"), conf_opt.config_file, line);
 			continue;
 		}
 
@@ -653,7 +657,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 #ifdef _WIN32
 	parg = cmd_line->warg = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if( NULL == parg || argc < 1) {
-		die("CommandLineToArgvW failed\n");
+		die(_("CommandLineToArgvW failed\n"));
 	}
 #else
 	argc = cmd_line->argc;
@@ -729,7 +733,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 					next_opt->parameter = (ptr[1] ? ptr + 1 : *(++parg));
 					if(!next_opt->parameter) {
 						/* note: need to check for parameter here, for early -o/-l options processing */
-						log_error("argument is required for option %s\n", next_opt->name);
+						log_error(_("argument is required for option %s\n"), next_opt->name);
 						rsh_exit(2);
 					}
 				}
@@ -873,17 +877,17 @@ static void make_final_options_checks(void)
 
 	if((opt.flags & OPT_VERBOSE) && conf_opt.config_file) {
 		/* note that the first log_msg call shall be made after setup_output() */
-		log_msg("Config file: %s\n", (conf_opt.config_file ? conf_opt.config_file : "None"));
+		log_msg(_("Config file: %s\n"), (conf_opt.config_file ? conf_opt.config_file : _("None")));
 	}
 
 	/* check that no more than one program mode specified */
 	if(opt.mode & (opt.mode - 1)) {
-		die("incompatible program modes\n");
+		die(_("incompatible program modes\n"));
 	}
 
 	ff = (opt.printf ? 1 : 0) | (opt.template_file ? 2 : 0) | (opt.fmt ? 4 : 0);
 	if((opt.fmt & (opt.fmt - 1)) || (ff & (ff - 1))) {
-		die("too many formating options\n");
+		die(_("too many formating options\n"));
 	}
 
 	if(opt.mode & MODE_TORRENT) opt.sum_flags |= RHASH_BTIH;

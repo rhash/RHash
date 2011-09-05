@@ -16,6 +16,8 @@
 #define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
 #define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
 
+#define _(str) (str)
+
 /**
  * Convert a hexadecimal string to a string of bytes.
  *
@@ -488,7 +490,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 					if(i >= RHASH_HASH_COUNT) {
 						if(opt.flags & OPT_VERBOSE) {
 							*hf_end = '\0';
-							log_warning("unknown hash in magnet link: %s\n", hs.begin);
+							log_warning(_("unknown hash in magnet link: %s\n"), hs.begin);
 						}
 						return 0;
 					}
@@ -540,7 +542,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	}
 
 	if(bad) {
-		log_warning("can't parse line: %s\n", line);
+		log_warning(_("can't parse line: %s\n"), line);
 		return 0;
 	}
 
