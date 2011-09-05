@@ -229,7 +229,7 @@ sub AUTOLOAD
 
 # static functions
 
-sub rhash_msg($$)
+sub msg($$)
 {
 	my ($hash_id, $msg) = @_;
 	my $raw = rhash_msg_raw($hash_id, $msg); # get binary hash
@@ -374,23 +374,13 @@ Returns the hash mask, the $rhash object was constructed with.
 
 Computed hash can be formated as a hexadecimal string (in the forward or
 reverse byte order), a base32/base64-encoded string or as raw binary data.
-E.g.:
-
-  use Rhash;
-  my $r = Rhash->new(Rhash::TTH)->update("a");
-  print "TTH in default format = " . $r->hash()  . "\n";
-  print "TTH in hexadecimal = ". $r->hash_hex()  . "\n";
-  print "TTH in reverse-hex = ". $r->hash_rhex() . "\n";
-  print "TTH in base32      = ". $r->hash_base32() . "\n";
-  print "TTH in base64      = ". $r->hash_base64() . "\n";
-  print "TTH as binary hash = ". $r->hash_raw()  . "\n";
 
 =item $rhash->hash( $hash_id )
 
 Returns the hash string in the default format,
 which can be hexadecimal or base32. Actually the method is equvalent of
 
-  (rhash_is_base32($hash_id) ? $rhash->hash_base32($hash_id) :
+  (Rhash::is_base32($hash_id) ? $rhash->hash_base32($hash_id) :
     $rhash->hash_hex($hash_id))
 
 If the optional $hash_id parameter is omited or zero, then the method returns the hash
@@ -448,7 +438,7 @@ Returns the name of the specified hash algorithm.
 
 =back
 
-=head1 ALTERNATIVE HASH CALCULATION
+=head1 ALTERNATIVE WAY TO COMPUTE HASH
 
 =over
 
@@ -462,13 +452,14 @@ Computes and returns a single hash (in its default format) of the $message by th
 =back
 
 =head1 LICENSE
-Permission is hereby granted, free of charge,  to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction,  including without limitation the rights
-to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
-copies  of  the Software,  and  to permit  persons  to whom  the Software  is
-furnished to do so.
 
-The Software  is distributed in the hope that it will be useful,  but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE.  Use  this  program  at  your  own  risk!
+ Permission is hereby granted, free of charge,  to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction,  including without limitation the rights
+ to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
+ copies  of  the Software,  and  to permit  persons  to whom  the Software  is
+ furnished to do so.
+
+ The Software  is distributed in the hope that it will be useful,  but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  Use  this  program  at  your  own  risk!

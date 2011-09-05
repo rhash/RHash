@@ -1,4 +1,4 @@
-use Test::More tests => 17;
+use Test::More tests => 12;
 BEGIN { use_ok('Rhash') };
 
 #########################
@@ -19,12 +19,5 @@ is(&Rhash::raw2base64("test msg"), "dGVzdCBtc2c=");
 
 $msg = "message digest";
 
-# test internal static functions
-ok( ($ctx = &Rhash::rhash_init(Rhash::MD5 | Rhash::SHA1)) );
-is(&Rhash::rhash_update($ctx, $msg), 0);
-is(&Rhash::rhash_final($ctx), 0);
-is(&Rhash::rhash_print($ctx, Rhash::MD5), "f96b697d7cb7938d525a2f31aaf161d0");
-is(&Rhash::rhash_print($ctx, Rhash::SHA1), "c12252ceda8be8994d5fa0290a47231c1d16aae3");
-&Rhash::rhash_free($ctx);
-
-is(&Rhash::rhash_msg(Rhash::MD5, $msg), "f96b697d7cb7938d525a2f31aaf161d0");
+# test msg() hashing method
+is(&Rhash::msg(Rhash::MD5, $msg), "f96b697d7cb7938d525a2f31aaf161d0");
