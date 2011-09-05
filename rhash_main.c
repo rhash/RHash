@@ -19,9 +19,9 @@
 #include "win_utils.h"
 #include "find_file.h"
 #include "calc_sums.h"
-#include "crc_update.h"
+#include "hash_update.h"
 #include "file_mask.h"
-#include "crc_print.h"
+#include "hash_print.h"
 #include "parse_cmdline.h"
 #include "output.h"
 #include "version.h"
@@ -252,6 +252,9 @@ int main(int argc, char *argv[])
 	setlocale(LC_ALL, ""); /* set locale according to the environment */
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
+	rhash_data.out = stdout; /* set initial output streams */
+	rhash_data.log = stderr; /* can be altered by options later */
+
 	init_hash_info_table();
 
 	read_options(argc, argv); /* load config and parse command line options */

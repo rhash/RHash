@@ -17,9 +17,9 @@ ALLCFLAGS = -pipe $(CFLAGS) $(ADDCFLAGS) \
   -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations
 LDLIBRHASH = -Llibrhash -lrhash
 ALLLDFLAGS = $(LDLIBRHASH) $(LDFLAGS) $(ADDLDFLAGS)
-HEADERS = calc_sums.h crc_print.h common_func.h crc_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
-SOURCES = calc_sums.c crc_print.c common_func.c crc_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
-OBJECTS = calc_sums.o crc_print.o common_func.o crc_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
+HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
+SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
+OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
 OUTDIR   =
 PROGNAME = rhash
 TARGET   = $(OUTDIR)$(PROGNAME)
@@ -132,7 +132,7 @@ $(TARGET): $(OBJECTS) $(LIBRHASH)
 # we are using plain old makefile style to support BSD make
 calc_sums.o: calc_sums.c common_func.h librhash/util.h librhash/hex.h \
  librhash/rhash.h librhash/timing.h parse_cmdline.h rhash_main.h \
- file_set.h calc_sums.h hash_check.h crc_print.h output.h win_utils.h \
+ file_set.h calc_sums.h hash_check.h hash_print.h output.h win_utils.h \
  version.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
@@ -140,22 +140,22 @@ common_func.o: common_func.c common_func.h librhash/util.h librhash/hex.h \
  win_utils.h parse_cmdline.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
-crc_print.o: crc_print.c common_func.h librhash/util.h librhash/hex.h \
+hash_print.o: hash_print.c common_func.h librhash/util.h librhash/hex.h \
  librhash/byte_order.h calc_sums.h librhash/rhash.h hash_check.h \
- parse_cmdline.h crc_print.h
+ parse_cmdline.h hash_print.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
-crc_update.o: crc_update.c common_func.h librhash/util.h \
+hash_update.o: hash_update.c common_func.h librhash/util.h \
  librhash/timing.h win_utils.h parse_cmdline.h output.h rhash_main.h \
  file_set.h calc_sums.h librhash/rhash.h hash_check.h file_mask.h \
- crc_update.h
+ hash_update.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 file_mask.o: file_mask.c common_func.h librhash/util.h file_mask.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 file_set.o: file_set.c librhash/hex.h librhash/crc32.h common_func.h \
- librhash/util.h crc_print.h parse_cmdline.h rhash_main.h output.h \
+ librhash/util.h hash_print.h parse_cmdline.h rhash_main.h output.h \
  file_set.h calc_sums.h librhash/rhash.h hash_check.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
@@ -164,7 +164,7 @@ find_file.o: find_file.c common_func.h librhash/util.h win_utils.h \
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 hash_check.o: hash_check.c librhash/hex.h librhash/byte_order.h \
- librhash/rhash.h output.h parse_cmdline.h crc_print.h hash_check.h
+ librhash/rhash.h output.h parse_cmdline.h hash_print.h hash_check.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 output.o: output.c common_func.h librhash/util.h librhash/rhash.h \
@@ -173,12 +173,12 @@ output.o: output.c common_func.h librhash/util.h librhash/rhash.h \
 
 parse_cmdline.o: parse_cmdline.c common_func.h librhash/util.h \
  librhash/rhash.h librhash/plug_openssl.h win_utils.h file_mask.h \
- crc_print.h output.h rhash_main.h version.h parse_cmdline.h
+ hash_print.h output.h rhash_main.h version.h parse_cmdline.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 rhash_main.o: rhash_main.c common_func.h librhash/util.h \
  librhash/timing.h win_utils.h find_file.h file_set.h calc_sums.h \
- librhash/rhash.h hash_check.h crc_update.h file_mask.h crc_print.h \
+ librhash/rhash.h hash_check.h hash_update.h file_mask.h hash_print.h \
  parse_cmdline.h output.h version.h rhash_main.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 

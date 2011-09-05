@@ -1,4 +1,4 @@
-/* crc_print.c - functions to output hash sums using printf-like format */
+/* hash_print.c - functions to output hash sums using printf-like format */
 
 #include "common_func.h" /* should be included before the C library files */
 #include <string.h>
@@ -9,7 +9,7 @@
 
 #include "calc_sums.h"
 #include "parse_cmdline.h"
-#include "crc_print.h"
+#include "hash_print.h"
 
 /* table with information about hashes */
 print_hash_info hash_info_table[32];

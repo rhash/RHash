@@ -1,6 +1,6 @@
-/* crc_printf.h - functions to print hash sums */
-#ifndef CRC_PRINT_H
-#define CRC_PRINT_H
+/* hash_print.h - functions to print hash sums */
+#ifndef HASH_PRINT_H
+#define HASH_PRINT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,4 +38,4 @@ void init_printf_format(struct strbuf_t* out);
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* CRC_PRINT_H */
+#endif /* HASH_PRINT_H */

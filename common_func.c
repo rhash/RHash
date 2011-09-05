@@ -63,7 +63,7 @@ int int_len(uint64_t num)
  * @param upper_case flag to print string in uppercase
  * @return pointer to the next char in buffer (dst+2)
  */
-char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
+static char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
 {
 	const char add = (upper_case ? 'A' - 10 : 'a' - 10);
 	unsigned char c = (byte >> 4) & 15;

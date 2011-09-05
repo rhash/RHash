@@ -31,31 +31,65 @@
 /* global pointer to the selected method of percents output */
 struct percents_output_info_t *percents_output = NULL;
 
+/**
+ * Print a formated message to program log, and flush the log stream.
+ *
+ * @param format print a formated message to the program log
+ * @param args
+ */
+static void log_va_msg(const char* format, va_list args)
+{
+	FILE* log = rhash_data.log;
+	vfprintf(log, format, args);
+	fflush(log);
+}
 
 /**
  * Print a formated message to program log, and flush the log stream.
  *
  * @param format print a formated message to the program log
- * @param param a printf format parameter (NULL, if not needed)
  */
 void log_msg(const char* format, ...)
 {
-	FILE* log = (rhash_data.log ? rhash_data.log : stderr);
 	va_list ap;
 	va_start(ap, format);
-	vfprintf(log, format, ap);
-	fflush(log);
+	log_va_msg(format, ap);
+}
+
+/**
+ * Print an error to program log.
+ *
+ * @param format print a formated message to the program log
+ */
+void log_error(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	fprintf(rhash_data.log, "%s: error: ", PROGRAM_NAME);
+	log_va_msg(format, ap);
+}
+
+/**
+ * Print an error to program log.
+ *
+ * @param filepath the path to file caused the error
+ */
+void log_warning(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	fprintf(rhash_data.log, "%s: warning: ", PROGRAM_NAME);
+	log_va_msg(format, ap);
 }
 
 /**
  * Print a file error to program log.
  *
- * @param filepath the path to file caused the error
+ * @param filepath path to the file, which caused the error
  */
 void log_file_error(const char* filepath)
 {
-	fprintf(rhash_data.log, PROGRAM_NAME " error: %s: %s\n", filepath, strerror(errno));
-	fflush(rhash_data.log);
+	log_error("%s: %s\n", filepath, strerror(errno));
 }
 
 /**

@@ -1,6 +1,6 @@
-/* crc-update.h - functions to update a crc file */
-#ifndef CRC_UPDATE_H
-#define CRC_UPDATE_H
+/* hash_update.h - functions to update a crc file */
+#ifndef HASH_UPDATE_H
+#define HASH_UPDATE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,4 +12,4 @@ int update_hash_file(const char* filepath);
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* CRC_UPDATE_H */
+#endif /* HASH_UPDATE_H */

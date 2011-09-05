@@ -214,8 +214,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\calc_sums.c" />
     <ClCompile Include="..\..\common_func.c" />
-    <ClCompile Include="..\..\crc_print.c" />
-    <ClCompile Include="..\..\crc_update.c" />
+    <ClCompile Include="..\..\hash_print.c" />
+    <ClCompile Include="..\..\hash_update.c" />
     <ClCompile Include="..\..\file_mask.c" />
     <ClCompile Include="..\..\file_set.c" />
     <ClCompile Include="..\..\find_file.c" />
@@ -289,8 +289,8 @@
     <ClInclude Include="..\..\librhash\whirlpool.h" />
     <ClInclude Include="..\..\calc_sums.h" />
     <ClInclude Include="..\..\common_func.h" />
-    <ClInclude Include="..\..\crc_print.h" />
-    <ClInclude Include="..\..\crc_update.h" />
+    <ClInclude Include="..\..\hash_print.h" />
+    <ClInclude Include="..\..\hash_update.h" />
     <ClInclude Include="..\..\file_mask.h" />
     <ClInclude Include="..\..\file_set.h" />
     <ClInclude Include="..\..\find_file.h" />

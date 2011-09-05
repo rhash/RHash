@@ -30,6 +30,8 @@ extern struct percents_output_info_t *percents_output;
 void setup_output(void);
 
 void log_msg(const char* format, ...);
+void log_error(const char* format, ...);
+void log_warning(const char* format, ...);
 void log_file_error(const char* filepath);
 void print_check_stats(void);
 

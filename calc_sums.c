@@ -15,7 +15,7 @@
 #include "librhash/timing.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
-#include "crc_print.h"
+#include "hash_print.h"
 #include "output.h"
 #include "win_utils.h"
 #include "version.h"
@@ -447,11 +447,11 @@ static int verify_sums(struct file_info *info)
  * Check hash sums in a hash file.
  * Lines beginning with ';' and '#' are ignored.
  *
- * @param crc_file_path - the path of the file with hash sums to verify.
+ * @param hash_file_path - the path of the file with hash sums to verify.
  * @param chdir - true if function should emulate chdir to directory of filepath before checking it.
  * @return zero on success, -1 on fail
  */
-int check_hash_file(const char* crc_file_path, int chdir)
+int check_hash_file(const char* hash_file_path, int chdir)
 {
 	FILE *fd;
 	char buf[2048];
@@ -465,10 +465,10 @@ int check_hash_file(const char* crc_file_path, int chdir)
 	/* process --check-embedded option */
 	if(opt.mode & MODE_CHECK_EMBEDDED) {
 		unsigned crc32_be;
-		if(find_embedded_crc32(crc_file_path, &crc32_be)) {
+		if(find_embedded_crc32(hash_file_path, &crc32_be)) {
 			/* initialize file_info structure */
 			memset(&info, 0, sizeof(info));
-			info.full_path = rsh_strdup(crc_file_path);
+			info.full_path = rsh_strdup(hash_file_path);
 			file_info_set_print_path(&info, info.full_path);
 			info.sums_flags = info.hc.hash_mask = RHASH_CRC32;
 			info.hc.flags = HC_HAS_EMBCRC32;
@@ -484,7 +484,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			free(info.full_path);
 			file_info_destroy(&info);
 		} else {
-			log_msg("warning: file name doesn't contain a crc: %s\n", crc_file_path);
+			log_msg("warning: file name doesn't contain a crc: %s\n", hash_file_path);
 			return -1;
 		}
 		return 0;
@@ -494,25 +494,25 @@ int check_hash_file(const char* crc_file_path, int chdir)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
-	if( IS_DASH_STR(crc_file_path) ) {
+	if( IS_DASH_STR(hash_file_path) ) {
 		fd = stdin;
-		crc_file_path = "<stdin>";
-	} else if( !(fd = rsh_fopen_bin(crc_file_path, "rb") )) {
-		log_file_error(crc_file_path);
+		hash_file_path = "<stdin>";
+	} else if( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
+		log_file_error(hash_file_path);
 		return -1;
 	}
 
-	pos = strlen(crc_file_path)+16;
+	pos = strlen(hash_file_path)+16;
 	ralign = str_set(buf, '-', (pos < 80 ? 80 - (int)pos : 2));
-	fprintf(rhash_data.out, "\n--( Verifying %s )%s\n", crc_file_path, ralign);
+	fprintf(rhash_data.out, "\n--( Verifying %s )%s\n", hash_file_path, ralign);
 	fflush(rhash_data.out);
 	rhash_timer_start(&timer);
 
 	/* mark the directory part of the path, by setting the pos index */
 	if(chdir) {
-		pos = strlen(crc_file_path);
-		for(; pos > 0 && !IS_PATH_SEPARATOR(crc_file_path[pos]); pos--);
-		if(IS_PATH_SEPARATOR(crc_file_path[pos])) pos++;
+		pos = strlen(hash_file_path);
+		for(; pos > 0 && !IS_PATH_SEPARATOR(hash_file_path[pos]); pos--);
+		if(IS_PATH_SEPARATOR(hash_file_path[pos])) pos++;
 	} else pos = 0;
 
 	/* read crc file line by line */
@@ -527,7 +527,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 		if(*line == 0) continue; /* skip empty lines */
 
 		if(is_binary_string(line)) {
-			fprintf(rhash_data.log, PROGRAM_NAME ": error: file is binary: %s\n", crc_file_path);
+			fprintf(rhash_data.log, PROGRAM_NAME ": error: file is binary: %s\n", hash_file_path);
 			if(fd != stdin) fclose(fd);
 			return -1;
 		}
@@ -547,7 +547,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 		/* see if crc file contains a hash sum without a filename */
 		if(info.print_path == NULL) {
 			char* point;
-			path_without_ext = rsh_strdup(crc_file_path);
+			path_without_ext = rsh_strdup(hash_file_path);
 			point = strrchr(path_without_ext, '.');
 
 			if(point) {
@@ -564,7 +564,7 @@ int check_hash_file(const char* crc_file_path, int chdir)
 			if(pos && !is_absolute) {
 				size_t len = strlen(info.print_path);
 				info.full_path = (char*)rsh_malloc(pos+len+1);
-				memcpy(info.full_path, crc_file_path, pos);
+				memcpy(info.full_path, hash_file_path, pos);
 				strcpy(info.full_path+pos, info.print_path);
 			} else {
 				info.full_path = rsh_strdup(info.print_path);

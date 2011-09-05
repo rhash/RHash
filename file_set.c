@@ -8,7 +8,7 @@
 
 #include "librhash/crc32.h"
 #include "common_func.h"
-#include "crc_print.h"
+#include "hash_print.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "output.h"

@@ -7,7 +7,7 @@
 #include "librhash/rhash.h"
 #include "output.h"
 #include "parse_cmdline.h"
-#include "crc_print.h"
+#include "hash_print.h"
 
 #include "hash_check.h"
 

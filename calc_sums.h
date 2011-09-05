@@ -39,7 +39,7 @@ void file_info_destroy(struct file_info*); /* free allocated memory */
 const char* file_info_get_utf8_print_path(struct file_info*);
 
 int calculate_and_print_sums(FILE* out, const char *print_path, const char *full_path, struct rsh_stat_struct* stat_buf);
-int check_hash_file(const char* crc_file_path, int chdir);
+int check_hash_file(const char* hash_file_path, int chdir);
 int rename_file_to_embed_crc32(struct file_info *info);
 void print_sfv_banner(FILE* out);
 int print_sfv_header_line(FILE* out, const char* printpath, const char* fullpath);

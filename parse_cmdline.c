@@ -14,7 +14,7 @@
 #include "librhash/rhash.h"
 #include "win_utils.h"
 #include "file_mask.h"
-#include "crc_print.h"
+#include "hash_print.h"
 #include "output.h"
 #include "rhash_main.h"
 #include "version.h"
