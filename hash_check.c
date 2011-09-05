@@ -488,7 +488,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 					if(i >= RHASH_HASH_COUNT) {
 						if(opt.flags & OPT_VERBOSE) {
 							*hf_end = '\0';
-							log_msg("warning: unknown hash in magnet link: %s\n", hs.begin);
+							log_warning("unknown hash in magnet link: %s\n", hs.begin);
 						}
 						return 0;
 					}
@@ -540,7 +540,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	}
 
 	if(bad) {
-		log_msg("warning: can't parse line: %s\n", line);
+		log_warning("can't parse line: %s\n", line);
 		return 0;
 	}
 

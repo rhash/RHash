@@ -13,7 +13,8 @@ struct file_info;
 /**
  * A 'method' to output percents.
  */
-struct percents_output_info_t {
+struct percents_output_info_t
+{
 	int  (*init)(struct file_info *info);
 	void (*update)(struct file_info *info, uint64_t offset);
 	void (*finish)(struct file_info *info, int process_res);

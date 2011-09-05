@@ -13,6 +13,7 @@
 #include "calc_sums.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
+#include "win_utils.h"
 #include "output.h"
 
 /*#ifdef _WIN32
@@ -65,7 +66,7 @@ void log_error(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: error: ", PROGRAM_NAME);
+	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -78,7 +79,7 @@ void log_warning(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: warning: ", PROGRAM_NAME);
+	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -452,6 +453,21 @@ struct percents_output_info_t p_perc = {
 	p_init_percents, p_update_percents, p_finish_percents, "digits"
 };
 
+static void setup_log_stream(FILE **p_stream, const char *stream_path)
+{
+	if(stream_path) {
+#ifdef _WIN32
+		if( !(*p_stream = _wfsopen((wchar_t*)stream_path, L"w", _SH_DENYNO)) ) {
+			stream_path = w2c((wchar_t*)stream_path);
+#else
+		if( !(*p_stream = fopen(stream_path, "w")) ) {
+#endif
+			log_error("%s: %s\n", stream_path, strerror(errno));
+			rsh_exit(2);
+		}
+	}
+}
+
 /**
  * Initialize pointers to output functions.
  */
@@ -464,35 +480,16 @@ void setup_output(void)
 		/* we don't use _fileno() cause it is not in ISO C90, and so
 		 * is incompatible with the GCC -ansi option */
 		if(rhash_data.log == stderr && isatty(2)) {
-			percents_output  = &p_perc;
+			percents_output  = &p_perc; /* one-line percents */
 		} else {
-			percents_output  = &dots_perc;
+			percents_output  = &dots_perc; /* print percents as dots */
 		}
 	} else {
-		percents_output  = &dummy_perc;
+		percents_output  = &dummy_perc; /* no percents */
 	}
 
-	if(opt.output) {
-#ifdef _WIN32
-		if( !(rhash_data.out = _wfsopen((wchar_t*)opt.output, L"w", _SH_DENYNO)) ) {
-#else
-		if( !(rhash_data.out = fopen(opt.output, "w")) ) {
-#endif
-			fprintf(stderr, PROGRAM_NAME ": %s: %s\n", opt.output, strerror(errno));
-			rsh_exit(-1);
-		}
-	}
-
-	if(opt.log) {
-#ifdef _WIN32
-		if( !(rhash_data.log = _wfsopen((wchar_t*)opt.log, L"w", _SH_DENYNO)) ) {
-#else
-		if( !(rhash_data.log = fopen(opt.log, "w")) ) {
-#endif
-			fprintf(stderr, PROGRAM_NAME ": %s: %s\n", opt.log, strerror(errno));
-			rsh_exit(-1);
-		}
-	}
+	setup_log_stream(&rhash_data.out, opt.output);
+	setup_log_stream(&rhash_data.log, opt.log);
 }
 
 /* misc output functions */

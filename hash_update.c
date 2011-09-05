@@ -92,7 +92,7 @@ static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path
 		if(*line == 0) continue; /* skip empty lines */
 
 		if(is_binary_string(line)) {
-			log_msg("error: skipping binary file %s\n", hash_file_path);
+			log_error("skipping binary file %s\n", hash_file_path);
 			fclose(fd);
 			return -1;
 		}
@@ -344,8 +344,8 @@ static int fix_sfv_header(const char* hash_file_path)
 		unlink(hash_file_path);
 #endif
 		if(rename(tmp_file, hash_file_path) < 0) {
-			fprintf(rhash_data.log, "%s: can't move %s to %s: %s\n", 
-				PROGRAM_NAME, tmp_file, hash_file_path, strerror(errno));
+			log_error("can't move %s to %s: %s\n", 
+				tmp_file, hash_file_path, strerror(errno));
 			err = 1;
 		}
 	}

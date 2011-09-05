@@ -199,7 +199,7 @@ static void process_files(void)
 		} else {
 			if(S_ISDIR(stat_buf.st_mode)){
 				if(opt.flags & OPT_VERBOSE){
-					log_msg("warning: %s: is a directory\n", filepath);
+					log_warning("%s: is a directory\n", filepath);
 				}
 				continue;
 			}
@@ -264,17 +264,19 @@ int main(int argc, char *argv[])
 	/* in benchmark mode just run benchmark and exit */
 	if(opt.mode & MODE_BENCHMARK) {
 		unsigned flags = (opt.flags & OPT_BENCH_RAW ? RHASH_BENCHMARK_CPB | RHASH_BENCHMARK_RAW : RHASH_BENCHMARK_CPB);
-		if((opt.flags & OPT_BENCH_RAW) == 0)
-			fprintf(rhash_data.out, PROGRAM_NAME " v" VERSION " benchmarking...\n");
+		if((opt.flags & OPT_BENCH_RAW) == 0) {
+			fprintf(rhash_data.out, "%s v%s benchmarking...\n", PROGRAM_NAME, VERSION);
+		}
 		rhash_run_benchmark(opt.sum_flags, flags, rhash_data.out);
 		rsh_exit(0);
 	}
 
 	if(opt.n_files == 0) {
 		if(argc > 1) {
-			log_msg("warning: no files/directories were specified at command line\n");
+			log_warning("no files/directories were specified at command line\n");
 		}
 
+		/* print short usage help */
 		log_msg("Usage: " CMD_FILENAME " [OPTION...] <FILE>...\n\n"
 			"Run `" CMD_FILENAME " --help' for more help.\n");
 		rsh_exit(0);
