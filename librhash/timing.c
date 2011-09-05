@@ -120,7 +120,7 @@ static void benchmark_cpu_init(void)
 }
 #endif
 
-/* #define BENCHMARK_HASH_SIMULTANIOUSLY - should support in future */
+/* #define BENCHMARK_HASH_SIMULTANEOUSLY - should support in future */
 
 /**
  * Hash a repeated message chunk by specified hash function.

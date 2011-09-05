@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "librhash/byte_order.h"
 #include "librhash/rhash.h"
 #include "librhash/timing.h"
 #include "parse_cmdline.h"
@@ -223,9 +222,13 @@ int rename_file_to_embed_crc32(struct file_info *info)
 
 	/* check if the filename contains a CRC32 hash sum */
 	if(find_embedded_crc32(info->print_path, &crc32_be)) {
+		unsigned char* c =
+			(unsigned char*)rhash_get_context_ptr(info->rctx, RHASH_CRC32);
+		unsigned actual_crc32 = ((unsigned)c[0] << 24) |
+			((unsigned)c[1] << 16) | ((unsigned)c[2] << 8) | (unsigned)c[3];
+
 		/* compare with calculated CRC32 */
-		if(be2me_32(crc32_be) != 
-			*(unsigned*)rhash_get_context_ptr(info->rctx, RHASH_CRC32)) {
+		if(crc32_be != actual_crc32) {
 			char crc32_str[9];
 			rhash_print(crc32_str, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 			log_msg("warning: wrong embedded sum, should be %s\n", crc32_str);

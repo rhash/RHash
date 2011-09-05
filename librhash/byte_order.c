@@ -17,10 +17,11 @@
 #if !(__GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4)) /* if !GCC or GCC < 4.3 */
 
 #  if _MSC_VER >= 1300 && (_M_IX86 || _M_AMD64 || _M_IA64) /* if MSVC++ >= 2002 on x86/x64 */
+#  include <intrin.h>
 #  pragma intrinsic(_BitScanForward)
 
 /**
- * Returns index of the traling bit of x.
+ * Returns index of the trailing bit of x.
  *
  * @param x the number to process
  * @return zero-based index of the trailing bit
@@ -28,31 +29,13 @@
 unsigned rhash_ctz(unsigned x)
 {
 	unsigned long index;
-	unsigned char isNonzero = _BitScanForward(&index, x); /* use MS VC intrisic */
+	unsigned char isNonzero = _BitScanForward(&index, x); /* MSVC intrinsic */
 	return (isNonzero ? (unsigned)index : 0);
 }
 #  else /* _MSC_VER >= 1300... */
 
 /**
- * Count number of non-zero bits in x, where x is in 0b0..01..11 form.
- * For details see
- * http://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
- *
- * @param x the number in which the number of unities is counted
- * @return number of non-zero bits
- */
-static inline unsigned popcnt(unsigned x)
-{
-	x -= ((x >> 1) & 0x55555555);
-	x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
-	x = (((x >> 4) + x) & 0x0f0f0f0f);
-	x += (x >> 8);
-	x += (x >> 16);
-	return (x & 0x3f);
-}
-
-/**
- * Returns index of the traling bit of x.
+ * Returns index of the trailing bit of a 32-bit number.
  * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
  *
  * @param x the number to process
@@ -60,13 +43,24 @@ static inline unsigned popcnt(unsigned x)
  */
 unsigned rhash_ctz(unsigned x)
 {
-	return popcnt((x & -(int)x) - 1);
+	/* array for conversion to bit position */
+	static unsigned char bit_pos[32] =  {
+		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+	};
+	/* The De Bruijn bit-scan was devised in 1997, according to Donald Knuth
+	 * by Martin Lauter. The constant 0x077CB531UL is a De Bruijn sequence,
+	 * which produces a unique pattern of bits into the high 5 bits for each
+	 * possible bit position that it is multiplied against.
+	 * See http://graphics.stanford.edu/~seander/bithacks.html
+	 * and http://chessprogramming.wikispaces.com/BitScan */
+	return (unsigned)bit_pos[((uint32_t)((v & -v) * 0x077CB531U)) >> 27];
 }
 #  endif /* _MSC_VER >= 1300... */
 #endif /* !(GCC >= 4.3) */
 
 /**
- * Copy a memory block with simultanious exchanging byte order.
+ * Copy a memory block with simultaneous exchanging byte order.
  * The byte order is changed from little-endian 32-bit integers
  * to big-endian (or vice-versa).
  *
@@ -78,7 +72,7 @@ void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
 {
 	/* if all pointers and length are 32-bits aligned */
 	if( 0 == (( (int)((char*)to - (char*)0) | ((char*)from - (char*)0) | index | length ) & 3) ) {
-		/* copy memory as dwords */
+		/* copy memory as 32-bit words */
 		const uint32_t* src = (const uint32_t*)from;
 		const uint32_t* end = (const uint32_t*)((const char*)src + length);
 		uint32_t* dst = (uint32_t*)((char*)to + index);
@@ -90,7 +84,7 @@ void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
 }
 
 /**
- * Copy a memory block with simultanious exchanging byte order.
+ * Copy a memory block with simultaneous exchanging byte order.
  * The byte order is changed from little-endian 64-bit integers
  * to big-endian (or vice-versa).
  *

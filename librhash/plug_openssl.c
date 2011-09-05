@@ -36,7 +36,7 @@
 #endif
 
 /* the mask of ids of hashing algorithms to use from the OpenSLL library */
-unsigned rhash_openssl_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
+unsigned rhash_openssl_hash_mask = RHASH_OPENSSL_DEFAULT_HASHES;
 
 #ifdef OPENSSL_RUNTIME
 typedef void (*os_fin_t)(void*, void*);
@@ -168,7 +168,7 @@ int rhash_plug_openssl(void)
 
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
 
-	if( (rhash_openssl_hash_mask & OPENSSL_SUPPORTED_HASHES_MASK) == 0) {
+	if( (rhash_openssl_hash_mask & RHASH_OPENSSL_SUPPORTED_HASHES) == 0) {
 		return 1; /* do not load openssl */
 	}
 

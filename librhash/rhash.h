@@ -174,6 +174,14 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ld
 #define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0);
 #define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0);
 
+#ifdef USE_OPENSSL
+#define RHASH_OPENSSL_SUPPORTED_HASHES (RHASH_MD4 | RHASH_MD5 | \
+	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | \
+	RHASH_SHA512 | RHASH_RIPEMD160 | RHASH_WHIRLPOOL)
+#else
+#define RHASH_OPENSSL_SUPPORTED_HASHES 0
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

@@ -12,7 +12,6 @@
 #endif
 
 #include "librhash/rhash.h"
-#include "librhash/plug_openssl.h"
 #include "win_utils.h"
 #include "file_mask.h"
 #include "crc_print.h"
@@ -138,7 +137,7 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 		length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
 
 		for(bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
-			if( (bit & OPENSSL_SUPPORTED_HASHES_MASK) &&
+			if( (bit & RHASH_OPENSSL_SUPPORTED_HASHES) &&
 				memcmp(cur, info->short_name, length) == 0 &&
 				info->short_name[length] == 0) {
 					o->openssl_mask |= bit;

@@ -4,7 +4,6 @@
 #include <string.h>
 #include <ctype.h>  /* isspace */
 
-#include "librhash/byte_order.h"
 #include "librhash/rhash.h"
 #include "output.h"
 #include "parse_cmdline.h"
@@ -107,6 +106,30 @@ static void process_backslashes(char* path)
 #define process_backslashes(path)
 #endif /* _WIN32 */
 
+
+/* convert a hash flag to index */
+#if __GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
+# define get_ctz(x) __builtin_ctz(x)
+#else
+
+/**
+ * Returns index of the trailing bit of a 32-bit number.
+ * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
+ *
+ * @param x the number to process
+ * @return zero-based index of the trailing bit
+ */
+unsigned get_ctz(unsigned x)
+{
+	/* see http://graphics.stanford.edu/~seander/bithacks.html */
+	static unsigned char bit_pos[32] =  {
+		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+	};
+	return (unsigned)bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
+}
+#endif /* (GCC >= 4.3) */
+
 /**
  * Encode a hash function digest size into a small number in {0,...,24}.
  * The digest size must be a positive number not greater then 128.
@@ -119,7 +142,7 @@ static int code_digest_size(int digest_size)
 	int pow, code;
 	/* check (0 < size && size <= 128)) */
 	if((unsigned)(digest_size - 1) > 127) return 32;
-	pow = rhash_ctz(digest_size >> 2);
+	pow = get_ctz(digest_size >> 2);
 	code = ((digest_size >> (pow + 3)) << 3) | pow;
 	return (code <= 24 ? code : 32);
 }
@@ -210,7 +233,7 @@ static unsigned char test_hash_string(char **ptr, char *end, int *p_len)
 	unsigned char hash_type = 0;
 
 	if((char_type & HV_HEX) && (len & 7) == 0 && len <= 256) {
-		int pow = rhash_ctz(len >> 3);
+		int pow = get_ctz(len >> 3);
 		int code = ((len >> (pow + 4)) << 3) | pow;
 		if(code < 32 && ((1 << code) & 0x101061d)) hash_type |= HV_HEX;
 	}
@@ -626,9 +649,14 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 	}
 
 	/* verify embedded CRC32 hash sum, if present */
-	if((hashes->flags & HC_HAS_EMBCRC32) != 0 && hashes->embedded_crc32_be !=
-		be2me_32(*(unsigned*)rhash_get_context_ptr(ctx, RHASH_CRC32))) {
+	if((hashes->flags & HC_HAS_EMBCRC32) != 0) {
+		unsigned char* c =
+			(unsigned char*)rhash_get_context_ptr(ctx, RHASH_CRC32);
+		unsigned crc32_be = ((unsigned)c[0] << 24) | ((unsigned)c[1] << 16) |
+			((unsigned)c[2] << 8) | (unsigned)c[3];
+		if(crc32_be != hashes->embedded_crc32_be) {
 			hashes->flags |= HC_WRONG_EMBCRC32;
+		}
 	}
 
 	/* return if nothing else to verify */

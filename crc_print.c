@@ -7,7 +7,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-#include "librhash/byte_order.h"
 #include "calc_sums.h"
 #include "parse_cmdline.h"
 #include "crc_print.h"
@@ -466,19 +465,20 @@ void init_hash_info_table(void)
 /**
  * Initialize printf string according to program options.
  * The function is called only when a printf format string is not specified
- * from command line, so it sould be constructed from other options.
+ * from command line, so it should be constructed from other options.
  *
  * @param out a string buffer to place the resulting format string into.
  */
 void init_printf_format(strbuf_t* out)
 {
 	const char* fmt, *tail = 0;
-	unsigned bit, index = rhash_ctz(opt.sum_flags);
+	unsigned bit, index = 0;
 	int uppercase;
 	char up_flag;
+	unsigned force_base32_mask = 0;
 
 	if(!opt.fmt) {
-		/* print sfv header for crc32 or if no sums options specified */
+		/* print SFV header for CRC32 or if no hash sums options specified */
 		opt.fmt = (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags ? FMT_SFV : FMT_SIMPLE);
 	}
 	uppercase = ((opt.flags & OPT_UPPERCASE) ||
@@ -500,6 +500,7 @@ void init_printf_format(strbuf_t* out)
 	} else if(opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=%{urlname}");
 		fmt = "&xt=urn:\002:\001";
+		force_base32_mask = (RHASH_SHA1 | RHASH_BTIH);
 		tail = "\\n";
 	} else if(opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
 		fmt = "\001  %p\\n";
@@ -511,12 +512,15 @@ void init_printf_format(strbuf_t* out)
 
 	/* loop by hashes */
 	for(bit = 1 << index; bit <= opt.sum_flags; bit = bit << 1, index++) {
-		int base32 = (opt.fmt == FMT_MAGNET && (bit & (RHASH_SHA1 | RHASH_BTIH)));
-		const char *p = fmt;
-		print_hash_info *info = &hash_info_table[index];
-		if((bit & opt.sum_flags) == 0) continue;
+		const char *p;
+		print_hash_info *info;
 
-		rsh_str_ensure_size(out, out->len + 256); /* allocate big enough buffer */
+		if((bit & opt.sum_flags) == 0) continue;
+		p = fmt;
+		info = &hash_info_table[index];
+
+		/* ensure the output buffer have enough space */
+		rsh_str_ensure_size(out, out->len + 256);
 
 		for(;;) {
 			int i;
@@ -525,7 +529,9 @@ void init_printf_format(strbuf_t* out)
 			switch((int)*(p++)) {
 				case 1:
 					out->str[out->len++] = '%';
-					if(base32) out->str[out->len++] = 'b';
+					if( (bit & force_base32_mask) != 0 ) {
+						out->str[out->len++] = 'b';
+					}
 					if(info->short_char) out->str[out->len++] = info->short_char & up_flag;
 					else {
 						char *letter;
