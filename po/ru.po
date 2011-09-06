@@ -8,20 +8,21 @@ msgstr ""
 "Project-Id-Version: RHash 1.2.7\n"
 "Report-Msgid-Bugs-To: rhash.admin@gmail.com\n"
 "POT-Creation-Date: 2011-09-06 07:41+0700\n"
-"PO-Revision-Date: 2011-09-06 07:41+0700n"
-"Last-Translator: Aleksey <rhash.admin@gmail.com>\n"
+"PO-Revision-Date: 2011-09-06 11:14+0600\n"
 "Language-Team: Russian <rhash.admin@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Last-Translator: Sergey Basalaev <sbasalaev@gmail.com>\n"
 
 #: calc_sums.c:236
 #, c-format
 msgid "wrong embedded sum, should be %s\n"
 msgstr "неправильная встроенная сумма, должна быть %s\n"
 
-#: calc_sums.c:260 hash_update.c:349
+#: calc_sums.c:260
+#: hash_update.c:349
 #, c-format
 msgid "can't move %s to %s: %s\n"
 msgstr "не могу переместить %s в %s: %s\n"
@@ -145,12 +146,12 @@ msgstr ""
 #: output.c:508
 #, c-format
 msgid "Everything OK\n"
-msgstr "Всё успешно проверенно\n"
+msgstr "Всё успешно проверено\n"
 
 #: output.c:510
 #, c-format
 msgid "Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"
-msgstr "Произошло ошибок: Несовпадений:%-3u Отсутсвуют:%-3u Удачно:%-3u Всего:%-3u\n"
+msgstr "Произошло ошибок: Несовпадений:%-3u Отсутствуют:%-3u Удачно:%-3u Всего:%-3u\n"
 
 #: output.c:530
 #, c-format
@@ -219,41 +220,42 @@ msgid ""
 "  -m, --magnet  Print hash sums  as magnet links.\n"
 "      --torrent Create torrent files.\n"
 msgstr ""
+"Опции:\n"
 "  -V, --version Вывести версию программы и выйти.\n"
 "  -h, --help    Вывести эту справку.\n"
-"  -C, --crc32   Вычислить хэш сумму CRC32.\n"
-"      --md4     Вычислить хэш сумму MD4.\n"
-"  -M, --md5     Вычислить хэш сумму MD5.\n"
-"  -H, --sha1    Вычислить хэш сумму SHA1.\n"
-"      --sha224, --sha256, --sha384, --sha512 Вычислить указанную SHA2-хэш сумму.\n"
-"  -T, --tth     Вычислить хэш сумму TTH sum.\n"
-"      --btih    Вычислить хэш сумму BitTorrent InfoHash.\n"
-"  -A, --aich    Вычислить хэш сумму AICH hash.\n"
-"  -E, --ed2k    Вычислить хэш сумму eDonkey.\n"
-"  -L, --ed2k-link  Вычислить хэш сумму and print eDonkey link.\n"
-"      --tiger   Вычислить хэш сумму Tiger.\n"
-"  -G, --gost    Вычислить хэш сумму GOST R 34.11-94.\n"
+"  -C, --crc32   Вычислить хэш-сумму CRC32.\n"
+"      --md4     Вычислить хэш-сумму MD4.\n"
+"  -M, --md5     Вычислить хэш-сумму MD5.\n"
+"  -H, --sha1    Вычислить хэш-сумму SHA1.\n"
+"      --sha224, --sha256, --sha384, --sha512 Вычислить указанную хэш-сумму SHA2.\n"
+"  -T, --tth     Вычислить хэш-сумму TTH sum.\n"
+"      --btih    Вычислить хэш-сумму BitTorrent InfoHash.\n"
+"  -A, --aich    Вычислить хэш-сумму AICH hash.\n"
+"  -E, --ed2k    Вычислить хэш-сумму eDonkey.\n"
+"  -L, --ed2k-link  Вычислить хэш-сумму и вывести ссылку eDonkey.\n"
+"      --tiger   Вычислить хэш-сумму Tiger.\n"
+"  -G, --gost    Вычислить хэш-сумму GOST R 34.11-94.\n"
 "      --gost-cryptopro Вычислить CryptoPro версию хэша GOST R 34.11-94.\n"
-"      --ripemd160  Вычислить хэш сумму RIPEMD-160.\n"
-"      --has160  Вычислить хэш сумму HAS-160.\n"
-"      --edonr256, --edonr512  Вычислить хэш сумму EDON-R 256/512.\n"
-"      --snefru128, --snefru256  Вычислить хэш сумму SNEFRU-128/256.\n"
-"  -a, --all     Вычислить все поддерживаемые хэш суммы.\n"
-"  -c, --check   Проверить хэш файлы указанные в командной строке.\n"
-"  -u, --update  Обновить хэш файлы указанные в командной строке.\n"
-"  -e, --embed-crc  Переименовать файлы, вставляя в имя CRC32 хэш.\n"
-"      --check-embedded  Проверить файлы по CRC32 хэшу в имени файла.\n"
+"      --ripemd160  Вычислить хэш-сумму RIPEMD-160.\n"
+"      --has160  Вычислить хэш-сумму HAS-160.\n"
+"      --edonr256, --edonr512  Вычислить хэш-сумму EDON-R 256/512.\n"
+"      --snefru128, --snefru256  Вычислить хэш-сумму SNEFRU-128/256.\n"
+"  -a, --all     Вычислить все поддерживаемые хэш-суммы.\n"
+"  -c, --check   Проверить хэш-файлы, указанные в командной строке.\n"
+"  -u, --update  Обновить хэш-файлы, указанные в командной строке.\n"
+"  -e, --embed-crc  Переименовать файлы, вставляя в имя хэш CRC32.\n"
+"      --check-embedded  Проверить файлы по хэшу CRC32 в имени файла.\n"
 "      --list-hashes  Напечатать имена всех поддерживаемых хэшей, по одному в строчку.\n"
 "  -B, --benchmark  Запустить тест производительности выбранного алгоритма.\n"
 "  -v, --verbose Включить подробный вывод.\n"
 "  -r, --recursive  Обрабатывать директории рекурсивно.\n"
 "      --skip-ok Не печатать строки «Успех» для удачно проверенных файлов.\n"
 "  -i, --ignore-case  Обновляя файлы, не учитывать регистр в именах файлов.\n"
-"      --percents   Показывать проценты, при вычислении и проверке хэш сумм.\n"
+"      --percents   Показывать проценты, при вычислении и проверке хэш-сумм.\n"
 "      --speed   Выводить скорость обработки каждого файла.\n"
 "      --maxdepth=<n> Спускаться не более чем на <n> уровней директорий.\n"
-"  -o, --output=<file> Файл для вывода результатов вычисления и проверки хэш сумм.\n"
-"  -l, --log=<file>    Файл для вывода ошибок и и подробной информации.\n"
+"  -o, --output=<file> Файл для вывода результатов вычисления и проверки хэш-сумм.\n"
+"  -l, --log=<file>    Файл для вывода ошибок и подробной информации.\n"
 "      --sfv     Печатать хэш суммы в SFV формате (по-умолчанию).\n"
 "      --bsd     Печатать хэш суммы в BSD-like формате.\n"
 "      --simple  Печатать хэш суммы в «простом» формате.\n"
@@ -277,7 +279,7 @@ msgstr ""
 #: parse_cmdline.c:156
 #, c-format
 msgid "openssl option doesn't support '%s' hash\n"
-msgstr "опция openssl не поддерживает хэш «%s»"
+msgstr "опция openssl не поддерживает хэш «%s»\n"
 
 #: parse_cmdline.c:163
 msgid "compiled without openssl support\n"
@@ -311,7 +313,8 @@ msgstr "неверный разделитель пути к файлу: %s\n"
 msgid "unknown option: %s"
 msgstr "неизвестная опция «%s»"
 
-#: parse_cmdline.c:400 parse_cmdline.c:737
+#: parse_cmdline.c:400
+#: parse_cmdline.c:737
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr "для опции «%s» требуется аргумент\n"
@@ -386,3 +389,4 @@ msgstr ""
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "Форматирующая строка: %s\n"
+
