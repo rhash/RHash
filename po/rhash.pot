@@ -33,7 +33,7 @@ msgstr ""
 
 #: calc_sums.c:490
 #, c-format
-msgid "file name doesn't contain a crc: %s\n"
+msgid "file name doesn't contain a CRC32: %s\n"
 msgstr ""
 
 #: calc_sums.c:510

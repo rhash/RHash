@@ -487,7 +487,7 @@ int check_hash_file(const char* hash_file_path, int chdir)
 			free(info.full_path);
 			file_info_destroy(&info);
 		} else {
-			log_warning(_("file name doesn't contain a crc: %s\n"), hash_file_path);
+			log_warning(_("file name doesn't contain a CRC32: %s\n"), hash_file_path);
 			return -1;
 		}
 		return 0;
