@@ -265,7 +265,8 @@ clean:
 	rm -f po/*.po~
 
 update-po:
-	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot
+	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot \
+		--msgid-bugs-address='rhash.admin@gmail.com' --package-name='RHash'
 	for f in po/*.po; do \
 		msgmerge -U $$f po/rhash.pot; \
 	done
