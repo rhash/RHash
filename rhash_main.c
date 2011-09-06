@@ -28,7 +28,13 @@
 
 #include "rhash_main.h"
 
-#define _(str) (str)
+#ifndef NO_GETTEXT
+# include <libintl.h>
+# define _(str) gettext(str)
+# define LOCALEDIR "/usr/share/locale"
+#else
+# define _(str) (str)
+#endif /* NO_GETTEXT */
 
 struct rhash_t rhash_data;
 
@@ -127,7 +133,7 @@ static int load_printf_template(void)
 		if(len == (size_t)-1) break;
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if(rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
-			log_msg(_("%s: too big template file\n"), opt.template_file);
+			log_msg(_("%s: template file is too big\n"), opt.template_file);
 			error = 1;
 		}
 	}
@@ -138,7 +144,7 @@ static int load_printf_template(void)
 	}
 
 	fclose(fd);
-	rhash_data.printf = rhash_data.template_text->str;
+	rhash_data.printf_str = rhash_data.template_text->str;
 	return !error;
 }
 
@@ -242,6 +248,17 @@ void rhash_destroy(struct rhash_t* ptr)
 	IF_WINDOWS(restore_console());
 }
 
+static void i18n_initialize(void)
+{
+	setlocale(LC_ALL, ""); /* set locale according to the environment */
+
+#ifndef NO_GETTEXT
+	bindtextdomain("rhash", LOCALEDIR); /* set the text message domain */
+	textdomain("rhash");
+#endif /* NO_GETTEXT */
+}
+
+
 /**
  * RHash program entry point.
  *
@@ -251,7 +268,7 @@ void rhash_destroy(struct rhash_t* ptr)
  */
 int main(int argc, char *argv[])
 {
-	setlocale(LC_ALL, ""); /* set locale according to the environment */
+	i18n_initialize(); /* initialize locale and translation */
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	rhash_data.out = stdout; /* set initial output streams */
@@ -285,24 +302,24 @@ int main(int argc, char *argv[])
 	}
 
 	/* setup printf formating string */
-	rhash_data.printf = opt.printf;
+	rhash_data.printf_str = opt.printf_str;
 
 	if(opt.template_file) {
 		if(!load_printf_template()) rsh_exit(2);
-	} else if(!rhash_data.printf && !(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED))) {
+	} else if(!rhash_data.printf_str && !(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED))) {
 		/* initialize printf output format according to '--<hashname>' options */
 		init_printf_format( (rhash_data.template_text = rsh_str_new()) );
-		rhash_data.printf = rhash_data.template_text->str;
+		rhash_data.printf_str = rhash_data.template_text->str;
 
 		if(opt.flags & OPT_VERBOSE) {
-			char* str = rsh_strdup(rhash_data.printf);
+			char* str = rsh_strdup(rhash_data.printf_str);
 			log_msg(_("Format string is: %s\n"), str_trim(str));
 			free(str);
 		}
 	}
 
-	if(rhash_data.printf) {
-		rhash_data.print_list = parse_print_string(rhash_data.printf, &opt.sum_flags);
+	if(rhash_data.printf_str) {
+		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
 	}
 
 	print_sfv_file_header();

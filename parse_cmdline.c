@@ -179,7 +179,8 @@ static void accept_video(options_t *o)
  */
 static void nya(void)
 {
-	fprintf(rhash_data.out, _("  /\\__/\\\n (^ _ ^.) Purrr...\n  (_uu__)\n"));
+	fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) %s\n  (_uu__)\n",
+		_("Purrr..."));
 	rsh_exit(0);
 }
 
@@ -316,7 +317,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
 	{ F_CSTR,   0,   0, "template",  &opt.template_file, 0 },
-	{ F_CSTR, 'p',   0, "printf",  &opt.printf, 0 },
+	{ F_CSTR, 'p',   0, "printf",  &opt.printf_str, 0 },
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
@@ -773,12 +774,12 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 	}
 
 	/* copy formating options from config if not specified at command line */
-	if(!opt.printf && !opt.template_file && !opt.sum_flags && !opt.fmt) {
-		opt.printf = conf_opt.printf;
+	if(!opt.printf_str && !opt.template_file && !opt.sum_flags && !opt.fmt) {
+		opt.printf_str = conf_opt.printf_str;
 		opt.template_file = conf_opt.template_file;
 	}
 
-	if(!opt.printf && !opt.template_file) {
+	if(!opt.printf_str && !opt.template_file) {
 		if(!opt.fmt) opt.fmt = conf_opt.fmt;
 		if(!opt.sum_flags) opt.sum_flags = conf_opt.sum_flags;
 	}
@@ -885,7 +886,7 @@ static void make_final_options_checks(void)
 		die(_("incompatible program modes\n"));
 	}
 
-	ff = (opt.printf ? 1 : 0) | (opt.template_file ? 2 : 0) | (opt.fmt ? 4 : 0);
+	ff = (opt.printf_str ? 1 : 0) | (opt.template_file ? 2 : 0) | (opt.fmt ? 4 : 0);
 	if((opt.fmt & (opt.fmt - 1)) || (ff & (ff - 1))) {
 		die(_("too many formating options\n"));
 	}

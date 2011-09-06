@@ -16,7 +16,7 @@ struct rhash_t
 	int  saved_console_codepage; /* saved codepage */
 	unsigned saved_cursor_size;
 
-	char*  printf;
+	char*  printf_str;
 	struct print_item *print_list;
 	struct strbuf_t *template_text;
 	/*struct file_info  *cur_file;*/

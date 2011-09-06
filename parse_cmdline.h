@@ -64,7 +64,7 @@ struct options_t {
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
 	const char* config_file; /* config file path */
-	char* printf;        /* printf-like format */
+	char* printf_str;        /* printf-like format */
 	char* template_file; /* printf-like template file path */
 	char* output;        /* file to output calculation or checking results to */
 	char* log;           /* file to log percents and other info to */
