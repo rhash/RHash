@@ -32,6 +32,9 @@
 #define STATE_ACTIVE  0xb01dbabe
 #define STATE_STOPED  0xdeadbeef
 #define STATE_DELETED 0xdecea5ed
+#define RCTX_AUTO_FINAL 0x1
+#define RCTX_FINALIZED  0x2
+#define RCTX_FINALIZED_MASK (RCTX_AUTO_FINAL | RCTX_FINALIZED)
 
 /**
  * Initialize static data of rhash algorithms
@@ -113,11 +116,11 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	rctx = (rhash_context*)rsh_malloc(aligned_size + hash_size_sum);
 
 	/* initialize common fields of the rhash context */
-	rctx->msg_size = 0;
+	memset(rctx, 0, sizeof(rhash_context));
 	rctx->hash_id = hash_id;
+	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
 	rctx->hash_vector_size = num;
-	rctx->callback = rctx->callback_data = NULL;
 
 	/* alligned hash contextes follows rctx->vector[num] in the same memory block */
 	phash_ctx = (char*)rctx + aligned_size;
@@ -237,6 +240,10 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 	unsigned char* out = (first_result ? first_result : buffer);
 	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
 
+	/* skip final call if already finalized and auto-final is on */
+	if((ctx->flags & RCTX_FINALIZED_MASK) ==
+		(RCTX_AUTO_FINAL | RCTX_FINALIZED)) return 0;
+
 	/* call final method for every algorithm */
 	for(i = 0; i < ctx->hash_vector_size; i++) {
 		struct rhash_hash_info* info = ctx->vector[i].hash_info;
@@ -245,6 +252,7 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 		info->final(ctx->vector[i].context, out);
 		out = buffer;
 	}
+	ctx->flags |= RCTX_FINALIZED;
 	return 0; /* no error processing at the moment */
 }
 
@@ -266,6 +274,11 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 
 	assert(ctx);
 	assert(ctx->hash_vector_size > 0 && ctx->hash_vector_size <= RHASH_HASH_COUNT);
+
+	/* finalize context if not yet finalized and auto-final is on */
+	if((ctx->flags & RCTX_FINALIZED_MASK) == RCTX_AUTO_FINAL) {
+		rhash_final(ctx, NULL);
+	}
 
 	if(hash_id == 0) {
 		item = &ctx->vector[0]; /* get the first hash */
@@ -687,7 +700,14 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 	case RMSG_IS_CANCELED:
 		return (ctx->state == STATE_STOPED);
 
-		/* openssl related messages */
+	case RMSG_GET_FINALIZED:
+		return ((ctx->flags & RCTX_FINALIZED) != 0);
+	case RMSG_SET_AUTOFINAL:
+		ctx->flags &= ~RCTX_AUTO_FINAL;
+		if(ldata) ctx->flags |= RCTX_AUTO_FINAL;
+		break;
+
+	/* OpenSSL related messages */
 #ifdef USE_OPENSSL
 	case RMSG_SET_OPENSSL_MASK:
 		rhash_openssl_hash_mask = (unsigned)ldata;
@@ -696,7 +716,7 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 		return rhash_openssl_hash_mask;
 #endif
 
-		/* BitTorrent related messages */
+	/* BitTorrent related messages */
 	case RMSG_BT_ADD_FILE:
 	case RMSG_BT_SET_OPTIONS:
 	case RMSG_BT_SET_ANNOUNCE:
