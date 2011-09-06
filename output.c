@@ -68,7 +68,7 @@ void log_error(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+	fprintf(rhash_data.log, _("%s: "), PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -81,7 +81,7 @@ void log_warning(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+	fprintf(rhash_data.log, _("%s: "), PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -92,7 +92,7 @@ void log_warning(const char* format, ...)
  */
 void log_file_error(const char* filepath)
 {
-	log_error("%s: %s\n", filepath, strerror(errno));
+	log_error(_("%s: %s\n"), filepath, strerror(errno));
 }
 
 /**
@@ -192,7 +192,7 @@ static void print_check_result(struct file_info *info, int print_name, int print
 			/* print error to stdout */
 			fprintf(rhash_data.out, "%s\n", strerror(errno));
 		} else if(!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
-			/* using at least 3 characters to overwrite "99%" */
+			/* TRANSLATORS: use at least 3 characters to overwrite "99%" */
 			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") : _("ERR\n")) );
 		} else {
 			print_verbose_error(info);
@@ -466,7 +466,7 @@ static void setup_log_stream(FILE **p_stream, const char *stream_path)
 #else
 		if( !(*p_stream = fopen(stream_path, "w")) ) {
 #endif
-			log_error("%s: %s\n", stream_path, strerror(errno));
+			log_error(_("%s: %s\n"), stream_path, strerror(errno));
 			rsh_exit(2);
 		}
 	}

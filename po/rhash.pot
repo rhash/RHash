@@ -1,20 +1,21 @@
-# Translation of RHash messages to LANGUAGE
-# Copyright (C) YEAR RHash Software Corp.
-# This file is distributed under the same license as the RHash package.
-#
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: RHash 1.2.7\n"
-"Report-Msgid-Bugs-To: rhash.admin@gmail.com\n"
-"POT-Creation-Date: 2011-09-06 07:41+0700\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-09-06 12:31+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: calc_sums.c:236
 #, c-format
@@ -85,6 +86,16 @@ msgstr ""
 msgid "Updated: %s\n"
 msgstr ""
 
+#: output.c:71 output.c:84
+#, c-format
+msgid "%s: "
+msgstr ""
+
+#: output.c:95 output.c:469
+#, c-format
+msgid "%s: %s\n"
+msgstr ""
+
 #: output.c:128
 #, c-format
 msgid "ERROR"
@@ -105,6 +116,7 @@ msgstr ""
 msgid ", %s is %s should be %s"
 msgstr ""
 
+#. TRANSLATORS: use at least 3 characters to overwrite "99%"
 #: output.c:196
 #, c-format
 msgid "OK \n"
@@ -251,7 +263,7 @@ msgstr ""
 msgid "unknown option: %s"
 msgstr ""
 
-#: parse_cmdline.c:400 parse_cmdline.c:737
+#: parse_cmdline.c:400 parse_cmdline.c:738
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr ""
@@ -266,24 +278,24 @@ msgstr ""
 msgid "%s: unknown option \"%s\"\n"
 msgstr ""
 
-#: parse_cmdline.c:661
+#: parse_cmdline.c:662
 msgid "CommandLineToArgvW failed\n"
 msgstr ""
 
-#: parse_cmdline.c:881
+#: parse_cmdline.c:882
 #, c-format
 msgid "Config file: %s\n"
 msgstr ""
 
-#: parse_cmdline.c:881
+#: parse_cmdline.c:882
 msgid "None"
 msgstr ""
 
-#: parse_cmdline.c:886
+#: parse_cmdline.c:887
 msgid "incompatible program modes\n"
 msgstr ""
 
-#: parse_cmdline.c:891
+#: parse_cmdline.c:892
 msgid "too many formating options\n"
 msgstr ""
 

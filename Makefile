@@ -53,9 +53,10 @@ ARCHIVE_DEB_GZ = ../rhash_$(VERSION).orig.tar.gz
 ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
 ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
 WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
-DESTDIR =
+DESTDIR = ./dest
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/share/man
+LOCALEDIR = $(PREFIX)/share/locale
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
 LIBRHASH = librhash/librhash.a
@@ -260,3 +261,25 @@ distclean: clean
 clean:
 	cd librhash && make clean
 	rm -f *.o $(TARGET)
+	rm -f po/*.gmo
+	rm -f po/*.po~
+
+update-po:
+	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot
+	for f in po/*.po; do \
+		msgmerge -U $$f po/rhash.pot; \
+	done
+
+compile-gmo:
+	for f in po/*.po; do \
+		g=`basename $$f .po`; \
+		msgfmt $$f -o po/$$g.gmo; \
+	done
+
+install-gmo: compile-gmo
+	for f in po/*.gmo; do \
+		l=`basename $$f .gmo`; \
+		$(INSTALL) -d $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES; \
+		$(INSTALL) -T $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+	done
+
