@@ -115,11 +115,6 @@ msgstr ""
 msgid "ERR\n"
 msgstr ""
 
-#: output.c:283
-#, c-format
-msgid "%s 100%%\n"
-msgstr ""
-
 #: output.c:301
 #, c-format
 msgid ""

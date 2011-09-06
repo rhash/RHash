@@ -192,7 +192,7 @@ static void print_check_result(struct file_info *info, int print_name, int print
 			/* print error to stdout */
 			fprintf(rhash_data.out, "%s\n", strerror(errno));
 		} else if(!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
-			/* using 3 characters to overwrite percent */
+			/* using at least 3 characters to overwrite "99%" */
 			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") : _("ERR\n")) );
 		} else {
 			print_verbose_error(info);
@@ -280,7 +280,7 @@ static void dots_finish_percents(struct file_info *info, int process_res)
 	info->error = process_res;
 
 	if((percents.points % 74) != 0) {
-		log_msg(_("%s 100%%\n"), str_set(buf, ' ', 74 - (percents.points%74) ));
+		log_msg("%s 100%%\n", str_set(buf, ' ', 74 - (percents.points%74) ));
 	}
 	print_results_on_check(info, 0);
 }
