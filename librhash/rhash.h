@@ -1,4 +1,4 @@
-/* rhash.h */
+/** @file rhash.h LibRHash interface */
 #ifndef RHASH_H
 #define RHASH_H
 
@@ -42,35 +42,37 @@ enum rhash_ids
 	RHASH_SHA512    = 0x80000,
 	RHASH_EDONR256    = 0x100000,
 	RHASH_EDONR512    = 0x200000,
+	
+	/** The bit-mask containing all supported hashe functions */
 	RHASH_ALL_HASHES = RHASH_CRC32 | RHASH_MD4 | RHASH_MD5 | RHASH_ED2K | RHASH_SHA1 |
 		RHASH_TIGER | RHASH_TTH | RHASH_GOST | RHASH_GOST_CRYPTOPRO |
 		RHASH_BTIH | RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 |
 		RHASH_HAS160 | RHASH_SNEFRU128 | RHASH_SNEFRU256|
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 |
 		RHASH_EDONR256 | RHASH_EDONR512,
+	
+	/** The number of supported hash functions */
 	RHASH_HASH_COUNT = 22
 };
 
-/* hash function information and its context */
-typedef struct rhash_vector_item {
-	struct rhash_hash_info* hash_info;
-	void *context;
-} rhash_vector_item;
-
-/* rhash context containing contexts for several hash functions */
+/**
+ * The rhash context structure contains contexts for several hash functions
+ */
 typedef struct rhash_context
 {
+	/** The size of the hashed message */
 	unsigned long long msg_size;
+	
+	/**
+	 * The bit-mask containing identifiers of the hashes being calculated
+	 */
 	unsigned hash_id;
-	unsigned hash_vector_size; /* number of contained hash sums */
-	unsigned flags;
-	unsigned state;
-	void *callback, *callback_data;
-	void *bt_ctx;
-	rhash_vector_item vector[1]; /* contexts of contained hash sums */
 } rhash_context;
 
+/** type of a pointer passed to all hashing functions */
 typedef struct rhash_context* rhash;
+
+/** type of a callback to be called periodically while hashing a file */
 typedef void (*rhash_callback_t)(void* data, unsigned long long offset);
 
 RHASH_API void rhash_library_init(void); /* initialize static data */
@@ -95,34 +97,58 @@ RHASH_API void rhash_free(rhash ctx);
 /* additional lo-level functions */
 RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
 
+/** bit-flag: default hash output format is base32 */
 #define RHASH_INFO_BASE32 1
+
+/**
+ * Information about a hash function.
+ */
 typedef struct rhash_info
 {
+	/** hash function indentifier */
 	unsigned hash_id;
+	/** flags bit-mask, including RHASH_INFO_BASE32 bit */
 	unsigned flags;
+	/** size of binary message digest in bytes */
 	size_t digest_size;
 	const char* name;
 } rhash_info;
 
 /* information functions */
 RHASH_API int  rhash_count(void); /* number of supported hashes */
-RHASH_API int  rhash_get_digest_size(unsigned hash_id); /* size of binary digest size   */
-RHASH_API int  rhash_get_hash_length(unsigned hash_id); /* length of digest hash string */
+RHASH_API int  rhash_get_digest_size(unsigned hash_id); /* size of binary message digest */
+RHASH_API int  rhash_get_hash_length(unsigned hash_id); /* length of formated hash string */
 RHASH_API int  rhash_is_base32(unsigned hash_id); /* default digest output format */
 RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function name */
 
 rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 
-/* manual hash sum output */
+/**
+ * Flags for printing a hash sum
+ */
 enum rhash_print_sum_flags
 {
+	/** print in a default format */
 	RHPR_DEFAULT   = 0x0,
+	/** output as binary message digest */
 	RHPR_RAW       = 0x1,
+	/** print as a hexadecimal string */
 	RHPR_HEX       = 0x2,
+	/** print as a base32-encoded string */
 	RHPR_BASE32    = 0x3,
+	/** print as a base64-encoded string */
 	RHPR_BASE64    = 0x4,
+
+	/**
+	 * Print as an uppercase string 
+	 * (for base32 or hexadecimal format only).
+	 */
 	RHPR_UPPERCASE = 0x8,
-	RHPR_REVERSE   = 0x10, /* reverse bytes of hex representation, can be used for GOST hash */
+
+	/** 
+	 * Reverse hash bytes, can be used for GOST hash.
+	 */
+	RHPR_REVERSE   = 0x10,
 };
 
 /* output hash into given buffer */
@@ -133,7 +159,7 @@ RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
 
 /* macros for message API */
 
-/* the rhash_uptr_t type shall be unsigned integer large enough to hold a pointer */
+/** The type of an unsigned integer large enough to hold a pointer */
 #if defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
 	defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
 typedef unsigned long long rhash_uptr_t;
@@ -141,14 +167,18 @@ typedef unsigned long long rhash_uptr_t;
 typedef unsigned long rhash_uptr_t;
 #endif
 
+/** The value returned by rhash_transmit on error */
 #define RHASH_ERROR ((rhash_uptr_t)-1)
+/** Convert a pointer to rhash_uptr_t */
 #define RHASH_STR2UPTR(str) ((rhash_uptr_t)(str))
+/** Convert a rhash_uptr_t to a void* pointer */
 #define RHASH_UPTR2PVOID(u) ((void*)((char*)0 + (u)))
 
 /* rhash API to set/get data via messages */
 RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ldata, rhash_uptr_t rdata);
 
 /* rhash message constants */
+
 #define RMSG_GET_CONTEXT 1
 #define RMSG_CANCEL      2
 #define RMSG_IS_CANCELED 3
@@ -169,16 +199,38 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void*dst, rhash_uptr_t ld
 #define RHASH_BT_OPT_INFOHASH_ONLY 2
 
 /* helper macros */
+
+/** Get a pointer to context of the specified hash function */
 #define rhash_get_context_ptr(ctx, hash_id) RHASH_UPTR2PVOID(rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
+/** Cancel hash calculation of a file */
 #define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
+/** Return non-zero if hash calculation was canceled, zero otherwise */
 #define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
-#define rhash_get_finalized(ctx, on) rhash_transmit(RMSG_GET_FINALIZED, ctx, 0, 0)
+/** Return non-zero if rhash_final was called for rhash_context */
+#define rhash_get_finalized(ctx) rhash_transmit(RMSG_GET_FINALIZED, ctx, 0, 0)
+
+/**
+ * Turn on/off the auto-final flag for the given rhash_context. By default
+ * auto-final is on, which means rhash_final is called automatically, if
+ * needed when a hash value is retrived by rhash_print call.
+ */
 #define rhash_set_autofinal(ctx, on) rhash_transmit(RMSG_SET_AUTOFINAL, ctx, on, 0)
 
-/* set the mask of algorithms to be used from openssl library */
+/**
+ * Set the bit-mask of hash algorithms to be calculated by OpenSSL library.
+ * The call rhash_set_openssl_mask(0) made before rhash_library_init(),
+ * turns off loading of the OpenSSL dynamic library.
+ * This call works if the LibRHash was compiled with OpenSSL support.
+ */
 #define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0);
+
+/**
+ * Return current bit-mask of hash algorithms selected to be calculated
+ * by OpenSSL library.
+ */
 #define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0);
 
+/** The bit mask of hash algorithms implemented by OpenSSL */
 #ifdef USE_OPENSSL
 #define RHASH_OPENSSL_SUPPORTED_HASHES (RHASH_MD4 | RHASH_MD5 | \
 	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | \

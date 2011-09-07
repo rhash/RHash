@@ -57,6 +57,25 @@ int RHASH_API rhash_count(void)
 	return rhash_info_size;
 }
 
+/* hash function information and its context */
+typedef struct rhash_vector_item
+{
+	struct rhash_hash_info* hash_info;
+	void *context;
+} rhash_vector_item;
+
+/* rhash context containing contexts for several hash functions */
+typedef struct rhash_context_ext
+{
+	struct rhash_context rc;
+	unsigned hash_vector_size; /* number of contained hash sums */
+	unsigned flags;
+	unsigned state;
+	void *callback, *callback_data;
+	void *bt_ctx;
+	rhash_vector_item vector[1]; /* contexts of contained hash sums */
+} rhash_context_ext;
+
 /* Lo-level rhash library functions */
 
 /**
@@ -71,7 +90,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 {
 	unsigned tail_bit_index; /* index of hash_id trailing bit */
 	unsigned num = 0;        /* number of hashes to compute */
-	rhash_context *rctx = NULL; /* allocated rhash context */
+	rhash_context_ext *rctx = NULL; /* allocated rhash context */
 	size_t hash_size_sum = 0;   /* size of hash contexes to store in rctx */
 
 	unsigned i, bit_index, id;
@@ -109,15 +128,15 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	}
 
 	/* align the size of the rhash context common part */
-	aligned_size = (offsetof(rhash_context, vector[num]) + 7) & ~7;
-	assert(aligned_size >= sizeof(rhash_context));
+	aligned_size = (offsetof(rhash_context_ext, vector[num]) + 7) & ~7;
+	assert(aligned_size >= sizeof(rhash_context_ext));
 
 	/* allocate rhash context with enough memory to store contexes of all used hashes */
-	rctx = (rhash_context*)rsh_malloc(aligned_size + hash_size_sum);
+	rctx = (rhash_context_ext*)rsh_malloc(aligned_size + hash_size_sum);
 
 	/* initialize common fields of the rhash context */
-	memset(rctx, 0, sizeof(rhash_context));
-	rctx->hash_id = hash_id;
+	memset(rctx, 0, sizeof(rhash_context_ext));
+	rctx->rc.hash_id = hash_id;
 	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
 	rctx->hash_vector_size = num;
@@ -150,7 +169,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 		}
 	}
 
-	return rctx; /* return allocated and initialized rhash context */
+	return &rctx->rc; /* return allocated and initialized rhash context */
 }
 
 /**
@@ -160,20 +179,22 @@ RHASH_API rhash rhash_init(unsigned hash_id)
  */
 void rhash_free(rhash ctx)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	if(!ctx) return;
-	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
-	ctx->state = STATE_DELETED; /* mark memory block as being removed */
+	
+	if(ctx == 0) return;
+	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
+	ectx->state = STATE_DELETED; /* mark memory block as being removed */
 
 	/* clean the hash functions, which require additional clean up */
-	for(i = 0; i < ctx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ctx->vector[i].hash_info;
+	for(i = 0; i < ectx->hash_vector_size; i++) {
+		struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		if(info->cleanup != 0) {
-			info->cleanup(ctx->vector[i].context);
+			info->cleanup(ectx->vector[i].context);
 		}
 	}
 
-	free(ctx);
+	free(ectx);
 }
 
 /**
@@ -184,19 +205,20 @@ void rhash_free(rhash ctx)
  */
 RHASH_API void rhash_reset(rhash ctx)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	assert(ctx->hash_vector_size > 0 && ctx->hash_vector_size < RHASH_HASH_COUNT);
-	ctx->state = STATE_ACTIVE; /* re-activate the structure */
+	assert(ectx->hash_vector_size > 0 && ectx->hash_vector_size < RHASH_HASH_COUNT);
+	ectx->state = STATE_ACTIVE; /* re-activate the structure */
 
 	/* re-initialize every hash in a loop */
-	for(i = 0; i < ctx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ctx->vector[i].hash_info;
+	for(i = 0; i < ectx->hash_vector_size; i++) {
+		struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		if(info->cleanup != 0) {
-			info->cleanup(ctx->vector[i].context);
+			info->cleanup(ectx->vector[i].context);
 		}
 
 		assert(info->init != NULL);
-		info->init(ctx->vector[i].context);
+		info->init(ectx->vector[i].context);
 	}
 }
 
@@ -204,24 +226,26 @@ RHASH_API void rhash_reset(rhash ctx)
  * Calculate hashes of message.
  * Can be called repeatedly with chunks of the message to be hashed.
  *
- * @param pointer to the rhash context
- * @param msg message chunk
- * @param size length of the message chunk
+ * @param ctx the rhash context
+ * @param message message chunk
+ * @param length length of the message chunk
  * @return 0 on success; On fail return -1 and set errno
  */
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
-	if(ctx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
+	
+	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
+	if(ectx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
 
 	ctx->msg_size += length;
 
 	/* call update method for every algorithm */
-	for(i = 0; i < ctx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ctx->vector[i].hash_info;
+	for(i = 0; i < ectx->hash_vector_size; i++) {
+		struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		assert(info->update != 0);
-		info->update(ctx->vector[i].context, message, length);
+		info->update(ectx->vector[i].context, message, length);
 	}
 	return 0; /* no error processing at the moment */
 }
@@ -229,7 +253,7 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)
 /**
  * Finalize hash calculation and optionally store the first hash.
  *
- * @param ctx rhash context
+ * @param ctx the rhash context
  * @param first_result optional buffer to store a calculated hash with the lowest available id
  * @return 0 on success; On fail return -1 and set errno
  */
@@ -238,21 +262,22 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 	unsigned i = 0;
 	unsigned char buffer[130];
 	unsigned char* out = (first_result ? first_result : buffer);
-	assert(ctx->hash_vector_size <= RHASH_HASH_COUNT);
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
+	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
 
 	/* skip final call if already finalized and auto-final is on */
-	if((ctx->flags & RCTX_FINALIZED_MASK) ==
+	if((ectx->flags & RCTX_FINALIZED_MASK) ==
 		(RCTX_AUTO_FINAL | RCTX_FINALIZED)) return 0;
 
 	/* call final method for every algorithm */
-	for(i = 0; i < ctx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ctx->vector[i].hash_info;
+	for(i = 0; i < ectx->hash_vector_size; i++) {
+		struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		assert(info->final != 0);
 		assert(info->info.digest_size < sizeof(buffer));
-		info->final(ctx->vector[i].context, out);
+		info->final(ectx->vector[i].context, out);
 		out = buffer;
 	}
-	ctx->flags |= RCTX_FINALIZED;
+	ectx->flags |= RCTX_FINALIZED;
 	return 0; /* no error processing at the moment */
 }
 
@@ -267,28 +292,29 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
  */
 static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
 	rhash_vector_item *item;
 	struct rhash_hash_info* info;
 	unsigned char* digest;
 
-	assert(ctx);
-	assert(ctx->hash_vector_size > 0 && ctx->hash_vector_size <= RHASH_HASH_COUNT);
+	assert(ectx);
+	assert(ectx->hash_vector_size > 0 && ectx->hash_vector_size <= RHASH_HASH_COUNT);
 
 	/* finalize context if not yet finalized and auto-final is on */
-	if((ctx->flags & RCTX_FINALIZED_MASK) == RCTX_AUTO_FINAL) {
+	if((ectx->flags & RCTX_FINALIZED_MASK) == RCTX_AUTO_FINAL) {
 		rhash_final(ctx, NULL);
 	}
 
 	if(hash_id == 0) {
-		item = &ctx->vector[0]; /* get the first hash */
+		item = &ectx->vector[0]; /* get the first hash */
 		info = item->hash_info;
 	} else {
 		for(i = 0;; i++) {
-			if(i >= ctx->hash_vector_size) {
+			if(i >= ectx->hash_vector_size) {
 				return; /* hash_id not found, do nothing */
 			}
-			item = &ctx->vector[i];
+			item = &ectx->vector[i];
 			info = item->hash_info;
 			if(info->info.hash_id == hash_id) break;
 		}
@@ -315,8 +341,8 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
  */
 RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data)
 {
-	ctx->callback = callback;
-	ctx->callback_data = callback_data;
+	((rhash_context_ext*)ctx)->callback = callback;
+	((rhash_context_ext*)ctx)->callback_data = callback_data;
 }
 
 
@@ -356,11 +382,12 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
  */
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	const size_t block_size = 8192;
 	unsigned char *buffer, *pmem;
 	size_t length = 0, align8;
 	int res = 0;
-	if(ctx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
+	if(ectx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
 
 	if(ctx == NULL) {
 		errno = EINVAL;
@@ -372,7 +399,7 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	buffer = pmem + align8;
 
 	while(!feof(fd)) {
-		if(ctx->state != STATE_ACTIVE) break; /* stop if canceled */
+		if(ectx->state != STATE_ACTIVE) break; /* stop if canceled */
 
 		length = fread(buffer, 1, block_size, fd);
 		/* read can return -1 on error */
@@ -382,8 +409,8 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 		}
 		rhash_update(ctx, buffer, length);
 
-		if(ctx->callback)
-			((rhash_callback_t)ctx->callback)(ctx->callback_data, ctx->msg_size);
+		if(ectx->callback)
+			((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
 	}
 
 	free(buffer);
@@ -522,13 +549,14 @@ RHASH_API const char* rhash_get_name(unsigned hash_id)
 /* hash sum output */
 
 /**
- * Print text presentation of a given hash sum to specified buffer
+ * Print a text presentation of a given hash sum to the specified buffer,
  *
  * @param output a buffer to print the hash to
- * @param context algorithms state
- * @param hash_id id of the sum to print
- * @param flags  controls how to print the sum, can contain flags
- *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, e.t.c.
+ * @param bytes a hash sum to print
+ * @param size a size of hash sum in bytes
+ * @param flags  a bit-mask controling how to format the hash sum,
+ *               can be a mix of the flags: RHPR_RAW, RHPR_HEX, RHPR_BASE32,
+ *               RHPR_BASE64, RHPR_UPPERCASE, RHPR_REVERSE
  * @return number of writen characters
  */
 size_t rhash_print_bytes(char* output, const unsigned char* bytes,
@@ -579,7 +607,7 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	size_t digest_size;
 
 	info = (hash_id != 0 ? rhash_info_by_id(hash_id) :
-		&context->vector[0].hash_info->info);
+		&((rhash_context_ext*)context)->vector[0].hash_info->info);
 
 	if(info == NULL) return 0;
 	digest_size = info->digest_size;
@@ -678,7 +706,8 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
  */
 RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata)
 {
-	rhash ctx = (rhash)dst; /* for messages working with rhash context */
+	/* for messages working with rhash context */
+	rhash_context_ext* const ctx = (rhash_context_ext*)dst;
 
 	switch(msg_id) {
 	case RMSG_GET_CONTEXT:
@@ -723,7 +752,7 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 	case RMSG_BT_SET_PIECE_LENGTH:
 	case RMSG_BT_SET_PROGRAM_NAME:
 	case RMSG_BT_GET_TEXT:
-		return process_bt_msg(msg_id, (torrent_ctx*)(((rhash_context*)dst)->bt_ctx), ldata, rdata);
+		return process_bt_msg(msg_id, (torrent_ctx*)(((rhash_context_ext*)dst)->bt_ctx), ldata, rdata);
 
 	default:
 		return RHASH_ERROR; /* unknown message */

@@ -48,6 +48,7 @@ unsigned rhash_ctz(unsigned x)
 		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
 		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
+
 	/* The De Bruijn bit-scan was devised in 1997, according to Donald Knuth
 	 * by Martin Lauter. The constant 0x077CB531UL is a De Bruijn sequence,
 	 * which produces a unique pattern of bits into the high 5 bits for each
@@ -65,7 +66,8 @@ unsigned rhash_ctz(unsigned x)
  * to big-endian (or vice-versa).
  *
  * @param to the pointer where to copy memory block
- * @param from the source block to copy
+ * @param index the index to start writing from
+ * @param from  the source block to copy
  * @param length length of the memory block
  */
 void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
@@ -89,6 +91,7 @@ void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length)
  * to big-endian (or vice-versa).
  *
  * @param to     the pointer where to copy memory block
+ * @param index  the index to start writing from
  * @param from   the source block to copy
  * @param length length of the memory block
  */

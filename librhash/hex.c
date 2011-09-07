@@ -12,45 +12,45 @@
 #include "hex.h"
 
 /**
-* Convert a byte to a hexadecimal string. The result, consisting of two
+* Convert a byte to a hexadecimal number. The result, consisting of two
 * hexadecimal digits is stored into a buffer.
  *
- * @param dst  the buffer to receive two symbols of hex representation
+ * @param dest  the buffer to receive two symbols of hex representation
  * @param byte the byte to decode
  * @param upper_case flag to print string in uppercase
- * @return pointer to the next char in buffer (dst+2)
+ * @return pointer to the chararcter just after the written number (dest + 2)
  */
-char* rhash_print_hex_byte(char *dst, const unsigned char byte, int upper_case)
+char* rhash_print_hex_byte(char *dest, const unsigned char byte, int upper_case)
 {
 	const char add = (upper_case ? 'A' - 10 : 'a' - 10);
 	unsigned char c = (byte >> 4) & 15;
-	*dst++ = (c > 9 ? c + add : c + '0');
+	*dest++ = (c > 9 ? c + add : c + '0');
 	c = byte & 15;
-	*dst++ = (c > 9 ? c + add : c + '0');
-	return dst;
+	*dest++ = (c > 9 ? c + add : c + '0');
+	return dest;
 }
 
 /**
  * Store hexadecimal representation of a binary string to given buffer.
  *
- * @param dst the buffer to receive hexadecimal representation
- * @param str binary string
+ * @param dest the buffer to receive hexadecimal representation
+ * @param src binary string
  * @param len string length
  * @param upper_case flag to print string in uppercase
  */
-void rhash_byte_to_hex(char *dst, const unsigned char *src, unsigned len, int upper_case)
+void rhash_byte_to_hex(char *dest, const unsigned char *src, unsigned len, int upper_case)
 {
 	while(len-- > 0) {
-		dst = rhash_print_hex_byte(dst, *src++, upper_case);
+		dest = rhash_print_hex_byte(dest, *src++, upper_case);
 	}
-	*dst = '\0';
+	*dest = '\0';
 }
 
 /**
  * Encode a binary string to base32.
  *
- * @param dst the buffer to store result
- * @param str binary string
+ * @param dest the buffer to store result
+ * @param src binary string
  * @param len string length
  * @param upper_case flag to print string in uppercase
  */
@@ -82,8 +82,8 @@ void rhash_byte_to_base32(char* dest, const unsigned char* src, unsigned len, in
  * Encode a binary string to base64.
  * Encoded output length is always a multiple of 4 bytes.
  *
- * @param dst the buffer to store result
- * @param str binary string
+ * @param dest the buffer to store result
+ * @param src binary string
  * @param len string length
  */
 void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)

@@ -6,10 +6,10 @@
 extern "C" {
 #endif
 
-void rhash_byte_to_hex(char *dst, const unsigned char *src, unsigned len, int upper_case);
+void rhash_byte_to_hex(char *dest, const unsigned char *src, unsigned len, int upper_case);
 void rhash_byte_to_base32(char* dest, const unsigned char* src, unsigned len, int upper_case);
 void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len);
-char* rhash_print_hex_byte(char *dst, const unsigned char byte, int upper_case);
+char* rhash_print_hex_byte(char *dest, const unsigned char byte, int upper_case);
 
 #define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
 #define BASE64_LENGTH(bytes) ((((bytes) + 2) / 3) * 4)

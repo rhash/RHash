@@ -1,10 +1,6 @@
-/* timing.h */
+/** @file timing.h timer and benchmarking functions */
 #ifndef TIMING_H
 #define TIMING_H
-
-#ifndef _WIN32
-#include <sys/time.h> /* for timeval */
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,23 +11,30 @@ extern "C" {
 # define RHASH_API
 #endif
 
-/* timedelta_t and timing interface */
+/* portable timer definition */
 #ifdef _WIN32
 typedef unsigned long long timedelta_t;
 #else
+#include <sys/time.h> /* for timeval */
 typedef struct timeval timedelta_t;
 #endif
 
 /* timer functions */
+
 RHASH_API void rhash_timer_start(timedelta_t* timer);
 RHASH_API double rhash_timer_stop(timedelta_t* timer);
 
 /* flags for running a benchmark */
+
+/** Benchmarking flag: don't print intermediate benchmarking info */
 #define RHASH_BENCHMARK_QUIET 1
+/** Benchmarking flag: measure the CPU "clocks per byte" speed */
 #define RHASH_BENCHMARK_CPB 2
+/** Benchmarking flag: print benchmark result in tab-delimed format */
 #define RHASH_BENCHMARK_RAW 4
 
-RHASH_API void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output);
+RHASH_API void rhash_run_benchmark(unsigned hash_id, unsigned flags,
+				   FILE* output);
 
 #ifdef __cplusplus
 } /* extern "C" */

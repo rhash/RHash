@@ -91,8 +91,8 @@ unsigned rhash_get_crc32_str(unsigned crcinit, const char *str)
  * Calculate CRC32 sum of a given message.
  *
  * @param crcinit intermediate CRC32 hash result
- * @param p  the message to process
- * @param len the length of the message
+ * @param msg  the message to process
+ * @param size the length of the message
  * @return updated CRC32 hash sum
  */
 unsigned rhash_get_crc32(unsigned crcinit, const unsigned char *msg, size_t size)

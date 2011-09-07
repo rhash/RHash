@@ -72,7 +72,7 @@ static double fsec(timedelta_t* timer)
 /**
  * Start a timer.
  *
- * @param delta timer to start
+ * @param timer timer to start
  */
 void rhash_timer_start(timedelta_t* timer)
 {

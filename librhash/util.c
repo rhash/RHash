@@ -156,7 +156,8 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
  * Allocate an empty vector.
  *
  * @param destructor pointer to the cleanup/deallocate function called
- *                   on each element when the vector is destructed
+ *                   on each element when the vector is destructed,
+ *                   NULL if items doesn't need to be freed
  * @return allocated vector
  */
 vector_t* rsh_vector_new(void (*destructor)(void*))
@@ -182,8 +183,6 @@ struct vector_t* rsh_vector_new_simple(void)
  * Release memory allocated by vector, but the vector structure itself.
  *
  * @param vect the vector to free
- * @param destructor function to free vector items,
- *                   NULL if items doesn't need to be freed
  */
 void rsh_vector_destroy(vector_t* vect)
 {
@@ -201,8 +200,6 @@ void rsh_vector_destroy(vector_t* vect)
  * Release all memory allocated by vector.
  *
  * @param vect the vector to free
- * @param destructor function to free vector items,
- *                   NULL if items doesn't need to be freed
  */
 void rsh_vector_free(vector_t* vect)
 {
@@ -233,7 +230,7 @@ void rsh_vector_add_ptr(vector_t* vect, void* item)
  * Add a sized item to vector.
  *
  * @param vect pointer to the vector to add item to
- * @param item the size of a vector item
+ * @param item_size the size of a vector item
  */
 void rsh_vector_add_empty(struct vector_t* vect, size_t item_size)
 {
@@ -285,7 +282,7 @@ strbuf_t* rsh_str_new(void)
 /**
  * Free memory allocated by string buffer object
  *
- * @param pointer to the string buffer to destroy
+ * @param ptr pointer to the string buffer to destroy
  */
 void rsh_str_free(strbuf_t* ptr)
 {
@@ -313,13 +310,13 @@ void rsh_str_ensure_size(strbuf_t *str, size_t new_size)
 
 /**
  * Append a sequence of single-byte characters of the specified length to
- * string buffer. The array is fully copied even if it contains the '\0'
+ * string buffer. The array is fully copied even if it contains the '\\0'
  * character. The function ensures the string buffer still contains
  * null-terminated string.
  *
  * @param str pointer to the string buffer
  * @param text the text to append
- * @param len number of character to append.
+ * @param length number of character to append.
  */
 void rsh_str_append_n(strbuf_t *str, const char* text, size_t length)
 {

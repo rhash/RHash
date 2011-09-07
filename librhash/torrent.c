@@ -94,7 +94,7 @@ typedef struct file_n_size_info
  *
  * @param ctx torrent algorithm context
  * @param path file path
- * @param size file size
+ * @param filesize file size
  */
 void rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
 {
