@@ -121,6 +121,7 @@ RHASH_API int  rhash_get_hash_length(unsigned hash_id); /* length of formated ha
 RHASH_API int  rhash_is_base32(unsigned hash_id); /* default digest output format */
 RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function name */
 
+/* note, that rhash_info_by_id() is not exported to a shared library or DLL */
 rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 
 /**
@@ -140,13 +141,13 @@ enum rhash_print_sum_flags
 	RHPR_BASE64    = 0x4,
 
 	/**
-	 * Print as an uppercase string 
-	 * (for base32 or hexadecimal format only).
+	 * Print as an uppercase string. Can be used
+	 * for base32 or hexadecimal format only.
 	 */
 	RHPR_UPPERCASE = 0x8,
 
 	/** 
-	 * Reverse hash bytes, can be used for GOST hash.
+	 * Reverse hash bytes. Can be used for GOST hash.
 	 */
 	RHPR_REVERSE   = 0x10,
 };
