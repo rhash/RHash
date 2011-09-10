@@ -28,14 +28,6 @@
 
 #include "rhash_main.h"
 
-#ifndef NO_GETTEXT
-# include <libintl.h>
-# define _(str) gettext(str)
-# define LOCALEDIR "/usr/share/locale"
-#else
-# define _(str) (str)
-#endif /* NO_GETTEXT */
-
 struct rhash_t rhash_data;
 
 /**

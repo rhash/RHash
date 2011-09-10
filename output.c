@@ -29,8 +29,6 @@
 #include <io.h>
 #endif
 
-#define _(str) (str)
-
 /* global pointer to the selected method of percents output */
 struct percents_output_info_t *percents_output = NULL;
 

@@ -2,6 +2,19 @@
 #ifndef COMMON_FUNC_H
 #define COMMON_FUNC_H
 
+/* internationalization support via gettext/libintl */
+#ifndef NO_GETTEXT
+# include <libintl.h>
+# define _(str) gettext(str)
+# ifdef _WIN32
+#  define LOCALEDIR "./locale"
+# else /* _WIN32 */
+#  define LOCALEDIR "/usr/share/locale"
+# endif /* _WIN32 */
+#else
+# define _(str) (str)
+#endif /* NO_GETTEXT */
+
 /* use 64-bit off_t */
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64

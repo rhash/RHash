@@ -18,8 +18,6 @@
 #include "calc_sums.h"
 #include "hash_update.h"
 
-#define _(str) (str)
-
 /* first define some internal functions, implemented later in this file */
 static int add_new_crc_entries(const char* filepath, file_set *crc_entries);
 static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path);

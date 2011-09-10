@@ -22,8 +22,6 @@
 
 #define VERSION_STRING PROGRAM_NAME " v" VERSION "\n"
 
-#define _(str) (str)
-
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
 struct options_t opt;      /* command line options */

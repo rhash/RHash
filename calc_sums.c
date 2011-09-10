@@ -22,8 +22,6 @@
 
 #include "calc_sums.h"
 
-#define _(str) (str)
-
 /**
  * Initialize BTIH hash function. Unlike other algorithms BTIH
  * requires more data for correct computation.

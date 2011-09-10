@@ -6,6 +6,7 @@
 
 #include "librhash/rhash.h"
 #include "output.h"
+#include "common_func.h"
 #include "parse_cmdline.h"
 #include "hash_print.h"
 
@@ -15,8 +16,6 @@
 #define HEX2DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
 #define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
 #define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
-
-#define _(str) (str)
 
 /**
  * Convert a hexadecimal string to a string of bytes.
