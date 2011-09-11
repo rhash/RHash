@@ -30,16 +30,19 @@
 #define SHA1_FINAL(ctx, result) rhash_sha1_final(&ctx->sha1_context, (result))
 #endif
 
+/** size of a SHA1 hash in bytes */
+#define BT_HASH_SIZE 20
+/** number of SHA1 hashes to store together in one block */
+#define BT_BLOCK_SIZE 256
+
 /**
- * Initialize torrent context before calculaing hash.
+ * Initialize torrent context before calculating hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_torrent_init(torrent_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(torrent_ctx));
-	ctx->blocks_hashes.blocks.destructor = free;
-	ctx->files.destructor = free;
 	ctx->piece_length = 65536;
 
 #ifdef USE_OPENSSL
@@ -60,25 +63,81 @@ void rhash_torrent_init(torrent_ctx* ctx)
 /**
  * Clean up torrent context by freeing all dynamically
  * allocated memory.
+ *
+ * @param ctx torrent algorithm context
  */
 void rhash_torrent_cleanup(torrent_ctx *ctx)
 {
-	assert(ctx);
-	rsh_vector_destroy(&ctx->blocks_hashes.blocks);
-	rsh_vector_destroy(&ctx->files);
+	size_t i;
+	assert(ctx != NULL);
+
+	/* destroy array of hash blocks */
+	for(i = 0; i < ctx->hash_blocks.size; i++) {
+		free(ctx->hash_blocks.array[i]);
+	}
+
+	/* destroy array of file paths */
+	for(i = 0; i < ctx->files.size; i++) {
+		free(ctx->files.array[i]);
+	}
+
 	free(ctx->program_name);
 	free(ctx->announce);
 	ctx->announce = ctx->program_name = 0;
-	rsh_str_free(ctx->torrent);
+	free(ctx->torrent_str);
 }
 
 static void rhash_make_torrent(torrent_ctx *ctx);
 
-/* macros to access array of SHA1 hashes of 1Kb blocks */
-#define BT_HASH_SIZE 20
-#define BT_BLOCK_SIZE 256
-#define BT_GET(blocks_hashes, index) rsh_blocks_vector_get_ptr(blocks_hashes, index, BT_BLOCK_SIZE, BT_HASH_SIZE)
-#define BT_ADD_HASH(ctx, hash) rsh_blocks_vector_add((&ctx->blocks_hashes), hash, BT_BLOCK_SIZE, BT_HASH_SIZE)
+/**
+ * Add an item to vector.
+ *
+ * @param vect vector to add item to
+ * @param item the item to add
+ * @return non-zero on success, zero on fail
+ */
+static int bt_vector_add_ptr(torrent_vect* vect, void* item)
+{
+	/* check if vect contains enough space for next item */
+	if(vect->size >= vect->allocated) {
+		size_t size = (vect->allocated == 0 ? 128 : vect->allocated * 2);
+		void *new_array = realloc(vect->array, size * sizeof(void*));
+		if(new_array == NULL) return 0; /* failed: no memory */
+		vect->array = (void**)new_array;
+		vect->allocated = size;
+	}
+	/* add new item to the vector */
+	vect->array[vect->size] = item;
+	vect->size++;
+	return 1;
+}
+
+/**
+ * Store a SHA1 hash of a processed file piece.
+ *
+ * @param ctx torrent algorithm context
+ * @return non-zero on success, zero on fail
+ */
+static int bt_store_piece_sha1(torrent_ctx *ctx)
+{
+	unsigned char* block;
+	unsigned char* hash;
+
+	if((ctx->piece_count % BT_BLOCK_SIZE) == 0) {
+		block = (unsigned char*)malloc(BT_HASH_SIZE * BT_BLOCK_SIZE);
+		if(block == NULL || !bt_vector_add_ptr(&ctx->hash_blocks, block)) {
+			if(block) free(block);
+			return 0;
+		}
+	} else {
+		block = (unsigned char*)(ctx->hash_blocks.array[ctx->piece_count / BT_BLOCK_SIZE]);
+	}
+
+	hash = &block[BT_HASH_SIZE * (ctx->piece_count % BT_BLOCK_SIZE)];
+	SHA1_FINAL(ctx, hash); /* write the hash */
+	ctx->piece_count++;
+	return 1;
+}
 
 /**
  * A filepath and filesize information.
@@ -95,20 +154,27 @@ typedef struct file_n_size_info
  * @param ctx torrent algorithm context
  * @param path file path
  * @param filesize file size
+ * @return non-zero on success, zero on fail
  */
-void rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
+int rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
 {
 	size_t len = strlen(path);
-	file_n_size_info* info = (file_n_size_info*)rsh_malloc(sizeof(uint64_t) + len + 1);
+	file_n_size_info* info = (file_n_size_info*)malloc(sizeof(uint64_t) + len + 1);
+	if(info == NULL) {
+		ctx->error = 1;
+		return 0;
+	}
+
 	info->size = filesize;
 	memcpy(info->path, path, len + 1);
-	rsh_vector_add_ptr(&ctx->files, info);
+	if(!bt_vector_add_ptr(&ctx->files, info)) return 0;
 
 	/* recalculate piece length (but only if hashing not started yet) */
-	if(ctx->blocks_hashes.size == 0 && ctx->index == 0) {
+	if(ctx->piece_count == 0 && ctx->index == 0) {
 		/* note: in case of batch of files should use a total batch size */
 		ctx->piece_length = rhash_torrent_default_piece_length(filesize);
 	}
+	return 1;
 }
 
 /**
@@ -121,7 +187,6 @@ void rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesiz
  */
 void rhash_torrent_update(torrent_ctx *ctx, const void* msg, size_t size)
 {
-	unsigned char hash[20];
 	const unsigned char* pmsg = (const unsigned char*)msg;
 	size_t rest = (size_t)(ctx->piece_length - ctx->index);
 	assert(ctx->index < ctx->piece_length);
@@ -133,8 +198,7 @@ void rhash_torrent_update(torrent_ctx *ctx, const void* msg, size_t size)
 			ctx->index += left;
 			break;
 		}
-		SHA1_FINAL(ctx, hash);
-		BT_ADD_HASH(ctx, hash); /* store a piece hash */
+		bt_store_piece_sha1(ctx);
 		SHA1_INIT(ctx);
 		ctx->index = 0;
 
@@ -154,10 +218,8 @@ void rhash_torrent_update(torrent_ctx *ctx, const void* msg, size_t size)
  */
 void rhash_torrent_final(torrent_ctx *ctx, unsigned char result[20])
 {
-	unsigned char hash[20];
 	if(ctx->index > 0) {
-		SHA1_FINAL(ctx, hash);
-		BT_ADD_HASH(ctx, hash);
+		bt_store_piece_sha1(ctx); /* flush buffered data */
 	}
 
 	rhash_make_torrent(ctx);
@@ -165,6 +227,33 @@ void rhash_torrent_final(torrent_ctx *ctx, unsigned char result[20])
 }
 
 /* BitTorrent functions */
+
+/**
+ * Grow, if needed, the torrent_str buffer to ensure it contains
+ * at least (length + 1) characters.
+ *
+ * @param ctx the torrent algorithm context
+ * @param length length of the string, the allocated buffer must contain
+ * @return 1 on success, 0 on error
+ */
+static int bt_str_ensure_length(torrent_ctx* ctx, size_t length)
+{
+	char* new_str;
+	if(length >= ctx->torrent_allocated && !ctx->error) {
+		length++; /* allocate one character more */
+		if(length < 64) length = 64;
+		else length = (length + 255) & ~255;
+		new_str = (char*)realloc(ctx->torrent_str, length);
+		if(new_str == NULL) {
+			ctx->error = 1;
+			ctx->torrent_allocated = 0;
+			return 0;
+		}
+		ctx->torrent_str = new_str;
+		ctx->torrent_allocated = length;
+	}
+	return 1;
+}
 
 /**
  * Print 64-bit number with trailing '\0' to a string buffer.
@@ -195,39 +284,39 @@ static int rhash_sprintI64(char *dst, uint64_t number)
 /**
  * B-encode given integer.
  *
- * @param out the string buffer to output encoded integer to
+ * @param ctx the torrent algorithm context
  * @param number the integer to output
  */
-static void bt_bencode_int(strbuf_t *out, uint64_t number)
+static void bt_bencode_int(torrent_ctx* ctx, uint64_t number)
 {
 	char* p;
 	/* add up to 20 digits and 2 letters */
-	rsh_str_ensure_length(out, out->len + 22);
-	p = out->str + out->len;
+	if(!bt_str_ensure_length(ctx, ctx->torrent_length + 22)) return;
+	p = ctx->torrent_str + ctx->torrent_length;
 	*(p++) = 'i';
 	p += rhash_sprintI64(p, number);
 	*(p++) = 'e';
 	*p = '\0'; /* terminate string with \0 */
 
-	out->len = (p - out->str);
+	ctx->torrent_length = (p - ctx->torrent_str);
 }
 
 /**
  * B-encode a string.
  *
- * @param out the string buffer to put encoded string into
+ * @param ctx the torrent algorithm context
  * @param str the string to encode
  */
-static void bt_bencode_str(strbuf_t *out, const char* str)
+static void bt_bencode_str(torrent_ctx* ctx, const char* str)
 {
 	size_t len = strlen(str);
 	int num_len;
 	char* p;
-	rsh_str_ensure_length(out, out->len + len + 21);
+	if(!bt_str_ensure_length(ctx, ctx->torrent_length + len + 21)) return;
 
-	p = out->str + out->len;
+	p = ctx->torrent_str + ctx->torrent_length;
 	p += (num_len = rhash_sprintI64(p, len));
-	out->len += len + num_len + 1;
+	ctx->torrent_length += len + num_len + 1;
 
 	*(p++) = ':';
 	memcpy(p, str, len + 1); /* copy with trailing '\0' */
@@ -236,28 +325,48 @@ static void bt_bencode_str(strbuf_t *out, const char* str)
 /**
  * B-encode array of SHA1 hashes of file pieces.
  *
- * @param out the string buffer to put encoded array into
- * @param ctx pointer to the torrent structure containing hashes
+ * @param ctx pointer to the torrent structure containing SHA1 hashes
  */
-static void bt_bencode_pieces(strbuf_t *out, torrent_ctx* ctx)
+static void bt_bencode_pieces(torrent_ctx* ctx)
 {
-	int pieces_length = ctx->blocks_hashes.size * BT_HASH_SIZE;
+	int pieces_length = ctx->piece_count * BT_HASH_SIZE;
 	int num_len;
 	int size, i;
 	char* p;
 
-	rsh_str_ensure_length(out, out->len + pieces_length + 21);
-	p = out->str + out->len;
+	if(!bt_str_ensure_length(ctx, ctx->torrent_length + pieces_length + 21))
+		return;
+
+	p = ctx->torrent_str + ctx->torrent_length;
 	p += (num_len = rhash_sprintI64(p, pieces_length));
-	out->len += pieces_length + num_len + 1;
+	ctx->torrent_length += pieces_length + num_len + 1;
 
 	*(p++) = ':';
 	p[pieces_length] = '\0'; /* terminate with \0 just in case */
 
-	for(size = ctx->blocks_hashes.size, i = 0; size > 0; size -= BT_BLOCK_SIZE, i++) {
-		memcpy(p, ctx->blocks_hashes.blocks.array[i], (size < BT_BLOCK_SIZE ? size : BT_BLOCK_SIZE) * BT_HASH_SIZE);
+	for(size = ctx->piece_count, i = 0; size > 0;
+		size -= BT_BLOCK_SIZE, i++)
+	{
+		memcpy(p, ctx->hash_blocks.array[i],
+			(size < BT_BLOCK_SIZE ? size : BT_BLOCK_SIZE) * BT_HASH_SIZE);
 		p += BT_BLOCK_SIZE * BT_HASH_SIZE;
 	}
+}
+
+/**
+ * Append a null-terminated string to the string string buffer.
+ *
+ * @param ctx the torrent algorithm context
+ * @param text the null-terminated string to append
+ */
+void bt_str_append(torrent_ctx *ctx, const char* text)
+{
+	size_t length = strlen(text);
+
+	if(!bt_str_ensure_length(ctx, ctx->torrent_length + length)) return;
+	memcpy(ctx->torrent_str + ctx->torrent_length, text, length);
+	ctx->torrent_length += length;
+	ctx->torrent_str[ctx->torrent_length] = '\0';
 }
 
 /**
@@ -290,10 +399,9 @@ static void rhash_make_torrent(torrent_ctx *ctx)
 	uint64_t total_size = 0;
 	size_t info_start_pos;
 
-	assert(ctx->torrent == NULL);
+	assert(ctx->torrent_str == NULL);
 	assert(ctx->files.size <= 1);
 
-	ctx->torrent = rsh_str_new();
 	if(ctx->piece_length == 0) {
 		if(ctx->files.size == 1) {
 			total_size = ((file_n_size_info*)ctx->files.array[0])->size;
@@ -302,50 +410,51 @@ static void rhash_make_torrent(torrent_ctx *ctx)
 	}
 
 	/* write torrent header to the ctx->torrent string bufer */
-	if((ctx->flags & BT_OPT_INFOHASH_ONLY) == 0) {
-		rsh_str_append(ctx->torrent, "d");
+	if((ctx->options & BT_OPT_INFOHASH_ONLY) == 0) {
+		bt_str_append(ctx, "d");
 		if(ctx->announce) {
-			rsh_str_append(ctx->torrent, "8:announce");
-			bt_bencode_str(ctx->torrent, ctx->announce);
+			bt_str_append(ctx, "8:announce");
+			bt_bencode_str(ctx, ctx->announce);
 		}
 
 		if(ctx->program_name) {
-			rsh_str_append(ctx->torrent, "10:created by");
-			bt_bencode_str(ctx->torrent, ctx->program_name);
+			bt_str_append(ctx, "10:created by");
+			bt_bencode_str(ctx, ctx->program_name);
 		}
 
-		rsh_str_append(ctx->torrent, "13:creation date");
-		bt_bencode_int(ctx->torrent, (uint64_t)time(NULL));
+		bt_str_append(ctx, "13:creation date");
+		bt_bencode_int(ctx, (uint64_t)time(NULL));
 	}
 
-	rsh_str_append(ctx->torrent, "8:encoding5:UTF-8");
+	bt_str_append(ctx, "8:encoding5:UTF-8");
 
-	rsh_str_append(ctx->torrent, "4:infod"); /* start info dictionary */
-	info_start_pos = ctx->torrent->len - 1;
+	bt_str_append(ctx, "4:infod"); /* start info dictionary */
+	info_start_pos = ctx->torrent_length - 1;
 
 	if(ctx->files.size == 1) {
 		file_n_size_info* f = (file_n_size_info*)ctx->files.array[0];
-		rsh_str_append(ctx->torrent, "6:length");
-		bt_bencode_int(ctx->torrent, f->size);
+		bt_str_append(ctx, "6:length");
+		bt_bencode_int(ctx, f->size);
 
 		/* note: for one file f->path must be a basename */
-		rsh_str_append(ctx->torrent, "4:name");
-		bt_bencode_str(ctx->torrent, f->path);
+		bt_str_append(ctx, "4:name");
+		bt_bencode_str(ctx, f->path);
 	}
-	rsh_str_append(ctx->torrent, "12:piece length");
-	bt_bencode_int(ctx->torrent, ctx->piece_length);
+	bt_str_append(ctx, "12:piece length");
+	bt_bencode_int(ctx, ctx->piece_length);
 
-	rsh_str_append(ctx->torrent, "6:pieces");
-	bt_bencode_pieces(ctx->torrent, ctx);
+	bt_str_append(ctx, "6:pieces");
+	bt_bencode_pieces(ctx);
 
-	if(ctx->flags & BT_OPT_PRIVATE) {
-		rsh_str_append(ctx->torrent, "7:privatei1e");
+	if(ctx->options & BT_OPT_PRIVATE) {
+		bt_str_append(ctx, "7:privatei1e");
 	}
-	rsh_str_append(ctx->torrent, "ee");
+	bt_str_append(ctx, "ee");
 
+	/* calculate BTIH */
 	SHA1_INIT(ctx);
-	SHA1_UPDATE(ctx, (unsigned char*)ctx->torrent->str + info_start_pos,
-		ctx->torrent->len - info_start_pos - 1);
+	SHA1_UPDATE(ctx, (unsigned char*)ctx->torrent_str + info_start_pos,
+		ctx->torrent_length - info_start_pos - 1);
 	SHA1_FINAL(ctx, ctx->btih);
 }
 
@@ -366,11 +475,11 @@ unsigned char* rhash_torrent_get_btih(torrent_ctx *ctx)
  * Set the torrent algorithm options.
  *
  * @param ctx the torrent algorithm context
- * @param flags the options to set
+ * @param options the options to set
  */
-void rhash_torrent_set_options(torrent_ctx *ctx, unsigned flags)
+void rhash_torrent_set_options(torrent_ctx *ctx, unsigned options)
 {
-	ctx->flags = flags;
+	ctx->options = options;
 }
 
 /**
@@ -379,10 +488,12 @@ void rhash_torrent_set_options(torrent_ctx *ctx, unsigned flags)
  *
  * @param ctx the torrent algorithm context
  * @param name the program name
+ * @return non-zero on success, zero on error
  */
-void rhash_torrent_set_program_name(torrent_ctx *ctx, const char* name)
+int rhash_torrent_set_program_name(torrent_ctx *ctx, const char* name)
 {
-	ctx->program_name = rsh_strdup(name);
+	ctx->program_name = strdup(name);
+	return (ctx->program_name != NULL);
 }
 
 /**
@@ -397,27 +508,29 @@ void rhash_torrent_set_piece_length(torrent_ctx *ctx, size_t piece_length)
 }
 
 /**
- * Set torrent announcement-url for storing into torrent file.
+ * Set torrent announcement-URL for storing into torrent file.
  *
  * @param ctx the torrent algorithm context
- * @param announce_url the announcement-url
+ * @param announce_url the announcement-URL
+ * @return non-zero on success, zero on error
  */
-void rhash_torrent_set_announce(torrent_ctx *ctx, const char* announce_url)
+int rhash_torrent_set_announce(torrent_ctx *ctx, const char* announce_url)
 {
 	free(ctx->announce);
-	ctx->announce = rsh_strdup(announce_url);
+	ctx->announce = strdup(announce_url);
+	return (ctx->announce != NULL);
 }
 
 /**
  * Get the content of generated torrent file.
  *
  * @param ctx the torrent algorithm context
- * @param pstr pointer to pointer recieving the buffer with file content
+ * @param pstr pointer to pointer receiving the buffer with file content
  * @return length of the torrent file content
  */
 size_t rhash_torrent_get_text(torrent_ctx *ctx, char** pstr)
 {
-	assert(ctx->torrent);
-	*pstr = ctx->torrent->str;
-	return ctx->torrent->len;
+	assert(ctx->torrent_str);
+	*pstr = ctx->torrent_str;
+	return ctx->torrent_length;
 }

@@ -71,7 +71,7 @@ aich.o: aich.c byte_order.h config.h algorithms.h rhash.h aich.h sha1.h
 
 algorithms.o: algorithms.c byte_order.h config.h rhash.h algorithms.h \
  aich.h sha1.h crc32.h ed2k.h md4.h edonr.h gost.h has160.h md5.h \
- ripemd-160.h snefru.h sha256.h sha512.h tiger.h torrent.h util.h tth.h \
+ ripemd-160.h snefru.h sha256.h sha512.h tiger.h torrent.h tth.h \
  whirlpool.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
@@ -107,7 +107,7 @@ plug_openssl.o: plug_openssl.c algorithms.h rhash.h byte_order.h config.h \
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 rhash.o: rhash.c byte_order.h config.h algorithms.h rhash.h torrent.h \
- util.h sha1.h plug_openssl.h hex.h
+ sha1.h plug_openssl.h util.h hex.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 ripemd-160.o: ripemd-160.c byte_order.h config.h ripemd-160.h
@@ -139,7 +139,7 @@ timing.o: timing.c byte_order.h config.h rhash.h timing.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 torrent.o: torrent.c byte_order.h config.h algorithms.h rhash.h torrent.h \
- util.h sha1.h
+ sha1.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 tth.o: tth.c byte_order.h config.h tth.h tiger.h

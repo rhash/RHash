@@ -2,7 +2,6 @@
 #ifndef TORRENT_H
 #define TORRENT_H
 #include <stdint.h>
-#include "util.h"
 #include "sha1.h"
 
 #ifdef __cplusplus
@@ -11,22 +10,35 @@ extern "C" {
 
 #define btih_hash_size  20
 
+/* vector structure */
+typedef struct torrent_vect {
+	void **array;     /* array of elements of the vector */
+	size_t size;      /* vector size */
+	size_t allocated; /* number of allocated elements */
+} torrent_vect;
+
+/* BitTorrent algorithm context */
 typedef struct torrent_ctx
 {
 	unsigned char btih[20]; /* resulting BTIH hash sum */
-	unsigned flags;
-	sha1_ctx sha1_context;
+	unsigned options;       /* algorithm options */
+	sha1_ctx sha1_context;  /* context for hashing current file piece */
 #ifdef USE_OPENSSL
-	unsigned long reserved; /* need more space for openssl sha1 context */
+	unsigned long reserved; /* need more space for OpenSSL SHA1 context */
 	void *sha_init, *sha_update, *sha_final;
 #endif
-	blocks_vector_t blocks_hashes; /* the list of sha1 hashes of pieces */
-	size_t index;           /* byte index in the current piece */
-	size_t piece_length;    /* length of a torrent file piece */
-	vector_t files;         /* names of files in the torrent batch */
-	strbuf_t* torrent;      /* content of generated torrent file */
-	char* program_name;     /* the name of the program */
-	char* announce;         /* announce url */
+	size_t index;             /* byte index in the current piece */
+	size_t piece_length;      /* length of a torrent file piece */
+	size_t piece_count;       /* the number of pieces processed */
+	torrent_vect hash_blocks; /* array of blocks storing SHA1 hashes */
+	torrent_vect files;       /* names of files in a torrent batch */
+	char* program_name;       /* the name of the program */
+	char* announce;           /* announce URL */
+
+	char*  torrent_str;       /* content of generated torrent file */
+	size_t torrent_length;    /* length of generated torrent file */
+	size_t torrent_allocated; /* bytes allocated for torrent file */
+	int error; /* non-zero if error occurred, zero otherwise */
 } torrent_ctx;
 
 void rhash_torrent_init(torrent_ctx *ctx);
@@ -41,10 +53,10 @@ unsigned char* rhash_torrent_get_btih(torrent_ctx *ctx);
 #define BT_OPT_PRIVATE 1
 #define BT_OPT_INFOHASH_ONLY 2
 
-void rhash_torrent_set_options(torrent_ctx *ctx, unsigned flags);
-void rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize);
-void rhash_torrent_set_announce(torrent_ctx *ctx, const char* announce_url);
-void rhash_torrent_set_program_name(torrent_ctx *ctx, const char* name);
+void rhash_torrent_set_options(torrent_ctx *ctx, unsigned options);
+int  rhash_torrent_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize);
+int  rhash_torrent_set_announce(torrent_ctx *ctx, const char* announce_url);
+int  rhash_torrent_set_program_name(torrent_ctx *ctx, const char* name);
 void rhash_torrent_set_piece_length(torrent_ctx *ctx, size_t piece_length);
 size_t rhash_torrent_default_piece_length(uint64_t total_size);
 
