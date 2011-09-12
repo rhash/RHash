@@ -6,13 +6,27 @@
 #include <ctype.h>  /* isspace */
 #include <assert.h>
 
-#include "librhash/crc32.h"
+#include "librhash/rhash.h"
 #include "common_func.h"
 #include "hash_print.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "output.h"
 #include "file_set.h"
+
+/**
+ * Generate a hash for a string.
+ *
+ * @param string the string to hash
+ * @return a string hash
+ */
+static unsigned file_set_make_hash(const char* string)
+{
+	unsigned hash;
+	if(rhash_msg(RHASH_CRC32, string, strlen(string), (unsigned char*)hash) < 0)
+		return 0;
+	return hash;
+}
 
 /**
  * Set file path of the given item.
@@ -32,7 +46,7 @@ static int file_set_item_set_filepath(file_set_item* item, const char* filepath)
 	/* Note: strcasecmp() is not used instead of search_filepath due to portability issue */
 	/* Note: item->search_filepath is always correctly freed by file_set_item_free() */
 	item->search_filepath = (opt.flags & OPT_IGNORE_CASE ? str_tolower(item->filepath) : item->filepath);
-	item->hash = rhash_get_crc32_str(0, item->search_filepath);
+	item->hash = file_set_make_hash(item->search_filepath);
 	return 1;
 }
 
@@ -152,7 +166,7 @@ int file_set_exist(file_set *set, const char* filepath)
 		str_tolower(filepath) : (char*)filepath);
 
 	/* generate hash to speedup the search */
-	hash = rhash_get_crc32_str(0, search_filepath);
+	hash = file_set_make_hash(search_filepath);
 
 	/* fast binary search */
 	for(a = -1, b = set->size; (a + 1) < b;) {
