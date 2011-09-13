@@ -32,6 +32,8 @@ CLASSES_DIR = classes
 JAVADOC_DIR = javadoc
 TEST_DIR    = test
 
+JAVADOC_API_URL = http://download.oracle.com/javase/6/docs/api/
+
 JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
 
 all: jar jni test
@@ -57,7 +59,7 @@ javadoc: clean-javadoc
 	           -sourcepath src \
 	           -subpackages org \
 	           -d $(JAVADOC_DIR) \
-	           -link http://java.sun.com/j2se/1.5.0/docs/api
+	           -link $(JAVADOC_API_URL)
 
 test: jar jni
 	$(JAVAC) -classpath $(JARFILE) $(TEST_DIR)/Test.java
