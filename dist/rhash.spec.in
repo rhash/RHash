@@ -102,6 +102,7 @@ ldconfig
 ldconfig
 
 %changelog
+* Wed Sep 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.8-1mdk
 * Sun Aug 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.7-1mdk
 * Tue Jun 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.6-1mdk
 * Wed May 18 2011 Aleksey <rhash.admin@gmail.com> 1.2.5-1mdk

@@ -1,5 +1,11 @@
+Wed Sep 14 2011 Aleksey
+	* === Version 1.2.8 ===
+
 Tue Sep  6 2011 Aleksey
 	* librhash: implemented auto-final feature, turned on by default
+
+Tue Sep  6 2011 Aleksey, SBasalaev
+	* Russian translation
 
 Sat Sep  3 2011 Aleksey
 	* Bugfix: not enough trailing '=' in a base64-encoded hash
