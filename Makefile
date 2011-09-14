@@ -45,7 +45,8 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_hashes.c \
   librhash/test_hashes.h librhash/torrent.h librhash/torrent.c \
   librhash/util.c librhash/util.h librhash/config.h librhash/Makefile
-DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES)
+I18N_FILES = po/rhash.pot po/ru.po
+DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
 WIN_SUFFIX     = win32
 ARCHIVE_BZIP   = rhash-$(VERSION)-src.tar.bz2
 ARCHIVE_GZIP   = rhash-$(VERSION)-src.tar.gz
@@ -212,6 +213,8 @@ $(ARCHIVE_GZIP): $(DIST_FILES)
 	rm -rf $(PROGNAME)-$(VERSION)
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+	make -C bindings distclean
+	find bindings/ -type f -regex '.*\(\.\([hct]\|java\|PL\|pm\|py\|rb\|txt\|xs\)\|Makefile\|MANIFEST\|typemap\)' -exec cp -l --parents '{}' $(PROGNAME)-$(VERSION)/ \;
 	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -281,6 +284,6 @@ install-gmo: compile-gmo
 	for f in po/*.gmo; do \
 		l=`basename $$f .gmo`; \
 		$(INSTALL) -d $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES; \
-		$(INSTALL) -T $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+		$(INSTALL_DATA) -T $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
