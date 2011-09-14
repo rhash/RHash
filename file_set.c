@@ -23,7 +23,7 @@
 static unsigned file_set_make_hash(const char* string)
 {
 	unsigned hash;
-	if(rhash_msg(RHASH_CRC32, string, strlen(string), (unsigned char*)hash) < 0)
+	if(rhash_msg(RHASH_CRC32, string, strlen(string), (unsigned char*)&hash) < 0)
 		return 0;
 	return hash;
 }

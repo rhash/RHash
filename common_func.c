@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdint.h>
 #include <time.h>
+#include <stdarg.h>
+#include <wchar.h>
 
 #include "win_utils.h"
 #include "parse_cmdline.h"

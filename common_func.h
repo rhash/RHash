@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h> /* for time_t */
+#include <stddef.h> /* for wchar_t */
 
 #ifndef _WIN32
 #include <sys/time.h> /* for timeval */

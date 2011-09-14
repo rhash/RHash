@@ -2,8 +2,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <stddef.h> /* for wchar_t */
-
 #ifdef __cplusplus
 extern "C" {
 #endif

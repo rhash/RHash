@@ -359,7 +359,7 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
  * @param ctx the torrent algorithm context
  * @param text the null-terminated string to append
  */
-void bt_str_append(torrent_ctx *ctx, const char* text)
+static void bt_str_append(torrent_ctx *ctx, const char* text)
 {
 	size_t length = strlen(text);
 
