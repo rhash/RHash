@@ -1,0 +1,7 @@
+Makefile.PL
+Rhash.pm
+Rhash.xs
+t/1test_hash_calculation.t
+t/2test_static_functions.t
+t/3test_all_hash_functions.t
+typemap

@@ -225,6 +225,7 @@ RHASH_API void rhash_reset(rhash ctx)
 		assert(info->init != NULL);
 		info->init(ectx->vector[i].context);
 	}
+	ectx->flags &= ~RCTX_FINALIZED; /* clear finalized state */
 }
 
 /**

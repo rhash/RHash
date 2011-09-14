@@ -23,7 +23,7 @@ JAVADOC = javadoc
 JAVAH = javah
 JAR = jar
 
-VERSION = $(shell sed -e 's/\(.*\)"\(.*\)"\(.*\)/\2/' ../../version.h)
+VERSION = $(shell sed -e 's/.*"\(.*\)".*/\1/' ../../version.h)
 
 JAVASRC_DIR = src
 CSRC_DIR    = native
@@ -41,6 +41,9 @@ all: jar jni test
 jar: compile-classes
 	mkdir -p $(DEST_DIR)
 	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
+
+jar-symlink:
+	ln -s rhash-$(VERSION).jar $(DEST_DIR)/rhash.jar
 
 compile-classes:
 	mkdir -p $(CLASSES_DIR)

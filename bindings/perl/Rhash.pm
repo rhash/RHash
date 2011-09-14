@@ -56,7 +56,6 @@ sub new
 	my $context = rhash_init(scalar($hash_id)) or return undef;
 	my $self = {
 		context => $context,
-		finalized => 0
 	};
 	return bless $self;
 }
@@ -120,7 +119,6 @@ sub final($)
 {
 	my $self = shift;
 	rhash_final($self->{context});
-	$self->{finalized} = 1;
 	return $self;
 }
 
@@ -128,7 +126,6 @@ sub reset($)
 {
 	my $self = shift;
 	rhash_reset($self->{context});
-	$self->{finalized} = 0;
 	return $self;
 }
 
@@ -161,7 +158,6 @@ sub hash($;$$)
 	my $self = shift;
 	my $hash_id = scalar(shift) || 0;
 	my $print_flags = scalar(shift) || RHPR_DEFAULT;
-	$self->final() if !$self->{finalized};
 	return rhash_print($self->{context}, $hash_id, $print_flags);
 }
 
@@ -370,10 +366,10 @@ Returns the hash mask, the $rhash object was constructed with.
 
 =head1 FORMATING HASH VALUE
 
-=over
-
 Computed hash can be formated as a hexadecimal string (in the forward or
 reverse byte order), a base32/base64-encoded string or as raw binary data.
+
+=over
 
 =item $rhash->hash( $hash_id )
 

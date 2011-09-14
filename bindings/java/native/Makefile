@@ -18,8 +18,10 @@
 
 CC = gcc
 CFLAGS = -g -O2
-LDFLAGS = -lrhash
-ALLCFLAGS = $(CFLAGS) -fPIC
+LIBRHASH_INC =
+LIBRHASH_LD  =
+LDFLAGS = -lrhash $(LIBRHASH_LD)
+ALLCFLAGS = $(CFLAGS) $(LIBRHASH_INC) -fPIC
 
 #Platform dependent
 JNI_INCLUDES = /usr/lib/jvm/default-java/include

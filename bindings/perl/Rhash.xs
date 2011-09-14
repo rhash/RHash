@@ -53,7 +53,7 @@ rhash_msg_raw(hash_id, message)
 	PROTOTYPE: $$
 	PREINIT:
 		STRLEN length;
-		char out[264];
+		unsigned char out[264];
 		int res;
 	INPUT:
 		char* message = SvPV(ST(1), length);
@@ -63,7 +63,7 @@ rhash_msg_raw(hash_id, message)
 		if(res < 0) {
 			croak("%s: %s", "rhash_msg_raw", strerror(errno));
 		}
-		RETVAL = newSVpv(out, rhash_get_digest_size(hash_id));
+		RETVAL = newSVpv((char*)out, rhash_get_digest_size(hash_id));
 	OUTPUT:
 		RETVAL
 
@@ -74,14 +74,14 @@ rhash_file_raw(hash_id, filepath)
 	PROTOTYPE: $$
 	PREINIT:
 		int res;
-		char out[264];
+		unsigned char out[264];
 	CODE:
 		verify_single_bit_hash_id(hash_id, cv);
 		res = rhash_file(hash_id, filepath, out);
 		if(res < 0) {
 			croak("%s: %s: %s", "rhash_file", filepath, strerror(errno));
 		}
-		RETVAL = newSVpv(out, rhash_get_digest_size(hash_id));
+		RETVAL = newSVpv((char*)out, rhash_get_digest_size(hash_id));
 	OUTPUT:
 		RETVAL
 
@@ -220,7 +220,7 @@ raw2hex(bytes)
 	PREINIT:
 		STRLEN size;
 	INPUT:
-		unsigned char * bytes = SvPV(ST(0), size);
+		unsigned char * bytes = (unsigned char*)SvPV(ST(0), size);
 	CODE:
 		RETVAL = allocate_string_buffer(size * 2);
 		rhash_print_bytes(SvPVX(RETVAL), bytes, size, RHPR_HEX);
@@ -233,7 +233,7 @@ raw2base32(bytes)
 	PREINIT:
 		STRLEN size;
 	INPUT:
-		unsigned char * bytes = SvPV(ST(0), size);
+		unsigned char * bytes = (unsigned char*)SvPV(ST(0), size);
 	CODE:
 		RETVAL = allocate_string_buffer(BASE32_LENGTH(size));
 		rhash_print_bytes(SvPVX(RETVAL), bytes, size, RHPR_BASE32);
@@ -246,7 +246,7 @@ raw2base64(bytes)
 	PREINIT:
 		STRLEN size;
 	INPUT:
-		unsigned char * bytes = SvPV(ST(0), size);
+		unsigned char * bytes = (unsigned char*)SvPV(ST(0), size);
 	CODE:
 		RETVAL = allocate_string_buffer(BASE64_LENGTH(size));
 		rhash_print_bytes(SvPVX(RETVAL), bytes, size, RHPR_BASE64);
