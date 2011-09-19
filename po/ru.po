@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: RHash 1.2.7\n"
 "Report-Msgid-Bugs-To: rhash.admin@gmail.com\n"
 "POT-Creation-Date: 2011-09-06 13:03+0700\n"
-"PO-Revision-Date: 2011-09-06 11:14+0600\n"
-"Last-Translator: Sergey Basalaev <sbasalaev@gmail.com>\n"
+"PO-Revision-Date: 2011-09-18 09:47+0000\n"
+"Last-Translator: Sergey Basalaev <SBasalaev@gmail.com>\n"
 "Language-Team: Russian <rhash.admin@gmail.com>\n"
-"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Launchpad-Export-Date: 2011-09-19 09:08+0000\n"
+"X-Generator: Launchpad (build 13980)\n"
+"Language: ru\n"
 
 #: calc_sums.c:236
 #, c-format
@@ -26,7 +26,7 @@ msgstr "неправильная встроенная сумма, должна �
 #: calc_sums.c:260 hash_update.c:349
 #, c-format
 msgid "can't move %s to %s: %s\n"
-msgstr "не могу переместить %s в %s: %s\n"
+msgstr "не удалось переместить %s в %s: %s\n"
 
 #: calc_sums.c:306
 #, c-format
@@ -45,7 +45,7 @@ msgid ""
 "--( Verifying %s )%s\n"
 msgstr ""
 "\n"
-"--( Проверяю %s )-%s\n"
+"--( Проверка %s )-%s\n"
 
 #: calc_sums.c:533
 #, c-format
@@ -74,17 +74,17 @@ msgstr "неизвестный хэш в magnet-ссылке: %s\n"
 #: hash_check.c:545
 #, c-format
 msgid "can't parse line: %s\n"
-msgstr "не понимаю строку: %s\n"
+msgstr "не удалось разобрать строку: %s\n"
 
 #: hash_update.c:42
 #, c-format
 msgid "Updating: %s\n"
-msgstr "Обновляю: %s\n"
+msgstr "Обновление: %s\n"
 
 #: hash_update.c:97
 #, c-format
 msgid "skipping binary file %s\n"
-msgstr "пропускаю двоичный файл %s\n"
+msgstr "пропуск двоичного файла %s\n"
 
 #: hash_update.c:187
 #, c-format
@@ -94,12 +94,12 @@ msgstr "Обновлён файл: %s\n"
 #: output.c:71 output.c:84
 #, c-format
 msgid "%s: "
-msgstr ""
+msgstr "%s: "
 
 #: output.c:95 output.c:469
 #, c-format
 msgid "%s: %s\n"
-msgstr ""
+msgstr "%s: %s\n"
 
 #: output.c:128
 #, c-format
@@ -125,7 +125,7 @@ msgstr "; %s равна, %s должна быть %s"
 #: output.c:196
 #, c-format
 msgid "OK \n"
-msgstr "Успех\n"
+msgstr "Успех \n"
 
 #: output.c:196
 #, c-format
@@ -139,7 +139,7 @@ msgid ""
 "Checking %s\n"
 msgstr ""
 "\n"
-"Проверяю %s\n"
+"Проверка %s\n"
 
 #: output.c:303
 #, c-format
@@ -148,7 +148,7 @@ msgid ""
 "Processing %s\n"
 msgstr ""
 "\n"
-"Обрабатываю %s\n"
+"Обработка %s\n"
 
 #: output.c:508
 #, c-format
@@ -180,7 +180,7 @@ msgid ""
 "\n"
 msgstr ""
 "%s\n"
-"Использование: %s [ОПЦИЯ...] [ФАЙЛ | -]...\n"
+"Синтаксис: %s [ОПЦИИ...] [ФАЙЛ | -]...\n"
 "       %s --printf=<форматирующая строка> [ФАЙЛ | -]...\n"
 "\n"
 
@@ -333,7 +333,7 @@ msgstr "для опции «%s» требуется аргумент\n"
 #: parse_cmdline.c:528
 #, c-format
 msgid "%s: can't parse line \"%s\"\n"
-msgstr "%s: не понимаю строку «%s»\n"
+msgstr "%s: не удалось разобрать строку «%s»\n"
 
 #: parse_cmdline.c:541
 #, c-format
@@ -392,7 +392,7 @@ msgid ""
 "\n"
 "Run `%s --help' for more help.\n"
 msgstr ""
-"Использование: %s [ОПЦИЯ...] <ФАЙЛ>...\n"
+"Синтаксис: %s [ОПЦИИ...] <ФАЙЛ>...\n"
 "\n"
 "Запустите `%s --help' для подробной справки.\n"
 
@@ -400,6 +400,3 @@ msgstr ""
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "Форматирующая строка: %s\n"
-
-#~ msgid "%s 100%%\n"
-#~ msgstr "%s 100%%\n"
