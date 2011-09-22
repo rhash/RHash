@@ -265,7 +265,7 @@ Rhash - Perl extension for LibRHash Hash library
 =head1 DESCRIPTION
 
 Rhash module is an object-oriented interface to the LibRHash library,
-which allows to simultaniously calculate several hash functions for a file or a text message.
+which allows one to simultaniously calculate several hash functions for a file or a text message.
 
 =head1 SUPPORTED ALGORITHMS
 

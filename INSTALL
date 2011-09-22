@@ -25,7 +25,7 @@ Windows Installation:
 You need MinGW compiler and MSYS environment.
 To compile the program run 'make'.
 
-Otionally you can run 'make test'.
+Optionally you can run 'make test'.
 
 The LibRHash DLL can be created by
   cd librhash && make dll test-dll
