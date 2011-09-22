@@ -269,7 +269,7 @@ clean:
 
 update-po:
 	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot \
-		--msgid-bugs-address='rhash.admin@gmail.com' --package-name='RHash'
+		--msgid-bugs-address='Aleksey <rhash.admin@gmail.com>' --package-name='RHash'
 	for f in po/*.po; do \
 		msgmerge -U $$f po/rhash.pot; \
 	done

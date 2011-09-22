@@ -178,6 +178,7 @@ static void accept_video(options_t *o)
 static void nya(void)
 {
 	fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) %s\n  (_uu__)\n",
+		/* TRANSLATORS: Keep secret ;) */
 		_("Purrr..."));
 	rsh_exit(0);
 }
