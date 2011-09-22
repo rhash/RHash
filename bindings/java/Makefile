@@ -43,7 +43,8 @@ jar: compile-classes
 	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
 
 jar-symlink:
-	ln -s rhash-$(VERSION).jar $(DEST_DIR)/rhash.jar
+	mkdir -p $(DEST_DIR)
+	ln -fs rhash-$(VERSION).jar $(DEST_DIR)/rhash.jar
 
 compile-classes:
 	mkdir -p $(CLASSES_DIR)
