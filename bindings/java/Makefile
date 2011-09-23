@@ -2,7 +2,7 @@
 
 # This file is a part of Java Bindings for Librhash
 # Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>
-# Librhash is (c) 2011, Alexey S Kravchenko <rhash.admin@gmail.com>
+# Librhash is (c) 2011, Aleksey Kravchenko <rhash.admin@gmail.com>
 # 
 # Permission is hereby granted, free of charge,  to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal

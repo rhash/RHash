@@ -1,6 +1,6 @@
 /* tth.c - calculate TTH (Tiger Tree Hash) function.
  *
- * Copyright: 2007 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2007 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

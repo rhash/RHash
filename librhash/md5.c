@@ -1,6 +1,6 @@
 /* md5.c - an implementation of the MD5 algorithm, based on RFC 1321.
  *
- * Copyright: 2007 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2007 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

@@ -1,6 +1,6 @@
 /* util.c - memory, vector and strings utility functions
  *
- * Copyright: 2010 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2010 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

@@ -1,7 +1,7 @@
 /* aich.c - an implementation of EMule AICH Algorithm.
  * Description: http://www.amule.org/wiki/index.php/AICH.
  *
- * Copyright: 2008 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2008 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

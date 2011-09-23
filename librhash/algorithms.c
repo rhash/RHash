@@ -1,6 +1,6 @@
 /* algorithms.c - the algorithms supported by the rhash library
  *
- * Copyright: 2011 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2011 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

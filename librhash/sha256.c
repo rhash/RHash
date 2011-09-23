@@ -1,7 +1,7 @@
 /* sha256.c - an implementation of SHA-256/224 hash functions
  * based on FIPS 180-3 (Federal Information Processing Standart).
  *
- * Copyright: 2010 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2010 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

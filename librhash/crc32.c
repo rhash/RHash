@@ -1,6 +1,6 @@
 /* crc32.c - an implementation of CRC32 hash function
  *
- * Copyright: 2006 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2006 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

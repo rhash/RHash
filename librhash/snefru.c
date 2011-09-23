@@ -1,6 +1,6 @@
 /* snefru.c - an implementation of Snefru-128/256 Message-Digest Algorithms
  *
- * Copyright: 2009 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

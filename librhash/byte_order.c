@@ -1,6 +1,6 @@
 /* byte_order.c - byte order related platform dependent routines,
  *
- * Copyright: 2008 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2008 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

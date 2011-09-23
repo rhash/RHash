@@ -2,7 +2,7 @@
  * based on the Russian Standard GOST R 34.11-94.
  * See also RFC 4357.
  *
- * Copyright: 2009 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

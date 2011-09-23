@@ -2,7 +2,7 @@
  * based on the article by
  * Ross Anderson and Eli Biham "Tiger: A Fast New Hash Function".
  *
- * Copyright: 2007 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2007 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),

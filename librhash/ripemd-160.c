@@ -3,7 +3,7 @@
  * H. Dobbertin, A. Bosselaers, B. Preneel, RIPEMD-160: A strengthened version of RIPEMD,
  * Lecture Notes in Computer, 1996, V.1039, pp.71-82
  *
- * Copyright: 2009 Alexey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
