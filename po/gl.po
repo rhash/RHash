@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2011-09-25 13:26+0700\n"
-"PO-Revision-Date: 2011-09-21 10:12+0000\n"
+"PO-Revision-Date: 2011-09-22 07:58+0000\n"
 "Last-Translator: Miguel Anxo Bouzada <mbouzada@gmail.com>\n"
 "Language-Team: Galician <gl@li.org>\n"
-"Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2011-09-21 12:36+0000\n"
-"X-Generator: Launchpad (build 13996)\n"
+"X-Launchpad-Export-Date: 2011-09-25 19:36+0000\n"
+"X-Generator: Launchpad (build 14012)\n"
+"Language: gl\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:235
@@ -161,8 +161,8 @@ msgstr "Todo corecto\n"
 #, c-format
 msgid "Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"
 msgstr ""
-"Producíronse algúns erros: Erros:%-3u Perdidos:%-3u Correctos:%-3u Total:"
-"%-3u\n"
+"Producíronse algúns erros: Erros:%-3u Perdidos:%-3u Correctos:%-3u Total:%-"
+"3u\n"
 
 #: output.c:530
 #, c-format
