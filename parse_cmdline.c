@@ -38,7 +38,7 @@ static void print_help(void)
 		"Usage: %s [OPTION...] [FILE | -]...\n"
 		"       %s --printf=<format string> [FILE | -]...\n\n"), VERSION_STRING, CMD_FILENAME, CMD_FILENAME);
 
-	fprintf(rhash_data.out, "%s%s%s",
+	fprintf(rhash_data.out, "%s%s%s%s",
 		_("Options:\n"
 		"  -V, --version Print program version and exit.\n"
 		"  -h, --help    Print this help screen.\n"
@@ -59,8 +59,8 @@ static void print_help(void)
 		"      --has160  Calculate HAS-160 hash.\n"
 		"      --edonr256, --edonr512  Calculate EDON-R 256/512 hash.\n"
 		"      --snefru128, --snefru256  Calculate SNEFRU-128/256 hash.\n"
-		"  -a, --all     Calculate all supported hashes.\n"
-		"  -c, --check   Check hash files specified by command line.\n"
+		"  -a, --all     Calculate all supported hashes.\n"),
+		_("  -c, --check   Check hash files specified by command line.\n"
 		"  -u, --update  Update hash files specified by command line.\n"
 		"  -e, --embed-crc  Rename files by inserting crc32 sum into name.\n"
 		"      --check-embedded  Verify files by crc32 sum embedded in their names.\n"

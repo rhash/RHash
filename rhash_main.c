@@ -46,7 +46,9 @@ static int find_file_callback(const char* filepath, int type, void* data)
 		if(data) {
 			if(!file_mask_match(opt.files_accept, filepath)) return 0;
 			if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
+			/* TODO: get size, fill file struct */
 			print_sfv_header_line(rhash_data.out, filepath, filepath);
+			/* rhash_data.total_size += file.size */
 		} else {
 			/* only check an update modes use crc_accept mask */
 			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
@@ -143,7 +145,7 @@ static int load_printf_template(void)
 /**
  * Output SFV-formated file header.
  */
-static void print_sfv_file_header(void)
+static void preprocess_files(void)
 {
 	int i;
 
@@ -314,7 +316,7 @@ int main(int argc, char *argv[])
 		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
 	}
 
-	print_sfv_file_header();
+	preprocess_files();
 	process_files();
 
 	options_destroy(&opt);

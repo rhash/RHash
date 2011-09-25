@@ -231,7 +231,8 @@ int rename_file_to_embed_crc32(struct file_info *info)
 		if(crc32_be != actual_crc32) {
 			char crc32_str[9];
 			rhash_print(crc32_str, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-			log_warning(_("wrong embedded CRC32, should be %s\n"), crc32_str); /* i18n: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
+			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
+			log_warning(_("wrong embedded CRC32, should be %s\n"), crc32_str);
 		} else return 0;
 	}
 

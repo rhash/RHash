@@ -191,7 +191,9 @@ static void print_check_result(struct file_info *info, int print_name, int print
 			fprintf(rhash_data.out, "%s\n", strerror(errno));
 		} else if(!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			/* TRANSLATORS: use at least 3 characters to overwrite "99%" */
-			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") : _("ERR\n")) );
+			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") :
+				/* TRANSLATORS: ERR is short for 'error' */
+				_("ERR\n")) );
 		} else {
 			print_verbose_error(info);
 		}
