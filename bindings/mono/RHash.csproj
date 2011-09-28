@@ -36,8 +36,8 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="HashType.cs" />
-    <Compile Include="RHash.cs" />
     <Compile Include="Bindings.cs" />
+    <Compile Include="Hasher.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

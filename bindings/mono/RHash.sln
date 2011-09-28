@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RHash", "RHash.csproj", "{2EC1635A-308E-46E4-B016-017C2AF3CDD9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E7412DAE-04A9-4B3A-9D55-DF58DBBF11BE}"
+	ProjectSection(SolutionItems) = preProject
+		Hasher.cs = Hasher.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +18,8 @@ Global
 		{2EC1635A-308E-46E4-B016-017C2AF3CDD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EC1635A-308E-46E4-B016-017C2AF3CDD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2EC1635A-308E-46E4-B016-017C2AF3CDD9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = RHash.csproj

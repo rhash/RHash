@@ -1,9 +1,10 @@
 using System;
+using System.IO;
 using System.Text;
 
 namespace RHash {
 		
-	public class RHash {
+	public sealed class Hasher {
 
 		private const int DEFAULT   = 0x0;
 		/* output as binary message digest */
@@ -23,19 +24,38 @@ namespace RHash {
 		/* Pointer to the native structure. */
 		private IntPtr ptr;
 		
-		public RHash (HashType hashtype) {
-			//TODO: throw exception if argument is invalid
+		public Hasher (HashType hashtype) {
 			this.hash_ids = (uint)hashtype;
 			this.ptr = Bindings.rhash_init(hash_ids);
 		}
 		
-		~RHash() {
-			Console.WriteLine("Destroying object");
-			Bindings.rhash_free(ptr);
+		public Hasher (uint hashmask) {
+			this.hash_ids = hashmask;
+			this.ptr = Bindings.rhash_init(hash_ids);
+			if (ptr == IntPtr.Zero) throw new ArgumentException("Invalid mask of hashes", "hashmask");
 		}
 		
-		public RHash Update(string message) {
+		~Hasher() {
+			if (ptr != IntPtr.Zero) {
+				Bindings.rhash_free(ptr);
+				ptr = IntPtr.Zero;
+			}
+		}
+		
+		public Hasher Update(string message) {
 			Bindings.rhash_update(ptr, message, message.Length);
+			return this;
+		}
+		
+		public Hasher UpdateFile(string filename) {
+			StreamReader file = new StreamReader(filename, Encoding.ASCII);
+			char[] buf = new char[8192];
+			int len = file.Read(buf, 0, 8192);
+			while (len > 0) {
+				Update(new string(buf, 0, len));
+				len = file.Read(buf, 0, 8192);
+			}
+			file.Close();
 			return this;
 		}
 		
@@ -54,35 +74,45 @@ namespace RHash {
 		}
 		
 		public string ToString(HashType type) {
-			//TODO: throw exception if argument is invalid
+			if ((hash_ids & (uint)type) == 0) {
+				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, 0);
 			return sb.ToString();
 		}
 		
 		public string ToHex(HashType type) {
-			//TODO: throw exception if argument is invalid
+			if ((hash_ids & (uint)type) == 0) {
+				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, HEX);
 			return sb.ToString();
 		}
 
 		public string ToBase32(HashType type) {
-			//TODO: throw exception if argument is invalid
+			if ((hash_ids & (uint)type) == 0) {
+				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
 			return sb.ToString();
 		}
 
 		public string ToBase64(HashType type) {
-			//TODO: throw exception if argument is invalid
+			if ((hash_ids & (uint)type) == 0) {
+				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
 			return sb.ToString();
 		}
 
 		public string ToRaw(HashType type) {
-			//TODO: throw exception if argument is invalid
+			if ((hash_ids & (uint)type) == 0) {
+				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, RAW);
 			return sb.ToString();
