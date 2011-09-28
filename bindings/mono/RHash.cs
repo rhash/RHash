@@ -20,66 +20,72 @@ namespace RHash {
 		private const int REVERSE   = 0x10;
 		
 		private uint hash_ids;
-		private RHashPtr ptr;
+		/* Pointer to the native structure. */
+		private IntPtr ptr;
 		
-		public RHash (uint hashtype) {
+		public RHash (HashType hashtype) {
 			//TODO: throw exception if argument is invalid
-			this.hash_ids = hashtype;
-			this.ptr = RHashPtr.rhash_init(hashtype);
+			this.hash_ids = (uint)hashtype;
+			this.ptr = Bindings.rhash_init(hash_ids);
+		}
+		
+		~RHash() {
+			Console.WriteLine("Destroying object");
+			Bindings.rhash_free(ptr);
 		}
 		
 		public RHash Update(string message) {
-			RHashPtr.rhash_update(ptr, message, message.Length);
+			Bindings.rhash_update(ptr, message, message.Length);
 			return this;
 		}
 		
 		public void Finish() {
-			RHashPtr.rhash_final(ptr);
+			Bindings.rhash_final(ptr);
 		}
 		
 		public void Reset() {
-			RHashPtr.rhash_reset(ptr);
+			Bindings.rhash_reset(ptr);
 		}
 		
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, 0, 0);
+			Bindings.rhash_print(sb, ptr, 0, 0);
 			return sb.ToString();
 		}
 		
 		public string ToString(HashType type) {
 			//TODO: throw exception if argument is invalid
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, (uint)type, 0);
+			Bindings.rhash_print(sb, ptr, (uint)type, 0);
 			return sb.ToString();
 		}
 		
 		public string ToHex(HashType type) {
 			//TODO: throw exception if argument is invalid
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, (uint)type, HEX);
-			return sb.ToString();			
+			Bindings.rhash_print(sb, ptr, (uint)type, HEX);
+			return sb.ToString();
 		}
 
 		public string ToBase32(HashType type) {
 			//TODO: throw exception if argument is invalid
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, (uint)type, BASE32);
-			return sb.ToString();			
+			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
+			return sb.ToString();
 		}
 
 		public string ToBase64(HashType type) {
 			//TODO: throw exception if argument is invalid
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, (uint)type, BASE32);
-			return sb.ToString();			
+			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
+			return sb.ToString();
 		}
 
 		public string ToRaw(HashType type) {
 			//TODO: throw exception if argument is invalid
 			StringBuilder sb = new StringBuilder(130);
-			RHashPtr.rhash_print(sb, ptr, (uint)type, RAW);
+			Bindings.rhash_print(sb, ptr, (uint)type, RAW);
 			return sb.ToString();
-		}	
+		}
 	}
 }

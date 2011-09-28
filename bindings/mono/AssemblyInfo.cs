@@ -5,11 +5,11 @@ using System.Runtime.CompilerServices;
 // Change them to the values specific to your project.
 
 [assembly: AssemblyTitle("RHash")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription(".NET/Mono bindings for librhash")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Sergey Basalaev")]
+[assembly: AssemblyCopyright("(c) 2011, Sergey Basalaev")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
