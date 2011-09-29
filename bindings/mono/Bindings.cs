@@ -22,9 +22,9 @@ namespace RHash {
 		public static extern
 			IntPtr rhash_init(uint hash_ids);
 		
-		[DllImport (librhash,  CharSet=CharSet.Ansi)]
+		[DllImport (librhash)]
 		public static extern
-			void rhash_update(IntPtr ctx, string message, int length);
+			void rhash_update(IntPtr ctx, byte[] message, int length);
 		
 		//may crash, rhash_final actually have 2 arguments
 		[DllImport (librhash)]
@@ -39,7 +39,7 @@ namespace RHash {
 		public static extern
 			void rhash_free(IntPtr ctx);
 		
-		[DllImport (librhash)]
+		[DllImport (librhash, CharSet=CharSet.Ansi)]
 		public static extern
 			void rhash_print(StringBuilder output, IntPtr ctx, uint hash_id, int flags);
 	}

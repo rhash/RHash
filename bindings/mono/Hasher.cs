@@ -42,17 +42,17 @@ namespace RHash {
 			}
 		}
 		
-		public Hasher Update(string message) {
-			Bindings.rhash_update(ptr, message, message.Length);
+		public Hasher Update(byte[] buf) {
+			Bindings.rhash_update(ptr, buf, buf.Length);
 			return this;
 		}
 		
 		public Hasher UpdateFile(string filename) {
-			StreamReader file = new StreamReader(filename, Encoding.ASCII);
-			char[] buf = new char[8192];
+			Stream file = new FileStream(filename, FileMode.Open);
+			byte[] buf = new byte[8192];
 			int len = file.Read(buf, 0, 8192);
 			while (len > 0) {
-				Update(new string(buf, 0, len));
+				Bindings.rhash_update(ptr, buf, len);
 				len = file.Read(buf, 0, 8192);
 			}
 			file.Close();
