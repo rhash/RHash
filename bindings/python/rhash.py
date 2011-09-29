@@ -108,11 +108,13 @@ class RHash(object):
 		for hash_id in hash_ids:
 			flags |= hash_id
 		if flags == 0:
+			self._ctx = None
 			raise ValueError('Invalid argument')
 		self._ctx = librhash.rhash_init(flags)
 	
 	def __del__(self):
-		librhash.rhash_free(self._ctx)
+		if self._ctx != None:
+			librhash.rhash_free(self._ctx)
 	
 	def reset(self):
 		librhash.rhash_reset(self._ctx)
