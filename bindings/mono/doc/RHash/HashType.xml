@@ -1,0 +1,327 @@
+<Type Name="HashType" FullName="RHash.HashType">
+  <TypeSignature Language="C#" Value="public enum HashType" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi sealed HashType extends System.Enum" />
+  <AssemblyInfo>
+    <AssemblyName>RHash</AssemblyName>
+    <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Enum</BaseTypeName>
+  </Base>
+  <Docs>
+    <summary>Type of hashing algorithm.</summary>
+    <remarks>Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
+DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
+RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="AICH">
+      <MemberSignature Language="C#" Value="AICH" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType AICH = unsigned int32(256)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>eMule AICH.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="BTIH">
+      <MemberSignature Language="C#" Value="BTIH" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType BTIH = unsigned int32(64)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>BitTorrent info hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="CRC32">
+      <MemberSignature Language="C#" Value="CRC32" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType CRC32 = unsigned int32(1)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>CRC32 checksum.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="ED2K">
+      <MemberSignature Language="C#" Value="ED2K" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType ED2K = unsigned int32(128)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>EDonkey 2000 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="EDONR256">
+      <MemberSignature Language="C#" Value="EDONR256" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType EDONR256 = unsigned int32(1048576)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>EDON-R 256.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="EDONR512">
+      <MemberSignature Language="C#" Value="EDONR512" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType EDONR512 = unsigned int32(2097152)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>EDON-R 512.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="GOST">
+      <MemberSignature Language="C#" Value="GOST" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST = unsigned int32(2048)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>GOST R 34.11-94.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="GOST_CRYPTOPRO">
+      <MemberSignature Language="C#" Value="GOST_CRYPTOPRO" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST_CRYPTOPRO = unsigned int32(4096)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>GOST R 34.11-94, CryptoPro version.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="HAS160">
+      <MemberSignature Language="C#" Value="HAS160" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType HAS160 = unsigned int32(8192)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>HAS-160 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="MD4">
+      <MemberSignature Language="C#" Value="MD4" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType MD4 = unsigned int32(2)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>MD4 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="MD5">
+      <MemberSignature Language="C#" Value="MD5" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType MD5 = unsigned int32(4)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>MD5 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="RIPEMD160">
+      <MemberSignature Language="C#" Value="RIPEMD160" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType RIPEMD160 = unsigned int32(1024)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>RIPEMD-160 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA1">
+      <MemberSignature Language="C#" Value="SHA1" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA1 = unsigned int32(8)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA-1 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA224">
+      <MemberSignature Language="C#" Value="SHA224" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA224 = unsigned int32(65536)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA-224 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA256">
+      <MemberSignature Language="C#" Value="SHA256" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA256 = unsigned int32(131072)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA-256 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA384">
+      <MemberSignature Language="C#" Value="SHA384" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA384 = unsigned int32(262144)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA-384 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA512">
+      <MemberSignature Language="C#" Value="SHA512" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA512 = unsigned int32(524288)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA-512 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SNEFRU128">
+      <MemberSignature Language="C#" Value="SNEFRU128" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU128 = unsigned int32(16384)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Snefru-128 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SNEFRU256">
+      <MemberSignature Language="C#" Value="SNEFRU256" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU256 = unsigned int32(32768)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Snefru-256 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="TIGER">
+      <MemberSignature Language="C#" Value="TIGER" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType TIGER = unsigned int32(16)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Tiger hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="TTH">
+      <MemberSignature Language="C#" Value="TTH" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType TTH = unsigned int32(32)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Tiger tree hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="WHIRLPOOL">
+      <MemberSignature Language="C#" Value="WHIRLPOOL" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType WHIRLPOOL = unsigned int32(512)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Whirlpool hash.</summary>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

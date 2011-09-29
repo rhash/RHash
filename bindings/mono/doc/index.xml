@@ -1,0 +1,41 @@
+<Overview>
+  <Assemblies>
+    <Assembly Name="RHash" Version="1.0.4289.30841">
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyCompany("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyConfiguration("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyCopyright("(c) 2011, Sergey Basalaev")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyDescription(".NET/Mono bindings for librhash")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyProduct("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyTitle("RHash")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyTrademark("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
+        </Attribute>
+      </Attributes>
+    </Assembly>
+  </Assemblies>
+  <Remarks>To be added.</Remarks>
+  <Copyright>To be added.</Copyright>
+  <Types>
+    <Namespace Name="RHash">
+      <Type Name="Hasher" Kind="Class" />
+      <Type Name="HashType" Kind="Enumeration" />
+    </Namespace>
+  </Types>
+  <Title>RHash</Title>
+</Overview>
