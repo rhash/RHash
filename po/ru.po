@@ -22,7 +22,7 @@ msgstr ""
 #: calc_sums.c:235
 #, c-format
 msgid "wrong embedded CRC32, should be %s\n"
-msgstr "неправильная встроенная сумма, должна быть %s\n"
+msgstr "неправильная встроенная CRC32, должна быть %s\n"
 
 #: calc_sums.c:259 hash_update.c:347
 #, c-format
