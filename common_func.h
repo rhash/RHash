@@ -51,10 +51,22 @@ size_t strlen_utf8_c(const char *str);
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
 
+typedef struct file_t {
+	char* path;
+#ifdef _WIN32
+	wchar_t* wpath;
+#endif
+	uint64_t size;
+	uint64_t mtime;
+} file_t;
+
 /* file function */
 const char* get_basename(const char* path);
 char* get_dirname(const char* path);
 char* make_path(const char* dir, const char* filename);
+void print_time(FILE *out, time_t time);
+int rsh_file_stat(file_t* file);
+int rsh_file_stat2(file_t* file, int use_lstat);
 
 #ifdef _WIN32
 # define IF_WINDOWS(code) code
@@ -98,11 +110,8 @@ typedef  char rsh_tchar;
 
 typedef struct rsh_stat_struct rsh_stat_buf;
 
-void print_time(FILE *out, time_t time);
 unsigned rhash_get_ticks(void);
-
 void  rhash_exit(int code);
-
 
 
 /* clever malloc with error detection */

@@ -10,6 +10,12 @@
 #include <time.h>
 #include <stdarg.h>
 #include <wchar.h>
+#include <errno.h>
+#include <sys/stat.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "win_utils.h"
 #include "parse_cmdline.h"
@@ -287,10 +293,6 @@ void print_time(FILE *out, time_t time)
 		t->tm_sec, (1900+t->tm_year), t->tm_mon+1, t->tm_mday);
 }
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 /**
  * Return ticks in milliseconds for time intervals measurement.
  * This function should be not precise but the fastest one
@@ -309,7 +311,62 @@ unsigned rhash_get_ticks(void)
 #endif
 }
 
+/**
+ * Fill file information in the file_t structure.
+ *
+ * @param file the file information
+ * @param use_lstat nonzero if lstat() shall be used
+ * @return 0 on success, -1 on error
+ */
+int rsh_file_stat2(file_t* file, int use_lstat)
+{
+	struct rsh_stat_struct st;
+	wchar_t* wpath;
+	int res = -1;
 
+#ifdef _WIN32
+	int i;
+	(void)use_lstat; /* ignore on windows */
+
+	if(file->wpath) {
+		free(file->wpath);
+		file->wpath = NULL;
+	}
+
+	for(i = 0; i < 2; i++) {
+		wpath = c2w(file->path, i);
+		if(wpath == NULL) continue;
+		res = clib_wstat(wpath, &st);
+		if(res == 0 || errno != ENOENT) {
+			file->wpath = wpath;
+			file->size  = st.st_size;
+
+			/* set correct filesize for large files under win32 */
+			win32_set_filesize64(file->path, &file->size);
+			break;
+		}
+		free(wpath);
+	}
+#else
+	res = (use_lstat ? rsh_stat(file->path, &st) : 
+		lstat(file->path, &st));
+	file->size  = st.st_size;
+#endif /* _WIN32 */
+
+	file->mtime = st.st_mtime;
+	return res;
+}
+
+/**
+ * Fill file information in the file_t structure.
+ *
+ * @param file the file information
+ * @return 0 on success, -1 on error
+ */
+int rsh_file_stat(file_t* file)
+{
+	return rsh_file_stat2(file, 0);
+}
 
 /* program exit and error reporting functions */
 
