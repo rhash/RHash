@@ -111,7 +111,9 @@ class RHash(object):
 			self._ctx = None
 			raise ValueError('Invalid argument')
 		self._ctx = librhash.rhash_init(flags)
-	
+		#switching off autofinal feature
+		librhash.rhash_transmit(5, self._ctx, 0, 0)
+
 	def __del__(self):
 		if self._ctx != None:
 			librhash.rhash_free(self._ctx)
@@ -163,4 +165,6 @@ class RHash(object):
 	
 	def BASE64(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
-
+	
+	def __str__(self, hash_id = 0):
+		return self._print(hash_id, 0)

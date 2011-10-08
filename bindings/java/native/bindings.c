@@ -104,7 +104,9 @@ JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_rhash_1get_1digest_1size
  */
 JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1init
 (JNIEnv *env, jclass clz, jint hash_flags) {
-	return (jlong)rhash_init(hash_flags);
+	rhash ctx = rhash_init(hash_flags);
+	rhash_set_autofinal(ctx, 0);
+	return (jlong)ctx;
 }
 
 /*

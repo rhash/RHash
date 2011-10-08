@@ -197,6 +197,7 @@ VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
 	}
 	if (!flags) flags = RHASH_ALL_HASHES;
 	rhash ctx = rhash_init(flags);
+	rhash_set_autofinal(ctx, 0);
 	VALUE newobj = Data_Wrap_Struct(clz, NULL, rh_free, ctx);
 	rb_obj_call_init(newobj, argc, argv);
 	return newobj;
