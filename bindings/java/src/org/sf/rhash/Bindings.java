@@ -17,8 +17,6 @@
 
 package org.sf.rhash;
 
-import java.io.IOException;
-
 /**
  * Glue to the native API.
  */

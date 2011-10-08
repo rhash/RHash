@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 /**
@@ -102,17 +102,19 @@ public final class RHash {
 	 * String is encoded into a sequence of bytes
 	 * using the specified charset.
 	 *
-	 * @param  type     type of hash algorithm
-	 * @param  str      the string to process
-	 * @param  charset  charset to encode string
+	 * @param  type      type of hash algorithm
+	 * @param  str       the string to process
+	 * @param  encoding  encoding to use
 	 * @return  message digest for specified string
 	 * @throws NullPointerException if any of arguments is <code>null</code>
+	 * @throws UnsupportedEncodingException if specified encoding is not supported
 	 */
-	static public Digest computeHash(HashType type, String str, Charset charset) {
-		if (type == null || str == null || charset == null) {
+	static public Digest computeHash(HashType type, String str, String encoding)
+			throws UnsupportedEncodingException {
+		if (type == null || str == null || encoding == null) {
 			throw new NullPointerException();
 		}
-		return computeHash(type, str.getBytes(charset));
+		return computeHash(type, str.getBytes(encoding));
 	}
 
 	/**
