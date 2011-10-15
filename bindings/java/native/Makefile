@@ -40,7 +40,7 @@ digest.o: digest.c digest.h
 	$(CC) $(ALLCFLAGS) -c $< -o $@
 
 $(LIBRARY): $(OBJECTS)
-	$(CC) $(LDFLAGS) -shared -o $@ $(OBJECTS)
+	$(CC) -shared -o $@ $(OBJECTS) $(LDFLAGS)
 
 clean:
 	rm -f *.o $(LIBRARY)
