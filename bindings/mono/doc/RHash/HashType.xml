@@ -4,6 +4,7 @@
   <AssemblyInfo>
     <AssemblyName>RHash</AssemblyName>
     <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+    <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
@@ -21,6 +22,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -35,6 +37,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -49,6 +52,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -63,6 +67,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -77,6 +82,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -91,6 +97,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -105,6 +112,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -119,6 +127,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -133,6 +142,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -147,6 +157,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -161,6 +172,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -175,6 +187,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -189,6 +202,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -203,6 +217,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -217,6 +232,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -231,6 +247,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -245,6 +262,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -259,6 +277,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -273,6 +292,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -287,6 +307,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -301,6 +322,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>
@@ -315,6 +337,7 @@ RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
+        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.HashType</ReturnType>

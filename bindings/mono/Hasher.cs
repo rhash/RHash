@@ -63,6 +63,14 @@ namespace RHash {
 			Bindings.rhash_update(ptr, buf, buf.Length);
 			return this;
 		}
+
+		public Hasher Update(byte[] buf, int len) {
+			if (len < 0 || len >= buf.Length) {
+				throw new IndexOutOfRangeException();
+			}
+			Bindings.rhash_update(ptr, buf, len);
+			return this;
+		}
 		
 		public Hasher UpdateFile(string filename) {
 			Stream file = new FileStream(filename, FileMode.Open);
