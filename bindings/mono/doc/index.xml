@@ -1,6 +1,6 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="RHash" Version="1.0.4326.33310">
+    <Assembly Name="RHash" Version="1.0.1.1">
       <Attributes>
         <Attribute>
           <AttributeName>System.Reflection.AssemblyCompany("")</AttributeName>
@@ -30,7 +30,7 @@
     </Assembly>
   </Assemblies>
   <Remarks>To be added.</Remarks>
-  <Copyright>To be added.</Copyright>
+  <Copyright>(c) 2011, Sergey Basalaev</Copyright>
   <Types>
     <Namespace Name="RHash">
       <Type Name="Hasher" Kind="Class" />

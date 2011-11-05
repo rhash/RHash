@@ -3,8 +3,7 @@
   <TypeSignature Language="ILAsm" Value=".class public auto ansi sealed beforefieldinit Hasher extends System.Object" />
   <AssemblyInfo>
     <AssemblyName>RHash</AssemblyName>
-    <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-    <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+    <AssemblyVersion>1.0.1.1</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Object</BaseTypeName>
@@ -20,8 +19,7 @@
       <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(valuetype RHash.HashType hashtype) cil managed" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="hashtype" Type="RHash.HashType" />
@@ -37,8 +35,7 @@
       <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(unsigned int32 hashmask) cil managed" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="hashmask" Type="System.UInt32" />
@@ -58,8 +55,7 @@
       <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Finalize() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -75,8 +71,7 @@
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Finish() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -92,8 +87,7 @@
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -113,8 +107,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToBase32(valuetype RHash.HashType type) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -135,8 +128,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToBase64(valuetype RHash.HashType type) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -157,8 +149,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToHex(valuetype RHash.HashType type) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -179,8 +170,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToRaw(valuetype RHash.HashType type) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -201,8 +191,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance string ToString() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -219,8 +208,7 @@ and process starts from the very beginning.</remarks>
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToString(valuetype RHash.HashType type) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
@@ -243,8 +231,7 @@ otherwise value is the same as returned by <see cref="M:RHash.Hasher.ToHex(RHash
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher Update(unsigned int8[] buf) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.Hasher</ReturnType>
@@ -264,7 +251,7 @@ otherwise value is the same as returned by <see cref="M:RHash.Hasher.ToHex(RHash
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher Update(unsigned int8[] buf, int32 len) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.Hasher</ReturnType>
@@ -287,8 +274,7 @@ otherwise value is the same as returned by <see cref="M:RHash.Hasher.ToHex(RHash
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher UpdateFile(string filename) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.4289.30841</AssemblyVersion>
-        <AssemblyVersion>1.0.4326.33310</AssemblyVersion>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>RHash.Hasher</ReturnType>
