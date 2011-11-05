@@ -23,10 +23,10 @@ namespace RHash {
 	/* Pointer to native structure. */
 	sealed class Bindings {
 		
-#if WINDOWS
-		private const string librhash = "librhash.dll";
-#else
+#if UNIX
 		private const string librhash = "librhash.so.0";
+#else
+		private const string librhash = "librhash.dll";
 #endif
 
 		private Bindings() { }
