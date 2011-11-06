@@ -15,35 +15,14 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
-MAKE=make
+MONO=mono
 CS=gmcs
-MDOC=mdoc
-SOURCES=AssemblyInfo.cs Bindings.cs Hasher.cs HashType.cs
 
-all: assembly assemble-doc html
+test: Test.exe
+	$(MONO) Test.exe
 
-assembly: RHash.dll RHash.dll.mdb
-
-RHash.dll RHash.dll.mdb: $(SOURCES)
-	$(CS) -target:library -define:UNIX -out:RHash.dll -debug -keyfile:RHash.snk $(SOURCES)
-
-update-doc: RHash.dll
-	$(MDOC) update RHash.dll -o doc
-
-assemble-doc: RHash.tree RHash.zip
-
-RHash.tree RHash.zip:
-	$(MDOC) assemble -o RHash doc
-
-html:
-	$(MDOC) export-html -o html doc
-
-test: RHash.dll
-	cp RHash.dll test/
-	$(MAKE) -C test
+Test.exe: Test.cs
+	$(CS) -r:RHash.dll Test.cs
 
 clean:
-	rm -f RHash.dll RHash.dll.mdb
-	rm -f RHash.tree RHash.zip
-	rm -rf html
-	$(MAKE) -C test/ clean
+	rm -f Test.exe RHash.dll
