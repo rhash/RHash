@@ -1,0 +1,293 @@
+<Type Name="Hasher" FullName="RHash.Hasher">
+  <TypeSignature Language="C#" Value="public sealed class Hasher" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi sealed beforefieldinit Hasher extends System.Object" />
+  <AssemblyInfo>
+    <AssemblyName>RHash</AssemblyName>
+    <AssemblyVersion>1.0.1.1</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Incremental hasher.</summary>
+    <remarks>This class allows you to do incremental hashing for set of hashing algorithms.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Hasher (RHash.HashType hashtype);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(valuetype RHash.HashType hashtype) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="hashtype" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="hashtype">Type of hashing algorithm.</param>
+        <summary>Creates new Hasher to compute message digest for given type.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Hasher (uint hashmask);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(unsigned int32 hashmask) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="hashmask" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="hashmask">Mask created of one or more <see cref="T:RHash.HashType" /> values.</param>
+        <summary>Creates new Hasher to compute message digests for given set of hashing algorithms.</summary>
+        <remarks>Mask should be created from ORed HashType values. The next example will create Hasher that computes both CRC32 and MD5 sums:
+
+<example><code lang="C#">
+  new Hasher((uint)HashType.CRC32 | (uint)HashType.MD5);</code></example></remarks>
+        <exception cref="T:System.ArgumentException">Argument is zero or contains invalid bits.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="Finalize">
+      <MemberSignature Language="C#" Value="~Hasher ();" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Finalize() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Called by garbage collector to free native resources.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Finish">
+      <MemberSignature Language="C#" Value="public void Finish ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Finish() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Finishes calculation of hashes.</summary>
+        <remarks>Processes any buffered data and finishes computation of hash sums.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Reset">
+      <MemberSignature Language="C#" Value="public void Reset ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Resets this Hasher to initial state.</summary>
+        <remarks>The Hasher becomes available to process new data chunks.
+Note, that this method returns Hasher to the state after creating
+the object, NOT the state when hashing continues.
+Therefore, all previously calculated hashes are lost
+and process starts from the very beginning.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToBase32">
+      <MemberSignature Language="C#" Value="public string ToBase32 (RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToBase32(valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="type">Type of hashing algorithm.</param>
+        <summary>Returns value of computed digest as base32 string.</summary>
+        <returns>Message digest in form of base32 string.</returns>
+        <remarks>To be added.</remarks>
+        <exception cref="T:System.ArgumentException">This Hasher does not compute hash of given type.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToBase64">
+      <MemberSignature Language="C#" Value="public string ToBase64 (RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToBase64(valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="type">Type of hashing algorithm.</param>
+        <summary>Returns value of computed digest as base64 string.</summary>
+        <returns>Message digest in form of base64 string.</returns>
+        <remarks>To be added.</remarks>
+        <exception cref="T:System.ArgumentException">This Hasher does not compute hash of given type.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToHex">
+      <MemberSignature Language="C#" Value="public string ToHex (RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToHex(valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="type">Type of hashing algorithm.</param>
+        <summary>Returns value of computed digest as hexadecimal string.</summary>
+        <returns>Message digest in form of hexadecimal string.</returns>
+        <remarks>To be added.</remarks>
+        <exception cref="T:System.ArgumentException">This Hasher does not compute hash of given type.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToRaw">
+      <MemberSignature Language="C#" Value="public string ToRaw (RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToRaw(valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="type">Type of hashing algorithm.</param>
+        <summary>Returns value of computed digest as raw bytes encoded in ANSI string.</summary>
+        <returns>Message digest as raw bytes encoded in an ANSI string.</returns>
+        <remarks>To be added.</remarks>
+        <exception cref="T:System.ArgumentException">This Hasher does not compute hash of given type.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="ToString">
+      <MemberSignature Language="C#" Value="public override string ToString ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance string ToString() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns value of computed digest as string in default format.</summary>
+        <returns>Message digest as string.</returns>
+        <remarks>For Hasher created using <see cref="C:RHash.Hasher(RHash.HashType)" /> constructor, this method returns the same string as <see cref="M:RHash.Hasher.ToString(RHash.HashType)" /> method with the hash type used in constructor.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToString">
+      <MemberSignature Language="C#" Value="public string ToString (RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string ToString(valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="type">Type of hashing algorithm.</param>
+        <summary>Returns value of computed digest as string in default format.</summary>
+        <returns>Message digest for given hashing algorithm.</returns>
+        <remarks>If default output for hashing algorithm is base32 then
+returned value is the same as if <see cref="M:RHash.Hasher.ToBase32(RHash.HashType)" /> method was called;
+otherwise value is the same as returned by <see cref="M:RHash.Hasher.ToHex(RHash.HashType)" /> method.</remarks>
+        <exception cref="T:System.ArgumentException">This Hasher does not compute hash of given type.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="Update">
+      <MemberSignature Language="C#" Value="public RHash.Hasher Update (byte[] buf);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher Update(unsigned int8[] buf) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.Hasher</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buf" Type="System.Byte[]" />
+      </Parameters>
+      <Docs>
+        <param name="buf">Data for hashing.</param>
+        <summary>Updates this Hasher with new data chunk.</summary>
+        <returns>This hasher.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Update">
+      <MemberSignature Language="C#" Value="public RHash.Hasher Update (byte[] buf, int len);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher Update(unsigned int8[] buf, int32 len) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.Hasher</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buf" Type="System.Byte[]" />
+        <Parameter Name="len" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="buf">Data for hashing.</param>
+        <param name="len">Number of bytes in array to hash.</param>
+        <summary>Updates this Hasher with new data chunk.</summary>
+        <returns>This Hasher.</returns>
+        <remarks>To be added.</remarks>
+        <exception cref="T:System.IndexOutOfRangeException">Argument len is negative or greater than buffer length.</exception>
+      </Docs>
+    </Member>
+    <Member MemberName="UpdateFile">
+      <MemberSignature Language="C#" Value="public RHash.Hasher UpdateFile (string filename);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class RHash.Hasher UpdateFile(string filename) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.Hasher</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filename" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="filename">Name of the file to process.</param>
+        <summary>Updates this Hasher with data from given file.</summary>
+        <returns>This Hasher.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

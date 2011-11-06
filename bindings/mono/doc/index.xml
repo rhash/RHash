@@ -1,0 +1,42 @@
+<Overview>
+  <Assemblies>
+    <Assembly Name="RHash" Version="1.0.1.1">
+      <AssemblyPublicKey>[00 24 00 00 04 80 00 00 94 00 00 00 06 02 00 00 00 24 00 00 52 53 41 31 00 04 00 00 11 00 00 00 2f cc 17 f0 6f bb a5 89 23 fa 26 a6 d9 a2 2a 73 c1 0f 82 84 6c e3 b5 d2 ba a3 82 ef 40 c8 88 8d 16 98 9d 5f a5 ce a5 a8 7c 4e 3d 9f 3a f9 ff 99 a4 d8 c2 51 a8 45 ca a7 df 00 7c 92 07 50 44 60 2a 2f 9c 08 76 6c 4d 61 1a 51 4f 46 44 ff 8f 52 98 25 e8 04 08 35 ee a5 ac 32 b2 eb 4b d6 b0 b0 c5 9b 39 48 0f c7 c9 6e 16 9d b9 33 aa 9e f4 54 21 a2 8d 0a 47 9b fd 15 5f c2 17 b6 09 9f 52 8f ]</AssemblyPublicKey>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyCompany("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyConfiguration("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyCopyright("(c) 2011, Sergey Basalaev")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyDescription(".NET/Mono bindings for librhash")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyProduct("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyTitle("RHash")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Reflection.AssemblyTrademark("")</AttributeName>
+        </Attribute>
+        <Attribute>
+          <AttributeName>System.Runtime.CompilerServices.RuntimeCompatibility(WrapNonExceptionThrows=true)</AttributeName>
+        </Attribute>
+      </Attributes>
+    </Assembly>
+  </Assemblies>
+  <Remarks>To be added.</Remarks>
+  <Copyright>(c) 2011, Sergey Basalaev</Copyright>
+  <Types>
+    <Namespace Name="RHash">
+      <Type Name="Hasher" Kind="Class" />
+      <Type Name="HashType" Kind="Enumeration" />
+    </Namespace>
+  </Types>
+  <Title>RHash</Title>
+</Overview>

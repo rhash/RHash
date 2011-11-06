@@ -1,0 +1,31 @@
+<Namespace Name="RHash">
+  <Docs>
+    <summary>.NET/Mono bindings to librhash.</summary>
+    <remarks>
+<para>Librhash is a library for computing and verifying hash sums
+that supports many hashing algorithms. This module provides
+class for incremental hashing that utilizes the library.
+Sample usage of it you can see from the following example:
+<example><code lang="C#">
+  Hasher hasher = new Hasher((uint)HashType.CRC32 | (uint)HashType.MD5);
+  hasher.Update(bytebuffer).UpdateFile("SomeFile.txt");
+  hasher.Finish();
+  Console.WriteLine(hasher.ToHex(HashType.CRC32));
+  Console.WriteLine(hasher.ToBase32(HashType.MD5));</code></example>
+</para><para>
+ In this example <see cref="T:RHash.Hasher" /> object is first
+ created for a set of hashing algorithms.
+</para><para>
+ Next, data for hashing is  given  in  chunks  with  methods
+ Update() and UpdateFile(). Finally, call Finish() to end up
+ all remaining calculations.
+</para><para>
+ To receive text represenation of the message digest use one
+ of methods ToHex(), ToBase32() and ToBase64(). Binary message
+ digest may be obtained with ToRaw(). All of these methods accept
+ algorithm  value as argument. It may be omitted if Hasher was
+ created to compute hash for only a single hashing algorithm.
+</para>
+</remarks>
+  </Docs>
+</Namespace>
