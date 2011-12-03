@@ -622,6 +622,20 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	digest_size = info->digest_size;
 	assert(digest_size <= 64);
 
+	if(output == NULL) {
+		int format = (flags & ~(RHPR_UPPERCASE | RHPR_REVERSE));
+		switch(format) {
+		case RHPR_HEX:
+			return (digest_size * 2);
+		case RHPR_BASE32:
+			return BASE32_LENGTH(digest_size);
+		case RHPR_BASE64:
+			return BASE64_LENGTH(digest_size);
+		default:
+			return digest_size;
+		}
+	}
+
 	/* note: use info->hash_id, cause hash_id can be 0 */
 	rhash_put_digest(context, info->hash_id, digest);
 

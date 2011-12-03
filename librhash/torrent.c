@@ -482,6 +482,18 @@ void rhash_torrent_set_options(torrent_ctx *ctx, unsigned options)
 	ctx->options = options;
 }
 
+#if defined(__STRICT_ANSI__)
+/* define strdup for gcc -ansi */
+static char* bt_strdup(const char* str)
+{
+	size_t len = strlen(str);
+	char* res = (char*)malloc(len + 1);
+	if(res) memcpy(res, str, len + 1);
+	return res;
+}
+#define strdup bt_strdup
+#endif /* __STRICT_ANSI__ */
+
 /**
  * Set optional name of the program generating the torrent
  * for storing into torrent file.
