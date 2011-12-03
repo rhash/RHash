@@ -378,7 +378,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 			continue;
 		}
 
-		/* output other special items: filepath, URL-encoded filename e.t.c. */
+		/* output other special items: filepath, URL-encoded filename etc. */
 		switch(print_type) {
 			case PRINT_STR:
 				fprintf(out, "%s", list->data);

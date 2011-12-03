@@ -496,7 +496,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
  * @param hash_id the id of hash algorithm
  * @return pointer to the rhash_info structure containing the information
  */
-rhash_info* rhash_info_by_id(unsigned hash_id)
+const rhash_info* rhash_info_by_id(unsigned hash_id)
 {
 	hash_id &= RHASH_ALL_HASHES;
 	/* check that only one bit is set */
@@ -538,7 +538,7 @@ RHASH_API int rhash_get_digest_size(unsigned hash_id)
  */
 RHASH_API int rhash_get_hash_length(unsigned hash_id)
 {
-	rhash_info* info = rhash_info_by_id(hash_id);
+	const rhash_info* info = rhash_info_by_id(hash_id);
 	return (int)(info ? (info->flags & F_BS32 ?
 		BASE32_LENGTH(info->digest_size) : info->digest_size * 2) : 0);
 }
@@ -551,7 +551,7 @@ RHASH_API int rhash_get_hash_length(unsigned hash_id)
  */
 RHASH_API const char* rhash_get_name(unsigned hash_id)
 {
-	rhash_info* info = rhash_info_by_id(hash_id);
+	const rhash_info* info = rhash_info_by_id(hash_id);
 	return (info ? info->name : 0);
 }
 
@@ -606,12 +606,12 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
  * @param hash_id id of the hash sum to print or 0 to print the first hash
  *                saved in the context.
  * @param flags  controls how to print the sum, can contain flags
- *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, e.t.c.
+ *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
  * @return number of writen characters on success, 0 on fail
  */
 size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int flags)
 {
-	rhash_info* info;
+	const rhash_info* info;
 	unsigned char digest[80];
 	size_t digest_size;
 

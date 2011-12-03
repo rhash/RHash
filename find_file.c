@@ -37,7 +37,7 @@ typedef struct dir_entry
 	struct dir_entry *next;
 	char* filename;
 	/*unsigned short level; nesting level */
-	unsigned type; /* dir,link, e.t.c. */
+	unsigned type; /* dir,link, etc. */
 	/*bool operator < (struct dir_entry &right) { return (name < right.name); }*/
 } dir_entry;
 

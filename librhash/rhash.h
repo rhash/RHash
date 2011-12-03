@@ -122,7 +122,7 @@ RHASH_API int  rhash_is_base32(unsigned hash_id); /* default digest output forma
 RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function name */
 
 /* note, that rhash_info_by_id() is not exported to a shared library or DLL */
-rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
+const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 
 /**
  * Flags for printing a hash sum
