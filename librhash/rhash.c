@@ -577,15 +577,15 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
 
 	switch(format) {
 	case RHPR_HEX:
-		str_len = size * 2;
+		str_len = size * 2 + 1;
 		rhash_byte_to_hex(output, bytes, (unsigned)size, upper_case);
 		break;
 	case RHPR_BASE32:
-		str_len = BASE32_LENGTH(size);
+		str_len = BASE32_LENGTH(size) + 1;
 		rhash_byte_to_base32(output, bytes, (unsigned)size, upper_case);
 		break;
 	case RHPR_BASE64:
-		str_len = BASE64_LENGTH(size);
+		str_len = BASE64_LENGTH(size) + 1;
 		rhash_byte_to_base64(output, bytes, (unsigned)size);
 		break;
 	default:
@@ -626,11 +626,11 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 		int format = (flags & ~(RHPR_UPPERCASE | RHPR_REVERSE));
 		switch(format) {
 		case RHPR_HEX:
-			return (digest_size * 2);
+			return (digest_size * 2) + 1;
 		case RHPR_BASE32:
-			return BASE32_LENGTH(digest_size);
+			return BASE32_LENGTH(digest_size) + 1;
 		case RHPR_BASE64:
-			return BASE64_LENGTH(digest_size);
+			return BASE64_LENGTH(digest_size) + 1;
 		default:
 			return digest_size;
 		}
