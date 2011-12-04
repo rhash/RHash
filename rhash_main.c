@@ -246,10 +246,10 @@ static void i18n_initialize(void)
 {
 	setlocale(LC_ALL, ""); /* set locale according to the environment */
 
-#ifndef NO_GETTEXT
+#ifdef USE_GETTEXT
 	bindtextdomain("rhash", LOCALEDIR); /* set the text message domain */
 	textdomain("rhash");
-#endif /* NO_GETTEXT */
+#endif /* USE_GETTEXT */
 }
 
 

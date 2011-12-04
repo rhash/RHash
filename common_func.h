@@ -3,7 +3,7 @@
 #define COMMON_FUNC_H
 
 /* internationalization support via gettext/libintl */
-#ifndef NO_GETTEXT
+#ifdef USE_GETTEXT
 # include <libintl.h>
 # define _(str) gettext(str)
 # ifdef _WIN32
@@ -13,7 +13,7 @@
 # endif /* _WIN32 */
 #else
 # define _(str) (str)
-#endif /* NO_GETTEXT */
+#endif /* USE_GETTEXT */
 
 /* use 64-bit off_t */
 #define _LARGEFILE64_SOURCE

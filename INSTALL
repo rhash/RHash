@@ -12,6 +12,9 @@ To test the compiled program run 'make test'.
 RPM package can be created by commands
   'make rpm' or 'setarch i586 make rpm'.
 
+For internationalization support RHash should be compiled with gettext library
+  make ADDCFLAGS="-DUSE_GETTEXT"
+
 To compile with openssl support use the following flags
   make ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS="-ldl"
 
