@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 require Exporter;
-our @ISA = qw(Exporter);
+our @ISA = (qw(Exporter));
 
 # define possible tags for functions export
 our %EXPORT_TAGS = (
