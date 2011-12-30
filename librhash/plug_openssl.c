@@ -89,18 +89,21 @@ static void wrapWHIRLPOOL_Final(void* ctx, unsigned char* result)
 }
 #endif
 
+rhash_info info_sslwhpl = { RHASH_WHIRLPOOL, 0, 64, "WHIRLPOOL", "whirlpool" };
+
 /* The table of supported OpenSSL hash functions */
 rhash_hash_info rhash_openssl_methods[] = {
-	{ { RHASH_MD4,       F_LE32, 16, "MD4"  }, sizeof(MD4_CTX), offsetof(MD4_CTX, A), HASH_INFO_METHODS(MD4) }, /* 128 bit */
-	{ { RHASH_MD5,       F_LE32, 16, "MD5"  }, sizeof(MD5_CTX), offsetof(MD5_CTX, A), HASH_INFO_METHODS(MD5) }, /* 128 bit */
-	{ { RHASH_SHA1,      F_BE32, 20, "SHA1" }, sizeof(SHA_CTX), offsetof(SHA_CTX, h0),  HASH_INFO_METHODS(SHA1) }, /* 160 bit */
-	{ { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160" }, sizeof(RIPEMD160_CTX), offsetof(RIPEMD160_CTX, A), HASH_INFO_METHODS(RIPEMD160) }, /* 160 bit */
-	{ { RHASH_SHA224,    F_BE32, 28, "SHA-224" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA224) }, /* 224 bit */
-	{ { RHASH_SHA256,    F_BE32, 32, "SHA-256" }, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA256) }, /* 256 bit */
-	{ { RHASH_SHA384,    F_BE64, 48, "SHA-384" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA384) }, /* 384 bit */
-	{ { RHASH_SHA512,    F_BE64, 64, "SHA-512" }, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA512) }, /* 512 bit */
+	{ &info_md4, sizeof(MD4_CTX), offsetof(MD4_CTX, A), HASH_INFO_METHODS(MD4) }, /* 128 bit */
+	{ &info_md5, sizeof(MD5_CTX), offsetof(MD5_CTX, A), HASH_INFO_METHODS(MD5) }, /* 128 bit */
+	{ &info_sha1, sizeof(SHA_CTX), offsetof(SHA_CTX, h0),  HASH_INFO_METHODS(SHA1) }, /* 160 bit */
+	{ &info_rmd160, sizeof(RIPEMD160_CTX), offsetof(RIPEMD160_CTX, A), HASH_INFO_METHODS(RIPEMD160) }, /* 160 bit */
+	{ &info_sha224, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA224) }, /* 224 bit */
+	{ &info_sha256, sizeof(SHA256_CTX), offsetof(SHA256_CTX, h), HASH_INFO_METHODS(SHA256) }, /* 256 bit */
+	{ &info_sha384, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA384) }, /* 384 bit */
+	{ &info_sha512, sizeof(SHA512_CTX), offsetof(SHA512_CTX, h), HASH_INFO_METHODS(SHA512) }, /* 512 bit */
 #ifdef USE_OPENSSL_WHIRLPOOL
-	{ { RHASH_WHIRLPOOL, 0, 64, "WHIRLPOOL" }, sizeof(WHIRLPOOL_CTX), offsetof(WHIRLPOOL_CTX, H.c), HASH_INFO_METHODS(WHIRLPOOL) }, /* 512 bit */
+	/* note: should be flags=0 */
+	{ &info_sslwhpl, sizeof(WHIRLPOOL_CTX), offsetof(WHIRLPOOL_CTX, H.c), HASH_INFO_METHODS(WHIRLPOOL) }, /* 512 bit */
 #endif
 };
 
@@ -182,10 +185,10 @@ int rhash_plug_openssl(void)
 	for(i = 0; i < (int)(sizeof(rhash_openssl_methods) / sizeof(rhash_hash_info)); i++)
 	{
 		rhash_hash_info *method = &rhash_openssl_methods[i];
-		if((rhash_openssl_hash_mask & method->info.hash_id) == 0) continue;
+		if((rhash_openssl_hash_mask & method->info->hash_id) == 0) continue;
 		if(!method->init) continue;
-		bit_index = rhash_ctz(method->info.hash_id);
-		assert(method->info.hash_id == rhash_openssl_hash_info[bit_index].info.hash_id);
+		bit_index = rhash_ctz(method->info->hash_id);
+		assert(method->info.hash_id == rhash_openssl_hash_info[bit_index].info->hash_id);
 		memcpy(&rhash_openssl_hash_info[bit_index], method, sizeof(rhash_hash_info));
 	}
 

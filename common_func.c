@@ -348,8 +348,8 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		free(wpath);
 	}
 #else
-	res = (use_lstat ? lstat(file->path, &st)) :
-		rsh_stat(file->path, &st);
+	res = (use_lstat ? lstat(file->path, &st) :
+		rsh_stat(file->path, &st));
 	file->size  = st.st_size;
 #endif /* _WIN32 */
 

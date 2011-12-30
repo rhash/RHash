@@ -112,6 +112,7 @@ typedef struct rhash_info
 	/** size of binary message digest in bytes */
 	size_t digest_size;
 	const char* name;
+	const char* magnet_name;
 } rhash_info;
 
 /* information functions */

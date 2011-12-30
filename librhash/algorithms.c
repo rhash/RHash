@@ -65,6 +65,29 @@ static void rhash_crc32_init(uint32_t* crc32);
 static void rhash_crc32_update(uint32_t* crc32, const unsigned char* msg, size_t size);
 static void rhash_crc32_final(uint32_t* crc32, unsigned char* result);
 
+rhash_info info_crc32 = { RHASH_CRC32, F_BE32, 4, "CRC32", "crc32" };
+rhash_info info_md4 = { RHASH_MD4, F_LE32, 16, "MD4", "md4" };
+rhash_info info_md5 = { RHASH_MD5, F_LE32, 16, "MD5", "md5" };
+rhash_info info_sha1 = { RHASH_SHA1,      F_BE32, 20, "SHA1", "sha1" };
+rhash_info info_tiger = { RHASH_TIGER,    F_LE64, 24, "TIGER", "tiger" };
+rhash_info info_tth  = { RHASH_TTH,       F_BS32, 24, "TTH", "tree:tiger" };
+rhash_info info_btih = { RHASH_BTIH,      0, 20, "BTIH", "btih" };
+rhash_info info_ed2k = { RHASH_ED2K,      F_LE32, 16, "ED2K", "ed2k" };
+rhash_info info_aich = { RHASH_AICH,      F_BS32, 20, "AICH", "aich" };
+rhash_info info_whirlpool = { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL", "whirlpool" };
+rhash_info info_rmd160 = { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160", "ripemd160" };
+rhash_info info_gost = { RHASH_GOST,      F_LE32, 32, "GOST", "gost" };
+rhash_info info_gostpro = { RHASH_GOST_CRYPTOPRO, F_LE32, 32, "GOST-CRYPTOPRO", "gost-cryptopro" };
+rhash_info info_has160 = { RHASH_HAS160,    F_LE32, 20, "HAS-160", "has160" };
+rhash_info info_snf128 = { RHASH_SNEFRU128, F_BE32, 16, "SNEFRU-128", "snefru128" };
+rhash_info info_snf256 = { RHASH_SNEFRU256, F_BE32, 32, "SNEFRU-256", "snefru256" };
+rhash_info info_sha224 = { RHASH_SHA224,    F_BE32, 28, "SHA-224", "sha224" };
+rhash_info info_sha256 = { RHASH_SHA256,    F_BE32, 32, "SHA-256", "sha256" };
+rhash_info info_sha384 = { RHASH_SHA384,    F_BE64, 48, "SHA-384", "sha384" };
+rhash_info info_sha512 = { RHASH_SHA512,    F_BE64, 64, "SHA-512", "sha512" };
+rhash_info info_edr256 = { RHASH_EDONR256,  F_LE32, 32, "EDON-R256", "edon-r256" };
+rhash_info info_edr512 = { RHASH_EDONR512,  F_LE64, 64, "EDON-R512", "edon-r512" };
+
 /* some helper macroses
  * like shift in bytes of a message digest in a hash sum context */
 #define dgshft(name) (((char*)&((name##_ctx*)0)->hash) - (char*)0)
@@ -78,28 +101,28 @@ static void rhash_crc32_final(uint32_t* crc32, unsigned char* result);
 /* information about all hashes */
 rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 {
-	{ { RHASH_CRC32,     F_BE32,  4, "CRC32" }, sizeof(uint32_t), 0, iuf(rhash_crc32), 0 }, /* 32 bit */
-	{ { RHASH_MD4,       F_LE32, 16, "MD4" }, sizeof(md4_ctx), dgshft(md4), iuf(rhash_md4), 0 }, /* 128 bit */
-	{ { RHASH_MD5,       F_LE32, 16,  "MD5" }, sizeof(md5_ctx), dgshft(md5), iuf(rhash_md5), 0 }, /* 128 bit */
-	{ { RHASH_SHA1,      F_BE32, 20, "SHA1" }, sizeof(sha1_ctx), dgshft(sha1), iuf(rhash_sha1), 0 }, /* 160 bit */
-	{ { RHASH_TIGER,     F_LE64, 24, "TIGER" }, sizeof(tiger_ctx), dgshft(tiger), iuf(rhash_tiger), 0 }, /* 192 bit */
-	{ { RHASH_TTH,       F_BS32, 24, "TTH" }, sizeof(tth_ctx), dgshft2(tth, tiger.hash), iuf(rhash_tth), 0 }, /* 192 bit */
-	{ { RHASH_BTIH,      0, 20, "BTIH" }, sizeof(torrent_ctx), dgshft2(torrent, btih), iuf(rhash_torrent), (pcleanup_t)rhash_torrent_cleanup }, /* 160 bit */
-	{ { RHASH_ED2K,      F_LE32, 16, "ED2K" }, sizeof(ed2k_ctx), dgshft2(ed2k, md4_context_inner.hash), iuf(rhash_ed2k), 0 }, /* 128 bit */
-	{ { RHASH_AICH,      F_BS32, 20, "AICH" }, sizeof(aich_ctx), dgshft2(aich, sha1_context.hash), iuf(rhash_aich), (pcleanup_t)rhash_aich_cleanup }, /* 160 bit */
-	{ { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL" }, sizeof(whirlpool_ctx), dgshft(whirlpool), iuf(rhash_whirlpool), 0 }, /* 512 bit */
-	{ { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160" }, sizeof(ripemd160_ctx), dgshft(ripemd160), iuf(rhash_ripemd160), 0 }, /* 160 bit */
-	{ { RHASH_GOST,      F_LE32, 32, "GOST" }, sizeof(gost_ctx), dgshft(gost), iuf(rhash_gost), 0 }, /* 256 bit */
-	{ { RHASH_GOST_CRYPTOPRO, F_LE32, 32, "GOST-CRYPTOPRO" }, sizeof(gost_ctx), dgshft(gost), ini(rhash_gost_cryptopro), upd(rhash_gost), fin(rhash_gost), 0 }, /* 256 bit */
-	{ { RHASH_HAS160,    F_LE32, 20, "HAS-160" }, sizeof(has160_ctx), dgshft(has160), iuf(rhash_has160), 0 }, /* 160 bit */
-	{ { RHASH_SNEFRU128, F_BE32, 16, "SNEFRU-128" }, sizeof(snefru_ctx), dgshft(snefru), ini(rhash_snefru128), upd(rhash_snefru), fin(rhash_snefru), 0 }, /* 128 bit */
-	{ { RHASH_SNEFRU256, F_BE32, 32, "SNEFRU-256" }, sizeof(snefru_ctx), dgshft(snefru), ini(rhash_snefru256), upd(rhash_snefru), fin(rhash_snefru), 0 }, /* 256 bit */
-	{ { RHASH_SHA224,    F_BE32, 28, "SHA-224" }, sizeof(sha256_ctx), dgshft(sha256), ini(rhash_sha224), upd(rhash_sha256), fin(rhash_sha256), 0 }, /* 224 bit */
-	{ { RHASH_SHA256,    F_BE32, 32, "SHA-256" }, sizeof(sha256_ctx), dgshft(sha256), iuf(rhash_sha256), 0 },  /* 256 bit */
-	{ { RHASH_SHA384,    F_BE64, 48, "SHA-384" }, sizeof(sha512_ctx), dgshft(sha512), ini(rhash_sha384), upd(rhash_sha512), fin(rhash_sha512), 0 }, /* 384 bit */
-	{ { RHASH_SHA512,    F_BE64, 64, "SHA-512" }, sizeof(sha512_ctx), dgshft(sha512), iuf(rhash_sha512), 0 },  /* 512 bit */
-	{ { RHASH_EDONR256,  F_LE32, 32,  "EDON-R256" }, sizeof(edonr_ctx), dgshft2(edonr, u.data256.hash) + 32, iuf(rhash_edonr256), 0 },  /* 256 bit */
-	{ { RHASH_EDONR512,  F_LE64, 64,  "EDON-R512" }, sizeof(edonr_ctx), dgshft2(edonr, u.data512.hash) + 64, iuf(rhash_edonr512), 0 },  /* 512 bit */
+	{ &info_crc32, sizeof(uint32_t), 0, iuf(rhash_crc32), 0 }, /* 32 bit */
+	{ &info_md4, sizeof(md4_ctx), dgshft(md4), iuf(rhash_md4), 0 }, /* 128 bit */
+	{ &info_md5, sizeof(md5_ctx), dgshft(md5), iuf(rhash_md5), 0 }, /* 128 bit */
+	{ &info_sha1, sizeof(sha1_ctx), dgshft(sha1), iuf(rhash_sha1), 0 }, /* 160 bit */
+	{ &info_tiger, sizeof(tiger_ctx), dgshft(tiger), iuf(rhash_tiger), 0 }, /* 192 bit */
+	{ &info_tth, sizeof(tth_ctx), dgshft2(tth, tiger.hash), iuf(rhash_tth), 0 }, /* 192 bit */
+	{ &info_btih, sizeof(torrent_ctx), dgshft2(torrent, btih), iuf(rhash_torrent), (pcleanup_t)rhash_torrent_cleanup }, /* 160 bit */
+	{ &info_ed2k, sizeof(ed2k_ctx), dgshft2(ed2k, md4_context_inner.hash), iuf(rhash_ed2k), 0 }, /* 128 bit */
+	{ &info_aich, sizeof(aich_ctx), dgshft2(aich, sha1_context.hash), iuf(rhash_aich), (pcleanup_t)rhash_aich_cleanup }, /* 160 bit */
+	{ &info_whirlpool, sizeof(whirlpool_ctx), dgshft(whirlpool), iuf(rhash_whirlpool), 0 }, /* 512 bit */
+	{ &info_rmd160, sizeof(ripemd160_ctx), dgshft(ripemd160), iuf(rhash_ripemd160), 0 }, /* 160 bit */
+	{ &info_gost, sizeof(gost_ctx), dgshft(gost), iuf(rhash_gost), 0 }, /* 256 bit */
+	{ &info_gostpro, sizeof(gost_ctx), dgshft(gost), ini(rhash_gost_cryptopro), upd(rhash_gost), fin(rhash_gost), 0 }, /* 256 bit */
+	{ &info_has160, sizeof(has160_ctx), dgshft(has160), iuf(rhash_has160), 0 }, /* 160 bit */
+	{ &info_snf128, sizeof(snefru_ctx), dgshft(snefru), ini(rhash_snefru128), upd(rhash_snefru), fin(rhash_snefru), 0 }, /* 128 bit */
+	{ &info_snf256, sizeof(snefru_ctx), dgshft(snefru), ini(rhash_snefru256), upd(rhash_snefru), fin(rhash_snefru), 0 }, /* 256 bit */
+	{ &info_sha224, sizeof(sha256_ctx), dgshft(sha256), ini(rhash_sha224), upd(rhash_sha256), fin(rhash_sha256), 0 }, /* 224 bit */
+	{ &info_sha256, sizeof(sha256_ctx), dgshft(sha256), iuf(rhash_sha256), 0 },  /* 256 bit */
+	{ &info_sha384, sizeof(sha512_ctx), dgshft(sha512), ini(rhash_sha384), upd(rhash_sha512), fin(rhash_sha512), 0 }, /* 384 bit */
+	{ &info_sha512, sizeof(sha512_ctx), dgshft(sha512), iuf(rhash_sha512), 0 },  /* 512 bit */
+	{ &info_edr256, sizeof(edonr_ctx), dgshft2(edonr, u.data256.hash) + 32, iuf(rhash_edonr256), 0 },  /* 256 bit */
+	{ &info_edr512, sizeof(edonr_ctx), dgshft2(edonr, u.data512.hash) + 64, iuf(rhash_edonr512), 0 },  /* 512 bit */
 };
 
 /**

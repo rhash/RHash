@@ -22,7 +22,7 @@ typedef void (*pcleanup_t)(void*);
 
 typedef struct rhash_hash_info
 {
-	rhash_info info;
+	rhash_info *info;
 	size_t context_size;
 	ptrdiff_t  digest_diff;
 	pinit_t    init;
@@ -35,6 +35,29 @@ extern rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT];
 extern rhash_hash_info* rhash_info_table;
 extern int rhash_info_size;
 extern unsigned rhash_uninitialized_algorithms;
+
+extern rhash_info info_crc32;
+extern rhash_info info_md4;
+extern rhash_info info_md5;
+extern rhash_info info_sha1;
+extern rhash_info info_tiger;
+extern rhash_info info_tth ;
+extern rhash_info info_btih;
+extern rhash_info info_ed2k;
+extern rhash_info info_aich;
+extern rhash_info info_whirlpool;
+extern rhash_info info_rmd160;
+extern rhash_info info_gost;
+extern rhash_info info_gostpro;
+extern rhash_info info_has160;
+extern rhash_info info_snf128;
+extern rhash_info info_snf256;
+extern rhash_info info_sha224;
+extern rhash_info info_sha256;
+extern rhash_info info_sha384;
+extern rhash_info info_sha512;
+extern rhash_info info_edr256;
+extern rhash_info info_edr512;
 
 /* rhash_info flags */
 #define F_BS32 1   /* default output in base32 */

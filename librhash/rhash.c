@@ -322,16 +322,16 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 			}
 			item = &ectx->vector[i];
 			info = item->hash_info;
-			if(info->info.hash_id == hash_id) break;
+			if(info->info->hash_id == hash_id) break;
 		}
 	}
 	digest = ((unsigned char*)item->context + info->digest_diff);
-	if(info->info.flags & F_SWAP32) {
-		rhash_u32_swap_copy(result, 0, digest, info->info.digest_size);
-	} else if(info->info.flags & F_SWAP64) {
-		rhash_u64_swap_copy(result, 0, digest, info->info.digest_size);
+	if(info->info->flags & F_SWAP32) {
+		rhash_u32_swap_copy(result, 0, digest, info->info->digest_size);
+	} else if(info->info->flags & F_SWAP64) {
+		rhash_u64_swap_copy(result, 0, digest, info->info->digest_size);
 	} else {
-		memcpy(result, digest, info->info.digest_size);
+		memcpy(result, digest, info->info->digest_size);
 	}
 }
 
@@ -502,7 +502,7 @@ const rhash_info* rhash_info_by_id(unsigned hash_id)
 	/* check that only one bit is set */
 	if(hash_id != (hash_id & -(int)hash_id)) return NULL;
 	/* note: alternative condition is (hash_id == 0 || (hash_id & (hash_id - 1)) != 0) */
-	return &(rhash_info_table[rhash_ctz(hash_id)].info);
+	return rhash_info_table[rhash_ctz(hash_id)].info;
 }
 
 /**
@@ -527,7 +527,7 @@ RHASH_API int rhash_get_digest_size(unsigned hash_id)
 {
 	hash_id &= RHASH_ALL_HASHES;
 	if(hash_id == 0 || (hash_id & (hash_id - 1)) != 0) return -1;
-	return (int)rhash_info_table[rhash_ctz(hash_id)].info.digest_size;
+	return (int)rhash_info_table[rhash_ctz(hash_id)].info->digest_size;
 }
 
 /**
@@ -616,7 +616,7 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	size_t digest_size;
 
 	info = (hash_id != 0 ? rhash_info_by_id(hash_id) :
-		&((rhash_context_ext*)context)->vector[0].hash_info->info);
+		((rhash_context_ext*)context)->vector[0].hash_info->info);
 
 	if(info == NULL) return 0;
 	digest_size = info->digest_size;
@@ -738,7 +738,7 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 			unsigned i;
 			for(i = 0; i < ctx->hash_vector_size; i++) {
 				struct rhash_hash_info* info = ctx->vector[i].hash_info;
-				if(info->info.hash_id == (unsigned)ldata)
+				if(info->info->hash_id == (unsigned)ldata)
 					return PVOID2UPTR(ctx->vector[i].context);
 			}
 			return (rhash_uptr_t)0;
