@@ -555,6 +555,20 @@ RHASH_API const char* rhash_get_name(unsigned hash_id)
 	return (info ? info->name : 0);
 }
 
+/**
+ * Returns a name part of magnet urn of the given hash algorithm.
+ * Such magnet_name is used to generate a magnet link of the form
+ * urn:&lt;magnet_name&gt;=&lt;hash_value&gt;.
+ *
+ * @param hash_id the id of hash algorithm
+ * @return name
+ */
+RHASH_API const char* rhash_get_magnet_name(unsigned hash_id)
+{
+	const rhash_info* info = rhash_info_by_id(hash_id);
+	return (info ? info->magnet_name : 0);
+}
+
 /* hash sum output */
 
 /**
