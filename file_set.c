@@ -89,7 +89,7 @@ void file_set_item_free(file_set_item *item)
  *
  * @param pp_rec1 the first item to compare
  * @param pp_rec2 the second item to compare
- * @return 0 if items are equal, -1 if pp_rec1 < pp_rec2, 1 otherwise
+ * @return 0 if items are equal, -1 if pp_rec1 &lt; pp_rec2, 1 otherwise
  */
 static int crc_pp_rec_compare(const void *pp_rec1, const void *pp_rec2)
 {
