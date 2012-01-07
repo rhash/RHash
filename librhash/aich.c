@@ -70,7 +70,7 @@ void rhash_aich_init(aich_ctx *ctx)
 #ifdef USE_OPENSSL
 	{
 		rhash_hash_info *sha1_info = &rhash_info_table[3];
-		assert(sha1_info->info.hash_id == RHASH_SHA1);
+		assert(sha1_info->info->hash_id == RHASH_SHA1);
 		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
 		ctx->sha_init = sha1_info->init;
 		ctx->sha_update = sha1_info->update;
@@ -107,13 +107,13 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	assert(CT_INDEX(chunk_num) == 0);
 
 	/* check main assumptions */
-	assert(ctx->chunk_table == 0 || ctx->chunk_table[index-1] != 0); /* table is empty or full */
+	assert(ctx->chunk_table == 0 || ctx->chunk_table[index - 1] != 0); /* table is empty or full */
 	assert(index <= ctx->allocated);
 
 	/* check if there is enough space allocated */
 	if(index >= ctx->allocated) {
 		/* resize the table by allocating some extra space */
-		int new_size = (ctx->allocated==0 ? 64 : ctx->allocated * 2);
+		int new_size = (ctx->allocated == 0 ? 64 : ctx->allocated * 2);
 		assert(index == ctx->allocated);
 
 		/* re-allocate the chunk table to contain new_size void*-pointers */
@@ -231,7 +231,8 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 		is_left_branch = ((unsigned)path >> 1) & 1;
 
 		/* calculate number of blocks at right branch of the current level */
-		blocks_stack[level] = (blocks_stack[level-1] + 1 - is_left_branch)/2;
+		blocks_stack[level] =
+			(blocks_stack[level - 1] + 1 - is_left_branch) / 2;
 		blocks = blocks_stack[level];
 	}
 }

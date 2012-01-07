@@ -258,7 +258,7 @@ void rhash_has160_final(has160_ctx *ctx, unsigned char* result)
 #endif
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index>14) {
+	if(index > 14) {
 		/* then fill the rest with zeros and process it */
 		while(index < 16) {
 			ctx->message[index++] = 0;

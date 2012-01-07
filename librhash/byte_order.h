@@ -82,7 +82,7 @@ extern "C" {
 #endif
 
 /* convert a hash flag to index */
-#if __GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
 # define rhash_ctz(x) __builtin_ctz(x)
 #else
 unsigned rhash_ctz(unsigned); /* define as function */
@@ -107,8 +107,8 @@ static inline uint32_t bswap_32(uint32_t x) {
 #elif !defined(__STRICT_ANSI__)
 /* general bswap_32 definition */
 static inline uint32_t bswap_32(uint32_t x) {
-	x= ((x<<8)&0xFF00FF00) | ((x>>8)&0x00FF00FF);
-	return (x>>16) | (x<<16);
+	x = ((x << 8) & 0xFF00FF00) | ((x >> 8) & 0x00FF00FF);
+	return (x >> 16) | (x << 16);
 }
 #else
 #define bswap_32(x) ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) | \

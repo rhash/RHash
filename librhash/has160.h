@@ -12,7 +12,7 @@ extern "C" {
 
 typedef struct has160_ctx
 {
-	unsigned message[has160_block_size/4]; /* 512-bit buffer for leftovers */
+	unsigned message[has160_block_size / 4]; /* 512-bit buffer for leftovers */
 	uint64_t length;     /* number of processed bytes */
 	unsigned hash[5];   /* 160-bit algorithm internal hashing state */
 } has160_ctx;

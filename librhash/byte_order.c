@@ -119,7 +119,7 @@ void rhash_u64_swap_copy(void* to, int index, const void* from, size_t length)
 void rhash_u32_memswap(unsigned *arr, int length)
 {
 	unsigned* end = arr + length;
-	for(; arr<end; arr++) {
+	for(; arr < end; arr++) {
 		*arr = bswap_32(*arr);
 	}
 }

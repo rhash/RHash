@@ -13,7 +13,7 @@ typedef struct tth_ctx
 {
 	tiger_ctx tiger;       /* context used to hash tree leaves */
 	uint64_t block_count;  /* number of processed blocks */
-	uint64_t stack[64*3];
+	uint64_t stack[64 * 3];
 } tth_ctx;
 
 /* hash functions */

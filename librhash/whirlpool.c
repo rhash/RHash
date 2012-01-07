@@ -36,14 +36,14 @@ void rhash_whirlpool_init(struct whirlpool_ctx* ctx)
 extern uint64_t rhash_whirlpool_sbox[8][256];
 
 #define WHIRLPOOL_OP(src, shift) ( \
-	rhash_whirlpool_sbox[0][(int)(src[  shift   &7 ] >> 56)       ] ^ \
-	rhash_whirlpool_sbox[1][(int)(src[ (shift+7)&7 ] >> 48) & 0xff] ^ \
-	rhash_whirlpool_sbox[2][(int)(src[ (shift+6)&7 ] >> 40) & 0xff] ^ \
-	rhash_whirlpool_sbox[3][(int)(src[ (shift+5)&7 ] >> 32) & 0xff] ^ \
-	rhash_whirlpool_sbox[4][(int)(src[ (shift+4)&7 ] >> 24) & 0xff] ^ \
-	rhash_whirlpool_sbox[5][(int)(src[ (shift+3)&7 ] >> 16) & 0xff] ^ \
-	rhash_whirlpool_sbox[6][(int)(src[ (shift+2)&7 ] >>  8) & 0xff] ^ \
-	rhash_whirlpool_sbox[7][(int)(src[ (shift+1)&7 ]      ) & 0xff])
+	rhash_whirlpool_sbox[0][(int)(src[ shift      & 7] >> 56)       ] ^ \
+	rhash_whirlpool_sbox[1][(int)(src[(shift + 7) & 7] >> 48) & 0xff] ^ \
+	rhash_whirlpool_sbox[2][(int)(src[(shift + 6) & 7] >> 40) & 0xff] ^ \
+	rhash_whirlpool_sbox[3][(int)(src[(shift + 5) & 7] >> 32) & 0xff] ^ \
+	rhash_whirlpool_sbox[4][(int)(src[(shift + 4) & 7] >> 24) & 0xff] ^ \
+	rhash_whirlpool_sbox[5][(int)(src[(shift + 3) & 7] >> 16) & 0xff] ^ \
+	rhash_whirlpool_sbox[6][(int)(src[(shift + 2) & 7] >>  8) & 0xff] ^ \
+	rhash_whirlpool_sbox[7][(int)(src[(shift + 1) & 7]      ) & 0xff])
 
 /**
  * The core transformation. Process a 512-bit block.
@@ -199,7 +199,7 @@ void rhash_whirlpool_final(whirlpool_ctx *ctx, unsigned char* result)
 	ctx->message[index++] = 0x80;
 
 	/* if no room left in the message to store 256-bit message length */
-	if(index>32) {
+	if(index > 32) {
 		/* then pad the rest with zeros and process it */
 		while(index < 64) {
 			ctx->message[index++] = 0;

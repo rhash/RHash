@@ -44,9 +44,9 @@ static const unsigned rhash_k256[64] = {
 #define sigma1(x) (ROTR32((x),17) ^ ROTR32((x), 19) ^ ((x) >> 10))
 
 /* Recalculate element n-th of circular buffer W using formula
- *   W[n] = sigma1(W[n-2]) + W[n-7] + sigma0(W[n-15]) + W[n-16]; */
-#define RECALCULATE_W(W,n) \
-	(W[n] += (sigma1(W[(n-2) & 15]) + W[(n-7) & 15] + sigma0(W[(n-15) & 15])))
+ *   W[n] = sigma1(W[n - 2]) + W[n - 7] + sigma0(W[n - 15]) + W[n - 16]; */
+#define RECALCULATE_W(W,n) (W[n] += \
+	(sigma1(W[(n - 2) & 15]) + W[(n - 7) & 15] + sigma0(W[(n - 15) & 15])))
 
 #define ROUND(a,b,c,d,e,f,g,h,k,data) { \
 	unsigned T1 = h + Sigma1(e) + Ch(e,f,g) + k + (data); \

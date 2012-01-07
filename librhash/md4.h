@@ -14,7 +14,7 @@ extern "C" {
 typedef struct md4_ctx
 {
 	unsigned hash[4];  /* 128-bit algorithm internal hashing state */
-	unsigned message[md4_block_size/4]; /* 512-bit buffer for leftovers */
+	unsigned message[md4_block_size / 4]; /* 512-bit buffer for leftovers */
 	uint64_t length;   /* number of processed bytes */
 } md4_ctx;
 

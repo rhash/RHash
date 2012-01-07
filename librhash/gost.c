@@ -55,11 +55,11 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
 #ifndef USE_GCC_ASM_IA32
 # define GOST_ENCRYPT_ROUND(key1, key2, sbox) \
 	tmp = (key1) + r; \
-	l ^= (sbox)[tmp & 0xff] ^ ((sbox)+256)[(tmp >> 8) & 0xff] ^ \
-		((sbox)+512)[(tmp >> 16) & 0xff] ^ ((sbox)+768)[tmp >> 24]; \
+	l ^= (sbox)[tmp & 0xff] ^ ((sbox) + 256)[(tmp >> 8) & 0xff] ^ \
+		((sbox) + 512)[(tmp >> 16) & 0xff] ^ ((sbox) + 768)[tmp >> 24]; \
 	tmp = (key2) + l; \
-	r ^= (sbox)[tmp & 0xff] ^ ((sbox)+256)[(tmp >> 8) & 0xff] ^ \
-		((sbox)+512)[(tmp >> 16) & 0xff] ^ ((sbox)+768)[tmp >> 24];
+	r ^= (sbox)[tmp & 0xff] ^ ((sbox) + 256)[(tmp >> 8) & 0xff] ^ \
+		((sbox) + 512)[(tmp >> 16) & 0xff] ^ ((sbox) + 768)[tmp >> 24];
 
 /* encrypt a block with the given key */
 # define GOST_ENCRYPT(result, i, key, hash, sbox) \
@@ -152,8 +152,8 @@ static void rhash_gost_block_compress(gost_ctx *ctx, const unsigned* block)
 			"movl %%ebx, %13\n\t"
 			GOST_ENCRYPT_GCC_ASM_X86() /* optimized for x86 Intel Core 2 */
 			"movl %13, %%ebx\n\t"
-			: "=S" (s[i]), "=D" (s[i+1]) /* 0,1: s[i]=esi, s[i+1]=edi */
-			: "d" (sbox), "D" (ctx->hash[i]), "S" (ctx->hash[i+1]), /* 2,3,4: edx=sbox,edi=r,esi=l */
+			: "=S" (s[i]), "=D" (s[i + 1]) /* 0,1: s[i]=esi, s[i + 1]=edi */
+			: "d" (sbox), "D" (ctx->hash[i]), "S" (ctx->hash[i + 1]), /* 2,3,4: edx=sbox,edi=r,esi=l */
 			"m" (key[0]), "m" (key[1]), "m" (key[2]), "m" (key[3]), /* 5, 6, 7, 8 */
 			"m" (key[4]), "m" (key[5]), "m" (key[6]), "m" (key[7]), /* 9,10,11,12 */
 			"m" (w[0])  /* store EBX in w[0], cause it's used for PIC on *BSD. */

@@ -60,9 +60,9 @@ static const uint64_t rhash_k512[80] = {
 #define sigma1(x) (ROTR64((x), 19) ^ ROTR64((x), 61) ^ ((x) >> 6))
 
 /* Recalculate element n-th of circular buffer W using formula
- *   W[n] = sigma1(W[n-2]) + W[n-7] + sigma0(W[n-15]) + W[n-16]; */
-#define RECALCULATE_W(W,n) \
-	(W[n] += (sigma1(W[(n-2) & 15]) + W[(n-7) & 15] + sigma0(W[(n-15) & 15])))
+ *   W[n] = sigma1(W[n - 2]) + W[n - 7] + sigma0(W[n - 15]) + W[n - 16]; */
+#define RECALCULATE_W(W,n) (W[n] += \
+	(sigma1(W[(n - 2) & 15]) + W[(n - 7) & 15] + sigma0(W[(n - 15) & 15])))
 
 #define ROUND(a,b,c,d,e,f,g,h,k,data) { \
 	uint64_t T1 = h + Sigma1(e) + Ch(e,f,g) + k + (data); \
@@ -73,9 +73,9 @@ static const uint64_t rhash_k512[80] = {
 	ROUND(a,b,c,d,e,f,g,h, k[n], RECALCULATE_W(W, n))
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_sha512_init(sha512_ctx *ctx)
 {

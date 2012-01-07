@@ -13,7 +13,7 @@ extern "C" {
 /* algorithm context */
 typedef struct ripemd160_ctx
 {
-	unsigned message[ripemd160_block_size/4]; /* 512-bit buffer for leftovers */
+	unsigned message[ripemd160_block_size / 4]; /* 512-bit buffer for leftovers */
 	uint64_t length;  /* number of processed bytes */
 	unsigned hash[5]; /* 160-bit algorithm internal hashing state */
 } ripemd160_ctx;

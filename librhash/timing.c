@@ -63,7 +63,7 @@ static double fsec(timedelta_t* timer)
 #ifdef _WIN32
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
-	return (double)*timer/freq.QuadPart;
+	return (double)*timer / freq.QuadPart;
 #else
 	return ((double)timer->tv_usec / 1000000.0) + timer->tv_sec;
 #endif
@@ -208,15 +208,15 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	if(flags & RHASH_BENCHMARK_CPB) {
 		unsigned int c1 = -1, c2 = -1;
 		unsigned volatile long long cy0, cy1, cy2;
-		int msg_size = 128*1024;
+		int msg_size = 128 * 1024;
 
 		/* make 200 tries */
 		for(i = 0; i < 200; i++) {
 			cy0 = read_tsc();
-			hash_in_loop(hash_id, message, sizeof(message), msg_size/sizeof(message), out);
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
 			cy1 = read_tsc();
-			hash_in_loop(hash_id, message, sizeof(message), msg_size/sizeof(message), out);
-			hash_in_loop(hash_id, message, sizeof(message), msg_size/sizeof(message), out);
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
 			cy2 = read_tsc();
 
 			cy2 -= cy1;

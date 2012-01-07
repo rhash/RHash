@@ -37,10 +37,10 @@ static void rhash_tth_process_block(tth_ctx *ctx)
 	unsigned pos = 0;
 	unsigned char msg[24];
 
-	for(it=1; it & ctx->block_count; it <<= 1) {
+	for(it = 1; it & ctx->block_count; it <<= 1) {
 		rhash_tiger_final(&ctx->tiger, msg);
 		rhash_tiger_init(&ctx->tiger);
-		ctx->tiger.message[ ctx->tiger.length++ ] = 0x01;
+		ctx->tiger.message[ctx->tiger.length++] = 0x01;
 		rhash_tiger_update(&ctx->tiger, (unsigned char*)(ctx->stack + pos), 24);
 		/* note: we can cut this step, if the previous rhash_tiger_final saves directly to ctx->tiger.message+25; */
 		rhash_tiger_update(&ctx->tiger, msg, 24);
@@ -62,7 +62,7 @@ void rhash_tth_update(tth_ctx *ctx, const unsigned char* msg, size_t size)
 {
 	size_t rest = 1025 - (size_t)ctx->tiger.length;
 	for(;;) {
-		if(size<rest) rest = size;
+		if(size < rest) rest = size;
 		rhash_tiger_update(&ctx->tiger, msg, rest);
 		msg += rest;
 		size -= rest;
@@ -98,11 +98,11 @@ void rhash_tth_final(tth_ctx *ctx, unsigned char result[24])
 		rhash_tth_process_block(ctx);
 	}
 
-	for(; it < ctx->block_count && (it & ctx->block_count)==0; it <<= 1) pos += 3;
+	for(; it < ctx->block_count && (it & ctx->block_count) == 0; it <<= 1) pos += 3;
 	last_message = (unsigned char*)(ctx->stack + pos);
 
 	for(it <<= 1; it <= ctx->block_count; it <<= 1) {
-		/* merge tth sums in the tree */
+		/* merge TTH sums in the tree */
 		pos += 3;
 		if(it & ctx->block_count) {
 			rhash_tiger_init(&ctx->tiger);

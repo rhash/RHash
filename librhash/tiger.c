@@ -43,13 +43,13 @@ extern uint64_t rhash_tiger_sboxes[4][256];
 #define round(a,b,c,x,mul) \
 	c ^= x; \
 	a -= t1[(uint8_t)(c)] ^ \
-		t2[(uint8_t)((c) >> (2*8))] ^ \
-		t3[(uint8_t)((c) >> (4*8))] ^ \
-		t4[(uint8_t)((c) >> (6*8))] ; \
-	b += t4[(uint8_t)((c) >> (1*8))] ^ \
-		t3[(uint8_t)((c) >> (3*8))] ^ \
-		t2[(uint8_t)((c) >> (5*8))] ^ \
-		t1[(uint8_t)((c) >> (7*8))]; \
+		t2[(uint8_t)((c) >> (2 * 8))] ^ \
+		t3[(uint8_t)((c) >> (4 * 8))] ^ \
+		t4[(uint8_t)((c) >> (6 * 8))] ; \
+	b += t4[(uint8_t)((c) >> (1 * 8))] ^ \
+		t3[(uint8_t)((c) >> (3 * 8))] ^ \
+		t2[(uint8_t)((c) >> (5 * 8))] ^ \
+		t1[(uint8_t)((c) >> (7 * 8))]; \
 	b *= mul;
 
 #else /* for IA32 */
@@ -57,13 +57,13 @@ extern uint64_t rhash_tiger_sboxes[4][256];
 #define round(a,b,c,x,mul) \
 	c ^= x; \
 	a -= t1[(uint8_t)(c)] ^ \
-		t2[(uint8_t)(((uint32_t)(c)) >> (2*8))] ^ \
-		t3[(uint8_t)((c) >> (4*8))] ^ \
-		t4[(uint8_t)(((uint32_t)((c) >> (4*8))) >> (2*8))] ; \
-	b += t4[(uint8_t)(((uint32_t)(c)) >> (1*8))] ^ \
-		t3[(uint8_t)(((uint32_t)(c)) >> (3*8))] ^ \
-		t2[(uint8_t)(((uint32_t)((c) >> (4*8))) >> (1*8))] ^ \
-		t1[(uint8_t)(((uint32_t)((c) >> (4*8))) >> (3*8))]; \
+		t2[(uint8_t)(((uint32_t)(c)) >> (2 * 8))] ^ \
+		t3[(uint8_t)((c) >> (4 * 8))] ^ \
+		t4[(uint8_t)(((uint32_t)((c) >> (4 * 8))) >> (2 * 8))] ; \
+	b += t4[(uint8_t)(((uint32_t)(c)) >> (1 * 8))] ^ \
+		t3[(uint8_t)(((uint32_t)(c)) >> (3 * 8))] ^ \
+		t2[(uint8_t)(((uint32_t)((c) >> (4 * 8))) >> (1 * 8))] ^ \
+		t1[(uint8_t)(((uint32_t)((c) >> (4 * 8))) >> (3 * 8))]; \
 	b *= mul;
 #endif /* CPU_X64 */
 
@@ -113,10 +113,10 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
 	char i;
 #endif
 
-	x0=le2me_64(block[0]); x1=le2me_64(block[1]);
-	x2=le2me_64(block[2]); x3=le2me_64(block[3]);
-	x4=le2me_64(block[4]); x5=le2me_64(block[5]);
-	x6=le2me_64(block[6]); x7=le2me_64(block[7]);
+	x0 = le2me_64(block[0]); x1 = le2me_64(block[1]);
+	x2 = le2me_64(block[2]); x3 = le2me_64(block[3]);
+	x4 = le2me_64(block[4]); x5 = le2me_64(block[5]);
+	x6 = le2me_64(block[6]); x7 = le2me_64(block[7]);
 
 	a = state[0];
 	b = state[1];
@@ -124,13 +124,13 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
 
 	/* passes and key shedules */
 #ifndef CPU_X64
-	for(i=0; i<3; i++) {
+	for(i = 0; i < 3; i++) {
 		if(i != 0) key_schedule;
-		pass(a, b, c, ( i==0 ? 5 : i==1 ? 7 : 9 ));
-		tmp=a;
-		a=c;
-		c=b;
-		b=tmp;
+		pass(a, b, c, (i == 0 ? 5 : i == 1 ? 7 : 9));
+		tmp = a;
+		a = c;
+		c = b;
+		b = tmp;
 	}
 #else
 	pass(a, b, c, 5);
@@ -209,7 +209,7 @@ void rhash_tiger_final(tiger_ctx *ctx, unsigned char result[24])
 	ctx->message[index++] = (ctx->tiger2 ? 0x80 : 0x01);
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index>56) {
+	if(index > 56) {
 		/* then fill the rest with zeros and process it */
 		while(index < 64) {
 			ctx->message[index++] = 0;
