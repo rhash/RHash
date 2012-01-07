@@ -139,7 +139,8 @@ static int load_openssl_runtime(void)
 	HMODULE handle = LoadLibraryA("libeay32.dll");
 #else
 	void* handle = dlopen("libcrypto.so", RTLD_NOW);
-	/*if (!handle) fprintf(stderr, "%s\n", dlerror());*/
+	if(!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW); /* hotfix */
+	if(!handle) handle = dlopen("libcrypto.so.0.9.8", RTLD_NOW);
 #endif
 
 	if(handle == NULL) return 0; /* could not load OpenSSL */
