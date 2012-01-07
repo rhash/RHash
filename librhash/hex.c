@@ -133,7 +133,6 @@ int rhash_urlencode(char *dst, const char *name)
 	if(!dst) {
 		int len;
 		for(len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
-		/* ed2k://|file|<fname>|<fsize>|2E398E5533AE4A83475B1AF001C6CEE6|h=RKLBEXT4O2H4RZER676WAVWGACIHQ56Z|/ */
 		return len;
 	}
 	/* encode URL as specified by RFC 1738 */
