@@ -457,8 +457,6 @@ void init_hash_info_table(void)
 		assert(strlen(info->name) < (size_t)(e-d));
 		for(p = info->name; *p && d < e; p++) if(*p != '-' || p[1] >= '9') *(d++) = (*p | 0x20);
 		*d = 0;
-
-		info->urn = (bit != RHASH_TTH ? info->short_name : "tree:tiger");
 	}
 }
 
@@ -543,7 +541,7 @@ void init_printf_format(strbuf_t* out)
 					}
 					break;
 				case 2:
-					rsh_str_append(out, info->urn);
+					rsh_str_append(out, rhash_get_magnet_name(bit));
 					break;
 				case 3:
 					rsh_str_append(out, info->name);

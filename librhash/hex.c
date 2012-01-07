@@ -9,6 +9,8 @@
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
  */
+#include <string.h>
+#include <ctype.h>
 #include "hex.h"
 
 /**
@@ -70,7 +72,7 @@ void rhash_byte_to_base32(char* dest, const unsigned char* src, unsigned len, in
 			++src;
 		} else {
 			shift = (shift + 5) % 8;
-			word = ( *src >> ( (8 - shift)&7 ) ) & 0x1F;
+			word = ( *src >> ( (8 - shift) & 7 ) ) & 0x1F;
 			if(shift == 0) src++;
 		}
 		*dest++ = ( word < 26 ? word + a : word + '2' - 26 );
@@ -112,4 +114,72 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 		if(shift == 4) *dest++ = '=';
 	}
 	*dest = '\0';
+}
+
+/* unsafe characters are "<>{}[]%#/|\^~`@:;?=&+ */
+#define IS_GOOD_URL_CHAR(c) (isalnum((unsigned char)c) || strchr("$-_.!'(),", c))
+
+/**
+ * URL-encode a string.
+ *
+ * @param dst buffer to receive result or NULL to calculate
+ *    the lengths of encoded string
+ * @param filename the file name
+ * @return the length of the result string
+ */
+int rhash_urlencode(char *dst, const char *name)
+{
+	const char *start;
+	if(!dst) {
+		int len;
+		for(len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
+		/* ed2k://|file|<fname>|<fsize>|2E398E5533AE4A83475B1AF001C6CEE6|h=RKLBEXT4O2H4RZER676WAVWGACIHQ56Z|/ */
+		return len;
+	}
+	/* encode URL as specified by RFC 1738 */
+	for(start = dst; *name; name++) {
+		if( IS_GOOD_URL_CHAR(*name) ) {
+			*dst++ = *name;
+		} else {
+			*dst++ = '%';
+			dst = rhash_print_hex_byte(dst, *name, 'A');
+		}
+	}
+	*dst = 0;
+	return (int)(dst - start);
+}
+
+/**
+ * Print 64-bit number with trailing '\0' to a string buffer.
+ * if dst is NULL, then just return the length of the number.
+ *
+ * @param dst output buffer
+ * @param number the number to print
+ * @return length of the printed number (without trailing '\0')
+ */
+int rhash_sprintI64(char *dst, uint64_t number)
+{
+	/* The biggest number has 20 digits: 2^64 = 18 446 744 073 709 551 616 */
+	char buf[24], *p;
+	size_t length;
+
+	if(dst == NULL) {
+		/* just calculate the length of the number */
+		if(number == 0) return 1;
+		for(length = 0; number != 0; number /= 10) length++;
+		return (int)length;
+	}
+
+	p = buf + 23;
+	*p = '\0'; /* last symbol should be '\0' */
+	if(number == 0) {
+		*(--p) = '0';
+	} else {
+		for(; p >= buf && number != 0; number /= 10) {
+			*(--p) = '0' + (char)(number % 10);
+		}
+	}
+	length = buf + 23 - p;
+	memcpy(dst, p, length + 1);
+	return (int)length;
 }

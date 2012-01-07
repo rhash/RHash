@@ -35,6 +35,8 @@
 #define RCTX_AUTO_FINAL 0x1
 #define RCTX_FINALIZED  0x2
 #define RCTX_FINALIZED_MASK (RCTX_AUTO_FINAL | RCTX_FINALIZED)
+#define RHPR_FORMAT (RHPR_RAW | RHPR_HEX | RHPR_BASE32 | RHPR_BASE64)
+#define RHPR_MODIFIER (RHPR_UPPERCASE | RHPR_REVERSE)
 
 /**
  * Initialize static data of rhash algorithms
@@ -279,7 +281,7 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 	for(i = 0; i < ectx->hash_vector_size; i++) {
 		struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		assert(info->final != 0);
-		assert(info->info.digest_size < sizeof(buffer));
+		assert(info->info->digest_size < sizeof(buffer));
 		info->final(ectx->vector[i].context, out);
 		out = buffer;
 	}
@@ -569,6 +571,117 @@ RHASH_API const char* rhash_get_magnet_name(unsigned hash_id)
 	return (info ? info->magnet_name : 0);
 }
 
+static size_t rhash_get_magnet_url_size(const char* filepath,
+	rhash context, unsigned hash_mask, int flags)
+{
+	size_t size = 0; /* count terminating '\0' */
+	unsigned bit, hash = context->hash_id & hash_mask;
+
+	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
+	if((flags & RHPR_NO_MAGNET) == 0) {
+		size += 8;
+	}
+
+	if((flags & RHPR_FILESIZE) != 0) {
+		uint64_t num = context->msg_size;
+
+		size += 4;
+		if(num == 0) size++;
+		else {
+			for(; num; num /= 10, size++);
+		}
+	}
+
+	if(filepath) {
+		size += 4 + rhash_urlencode(NULL, filepath);
+	}
+
+	/* loop through hash values */
+	for(bit = hash & -hash; bit <= hash; bit <<= 1) {
+		const char* name;
+		if((bit & hash) == 0) continue;
+		if((name = rhash_get_magnet_name(bit)) == 0) continue;
+
+		size += (7 + 2) + strlen(name);
+		size += rhash_print(NULL, context, bit,
+			(bit & (RHASH_SHA1 | RHASH_BTIH) ? RHPR_BASE32 : 0));
+	}
+
+	return size;
+}
+
+/**
+ * Print magnet link with given filepath and calculated hash sums into the
+ * output buffer. The hash_mask can limit which hash values will be printed.
+ * The function returns the size of the required buffer.
+ * If output is NULL the .
+ *
+ * @param output a string buffer to receive the magnet link or NULL
+ * @param filepath the file path to be printed or NULL
+ * @param context algorithms state
+ * @param hash_mask bit mask of the hash sums to add to the link
+ * @param flags   can be combination of bits RHPR_UPPERCASE, RHPR_NO_MAGNET,
+ *                RHPR_FILESIZE
+ * @return number of written characters, including terminating '\0' on success, 0 on fail
+ */
+RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
+	rhash context, unsigned hash_mask, int flags)
+{
+	int i;
+	const char* begin = output;
+
+	if(output == NULL) return rhash_get_magnet_url_size(
+		filepath, context, hash_mask, flags);
+
+	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
+	if((flags & RHPR_NO_MAGNET) == 0) {
+		strcpy(output, "magnet:?");
+		output += 8;
+	}
+
+	if((flags & RHPR_FILESIZE) != 0) {
+		strcpy(output, "xl=");
+		output += 3;
+		output += rhash_sprintI64(output, context->msg_size);
+		*(output++) = '&';
+	}
+
+	if(filepath) {
+		strcpy(output, "dn=");
+		output += 3;
+		output += rhash_urlencode(output, filepath);
+		*(output++) = '&';
+	}
+	flags &= RHPR_UPPERCASE;
+
+	for(i = 0; i < 2; i++) {
+		unsigned bit;
+		unsigned hash = context->hash_id & hash_mask;
+		hash = (i == 0 ? hash & (RHASH_ED2K | RHASH_AICH)
+			: hash & ~(RHASH_ED2K | RHASH_AICH));
+		if(!hash) continue;
+
+		/* loop through hash values */
+		for(bit = hash & -hash; bit <= hash; bit <<= 1) {
+			const char* name;
+			if((bit & hash) == 0) continue;
+			if(!(name = rhash_get_magnet_name(bit))) continue;
+
+			strcpy(output, "xt=urn:");
+			output += 7;
+			strcpy(output, name);
+			output += strlen(name);
+			*(output++) = ':';
+			output += rhash_print(output, context, bit, 
+				(bit & (RHASH_SHA1 | RHASH_BTIH) ? flags | RHPR_BASE32 : flags));
+			*(output++) = '&';
+		}
+	}
+	output[-1] = '\0'; /* terminate the line */
+
+	return (output - begin);
+}
+
 /* hash sum output */
 
 /**
@@ -587,7 +700,7 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
 {
 	size_t str_len;
 	int upper_case = (flags & RHPR_UPPERCASE);
-	int format = (flags & ~(RHPR_UPPERCASE | RHPR_REVERSE));
+	int format = (flags & ~RHPR_MODIFIER);
 
 	switch(format) {
 	case RHPR_HEX:
@@ -621,7 +734,7 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
  *                saved in the context.
  * @param flags  controls how to print the sum, can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
- * @return number of writen characters on success, 0 on fail
+ * @return number of written characters on success, 0 on fail
  */
 size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int flags)
 {
@@ -636,9 +749,14 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	digest_size = info->digest_size;
 	assert(digest_size <= 64);
 
+	flags &= (RHPR_FORMAT | RHPR_MODIFIER);
+	if((flags & RHPR_FORMAT) == 0) {
+		/* use default format if not specified by flags */
+		flags |= (info->flags & RHASH_INFO_BASE32 ? RHPR_BASE32 : RHPR_HEX);
+	}
+
 	if(output == NULL) {
-		int format = (flags & ~(RHPR_UPPERCASE | RHPR_REVERSE));
-		switch(format) {
+		switch(flags & RHPR_FORMAT) {
 		case RHPR_HEX:
 			return (digest_size * 2);
 		case RHPR_BASE32:
@@ -653,12 +771,7 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	/* note: use info->hash_id, cause hash_id can be 0 */
 	rhash_put_digest(context, info->hash_id, digest);
 
-	/* use default text presentation if not specified by flags */
-	if((flags & ~(RHPR_UPPERCASE|RHPR_REVERSE)) == 0) {
-		flags |= (info->flags & RHASH_INFO_BASE32 ? RHPR_BASE32 : RHPR_HEX);
-	}
-
-	if((flags & ~RHPR_UPPERCASE) == (RHPR_REVERSE|RHPR_HEX)) {
+	if((flags & ~RHPR_UPPERCASE) == (RHPR_REVERSE | RHPR_HEX)) {
 		/* reverse the digest */
 		unsigned char *p = digest, *r = digest + digest_size - 1;
 		char tmp;

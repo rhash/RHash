@@ -18,6 +18,7 @@
 
 #include "byte_order.h"
 #include "algorithms.h"
+#include "hex.h"
 #include "torrent.h"
 
 #ifdef USE_OPENSSL
@@ -49,7 +50,7 @@ void rhash_torrent_init(torrent_ctx* ctx)
 	{
 		/* get the methods of the selected SHA1 algorithm */
 		rhash_hash_info *sha1_info = &rhash_info_table[3];
-		assert(sha1_info->info.hash_id == RHASH_SHA1);
+		assert(sha1_info->info->hash_id == RHASH_SHA1);
 		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
 		ctx->sha_init = sha1_info->init;
 		ctx->sha_update = sha1_info->update;
@@ -253,32 +254,6 @@ static int bt_str_ensure_length(torrent_ctx* ctx, size_t length)
 		ctx->torrent_allocated = length;
 	}
 	return 1;
-}
-
-/**
- * Print 64-bit number with trailing '\0' to a string buffer.
- *
- * @param dst output buffer
- * @param number the number to print
- * @return length of the printed number (without trailing '\0')
- */
-static int rhash_sprintI64(char *dst, uint64_t number)
-{
-	/* The biggest number has 20 digits: 2^64 = 18 446 744 073 709 551 616 */
-	char buf[24];
-	size_t len;
-	char *p = buf + 23;
-	*p = '\0'; /* last symbol should be '\0' */
-	if(number == 0) {
-		*(--p) = '0';
-	} else {
-		for(; p >= buf && number != 0; number /= 10) {
-			*(--p) = '0' + (char)(number % 10);
-		}
-	}
-	len = buf + 23 - p;
-	memcpy(dst, p, len + 1);
-	return (int)len;
 }
 
 /**

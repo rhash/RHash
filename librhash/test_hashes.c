@@ -26,9 +26,9 @@
 #include "rhash.h"
 #include "test_hashes.h"
 
-/*=======================================================================*
- *                         Data for tests                                *
- *=======================================================================*/
+/*=========================================================================*
+ *                             Data for tests                              *
+ *=========================================================================*/
 const char* crc32_tests[] = { /* verified with cksfv */
 	"", "00000000",
 	"a", "E8B7BE43",
@@ -375,9 +375,9 @@ known_strings_t known_strings[] = {
 	{ 0, 0 }
 };
 
-/*==========================================================================*
- *                    Helper functions to hash messages                     *
- *==========================================================================*/
+/*=========================================================================*
+ *                    Helper functions to hash messages                    *
+ *=========================================================================*/
 
 static int g_errors = 0;  /* total number of errors occured */
 
@@ -506,9 +506,9 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
 	assert_hash_long_msg(hash_id, msg_chunk, 8192, msg_size, hash, msg_name);
 }
 
-/*=======================================================================*
- *                            Test functions                             *
- *=======================================================================*/
+/*=========================================================================*
+ *                             Test functions                              *
+ *=========================================================================*/
 
 /**
  * Test a hash algorithm on array of known short messages.
@@ -546,7 +546,7 @@ static void test_all_known_strings(void)
 {
 	int i;
 	for(i = 0; known_strings[i].tests != 0; i++) {
-		assert(i < (int)(sizeof(known_strings)/sizeof(known_strings_t)));
+		assert(i < (int)(sizeof(known_strings) / sizeof(known_strings_t)));
 		test_known_strings_pairs(known_strings[i].hash_id, known_strings[i].tests);
 	}
 }
@@ -652,7 +652,7 @@ static void test_alignment(void)
 
 /**
  * Verify processor endianness detected at compile-time against
- * with the actual cpu endianness in runtime.
+ * with the actual CPU endianness in runtime.
  */
 static void test_endianness(void)
 {
@@ -661,6 +661,59 @@ static void test_endianness(void)
 		log_message("error: wrong endianness detected at compile time\n");
 		g_errors++;
 	}
+}
+
+#define TEST_PATH 0x4000000
+
+/**
+ * Verify a magnet link.
+ */
+static void assert_magnet(const char* expected,
+	rhash ctx, unsigned mask, int flags)
+{
+	static char out[240];
+	const char* path = (flags & TEST_PATH ? "test.txt" : NULL);
+	size_t size;
+	flags &= ~TEST_PATH;
+	size = rhash_print_magnet(out, path, ctx, mask, flags);
+
+	if(expected && strcmp(expected, out) != 0) {
+		log_message("error: \"%s\" != \"%s\"\n", expected, out);
+		g_errors++;
+	} else {
+		size_t size2 = strlen(out) + 1;
+		if(size != size2) {
+			log_message("error: rhash_print_magnet returns wrong length %d != %d for \"%s\"\n", (int)size, (int)size2, out);
+			g_errors++;
+		} else if(size != (size2 = rhash_print_magnet(NULL, path, ctx, mask, flags))) {
+			log_message("error: rhash_print_magnet(NULL, ...) returns wrong length %d != %d for \"%s\"\n", (int)size2, (int)size, out);
+			g_errors++;
+		}
+	}
+}
+
+/**
+ * Test printing of magnet links.
+ */
+static void test_magnet(void)
+{
+	unsigned bit;
+
+	rhash ctx = rhash_init(RHASH_ALL_HASHES);
+	rhash_update(ctx, "a", 1);
+	rhash_final(ctx, 0);
+
+	assert_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y", ctx, RHASH_TTH, RHPR_FILESIZE | TEST_PATH);
+	assert_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661", ctx, RHASH_MD5, RHPR_FILESIZE | RHPR_UPPERCASE);
+	assert_magnet("xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:btih:7vai5hicjnmkk6vbge7p6faal74lfror",
+		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
+
+	/* verify length calculation for all hashes */
+	for(bit = 1; bit < RHASH_ALL_HASHES; bit <<= 1) {
+		assert_magnet(NULL, ctx, bit, RHPR_FILESIZE | RHPR_NO_MAGNET);
+	}
+
+	rhash_free(ctx);
 }
 
 /**
@@ -720,6 +773,7 @@ int main(int argc, char *argv[])
 		test_all_known_strings();
 		test_long_strings();
 		test_alignment();
+		test_magnet();
 		if(g_errors == 0) printf("All sums are working properly!\n");
 		fflush(stdout);
 	}
@@ -766,7 +820,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	test_alignment();
 
 	wmsg = char2wchar(g_msg ? g_msg : "Success!\r\nAll sums are working properly.");
-	MessageBox(NULL, wmsg, _T("caption"), MB_OK|MB_ICONEXCLAMATION);
+	MessageBox(NULL, wmsg, _T("caption"), MB_OK | MB_ICONEXCLAMATION);
 	free(wmsg);
 	free(g_msg);
 

@@ -19,7 +19,6 @@ typedef struct print_hash_info
 	char short_name[16];
 	char short_char;
 	const char *name;
-	const char *urn;
 } print_hash_info;
 
 extern print_hash_info hash_info_table[];

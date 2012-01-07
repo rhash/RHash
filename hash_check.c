@@ -479,9 +479,9 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 					if(FOURC2U('u', 'r', 'n', ':') != FOURC2U(hs.begin[-4],
 						hs.begin[-3], hs.begin[-2], hs.begin[-1])) return 0;
 
-					/* look for hash function by the name of magnet-parameter */
+					/* find hash by its magnet link specific URN name  */
 					for(i = 0; i < RHASH_HASH_COUNT; i++) {
-						const char* urn = hash_info_table[i].urn;
+						const char* urn = rhash_get_magnet_name(1 << i);
 						size_t len = hf_end - hs.begin;
 						if(strncmp(hs.begin, urn, len) == 0 &&
 							urn[len] == '\0') break;
@@ -500,7 +500,8 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 					if(!hash_check_find_str(&hs, "\3")) bad = 1;
 					if(hs.begin != param_end) bad = 1;
 					break;
-					/* this switch() skips all unknown parameters */
+
+					/* note: this switch() skips all unknown parameters */
 				}
 			}
 			if(!bad && next) hs.begin = next;
