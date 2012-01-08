@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 my $libs = '-lrhash';
 my $inc = '';
 $inc = $ENV{'LIBRHASH_INC'} if defined($ENV{'LIBRHASH_INC'});
-if(defined($ENV{'LIBRHASH_LD'}) && $ENV{'LIBRHASH_LD'} =~ /^-L/) {
+if(defined($ENV{'LIBRHASH_LD'}) && $ENV{'LIBRHASH_LD'} =~ /-L/) {
     $libs = $ENV{'LIBRHASH_LD'} . ' ' . $libs;
 }
 
