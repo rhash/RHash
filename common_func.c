@@ -320,7 +320,6 @@ unsigned rhash_get_ticks(void)
 int rsh_file_stat2(file_t* file, int use_lstat)
 {
 	struct rsh_stat_struct st;
-	wchar_t* wpath;
 	int res = -1;
 
 #ifdef _WIN32
@@ -333,7 +332,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	}
 
 	for(i = 0; i < 2; i++) {
-		wpath = c2w(file->path, i);
+		wchar_t* wpath = c2w(file->path, i);
 		if(wpath == NULL) continue;
 		res = clib_wstat(wpath, &st);
 		if(res == 0 || errno != ENOENT) {
