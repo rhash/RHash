@@ -15,37 +15,53 @@
 
 '''Python bindings for librhash
 
-Librhash is a library for computing and verifying hash sums
-that supports many hashing algorithms. This module provides
-class for incremental hashing, sample usage of it  you  can
-see from the following example:
+Librhash  is  a library for computing and verifying hash sums
+that supports many hashing algorithms. The  simplest  way  to
+calculate  hash  of  a message  or  a file is by using one of
+the functions:
 
->>> hasher = RHash(CRC32, MD5)
+hash_for_message(message, hash_id)
+hash_for_file(filename, hash_id)
+magnet_for_file(filename, hash_ids)
+
+Here  hash_id  is one of the constants CRC32, MD4, MD5, SHA1,
+TIGER, TTH, BTIH, ED2K,  AICH,  WHIRLPOOL,  RIPEMD160,  GOST,
+GOST_CRYPTOPRO, HAS160, SNEFRU128, SNEFRU256, SHA224, SHA256,
+SHA384, SHA512, EDONR256 or EDONR512. The first two functions
+will  return  the  default text representation of the message
+digest they compute. The latter will return magnet  link  for
+the  file.  In  this  function  you  can  OR-combine  several
+hash_ids, like
+
+>>> print magnet_for_file('rhash.py', CRC32 | MD5)
+magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:f88e6c1620361da9d04e2a2a1c788059
+
+Next, this module provides a class to calculate several hashes
+simultaneously in an incremental way. Example of using it:
+
+>>> hasher = RHash(CRC32 | MD5)
 >>> hasher.update('Hello, ')
->>> hasher.update('world!')
+>>> hasher << 'world' << '!'
 >>> hasher.finish()
 >>> print hasher.HEX(CRC32)
 EBE6C6E6
 >>> print hasher.hex(MD5)
 6cd3556deb0da54bca060b4c39479839
 
-In this example RHash object is first created for a set  of
-hashing  algorithms.  Supported values are CRC32, MD4, MD5,
-SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL,  RIPEMD160,
-GOST, GOST_CRYPTOPRO, HAS160, SNEFRU128, SNEFRU256, SHA224,
-SHA256,  SHA384,  SHA512, EDONR256 and EDONR512. Or you can
-just use RHash(ALL) to process all of them at once.
+In this example RHash object is first created for  a  set  of
+hashing algorithms. Then, data for hashing is given in chunks
+with   methods   update(message)  and  update_file(filename).
+Finally, call finish() to end up all remaining calculations.
 
-Next, data for hashing is  given  in  chunks  with  methods
-update(message)  and  update_file(filename).  Finally, call
-finish() to end up all remaining calculations.
+To  receive  text represenation of the message digest use one
+of the methods hex(), HEX(), base32(), BASE32(), base64() and
+BASE64().  Binary  message digest may be obtained with raw().
+All of these methods accept hash_id as argument.  It  may  be
+omitted  if  RHash  was  created  to  compute hash for only a
+single hashing algorithm.
 
-To receive text represenation of the message digest use one
-of  methods  hex(), HEX(), base32(), BASE32(), base64() and
-BASE64(). Binary message digest may be obtained with raw().
-All of these methods accept algorithm value as argument. It
-may be omitted if RHash was created  to  compute  hash  for
-only a single hashing algorithm.
+Method magnet(filename) will generate magnet link with  all
+hashes computed by the RHash object.
 '''
 
 # public API
@@ -53,7 +69,7 @@ __all__ = ['ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
 	'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
 	'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
 	'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
-	'RHash']
+	'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
 import sys
 from ctypes import *
@@ -98,19 +114,17 @@ RHPR_HEX    = 2
 RHPR_BASE32 = 3
 RHPR_BASE64 = 4
 RHPR_UPPERCASE = 8
-
+RHPR_NO_MAGNET = 0x20
+RHPR_FILESIZE  = 0x40
 
 class RHash(object):
 	'Incremental hasher'
 	
-	def __init__(self, *hash_ids):
-		flags = 0
-		for hash_id in hash_ids:
-			flags |= hash_id
-		if flags == 0:
+	def __init__(self, hash_ids):
+		if hash_ids == 0:
 			self._ctx = None
 			raise ValueError('Invalid argument')
-		self._ctx = librhash.rhash_init(flags)
+		self._ctx = librhash.rhash_init(hash_ids)
 		#switching off autofinal feature
 		librhash.rhash_transmit(5, self._ctx, 0, 0)
 
@@ -136,6 +150,7 @@ class RHash(object):
 			self.update(buf)
 			buf = f.read(8192)
 		f.close()
+		return self
 	
 	def finish(self):
 		librhash.rhash_final(self._ctx, None)
@@ -143,7 +158,7 @@ class RHash(object):
 	def _print(self, hash_id, flags):
 		buf = create_string_buffer(130)
 		ln = librhash.rhash_print(buf, self._ctx, hash_id, flags)
-		return str(buf[0:ln])
+		return buf[0:ln]
 	
 	def raw(self, hash_id = 0):
 		return self._print(hash_id, RHPR_RAW)
@@ -166,5 +181,26 @@ class RHash(object):
 	def BASE64(self, hash_id = 0):
 		return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
 	
+	def magnet(self, filepath):
+		ln = librhash.rhash_print_magnet(None, filepath, self._ctx, ALL, RHPR_FILESIZE)
+		buf = create_string_buffer(ln)
+		librhash.rhash_print_magnet(buf, filepath, self._ctx, ALL, RHPR_FILESIZE)
+		return buf[0:ln-1]
+	
 	def __str__(self, hash_id = 0):
 		return self._print(hash_id, 0)
+
+def hash_for_msg(message, hash_id):
+	h = RHash(hash_id)
+	h.update(message).finish()
+	return str(h)
+
+def hash_for_file(filename, hash_id):
+	h = RHash(hash_id)
+	h.update_file(filename).finish()
+	return str(h)	
+
+def magnet_for_file(filename, hash_mask):
+	h = RHash(hash_mask)
+	h.update_file(filename).finish()
+	return h.magnet(filename)
