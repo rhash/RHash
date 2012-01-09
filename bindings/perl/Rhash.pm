@@ -65,7 +65,7 @@ sub DESTROY($)
 {
 	my $self = shift;
 	# the 'if' added as workaround for perl 'global destruction' bug
-	# ($self->{context} can dissapear on global destruction)
+	# ($self->{context} can disappear on global destruction)
 	rhash_free($self->{context}) if $self->{context};
 }
 
@@ -188,21 +188,8 @@ sub hash_raw($;$)
 
 sub magnet_link($;$$)
 {
-	my ($self, $filename, $filesize) = @_;
-	my $hash_mask = ($self->hash_id() & ALL);
-	my $str = "magnet?";
-	$str .= "xl=" . int($filesize) . "&" if defined($filesize);
-	if(defined($filename)) {
-		# url encode the filename
-		$filename =~ s/([^\w._])/sprintf("%%%02X", ord($1))/seg;
-		$str .= "dn=" . $filename . "&";
-	}
-	for(my $id = 1; $id < $hash_mask; $id <<= 1) {
-		next unless ($id & $hash_mask);
-		$str .= rhash_get_xt_urn($id) . ":" . $self->hash($id) . "&";
-	}
-	chop($str); # remove trailing chracter
-	return $str;
+	my ($self, $filename, $hash_mask) = @_;
+	return rhash_print_magnet($self->{context}, $filename, $hash_mask);
 }
 
 our $AUTOLOAD;
@@ -230,15 +217,6 @@ sub msg($$)
 	my ($hash_id, $msg) = @_;
 	my $raw = rhash_msg_raw($hash_id, $msg); # get binary hash
 	return (is_base32($hash_id) ? raw2base32($raw) : raw2hex($raw));
-}
-
-our %URNS = ( TTH, 'xt=urn:tree:tiger' );
-
-sub rhash_get_xt_urn($)
-{
-	my $hash_id = int(shift);
-	return $URNS{$hash_id} ||
-		($URNS{$hash_id} = 'xt=urn:' . lc rhash_get_name($hash_id));
 }
 
 1;
@@ -399,11 +377,13 @@ Returns a specified hash in the base32 format.
 
 Returns a specified hash in the base64 format.
 
-=item $rhash->magnet_link($filename, $filesize)
+=item $rhash->magnet_link( $filename, $hash_mask )
 
-Returns the magnet link containing the computed hashes, and, optionaly,
-$filename and $filesize. The $filename (if specified) is URL-encoded,
-by converting special characters into the %<hex-code> form.
+Returns the magnet link containing the computed hashes, filesize, and,
+optionaly, $filename. The $filename (if specified) is URL-encoded,
+by converting special characters into the %<hexadecimal-code> form.
+The optional parameter $hash_mask can limit which hash values to put
+into the link.
 
 =back
 

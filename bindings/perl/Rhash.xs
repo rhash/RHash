@@ -27,12 +27,12 @@ void verify_single_bit_hash_id(unsigned hash_id, CV* cv)
 	croak(error, func_name, hash_id);
 }
 
-/* allocate a perl string scalar variable, containing buf_size+1 bytes */
-SV * allocate_string_buffer(STRLEN buf_size)
+/* allocate a perl string scalar variable, containing str_len + 1 bytes */
+SV * allocate_string_buffer(STRLEN str_len)
 {
-	SV * sv = newSV(buf_size); /* allocates (buf_size + 1) bytes */
+	SV * sv = newSV(str_len); /* allocates (str_len + 1) bytes */
 	SvPOK_only(sv);
-	SvCUR_set(sv, buf_size);
+	SvCUR_set(sv, str_len);
 	return sv;
 }
 
@@ -141,6 +141,29 @@ rhash_print(ctx, hash_id, flags = 0)
 
 		/* set exact length to support raw output (RHPR_RAW) */
 		RETVAL = newSVpv(out, len);
+	OUTPUT:
+		RETVAL
+
+SV *
+rhash_print_magnet(ctx, filename, hash_mask)
+		rhash_context * ctx
+		SV * filename
+		SV * hash_mask
+	PROTOTYPE: $;$$
+	PREINIT:
+		/* process undefined values */
+		char * name = (SvOK(filename) ? SvPV_nolen(filename) : 0);
+		unsigned mask = (SvOK(hash_mask) ? (unsigned)SvUV(hash_mask) : RHASH_ALL_HASHES);
+		size_t buf_size;
+	CODE:
+		/* allocate a string buffer and print magnet link into it */
+		buf_size = rhash_print_magnet(0, name, ctx, mask, RHPR_FILESIZE);
+		RETVAL = allocate_string_buffer(buf_size - 1);
+		rhash_print_magnet(SvPVX(RETVAL), name, ctx, mask, RHPR_FILESIZE);
+
+		/* note: length(RETVAL) = (buf_size - 1),
+		 * so the following call is not required:
+		 * SvCUR_set(RETVAL, strlen(SvPVX(RETVAL))); */
 	OUTPUT:
 		RETVAL
 
