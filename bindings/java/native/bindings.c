@@ -77,6 +77,27 @@ JNIEXPORT jbyteArray JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1bytes
 	return arr;
 }
 
+
+/*
+ * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_print_magnet
+ * Signature: (JLjava/lang/String;I)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1magnet
+(JNIEnv *env, jclass clz, jlong context, jstring filepath, jint flags) {
+	const char* fpath = (filepath != NULL) ?
+			(*env)->GetStringUTFChars(env, filepath, NULL) : NULL;
+	size_t len = rhash_print_magnet(NULL, fpath, (rhash)context, flags, RHPR_FILESIZE);
+	char *buf = (char*)malloc(len);
+	rhash_print_magnet(buf, fpath, (rhash)context, flags, RHPR_FILESIZE);
+	if (filepath != NULL) {
+		(*env)->ReleaseStringUTFChars(env, filepath, fpath);
+	}
+	jstring str = (*env)->NewStringUTF(env, buf);
+	free(buf);
+	return str;
+}
+
 /*
  * Class:     org_sf_rhash_Bindings
  * Method:    rhash_is_base32

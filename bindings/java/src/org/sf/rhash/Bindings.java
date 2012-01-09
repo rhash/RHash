@@ -42,18 +42,28 @@ final class Bindings {
 	 * @param  data     the data to process
 	 * @param  ofs      offset in data array from which to start processing
 	 * @param  len      data length
-	 * @return  pointer to native digest object
+	 * @return  pointer to the native digest object
 	 */
 	static native long rhash_msg(int hash_id, byte[] data, int ofs, int len);
 	
 	/**
-	 * Print text representation of a given digest.
+	 * Prints text representation of a given digest.
 	 *
-	 * @param  hash   pointer to native digest object
+	 * @param  rhash  pointer to native digest object
 	 * @param  flags  output flags
 	 * @return  text representation as byte array
 	 */
-	static native byte[] rhash_print_bytes(long hash, int flags);
+	static native byte[] rhash_print_bytes(long rhash, int flags);
+
+	/**
+	 * Returns magnet link for given hash context and hashing algorithms.
+	 * 
+	 * @param  rhash     pointer to native digest object
+	 * @param  filename  the name of the file to incorporate in magnet
+	 * @param  flags     mask of hash_id values
+	 * @return  magnet string
+	 */
+	static native String rhash_print_magnet(long rhash, String filename, int flags);
 
 	/**
 	 * Tests whether given default hash algorithm output is base32.
@@ -73,44 +83,44 @@ final class Bindings {
 	/**
 	 * Creates new hash context.
 	 * @param  flags  mask of hash_id values
-	 * @return  pointer to native hash context
+	 * @return  pointer to the native hash context
 	 */
 	static native long rhash_init(int flags);
 
 	/**
 	 * Updates hash context with given data.
-	 * @param context  pointer to native hash context
-	 * @param data     data to process
-	 * @param ofs      index of the first byte to process
-	 * @param len      count of bytes to process
+	 * @param rhash  pointer to native hash context
+	 * @param data   data to process
+	 * @param ofs    index of the first byte to process
+	 * @param len    count of bytes to process
 	 */
-	static native void rhash_update(long context, byte[] data, int ofs, int len);
+	static native void rhash_update(long rhash, byte[] data, int ofs, int len);
 
 	/**
 	 * Finalizes hash context.
-	 * @param context  pointer to native hash context
+	 * @param rhash  pointer to native hash context
 	 */
-	static native void rhash_final(long context);
+	static native void rhash_final(long rhash);
 
 	/**
 	 * Resets hash context.
-	 * @param context  pointer to native hash context
+	 * @param rhash  pointer to native hash context
 	 */
-	static native void rhash_reset(long context);
+	static native void rhash_reset(long rhash);
 
 	/**
 	 * Generates message digest for given context and hash_id.
-	 * @param  context  pointer to native hash context
+	 * @param  rhash    pointer to native hash context
 	 * @param  hash_id  id of hashing algorithm
 	 * @return  pointer to native digest
 	 */
-	static native long rhash_print(long context, int hash_id);
+	static native long rhash_print(long rhash, int hash_id);
 
 	/**
 	 * Frees hash context.
-	 * @param context  pointer to native hash context
+	 * @param rhash  pointer to native hash context
 	 */
-	static native void rhash_free(long context);
+	static native void rhash_free(long rhash);
 
 	/**
 	 * Compares two native hash objects.

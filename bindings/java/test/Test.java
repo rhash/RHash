@@ -7,7 +7,7 @@ import java.util.HashMap;
 public class Test {
 
 	static final String teststring = "12345\n";
-	static final File testfile = new File("12345.txt");
+	static final File testfile = new File("test/12345.txt");
 
 	static public void main(String[] args) throws IOException {
 		HashMap<HashType,String> hashes = new HashMap<HashType,String>();
@@ -34,7 +34,7 @@ public class Test {
 		hashes.put(EDONR256,  "c3d2bbfd63f7461a806f756bf4efeb224036331a9c1d867d251e9e480b18e6fb");
 		hashes.put(EDONR512,  "a040056378fbd1f9a528677defd141c964fab9c429003fecf2eadfc20c8980cf2e083a1b4e74d5369af3cc0537bcf9b386fedf3613c9ee6c44f54f11bcf3feae");
 		
-		System.err.println("\nTest: hashes for message");
+		System.err.println("\nTests: hashes for message");
 		int errcount1 = 0;
 		for (HashType t : hashes.keySet()) {
 			String mustbe = hashes.get(t);
@@ -46,11 +46,11 @@ public class Test {
 		}
 		System.err.printf("%d tests / %d failed\n", hashes.size(), errcount1);
 
-		System.err.println("\nTest: hashes for file");
+		System.err.println("\nTests: hashes for file");
 		int errcount2 = 0;
 		for (HashType t : hashes.keySet()) {
 			String mustbe = hashes.get(t);
-			String got    = RHash.computeHash(t, teststring).toString();
+			String got    = RHash.computeHash(t, testfile).toString();
 			if (!got.equals(mustbe)) {
 				System.err.printf("Test for %s failed: expected '%s', got '%s'\n", t, mustbe, got);
 				errcount2++;
@@ -58,6 +58,26 @@ public class Test {
 		}
 		System.err.printf("%d tests / %d failed\n", hashes.size(), errcount2);
 
-		System.exit(errcount1+errcount2);
+		System.err.println("\nTests: magnet links");
+		int errcount3 = 0;
+		// magnet by static method
+		String mustbe = "magnet:?xl=6&dn=test%2F12345.txt&xt=urn:crc32:261dafe6&xt=urn:md5:d577273ff885c3f84dadb8578bb41399";
+		String got = RHash.getMagnetFor("test/12345.txt", CRC32, MD5);
+		if (!got.equals(mustbe)) {
+			System.err.printf("Magnet test failed: expected '%s', got '%s'\n", mustbe, got);
+			errcount3++;
+		}
+		// magnet with null argument
+		RHash hasher = new RHash(CRC32, MD5);
+		hasher.update(testfile).finish();
+		mustbe = "magnet:?xl=6&xt=urn:crc32:261dafe6";
+		got = hasher.getMagnet(null, CRC32, AICH);
+		if (!got.equals(mustbe)) {
+			System.err.printf("Magnet test failed: expected '%s', got '%s'\n", mustbe, got);
+			errcount3++;
+		}
+		System.err.printf("%d tests / %d failed\n", 1, errcount3);
+
+		System.exit(errcount1+errcount2+errcount3);
 	}
 }

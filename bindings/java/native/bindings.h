@@ -41,6 +41,14 @@ JNIEXPORT jbyteArray JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1bytes
 
 /*
  * Class:     org_sf_rhash_Bindings
+ * Method:    rhash_print_magnet
+ * Signature: (JLjava/lang/String;I)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1magnet
+  (JNIEnv *, jclass, jlong, jstring, jint);
+
+/*
+ * Class:     org_sf_rhash_Bindings
  * Method:    rhash_is_base32
  * Signature: (I)Z
  */

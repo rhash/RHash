@@ -149,6 +149,30 @@ public final class RHash {
 		hasher.update(file).finish();
 		return hasher.getDigest();
 	}
+	
+	/**
+	 * Produces magnet link for specified file with given hashes.
+	 *
+	 * @param  file   the file to generate magnet for
+	 * @param  types  types of hashing algorithms
+	 */
+	static public String getMagnetFor(String filename, HashType... types) throws IOException {
+		RHash hasher = new RHash(types);
+		hasher.update(new File(filename)).finish();
+		return hasher.getMagnet(filename);
+	}
+	
+	/**
+	 * Produces magnet link for specified file with given hashes.
+	 *
+	 * @param  file   the file to generate magnet for
+	 * @param  types  set of hashing types
+	 */
+	static public String getMagnetFor(String filename, Set<HashType> types) throws IOException {
+		RHash hasher = new RHash(types);
+		hasher.update(new File(filename)).finish();
+		return hasher.getMagnet(filename);
+	}
 
 	/** Indicates whether this <code>RHash</code> is finished. */
 	private boolean finished = false;
@@ -376,7 +400,45 @@ public final class RHash {
 	public Digest getDigest() {
 		return getDigest(deftype);
 	}
+	
+	/**
+	 * Returns magnet link that includes specified filename
+	 * and hashes for given algorithms. Only hashes that were
+	 * computed by this <code>RHash</code> are included.
+	 *
+	 * @param  filename  file name to include in magnet, may be <code>null</code>
+	 * @return magnet link
+	 * @throws IllegalStateException
+	 *   if this <code>RHash</code> is not finished
+	 */
+	public String getMagnet(String filename, HashType... types) {
+		if (!finished) {
+			throw new IllegalStateException(ERR_UNFINISHED);
+		}
+		int flags = 0;
+		for (HashType t : types) {
+			flags |= t.hashId();
+		}
+		return Bindings.rhash_print_magnet(context_ptr, filename, flags);
+	}
 
+	/**
+	 * Returns magnet link for given filename.
+	 * Magnet includes all hashes that were computed
+	 * by this <code>RHash</code>.
+	 * 
+	 * @param  filename  file name to include in magnet, may be <code>null</code>
+	 * @return magnet link
+	 * @throws IllegalStateException
+	 *   if this <code>RHash</code> is not finished
+	 */
+	public String getMagnet(String filename) {
+		if (!finished) {
+			throw new IllegalStateException(ERR_UNFINISHED);
+		}
+		return Bindings.rhash_print_magnet(context_ptr, filename, hash_flags);
+	}
+	
 	/**
 	 * Called by garbage collector to free native resources.
 	 */
