@@ -134,6 +134,7 @@ class RHash(object):
 	
 	def reset(self):
 		librhash.rhash_reset(self._ctx)
+		return self
 	
 	def update(self, message):
 		message = str(message)
@@ -154,6 +155,7 @@ class RHash(object):
 	
 	def finish(self):
 		librhash.rhash_final(self._ctx, None)
+		return self
 	
 	def _print(self, hash_id, flags):
 		buf = create_string_buffer(130)
@@ -198,7 +200,7 @@ def hash_for_msg(message, hash_id):
 def hash_for_file(filename, hash_id):
 	h = RHash(hash_id)
 	h.update_file(filename).finish()
-	return str(h)	
+	return str(h)
 
 def magnet_for_file(filename, hash_mask):
 	h = RHash(hash_mask)
