@@ -1,5 +1,6 @@
 MAKE = make
 RUBY = ruby
+PYTHON = python
 PERL = /usr/bin/perl
 DESTDIR =
 PREFIX = /usr/local
@@ -8,7 +9,7 @@ PERL_OPTIMIZE = -O2 -g -Wall
 all: configure build test
 configure: configure-ruby configure-perl
 build: build-java build-perl build-ruby build-mono
-test: test-java test-perl test-ruby test-mono
+test: test-java test-perl test-ruby test-mono test-python
 install: install-ruby install-perl
 clean: distclean
 
@@ -41,6 +42,9 @@ test-ruby:
 
 test-mono:
 	$(MAKE) -C mono test
+
+test-python:
+	$(PYTHON) python/test_rhash.py
 
 install-ruby:
 	$(MAKE) -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
