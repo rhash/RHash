@@ -36,6 +36,8 @@ namespace RHash {
 		private const int UPPERCASE = 0x8;
 		/* Reverse hash bytes. */
 		private const int REVERSE   = 0x10;
+		/* Print file size. */
+		private const int FILESIZE  = 0x40;
 		
 		private uint hash_ids;
 		/* Pointer to the native structure. */
@@ -85,7 +87,7 @@ namespace RHash {
 		}
 		
 		public void Finish() {
-			Bindings.rhash_final(ptr);
+			Bindings.rhash_final(ptr, IntPtr.Zero);
 		}
 		
 		public void Reset() {
@@ -141,6 +143,29 @@ namespace RHash {
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, RAW);
 			return sb.ToString();
+		}
+
+		public string GetMagnet(string filepath) {
+			return GetMagnet(filepath, hash_ids);
+		}
+
+		public string GetMagnet(string filepath, uint hashmask) {
+			int len = Bindings.rhash_print_magnet(null, filepath, ptr, hashmask, FILESIZE);
+			StringBuilder sb = new StringBuilder(len);
+			Bindings.rhash_print_magnet(sb, filepath, ptr, hashmask, FILESIZE);
+			return sb.ToString();
+		}
+		
+		public static string GetHashForMsg(byte[] buf, HashType type) {
+			return new Hasher(type).Update(buf).ToString(type);
+		}
+		
+		public static string GetHashForFile(string filename, HashType type) {
+			return new Hasher(type).UpdateFile(filename).ToString(type);
+		}
+		
+		public static string GetMagnetFor(string filepath, uint hashmask) {
+			return new Hasher(hashmask).UpdateFile(filepath).GetMagnet(filepath);
 		}
 	}
 }

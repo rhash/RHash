@@ -46,12 +46,12 @@ class Test {
 		hashes.Add(HashType.SNEFRU256, "1b59927d85a9349a87796620fe2ff401a06a7ba48794498ebab978efc3a68912");
 		hashes.Add(HashType.EDONR256,  "c3d2bbfd63f7461a806f756bf4efeb224036331a9c1d867d251e9e480b18e6fb");
 		hashes.Add(HashType.EDONR512,  "a040056378fbd1f9a528677defd141c964fab9c429003fecf2eadfc20c8980cf2e083a1b4e74d5369af3cc0537bcf9b386fedf3613c9ee6c44f54f11bcf3feae");
-		
-		Console.WriteLine("\nTest: hashes for message");
+
+		Console.WriteLine("\nTests: hashes for message");
 		int errcount1 = 0;
 		foreach (HashType t in hashes.Keys) {
 			string mustbe = hashes[t];
-			string got    = new Hasher(t).Update(testbytes).ToString();
+			string got    = Hasher.GetHashForMsg(testbytes, t);
 			if (!got.Equals(mustbe)) {
 				Console.WriteLine("Test for {0} failed: expected '{1}', got '{2}'\n", t, mustbe, got);
 				errcount1++;
@@ -59,18 +59,40 @@ class Test {
 		}
 		Console.WriteLine("{0} tests / {1} failed\n", hashes.Count, errcount1);
 
-		Console.WriteLine("\nTest: hashes for file");
+		Console.WriteLine("\nTests: hashes for file");
 		int errcount2 = 0;
 		foreach (HashType t in hashes.Keys) {
 			string mustbe = hashes[t];
-			string got    = new Hasher(t).UpdateFile("12345.txt").ToString();
+			string got    = Hasher.GetHashForFile("12345.txt", t);
 			if (!got.Equals(mustbe)) {
 				Console.WriteLine("Test for {0} failed: expected '{1}', got '{2}'\n", t, mustbe, got);
 				errcount2++;
 			}
 		}
 		Console.WriteLine("{0} tests / {1} failed\n", hashes.Count, errcount2);
+		
+        Console.WriteLine("\nTests: magnet links");
+        int errcount3 = 0;
+		{
+	        // magnet by static method
+    	    string mustbe = "magnet:?xl=6&dn=12345.txt&xt=urn:crc32:261dafe6&xt=urn:md5:d577273ff885c3f84dadb8578bb41399";
+        	string got = Hasher.GetMagnetFor("12345.txt", (uint)HashType.CRC32 | (uint)HashType.MD5);
+	        if (!got.Equals(mustbe)) {
+    	        Console.WriteLine("Magnet by static method test failed: expected '{0}', got '{1}'\n", mustbe, got);
+        	    errcount3++;
+	        }
+    	    // magnet with null argument
+	        Hasher hasher = new Hasher((uint)HashType.CRC32 | (uint)HashType.MD5);
+	        hasher.UpdateFile("12345.txt").Finish();
+	        mustbe = "magnet:?xl=6&xt=urn:crc32:261dafe6";
+	        got = hasher.GetMagnet(null, (uint)HashType.CRC32 | (uint)HashType.AICH);
+	        if (!got.Equals(mustbe)) {
+	            Console.WriteLine("Magnet with null argument test failed: expected '{0}', got '{1}'\n", mustbe, got);
+	            errcount3++;
+	        }
+		}
+        Console.WriteLine("{0} tests / {1} failed\n", 2, errcount3);
 
-		//System.exit(errcount1+errcount2);
+		System.Environment.ExitCode = errcount1 + errcount2 + errcount3;
 	}
 }

@@ -50,7 +50,7 @@ namespace RHash {
 		//may crash, rhash_final actually have 2 arguments
 		[DllImport (librhash)]
 		public static extern
-			void rhash_final(IntPtr ctx);
+			void rhash_final(IntPtr ctx, IntPtr unused);
 
 		[DllImport (librhash)]
 		public static extern
@@ -63,5 +63,9 @@ namespace RHash {
 		[DllImport (librhash, CharSet=CharSet.Ansi)]
 		public static extern
 			void rhash_print(StringBuilder output, IntPtr ctx, uint hash_id, int flags);
+
+		[DllImport (librhash)]
+		public static extern
+			int rhash_print_magnet(StringBuilder output, String filepath, IntPtr ctx, uint hash_mask, int flags);
 	}
 }

@@ -76,7 +76,7 @@ public class Test {
 			System.err.printf("Magnet test failed: expected '%s', got '%s'\n", mustbe, got);
 			errcount3++;
 		}
-		System.err.printf("%d tests / %d failed\n", 1, errcount3);
+		System.err.printf("%d tests / %d failed\n", 2, errcount3);
 
 		System.exit(errcount1+errcount2+errcount3);
 	}
