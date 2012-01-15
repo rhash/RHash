@@ -17,6 +17,7 @@
 
 #include <rhash/rhash.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "bindings.h"
 #include "digest.h"
@@ -59,7 +60,7 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1msg
 	//cleaning
 	free(msg);
 	//returning
-	return (jlong)obj;
+	return (jlong)(intptr_t)obj;
 }
 
 /*
@@ -69,7 +70,7 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1msg
  */
 JNIEXPORT jbyteArray JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1bytes
 (JNIEnv *env, jclass clz, jlong ptr, jint flags) {
-	Digest obj = (Digest)ptr;
+	Digest obj = (Digest)(intptr_t)ptr;
 	unsigned char output[130];
 	int len = rhash_print_bytes(output, obj->hash_data, obj->hash_len, flags);
 	jbyteArray arr = (*env)->NewByteArray(env, len);
@@ -87,9 +88,9 @@ JNIEXPORT jstring JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1magnet
 (JNIEnv *env, jclass clz, jlong context, jstring filepath, jint flags) {
 	const char* fpath = (filepath != NULL) ?
 			(*env)->GetStringUTFChars(env, filepath, NULL) : NULL;
-	size_t len = rhash_print_magnet(NULL, fpath, (rhash)context, flags, RHPR_FILESIZE);
+	size_t len = rhash_print_magnet(NULL, fpath, (rhash)(intptr_t)context, flags, RHPR_FILESIZE);
 	char *buf = (char*)malloc(len);
-	rhash_print_magnet(buf, fpath, (rhash)context, flags, RHPR_FILESIZE);
+	rhash_print_magnet(buf, fpath, (rhash)(intptr_t)context, flags, RHPR_FILESIZE);
 	if (filepath != NULL) {
 		(*env)->ReleaseStringUTFChars(env, filepath, fpath);
 	}
@@ -127,7 +128,7 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1init
 (JNIEnv *env, jclass clz, jint hash_flags) {
 	rhash ctx = rhash_init(hash_flags);
 	rhash_set_autofinal(ctx, 0);
-	return (jlong)ctx;
+	return (jlong)(intptr_t)ctx;
 }
 
 /*
@@ -139,7 +140,7 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1update
 (JNIEnv *env, jclass clz, jlong context, jbyteArray data, jint ofs, jint len) {
 	void* msg = malloc(len);
 	(*env)->GetByteArrayRegion(env, data, ofs, len, msg);
-	rhash_update((rhash)context, msg, len);
+	rhash_update((rhash)(intptr_t)context, msg, len);
 	free(msg);
 }
 
@@ -150,7 +151,7 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1update
  */
 JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1final
 (JNIEnv *env, jclass clz, jlong context) {
-	rhash_final((rhash)context, NULL);
+	rhash_final((rhash)(intptr_t)context, NULL);
 }
 
 /*
@@ -160,7 +161,7 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1final
  */
 JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1reset
 (JNIEnv *env, jclass clz, jlong context) {
-	rhash_reset((rhash)context);
+	rhash_reset((rhash)(intptr_t)context);
 }
 
 /*
@@ -173,8 +174,8 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1print
 	Digest obj = malloc(sizeof(DigestStruct));
 	obj->hash_len  = rhash_get_digest_size(hash_id);
 	obj->hash_data = calloc(obj->hash_len, sizeof(unsigned char));
-	rhash_print(obj->hash_data, (rhash)context, hash_id, RHPR_RAW);
-	return (jlong)obj;
+	rhash_print(obj->hash_data, (rhash)(intptr_t)context, hash_id, RHPR_RAW);
+	return (jlong)(intptr_t)obj;
 }
 
 /*
@@ -184,7 +185,7 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1print
  */
 JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1free
 (JNIEnv *env, jclass clz, jlong context) {
-	rhash_free((rhash)context);
+	rhash_free((rhash)(intptr_t)context);
 }
 
 /*
@@ -194,7 +195,7 @@ JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_rhash_1free
  */
 JNIEXPORT jboolean JNICALL Java_org_sf_rhash_Bindings_compareDigests
 (JNIEnv *env, jclass clz, jlong ptr1, jlong ptr2) {
-	return compareDigests((Digest)ptr1, (Digest)ptr2);
+	return compareDigests((Digest)(intptr_t)ptr1, (Digest)(intptr_t)ptr2);
 }
 
 /*
@@ -204,7 +205,7 @@ JNIEXPORT jboolean JNICALL Java_org_sf_rhash_Bindings_compareDigests
  */
 JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_hashcodeForDigest
 (JNIEnv *env, jclass clz, jlong ptr) {
-	return hashcodeForDigest((Digest)ptr);
+	return hashcodeForDigest((Digest)(intptr_t)ptr);
 }
 
 /*
@@ -214,6 +215,6 @@ JNIEXPORT jint JNICALL Java_org_sf_rhash_Bindings_hashcodeForDigest
  */
 JNIEXPORT void JNICALL Java_org_sf_rhash_Bindings_freeDigest
 (JNIEnv *env, jclass clz, jlong ptr) {
-	freeDigest((Digest)ptr);
+	freeDigest((Digest)(intptr_t)ptr);
 }
 
