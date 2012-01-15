@@ -10,9 +10,13 @@
   </Base>
   <Docs>
     <summary>Type of hashing algorithm.</summary>
-    <remarks>Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
+    <remarks><para>
+Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
 DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
-RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.</remarks>
+RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
+</para><para>
+Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hashes.
+</para></remarks>
   </Docs>
   <Members>
     <Member MemberName="AICH">

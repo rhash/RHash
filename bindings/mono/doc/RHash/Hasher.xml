@@ -82,6 +82,114 @@
         <remarks>Processes any buffered data and finishes computation of hash sums.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetHashForFile">
+      <MemberSignature Language="C#" Value="public static string GetHashForFile (string filename, RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig string GetHashForFile(string filename, valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filename" Type="System.String" />
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="filename">File to compute hash for.</param>
+        <param name="type">Type of hash to compute.</param>
+        <summary>Computes message digest for given file.</summary>
+        <returns>Message digest as returned by <see cref="M:RHash.Hasher.ToString(RHash.HashType)" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetHashForMsg">
+      <MemberSignature Language="C#" Value="public static string GetHashForMsg (byte[] buf, RHash.HashType type);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig string GetHashForMsg(unsigned int8[] buf, valuetype RHash.HashType type) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buf" Type="System.Byte[]" />
+        <Parameter Name="type" Type="RHash.HashType" />
+      </Parameters>
+      <Docs>
+        <param name="buf">Binary message to compute hash for.</param>
+        <param name="type">Type of hash to compute.</param>
+        <summary>Computes message digest for given binary message.</summary>
+        <returns>Message digest, as returned by <see cref="M:RHash.Hasher.ToString(RHash.HashType)" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetMagnet">
+      <MemberSignature Language="C#" Value="public string GetMagnet (string filepath);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string GetMagnet(string filepath) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filepath" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="filepath">File path to be included in magnet. May be null.</param>
+        <summary>Generates magnet link with given filename.</summary>
+        <returns>Magnet link.</returns>
+        <remarks>Magnet includes all hashes computed by this hasher. If filepath is null then returned magnet does not contain a filename.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetMagnet">
+      <MemberSignature Language="C#" Value="public string GetMagnet (string filepath, uint hashmask);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string GetMagnet(string filepath, unsigned int32 hashmask) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filepath" Type="System.String" />
+        <Parameter Name="hashmask" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="filepath">File path to be included in magnet. May be null.</param>
+        <param name="hashmask">Mask created from one or more <see cref="T:RHash.HashType" /> values.</param>
+        <summary>Generates magnet link with given filename and hashes.</summary>
+        <returns>Magnet link.</returns>
+        <remarks>Only hashes that were computed by this Hasher are included in the output. If filepath is null then returned magnet does not contain a filename.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetMagnetFor">
+      <MemberSignature Language="C#" Value="public static string GetMagnetFor (string filepath, uint hashmask);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig string GetMagnetFor(string filepath, unsigned int32 hashmask) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filepath" Type="System.String" />
+        <Parameter Name="hashmask" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="filepath">File to process.</param>
+        <param name="hashmask">Mask created of one or more <see cref="T:RHash.HashType" /> values.</param>
+        <summary>Generates magnet for specified file with given hashes.</summary>
+        <returns>Magnet link.</returns>
+        <remarks>Returned magnet includes file name and all computed hashes.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Reset">
       <MemberSignature Language="C#" Value="public void Reset ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset() cil managed" />
