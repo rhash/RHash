@@ -115,10 +115,13 @@ test: $(TARGET) test-hashes
 	chmod +x tests/test_$(PROGNAME).sh
 	tests/test_$(PROGNAME).sh
 
-version.h : Makefile
+version.h: Makefile
 	echo "#define VERSION \"$(VERSION)\"" > version.h
 
-check: version.h
+bindings/version.properties: Makefile
+	echo "version=$(VERSION)" > bindings/version.properties
+
+check: version.h bindings/version.properties
 # check version
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
@@ -208,13 +211,15 @@ permissions:
 	chmod -x $(DIST_FILES)
 	chmod +x tests/test_$(PROGNAME).sh
 
-$(ARCHIVE_GZIP): $(DIST_FILES)
+clean-bindings:
+	make -C bindings distclean
+
+$(ARCHIVE_GZIP): $(DIST_FILES) clean-bindings
 	make permissions
 	rm -rf $(PROGNAME)-$(VERSION)
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
-	make -C bindings distclean
-	find bindings/ -type f -regex '.*\(\.\([hct]\|java\|PL\|pm\|py\|rb\|txt\|xs\)\|Makefile\|MANIFEST\|typemap\)' -exec cp -l --parents '{}' $(PROGNAME)-$(VERSION)/ \;
+	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -223,6 +228,7 @@ $(ARCHIVE_BZIP): $(DIST_FILES)
 	rm -rf $(PROGNAME)-$(VERSION)
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -231,6 +237,7 @@ $(ARCHIVE_7Z): $(DIST_FILES)
 	rm -rf $(PROGNAME)-$(VERSION)
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
