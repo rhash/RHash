@@ -7,16 +7,18 @@ PREFIX = /usr/local
 PERL_OPTIMIZE = -O2 -g -Wall
 VERSION = $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
 FILES = Makefile version.properties
+BINDINGS = java mono perl python ruby
 ARCHIVE_GZIP = rhash-bindings-$(VERSION)-src.tar.gz
 COPYDIR = rhash-bindings-$(VERSION)
 CP = cp -l --parents
 
 all: configure build test
-configure: configure-ruby configure-perl
-build: build-java build-perl build-ruby build-mono
-test: test-java test-perl test-ruby test-mono test-python
-install: install-ruby install-perl
 clean: distclean
+
+configure: $(patsubst %, configure-%, $(filter perl ruby, $(BINDINGS)))
+build: $(patsubst %, build-%, $(BINDINGS))
+test: $(patsubst %, test-%, $(BINDINGS))
+install: $(patsubst %, install-%, $(filter perl ruby, $(BINDINGS)))
 
 configure-perl:
 	cd perl && perl Makefile.PL INSTALLDIRS=vendor
@@ -29,6 +31,9 @@ build-java:
 
 build-perl:
 	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
+
+build-python:
+# not required
 
 build-ruby:
 	$(MAKE) -C ruby
@@ -70,7 +75,6 @@ gzip:
 	rm -rf $(ARCHIVE_GZIP)
 	make copy-dist
 	tar -czf $(ARCHIVE_GZIP) "$(COPYDIR)"
-	rm -rf "$(COPYDIR)"
 
 distclean:
 	$(MAKE) -C java distclean
