@@ -50,6 +50,12 @@ class TestRHash < Test::Unit::TestCase
 	assert_equal("\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09\x98\xec\xf8\x42\x7e", r.to_raw(RHash::MD5))
     end
 
+    def test_magnet
+	r = RHash.new(RHash::MD5, RHash::TTH)
+	r.update("abc").finish()
+	assert_equal("magnet:?xl=3&dn=file.txt&xt=urn:md5:900150983cd24fb0d6963f7d28e17f72&xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia", r.magnet("file.txt"))
+    end
+
     def test_update_file
 	path = "ruby_test_input_123.txt"
 	File.open(path, 'wb') { |f| f.write("\0\1\2\n") }

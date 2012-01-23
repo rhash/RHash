@@ -140,6 +140,41 @@ static VALUE rh_to_base32(int argc, VALUE* argv, VALUE self) {
 
 /**
  * call-seq:
+ *   rhash.magnet(filepath)
+ *   rhash.magnet
+ *
+ * Returns magnet link with all hashes computed by
+ * the RHash object.
+ * if filepath is specified, then it is url-encoded
+ * and included into the resulting magnet link.
+ */
+static VALUE rh_magnet(int argc, VALUE* argv, VALUE self) {
+	VALUE value;
+	const char* filepath = 0;
+	char* buf;
+	size_t buf_size;
+	rhash ctx;
+
+	Data_Get_Struct(self, struct rhash_context, ctx);
+
+	rb_scan_args(argc, argv, "01", &value);
+	if (value != Qnil) {
+		if (TYPE(value) != T_STRING) value = rb_obj_as_string(value);
+		filepath = RSTRING_PTR(value);
+	}
+
+	buf_size = rhash_print_magnet(0, filepath, ctx, RHASH_ALL_HASHES, RHPR_FILESIZE);
+	buf = (char*)malloc(buf_size);
+	if (!buf) return Qnil;
+
+	rhash_print_magnet(buf, filepath, ctx, RHASH_ALL_HASHES, RHPR_FILESIZE);
+	value = rb_str_new2(buf);
+	free(buf);
+	return value;
+}
+
+/**
+ * call-seq:
  *   rhash.to_base64(id)
  *   rhash.to_base64
  *
@@ -253,6 +288,7 @@ void Init_rhash() {
 	rb_define_method(cRHash, "to_base32",  rh_to_base32, -1);
 	rb_define_method(cRHash, "to_base64",  rh_to_base64, -1);
 	rb_define_method(cRHash, "to_s",       rh_to_s, -1);
+	rb_define_method(cRHash, "magnet",     rh_magnet, -1);
 	
 	rb_eval_string(
 "class RHash \n\
