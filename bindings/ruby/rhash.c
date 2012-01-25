@@ -299,6 +299,18 @@ void Init_rhash() {
     end \n\
     self \n\
   end \n\
+end\n\
+\n\
+def RHash.hash_for_msg(msg, hash_id)\n\
+  RHash.new(hash_id).update(msg).finish.to_s\n\
+end\n\
+\n\
+def RHash.hash_for_file(filename, hash_id)\n\
+  RHash.new(hash_id).update_file(filename).finish.to_s\n\
+end\n\
+\n\
+def RHash.magnet_for_file(filename, *hash_ids)\n\
+  RHash.new(*hash_ids).update_file(filename).finish.magnet(filename)\n\
 end");
 	
 	/** CRC32 checksum. */
