@@ -36,7 +36,7 @@ JAVADOC_API_URL = http://download.oracle.com/javase/6/docs/api/
 
 JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
 
-all: jar jni test
+all: jar jar-symlink jni javadoc
 
 jar: compile-classes
 	mkdir -p $(DEST_DIR)

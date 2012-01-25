@@ -27,7 +27,7 @@ configure-ruby:
 	$(RUBY) -C ruby extconf.rb
 
 build-java:
-	$(MAKE) -C java/ jar jar-symlink jni javadoc
+	$(MAKE) -C java/
 
 build-perl:
 	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
