@@ -153,8 +153,8 @@ public final class RHash {
 	/**
 	 * Produces magnet link for specified file with given hashes.
 	 *
-	 * @param  file   the file to generate magnet for
-	 * @param  types  types of hashing algorithms
+	 * @param  filename   the file to generate magnet for
+	 * @param  types      types of hashing algorithms
 	 */
 	static public String getMagnetFor(String filename, HashType... types) throws IOException {
 		RHash hasher = new RHash(types);
@@ -165,8 +165,8 @@ public final class RHash {
 	/**
 	 * Produces magnet link for specified file with given hashes.
 	 *
-	 * @param  file   the file to generate magnet for
-	 * @param  types  set of hashing types
+	 * @param  filename   the file to generate magnet for
+	 * @param  types      set of hashing types
 	 */
 	static public String getMagnetFor(String filename, Set<HashType> types) throws IOException {
 		RHash hasher = new RHash(types);
