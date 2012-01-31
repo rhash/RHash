@@ -22,6 +22,7 @@ JAVAC = javac
 JAVADOC = javadoc
 JAVAH = javah
 JAR = jar
+JUNIT_CLASSPATH = /usr/share/java/junit4.jar
 
 VERSION = $(shell sed -ne 's/^version=\(.*\)/\1/p' ../version.properties)
 
@@ -66,8 +67,8 @@ javadoc: clean-javadoc
 	           -link $(JAVADOC_API_URL)
 
 test: jar jni
-	$(JAVAC) -classpath $(JARFILE) $(TEST_DIR)/Test.java
-	$(JAVA) -classpath $(TEST_DIR):$(JARFILE) -Djava.library.path=$(DEST_DIR) Test
+	$(JAVAC) -classpath $(JARFILE):$(JUNIT_CLASSPATH) $(TEST_DIR)/RHashTest.java
+	$(JAVA) -classpath $(TEST_DIR):$(JARFILE):$(JUNIT_CLASSPATH) -Djava.library.path=$(DEST_DIR) junit.textui.TestRunner RHashTest
 
 clean: clean-javadoc clean-jni clean-classes clean-test
 
