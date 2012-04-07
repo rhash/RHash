@@ -29,6 +29,8 @@ typedef struct hash_value
 	unsigned char format;
 } hash_value;
 
+struct rhash_context;
+
 /**
  * Parsed file info, like the path, size and file hash values.
  */

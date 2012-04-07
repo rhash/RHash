@@ -19,13 +19,14 @@ struct rhash_t
 	char*  printf_str;
 	struct print_item *print_list;
 	struct strbuf_t *template_text;
-	/*struct file_info  *cur_file;*/
+	struct rhash_context* rctx;
 
 	/* missed, ok and processed files statistics */
 	unsigned processed;
 	unsigned ok;
 	unsigned miss;
 	uint64_t total_size;
+	uint64_t batch_size;
 
 	int error_flag;     /* non-zero if any error occurred */
 };

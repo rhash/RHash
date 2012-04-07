@@ -13,20 +13,24 @@ extern "C" {
 /* find_file options */
 #define FIND_WALK_DEPTH_FIRST 1
 #define FIND_FOLLOW_LINKS 2
+#define FIND_SKIP_DIRS 4
+#define FIND_LOG_ERRORS 8
 
-/* masks for file flags passed to the call_back function */
-#define FIND_IFDIR   0x04
-#define FIND_IFLNK   0x0a
-#define FIND_IFFIRST 0x10
+/* mask for file flags  */
+/*#define FIND_IFFIRST 0x10*/
+#define FILE_ISROOT 0x10
 
-/*struct find_file_options {
-	unsigned flags;
+typedef struct find_file_options {
+	int options;
 	int max_depth;
-};*/
+	int (*call_back)(file_t* file, void* data);
+	void* call_back_data;
+} find_file_options;
 
-int find_file(const char* start_dir,
-	int (*call_back)(const char* filepath, int type, void* data),
-	int options, int max_depth, void* call_back_data);
+void process_files(const char** paths, size_t count,
+	find_file_options* options);
+
+int find_file(file_t* start_dir, find_file_options* options);
 
 #ifdef __cplusplus
 } /* extern "C" */

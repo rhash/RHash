@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <assert.h>
 
+#include "librhash/rhash.h"
 #include "calc_sums.h"
 #include "parse_cmdline.h"
 #include "hash_print.h"

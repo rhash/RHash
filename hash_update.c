@@ -30,18 +30,18 @@ static int fix_sfv_header(const char* crc_filepath);
  * @param hash_file_path the path to the crc file
  * @return 0 on success, -1 on fail
  */
-int update_hash_file(const char* hash_file_path)
+int update_hash_file(file_t* file)
 {
 	file_set* crc_entries;
 	timedelta_t timer;
 	int res;
 
 	if(opt.flags & OPT_VERBOSE) {
-		log_msg(_("Updating: %s\n"), hash_file_path);
+		log_msg(_("Updating: %s\n"), file->path);
 	}
 
 	crc_entries = file_set_new();
-	res = file_set_load_from_crc_file(crc_entries, hash_file_path);
+	res = file_set_load_from_crc_file(crc_entries, file->path);
 
 	if(opt.flags & OPT_SPEED) rhash_timer_start(&timer);
 	rhash_data.total_size = 0;
@@ -49,11 +49,11 @@ int update_hash_file(const char* hash_file_path)
 
 	if(res == 0) {
 		/* add the crc file itself to the set of excluded from re-calculation files */
-		file_set_add_name(crc_entries, get_basename(hash_file_path));
+		file_set_add_name(crc_entries, get_basename(file->path));
 		file_set_sort(crc_entries);
 
 		/* update crc file with sums of files not present in the crc_entries */
-		res = add_new_crc_entries(hash_file_path, crc_entries);
+		res = add_new_crc_entries(file->path, crc_entries);
 	}
 	file_set_free(crc_entries);
 
@@ -163,11 +163,14 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 
 	/* append hash sums to the updated crc file */
 	for(i = 0; i < files_to_add->size; i++, rhash_data.processed++) {
+		file_t file;
 		char *allocated = 0;
-		char *fullpath = file_set_get(files_to_add, i)->filepath;
+		char *print_path = file_set_get(files_to_add, i)->filepath;
+		file.path = print_path;
+
 		if(dir_path[0] != '.' || dir_path[1] != 0) {
 			/* prepend the file path by directory path */
-			fullpath = allocated = make_path(dir_path, fullpath);
+			file.path = allocated = make_path(dir_path, print_path);
 		}
 		if(opt.fmt == FMT_SFV) {
 			if(print_banner) {
@@ -175,10 +178,12 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 				print_banner = 0;
 			}
 		}
+		rsh_file_stat2(&file, 0);
 
 		/* print hash sums to the crc file */
-		calculate_and_print_sums(fd, file_set_get(files_to_add, i)->filepath, fullpath, NULL);
+		calculate_and_print_sums(fd, &file, print_path);
 
+		rsh_file_cleanup(&file);
 		free(allocated);
 	}
 	fclose(fd);

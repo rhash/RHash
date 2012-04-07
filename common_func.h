@@ -51,6 +51,10 @@ size_t strlen_utf8_c(const char *str);
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
 
+/* modes for file_t.mode */
+#define FILE_IFDIR   0x01
+#define FILE_IFLNK   0x02
+
 typedef struct file_t {
 	char* path;
 #ifdef _WIN32
@@ -58,6 +62,7 @@ typedef struct file_t {
 #endif
 	uint64_t size;
 	uint64_t mtime;
+	unsigned mode;
 } file_t;
 
 /* file function */
@@ -65,8 +70,10 @@ const char* get_basename(const char* path);
 char* get_dirname(const char* path);
 char* make_path(const char* dir, const char* filename);
 void print_time(FILE *out, time_t time);
+void print_time64(FILE *out, uint64_t time);
 int rsh_file_stat(file_t* file);
 int rsh_file_stat2(file_t* file, int use_lstat);
+void rsh_file_cleanup(file_t* file);
 
 #ifdef _WIN32
 # define IF_WINDOWS(code) code

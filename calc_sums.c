@@ -31,7 +31,8 @@
 static void init_btih_data(struct file_info *info)
 {
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
-	rhash_transmit(RMSG_BT_ADD_FILE, info->rctx, RHASH_STR2UPTR((char*)get_basename(file_info_get_utf8_print_path(info))), (rhash_uptr_t)&info->size);
+	rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
+		RHASH_STR2UPTR((char*)get_basename(file_info_get_utf8_print_path(info))), (rhash_uptr_t)&info->size);
 	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(PROGRAM_NAME "/" VERSION), 0);
 
 	if(opt.flags & OPT_BT_PRIVATE) {
@@ -44,6 +45,40 @@ static void init_btih_data(struct file_info *info)
 
 	if(opt.bt_piece_length) {
 		rhash_transmit(RMSG_BT_SET_PIECE_LENGTH, info->rctx, RHASH_STR2UPTR(opt.bt_piece_length), 0);
+	} else if((opt.flags & OPT_BATCH_TORRENT) && rhash_data.batch_size) {
+		rhash_transmit(RMSG_BT_SET_BATCH_SIZE, info->rctx, RHASH_STR2UPTR(&rhash_data.batch_size), 0);
+	}
+}
+
+/**
+ * (Re)-initialize RHash context, to calculate hash sums.
+ *
+ * @param info the file data
+ */
+static void re_init_rhash_context(struct file_info *info)
+{
+	if(rhash_data.rctx != 0) {
+		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+			rhash_free(rhash_data.rctx);
+			rhash_data.rctx = 0;
+		} else {
+			info->rctx = rhash_data.rctx;
+			if((opt.flags & OPT_BATCH_TORRENT) == 0) {
+				rhash_reset(rhash_data.rctx);
+			} else {
+				/* add another file to the torrent batch */
+				rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
+					RHASH_STR2UPTR((char*)get_basename(file_info_get_utf8_print_path(info))), (rhash_uptr_t)&info->size);
+			}
+			return;
+		}
+	}
+
+	info->rctx = rhash_data.rctx = rhash_init(info->sums_flags);
+
+	/* initialize BitTorrent data */
+	if(info->sums_flags & RHASH_BTIH) {
+		init_btih_data(info);
 	}
 }
 
@@ -92,13 +127,7 @@ static int calc_sums(struct file_info *info)
 		}
 	}
 
-	assert(info->rctx == 0);
-	info->rctx = rhash_init(info->sums_flags);
-
-	/* initialize BitTorrent data */
-	if(info->sums_flags & RHASH_BTIH) {
-		init_btih_data(info);
-	}
+	re_init_rhash_context(info);
 
 	if(percents_output->update != 0) {
 		rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
@@ -106,10 +135,14 @@ static int calc_sums(struct file_info *info)
 
 	/* read and hash file content */
 	if((res = rhash_file_update(info->rctx, fd)) != -1) {
-		rhash_final(info->rctx, 0); /* finalize hashing */
+		if(opt.flags & OPT_BATCH_TORRENT) {
+			rhash_data.total_size = info->size = info->rctx->msg_size;
+		} else {
+			rhash_final(info->rctx, 0); /* finalize hashing */
 
-		info->size = info->rctx->msg_size;
-		rhash_data.total_size += info->size;
+			info->size = info->rctx->msg_size;
+			rhash_data.total_size += info->size;
+		}
 	}
 
 	if(fd != stdin) fclose(fd);
@@ -125,7 +158,6 @@ void file_info_destroy(struct file_info* info)
 {
 	free(info->utf8_print_path);
 	free(info->allocated_ptr);
-	rhash_free(info->rctx);
 }
 
 /**
@@ -275,25 +307,20 @@ int rename_file_to_embed_crc32(struct file_info *info)
 }
 
 /**
- * Save torrent file.
+ * Save torrent file to the given path.
  *
- * @param info information about the hashed file
+ * @param path the path to save torrent file to
+ * @param rctx the context containing torrent data
  */
-static void save_torrent(struct file_info* info)
+void save_torrent_to(const char* path, rhash_context* rctx)
 {
-	char *str;
 	FILE* fd;
 	struct rsh_stat_struct stat_buf;
-	size_t path_len = strlen(info->full_path);
 	size_t text_len;
-	char* path = (char*)rsh_malloc(path_len + 9);
-
-	/* append .torrent extension to the file path */
-	memcpy(path, info->full_path, path_len);
-	memcpy(path + path_len, ".torrent", 9);
+	char *str;
 
 	/* get torrent file content */
-	text_len = rhash_transmit(RMSG_BT_GET_TEXT, info->rctx, RHASH_STR2UPTR(&str), 0);
+	text_len = rhash_transmit(RMSG_BT_GET_TEXT, rctx, RHASH_STR2UPTR(&str), 0);
 	assert(text_len != RHASH_ERROR);
 
 	if(rsh_stat(path, &stat_buf) >= 0) {
@@ -308,6 +335,23 @@ static void save_torrent(struct file_info* info)
 		}
 		if(fd) fclose(fd);
 	}
+}
+
+/**
+ * Save torrent file.
+ *
+ * @param info information about the hashed file
+ */
+static void save_torrent(struct file_info* info)
+{
+	size_t path_len = strlen(info->full_path);
+	char* path = (char*)rsh_malloc(path_len + 9);
+
+	/* append .torrent extension to the file path */
+	memcpy(path, info->full_path, path_len);
+	memcpy(path + path_len, ".torrent", 9);
+
+	save_torrent_to(path, info->rctx);
 	free(path);
 }
 
@@ -315,41 +359,30 @@ static void save_torrent(struct file_info* info)
  * Calculate and print file hash sums using printf format.
  *
  * @param out a stream to print to
- * @param filepath path to the file to calculate sums for
- * @param fullpath fullpath to the file relative to the current directory
+ * @param file the file to calculate sums for
+ * @param print_path the path to print
  * @return 0 on success, -1 on fail
  */
-int calculate_and_print_sums(FILE* out, const char *print_path, const char *full_path, struct rsh_stat_struct* stat_buf)
+int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 {
 	struct file_info info;
 	timedelta_t timer;
+	int is_batch_torrent = (opt.flags & OPT_BATCH_TORRENT);
 	int res = 0;
 
 	memset(&info, 0, sizeof(info));
-	info.full_path = rsh_strdup(full_path);
+	info.full_path = rsh_strdup(file->path);
 	file_info_set_print_path(&info, print_path);
 	info.size = 0;
 
 	info.sums_flags = opt.sum_flags;
 
-	if(IS_DASH_STR(full_path)) {
+	if(IS_DASH_STR(info.full_path)) {
 		print_path = "(stdin)";
 		memset(&info.stat_buf, 0, sizeof(info.stat_buf));
 	} else {
-		if(stat_buf != NULL) {
-			memcpy(&info.stat_buf, stat_buf, sizeof(info.stat_buf));
-		} else {
-			if(rsh_stat(full_path, (stat_buf = &info.stat_buf)) < 0) {
-				log_file_error(full_path);
-				free(info.full_path);
-				file_info_destroy(&info);
-				return -1;
-			}
-		}
-		if(S_ISDIR(stat_buf->st_mode)) return 0; /* don't handle directories */
-
-		info.size = stat_buf->st_size; /* total size, in bytes */
-		IF_WINDOWS(win32_set_filesize64(info.full_path, &info.size)); /* set correct filesize for large files under win32 */
+		if(file->mode & FILE_IFDIR) return 0; /* don't handle directories */
+		info.size = file->size; /* total size, in bytes */
 	}
 
 	/* initialize percents output */
@@ -361,7 +394,7 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 		if(calc_sums(&info) < 0) {
 			/* print error unless sharing access error occurred */
 			if(errno == EACCES) return 0;
-			log_file_error(full_path);
+			log_file_error(file->path);
 			res = -1;
 		}
 	}
@@ -369,7 +402,7 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 	info.time = rhash_timer_stop(&timer);
 	finish_percents(&info, res);
 
-	if(opt.mode & MODE_TORRENT) {
+	if((opt.mode & MODE_TORRENT) && !is_batch_torrent) {
 		save_torrent(&info);
 	}
 
@@ -379,21 +412,28 @@ int calculate_and_print_sums(FILE* out, const char *print_path, const char *full
 	}
 
 	if((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
-		print_sfv_header_line(rhash_data.upd_fd, info.print_path, info.full_path);
+		file_t file;
+		file.path = info.full_path;
+		rsh_file_stat2(&file, 0);
+
+		print_sfv_header_line(rhash_data.upd_fd, &file, info.full_path);
 		if(opt.flags & OPT_VERBOSE) {
-			print_sfv_header_line(rhash_data.log, info.print_path, info.full_path);
+			print_sfv_header_line(rhash_data.log, &file, info.full_path);
 			fflush(rhash_data.log);
 		}
+		rsh_file_cleanup(&file);
 	}
 
 	if(rhash_data.print_list && res >= 0) {
-		print_line(out, rhash_data.print_list, &info);
-		fflush(out);
+		if (!is_batch_torrent) {
+			print_line(out, rhash_data.print_list, &info);
+			fflush(out);
 
-		/* duplicate calculated line to stderr or log file if verbose */
-		if( (opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE) ) {
-			print_line(rhash_data.log, rhash_data.print_list, &info);
-			fflush(rhash_data.log);
+			/* print calculated line to stderr or log-file if verbose */
+			if((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
+				print_line(rhash_data.log, rhash_data.print_list, &info);
+				fflush(rhash_data.log);
+			}
 		}
 
 		if((opt.flags & OPT_SPEED) && info.sums_flags) {
@@ -453,7 +493,7 @@ static int verify_sums(struct file_info *info)
  * @param chdir - true if function should emulate chdir to directory of filepath before checking it.
  * @return zero on success, -1 on fail
  */
-int check_hash_file(const char* hash_file_path, int chdir)
+int check_hash_file(file_t* file, int chdir)
 {
 	FILE *fd;
 	char buf[2048];
@@ -461,6 +501,7 @@ int check_hash_file(const char* hash_file_path, int chdir)
 	const char *ralign;
 	timedelta_t timer;
 	struct file_info info;
+	const char* hash_file_path = file->path;
 	int res = 0, line_num = 0;
 	double time;
 
@@ -605,34 +646,26 @@ int check_hash_file(const char* hash_file_path, int chdir)
  * Print a file info line in SFV header format.
  *
  * @param out a stream to print info to
- * @param printpath relative file path to print
- * @param fullpath a path to the file relative to the current directory.
+ * @param file the file info to print
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_sfv_header_line(FILE* out, const char* printpath, const char* fullpath)
+int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 {
-	struct rsh_stat_struct stat_buf;
-	uint64_t filesize;
 	char buf[24];
 
-	if( (rsh_stat(fullpath, &stat_buf)) < 0 ) {
-		return -1; /* not reporting an error here */
-	}
-	if(S_ISDIR(stat_buf.st_mode)) return 0; /* don't handle directories */
-
-	filesize = stat_buf.st_size; /* total size, in bytes */
-	IF_WINDOWS(win32_set_filesize64(fullpath, &filesize)); /* set correct filesize for large files under win32 */
+	if(!printpath) printpath = file->path;
+	if(printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
 
 #ifdef _WIN32
 	/* skip file if it can't be opened with exclusive sharing rights */
-	if(!can_open_exclusive(fullpath)) {
+	if(!can_open_exclusive(file->path)) {
 		return 0;
 	}
 #endif
 
-	sprintI64(buf, filesize, 12);
+	sprintI64(buf, file->size, 12);
 	fprintf(out, "; %s  ", buf);
-	print_time(out, stat_buf.st_mtime);
+	print_time64(out, file->mtime);
 	fprintf(out, " %s\n", printpath);
 	return 0;
 }

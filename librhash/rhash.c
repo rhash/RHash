@@ -821,22 +821,26 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
 
 	switch(msg_id) {
 	case RMSG_BT_ADD_FILE:
-		rhash_torrent_add_file(bt, (const char*)ldata, *(unsigned long long*)rdata);
+		bt_add_file(bt, (const char*)ldata, *(unsigned long long*)rdata);
 		break;
 	case RMSG_BT_SET_OPTIONS:
-		rhash_torrent_set_options(bt, (unsigned)ldata);
+		bt_set_options(bt, (unsigned)ldata);
 		break;
 	case RMSG_BT_SET_ANNOUNCE:
-		rhash_torrent_set_announce(bt, (const char*)ldata);
+		bt_set_announce(bt, (const char*)ldata);
 		break;
 	case RMSG_BT_SET_PIECE_LENGTH:
-		rhash_torrent_set_piece_length(bt, (size_t)ldata);
+		bt_set_piece_length(bt, (size_t)ldata);
+		break;
+	case RMSG_BT_SET_BATCH_SIZE:
+		bt_set_piece_length(bt,
+			bt_default_piece_length(*(unsigned long long*)ldata));
 		break;
 	case RMSG_BT_SET_PROGRAM_NAME:
-		rhash_torrent_set_program_name(bt, (const char*)ldata);
+		bt_set_program_name(bt, (const char*)ldata);
 		break;
 	case RMSG_BT_GET_TEXT:
-		return RHASH_STR2UPTR(rhash_torrent_get_text(bt, (char**)ldata));
+		return RHASH_STR2UPTR(bt_get_text(bt, (char**)ldata));
 	default:
 		return RHASH_ERROR; /* unknown message */
 	}
@@ -902,6 +906,7 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 	case RMSG_BT_SET_PIECE_LENGTH:
 	case RMSG_BT_SET_PROGRAM_NAME:
 	case RMSG_BT_GET_TEXT:
+	case RMSG_BT_SET_BATCH_SIZE:
 		return process_bt_msg(msg_id, (torrent_ctx*)(((rhash_context_ext*)dst)->bt_ctx), ldata, rdata);
 
 	default:

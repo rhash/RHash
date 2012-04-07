@@ -14,8 +14,10 @@
 #include <sys/stat.h> /* stat(), S_ISDIR */
 #include <signal.h>
 #include <locale.h>
+#include <assert.h>
 
 #include "librhash/timing.h"
+#include "librhash/rhash.h"
 #include "win_utils.h"
 #include "find_file.h"
 #include "calc_sums.h"
@@ -32,38 +34,43 @@ struct rhash_t rhash_data;
 
 /**
  * Callback function to process a file found while recursively traversing
- * a directory.
+ * a directory. It hashes, checks or updates a file according to work mode.
  *
- * @param filepath path to the file
- * @param type file attributes
+ * @param file the file to process
  * @param data the paramater specified, when calling find_file(). It shall be
  *             non-zero for printing SFV header, zero for actual processing.
  */
-static int find_file_callback(const char* filepath, int type, void* data)
+static int find_file_callback(file_t* file, void* data)
 {
 	int res = 0;
-	if( !(type & FIND_IFDIR) ) {
+	assert((file->mode & FILE_IFDIR) == 0);
+
+	if(!(file->mode & FILE_IFDIR)) {
 		if(data) {
-			if(!file_mask_match(opt.files_accept, filepath)) return 0;
-			if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
-			/* TODO: get size, fill file struct */
-			print_sfv_header_line(rhash_data.out, filepath, filepath);
-			/* rhash_data.total_size += file.size */
+			if(!file_mask_match(opt.files_accept, file->path)) return 0;
+
+			if(opt.fmt & FMT_SFV)
+				print_sfv_header_line(rhash_data.out, file, 0);
+
+			rhash_data.batch_size += file->size;
 		} else {
+			char* filepath = file->path;
+
 			/* only check an update modes use crc_accept mask */
 			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
 				opt.crc_accept : opt.files_accept);
-			if(!file_mask_match(masks, filepath)) return 0;
+			if(!(file->mode & FILE_ISROOT) &&
+				!file_mask_match(masks, filepath)) return 0;
 
 			if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-				res = check_hash_file(filepath, 1);
+				res = check_hash_file(file, 1);
 			} else {
 				if(opt.mode & MODE_UPDATE) {
-					res = update_hash_file(filepath);
+					res = update_hash_file(file);
 				} else {
 					/* default mode: calculate hash */
 					if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
-					res = calculate_and_print_sums(rhash_data.out, filepath, filepath, NULL);
+					res = calculate_and_print_sums(rhash_data.out, file, filepath);
 					rhash_data.processed++;
 				}
 			}
@@ -143,94 +150,6 @@ static int load_printf_template(void)
 }
 
 /**
- * Output SFV-formated file header.
- */
-static void preprocess_files(void)
-{
-	int i;
-
-	/* print SFV file header */
-	if(opt.fmt == FMT_SFV && opt.mode == 0) {
-		print_sfv_banner(rhash_data.out);
-
-		for(i = 0; i < opt.n_files; i++) {
-			char *path = opt.files[i];
-			if(opt.flags & OPT_RECURSIVE) {
-				struct rsh_stat_struct stat_buf;
-				if(rsh_stat(path, &stat_buf) < 0) {
-					continue; /* don't report error here, it'll be reported later */
-				}
-				/* if file is a directory, then walk it recursively */
-				if(S_ISDIR(stat_buf.st_mode)) {
-					find_file(path, find_file_callback, 0, opt.find_max_depth, (void*)1);
-					continue;
-				}
-			}
-			print_sfv_header_line(rhash_data.out, path, path);
-		}
-		fflush(rhash_data.out);
-	}
-}
-
-/**
- * Hash, check or update files according to work mode.
- */
-static void process_files(void)
-{
-	timedelta_t timer;
-	struct rsh_stat_struct stat_buf;
-	int i;
-	rhash_timer_start(&timer);
-	rhash_data.processed = 0;
-
-	/* process filenames */
-	for(i = 0; i < opt.n_files; i++) {
-		int res = 0;
-		char* filepath = opt.files[i];
-		stat_buf.st_mode = 0;
-
-		if(!IS_DASH_STR(filepath) && rsh_stat(filepath, &stat_buf) < 0) {
-			log_file_error(filepath);
-			continue;
-		}
-		if(opt.flags & OPT_RECURSIVE) {
-			if(S_ISDIR(stat_buf.st_mode)) {
-				find_file(filepath, find_file_callback, 0, opt.find_max_depth, NULL);
-				continue;
-			}
-		} else {
-			if(S_ISDIR(stat_buf.st_mode)){
-				if(opt.flags & OPT_VERBOSE){
-					log_warning(_("%s: is a directory\n"), filepath);
-				}
-				continue;
-			}
-		}
-
-		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			res = check_hash_file(filepath, 0);
-		} else if(opt.mode & MODE_UPDATE) {
-			res = update_hash_file(filepath);
-		} else {
-			res = calculate_and_print_sums(rhash_data.out, filepath, filepath, &stat_buf);
-			rhash_data.processed++;
-		}
-		if(res < 0) rhash_data.error_flag = 1;
-	}
-
-	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
-		print_check_stats();
-	}
-
-	if((opt.flags & OPT_SPEED) && !(opt.mode&(MODE_CHECK | MODE_UPDATE)) &&
-		rhash_data.processed > 1) {
-			double time = rhash_timer_stop(&timer);
-			print_time_stats(time, rhash_data.total_size, 1);
-	}
-}
-
-
-/**
  * Free data allocated by an rhash_t object
  *
  * @param ptr pointer to rhash_t object
@@ -239,6 +158,7 @@ void rhash_destroy(struct rhash_t* ptr)
 {
 	free_print_list(ptr->print_list);
 	rsh_str_free(ptr->template_text);
+	if(ptr->rctx) rhash_free(ptr->rctx);
 	IF_WINDOWS(restore_console());
 }
 
@@ -262,6 +182,10 @@ static void i18n_initialize(void)
  */
 int main(int argc, char *argv[])
 {
+	find_file_options search_opt;
+	timedelta_t timer;
+	int sfv;
+
 	i18n_initialize(); /* initialize locale and translation */
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
@@ -316,8 +240,47 @@ int main(int argc, char *argv[])
 		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
 	}
 
-	preprocess_files();
-	process_files();
+	memset(&search_opt, 0, sizeof(search_opt));
+	search_opt.max_depth = (opt.flags & OPT_RECURSIVE ? opt.find_max_depth : 1);
+	search_opt.options = FIND_SKIP_DIRS;
+	search_opt.call_back = find_file_callback;
+
+	if((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
+		print_sfv_banner(rhash_data.out);
+	}
+
+	/* pre-process files */
+	if(sfv || (opt.flags & OPT_BATCH_TORRENT)) {
+		/* note: errors are not reported on pre-processing */
+		search_opt.call_back_data = (void*)1;
+		process_files((const char**)opt.files, opt.n_files, &search_opt);
+
+		fflush(rhash_data.out);
+	}
+
+	/* measure total processing time */
+	rhash_timer_start(&timer);
+	rhash_data.processed = 0;
+
+	/* process files */
+	search_opt.options |= FIND_LOG_ERRORS;
+	search_opt.call_back_data = (void*)0;
+	process_files((const char**)opt.files, opt.n_files, &search_opt);
+
+	if((opt.flags & OPT_BATCH_TORRENT) && rhash_data.rctx) {
+		rhash_final(rhash_data.rctx, 0);
+		save_torrent_to("batch.torrent", rhash_data.rctx);
+	}
+
+	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
+		print_check_stats();
+	}
+
+	if((opt.flags & OPT_SPEED) && !(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
+		rhash_data.processed > 1) {
+		double time = rhash_timer_stop(&timer);
+		print_time_stats(time, rhash_data.total_size, 1);
+	}
 
 	options_destroy(&opt);
 	rhash_destroy(&rhash_data);

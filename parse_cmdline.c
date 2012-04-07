@@ -339,6 +339,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
 	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
 	{ F_CSTR,   0,   0, "bt-announce", &opt.bt_announce, 0 },
+	{ F_UFLG,   0,   0, "bt-batch", &opt.flags, OPT_BATCH_TORRENT },
 	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
 	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
 
@@ -892,6 +893,7 @@ static void make_final_options_checks(void)
 	}
 
 	if(opt.mode & MODE_TORRENT) opt.sum_flags |= RHASH_BTIH;
+	else opt.flags &= ~OPT_BATCH_TORRENT; /* batch requires torrent mode */
 
 	if(!opt.crc_accept) opt.crc_accept = file_mask_new_from_list(".sfv");
 

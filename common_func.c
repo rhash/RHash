@@ -292,6 +292,11 @@ void print_time(FILE *out, time_t time)
 		t->tm_sec, (1900+t->tm_year), t->tm_mon+1, t->tm_mday);
 }
 
+void print_time64(FILE *out, uint64_t time)
+{
+	print_time(out, (time_t)time);
+}
+
 /**
  * Return ticks in milliseconds for time intervals measurement.
  * This function should be not precise but the fastest one
@@ -335,7 +340,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		wchar_t* wpath = c2w(file->path, i);
 		if(wpath == NULL) continue;
 		res = clib_wstat(wpath, &st);
-		if(res == 0 || errno != ENOENT) {
+		if(res == 0) {
 			file->wpath = wpath;
 			file->size  = st.st_size;
 
@@ -352,6 +357,9 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 #endif /* _WIN32 */
 
 	file->mtime = st.st_mtime;
+	file->mode  = 0;
+	if(S_ISDIR(st.st_mode)) file->mode |= FILE_IFDIR;
+
 	return res;
 }
 
@@ -364,6 +372,16 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 int rsh_file_stat(file_t* file)
 {
 	return rsh_file_stat2(file, 0);
+}
+
+void rsh_file_cleanup(file_t* file)
+{
+#ifdef _WIN32
+	if(file->wpath) {
+		free(file->wpath);
+		file->wpath = NULL;
+	}
+#endif /* _WIN32 */
 }
 
 /* program exit and error reporting functions */

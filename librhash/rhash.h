@@ -207,6 +207,7 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define RMSG_BT_SET_PIECE_LENGTH 35
 #define RMSG_BT_SET_PROGRAM_NAME 36
 #define RMSG_BT_GET_TEXT 37
+#define RMSG_BT_SET_BATCH_SIZE 38
 
 /* possible BitTorrent options for the RMSG_BT_SET_OPTIONS message */
 #define RHASH_BT_OPT_PRIVATE 1

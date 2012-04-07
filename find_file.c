@@ -15,30 +15,48 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "output.h"
 #include "win_utils.h"
 #include "find_file.h"
 
 #if !defined(_WIN32) && (defined(_BSD_SOURCE) || _XOPEN_SOURCE >= 500)
-#define USE_LSTAT_FOR_SYMLINKS
+# define USE_LSTAT_FOR_SYMLINKS
+# define USE_LSTAT 1
+#else
+# define USE_LSTAT 0
 #endif
 
-/* from perl manual File::Find
- * These are functions for searching through directory trees doing work on
- * each file found, similarly to the Unix find command.
- * File::Find exports two functions, "find" and "finddepth".
- * They work similarly but have subtle differences.
- * 1. find() does a breadth-first search over the given @directories in the order they are given.
- *    In essence, it works from the top down.
- * 2. finddepth() works just like find() except it does a depth-first search.
- *    It works from the bottom of the directory tree up. */
+void process_files(const char* paths[], size_t count,
+	find_file_options* opt)
+{
+	struct file_t file;
+	size_t i;
+	memset(&file, 0, sizeof(file));
+
+	for(i = 0; i < count; i++) {
+		file.path = (char*)paths[i];
+
+		if(!IS_DASH_STR(file.path) && rsh_file_stat2(&file, USE_LSTAT) < 0) {
+			if((opt->options & FIND_LOG_ERRORS) != 0)
+				log_file_error(file.path);
+			continue;
+		}
+		if(!IS_DASH_STR(file.path) && (file.mode & FILE_IFDIR) != 0) {
+			find_file(&file, opt);
+		} else {
+			file.mode |= FILE_ISROOT;
+			opt->call_back(&file, opt->call_back_data);
+		}
+	}
+
+	rsh_file_cleanup(&file);
+}
 
 typedef struct dir_entry
 {
 	struct dir_entry *next;
 	char* filename;
-	/*unsigned short level; nesting level */
 	unsigned type; /* dir,link, etc. */
-	/*bool operator < (struct dir_entry &right) { return (name < right.name); }*/
 } dir_entry;
 
 /**
@@ -107,49 +125,46 @@ typedef struct dir_iterator
  * Walk directory tree and call given callback function to process each file/directory.
  *
  * @param start_dir path to the directory to walk recursively
- * @param callback the function to call on each file/directory
- * @param options specifying how to walk the directory tree
- * @param call_back_data a pointer to pass to callback
+ * @param options the options specifying how to walk the directory tree
  */
-int find_file(const char* start_dir,
-	int (*call_back)(const char* filepath, int type, void* data),
-	int options, int max_depth, void* call_back_data)
+int find_file(file_t* start_dir, find_file_options* options)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
 	int level = 1;
+	int max_depth = options->max_depth;
+	int flags = options->options;
 	dir_entry* entry;
-	struct rsh_stat_struct st;
+	file_t file;
 
 	if(max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
 		max_depth = MAX_DIRS_DEPTH;
 	}
+
 	/* skip the directory if max_depth == 0 */
 	if(max_depth == 0) {
 		return 0;
 	}
 
-	/* check that start_dir is a directory */
-	if(rsh_stat(start_dir, &st) < 0) {
-		return -1; /* errno is already set by stat */
-	}
-	if( !S_ISDIR(st.st_mode) ) {
+	memset(&file, 0, sizeof(file));
+
+	if((start_dir->mode & FILE_IFDIR) == 0) {
 		errno = ENOTDIR;
 		return -1;
 	}
 
 	/* check if we should descend into the root directory */
-	if( !(options&FIND_WALK_DEPTH_FIRST)
-		&& !call_back(start_dir, FIND_IFDIR | FIND_IFFIRST, call_back_data)) {
+	if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0) {
+		if(!options->call_back(start_dir, options->call_back_data))
 			return 0;
 	}
 
-	it = (dir_iterator*)malloc(MAX_DIRS_DEPTH*sizeof(dir_iterator));
+	it = (dir_iterator*)malloc(MAX_DIRS_DEPTH * sizeof(dir_iterator));
 	if(!it) return 0;
 
 	/* push root directory into dirs_stack */
 	it[0].left = 1;
-	it[0].prev_dir = rsh_strdup(start_dir);
+	it[0].prev_dir = rsh_strdup(start_dir->path);
 	it[1].prev_dir = NULL;
 	if(!it[0].prev_dir) {
 		errno = ENOMEM;
@@ -168,7 +183,7 @@ int find_file(const char* start_dir,
 		char* dir_path;
 		DIR *dp;
 		struct dirent *de;
-		int type;
+
 		/* walk back */
 		while((--level) >= 0 && it[level].left <= 0) free(it[level+1].prev_dir);
 		if(level < 0) break;
@@ -188,69 +203,56 @@ int find_file(const char* start_dir,
 		it[level].left = 0;
 		it[level].prev_dir = dir_path;
 
-		if( options&FIND_WALK_DEPTH_FIRST ) {
+		if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))
+			== FIND_WALK_DEPTH_FIRST) {
+			rsh_file_cleanup(&file);
+			file.path = dir_path;
 			/* check if we should skip the directory */
-			if( !call_back(dir_path, FIND_IFDIR, call_back_data) )
+			if(!options->call_back(&file, options->call_back_data))
 				continue;
 		}
 
 		/* read dir */
 		dp = opendir(dir_path);
 		if(dp == NULL) continue;
-		type = FIND_IFFIRST;
+
 		insert_at = &dirs_stack;
 
 		while((de = readdir(dp)) != NULL) {
 			int res;
-			char* path;
 			/* skip "." and ".." dirs */
 			if(de->d_name[0] == '.' && (de->d_name[1] == 0 ||
 				(de->d_name[1] == '.' && de->d_name[2] == 0 )))
 				continue;
 
-			if( !(path = make_path(dir_path, de->d_name)) ) continue;
+			if( !(file.path = make_path(dir_path, de->d_name)) ) continue;
 
-#ifndef USE_LSTAT_FOR_SYMLINKS
-			if(rsh_stat(path, &st) < 0) {
-				free(path);
-				continue;
-			}
-#else
-			res = (options & FIND_FOLLOW_LINKS ? rsh_stat(path, &st) : lstat(path, &st));
-			/*if((st.st_mode&S_IFMT) == S_IFLNK) type |= FIND_IFLNK;*/
-			if(res < 0 || (!(options & FIND_FOLLOW_LINKS) && S_ISLNK(st.st_mode)) ) {
-				free(path);
-				continue;
-			}
-#endif
-
-/* check bits (the check fails for gcc -ansi) */
-/*#if( (S_IFMT >> 12) != 0x0f  || (S_IFDIR >> 12) != FIND_IFDIR )
-#  error wrong bits for S_IFMT and S_IFDIR
-#endif*/
-
-			/*type |= (S_ISDIR(st.st_mode) ? FIND_IFDIR : 0);*/
-			type |= ((st.st_mode >> 12) & 0x0f);
-
-			if((type & FIND_IFDIR) && (options & FIND_WALK_DEPTH_FIRST)) res = 1;
-			else {
-				/* handle file by callback function */
-				res = call_back(path, type, call_back_data);
-			}
-			free(path);
-
-			/* if file is a directory and we need to walk it */
-			if((type & FIND_IFDIR) && res && level < max_depth) {
-				/* don't go deeper if max_depth reached */
-
-				/* add directory to dirs_stack */
-				if( dir_entry_insert(insert_at, de->d_name, type) ) {
-					/* if really added */
-					insert_at = &((*insert_at)->next);
-					it[level].left++;
+			res  = rsh_file_stat2(&file, USE_LSTAT);
+			/* process */
+			if(res >= 0) {
+				if((file.mode & FILE_IFDIR) &&
+					(flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) res = 1;
+				else {
+					/* handle file by callback function */
+					res = options->call_back(&file, options->call_back_data);
 				}
+
+				/* if file is a directory and we need to walk it */
+				if((file.mode & FILE_IFDIR) && res && level < max_depth) {
+					/* don't go deeper if max_depth reached */
+
+					/* add directory to dirs_stack */
+					if(dir_entry_insert(insert_at, de->d_name, file.mode)) {
+						/* if really added */
+						insert_at = &((*insert_at)->next);
+						it[level].left++;
+					}
+				}
+			} else if (options->options & FIND_LOG_ERRORS) {
+				log_file_error(file.path);
 			}
-			type = 0; /* clear FIND_IFFIRST flag */
+			rsh_file_cleanup(&file);
+			free(file.path);
 		}
 		closedir(dp);
 
