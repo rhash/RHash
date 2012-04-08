@@ -235,13 +235,16 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 {
 	wchar_t* res;
 	size_t len;
-	/* remove leading path separators from filename */
-	while(IS_PATH_SEPARATOR_W(*filename)) filename++;
+
+	if(dir_path == 0) dir_len = 0;
+	else {
+		/* remove leading path separators from filename */
+		while(IS_PATH_SEPARATOR_W(*filename)) filename++;
+
+		if(dir_len == (size_t)-1) dir_len = wcslen(dir_path);
+	}
 	len = wcslen(filename);
 
-	if(!dir_path) dir_len = 0;
-	else if(dir_len == (size_t)-1) dir_len = wcslen(dir_path);
-	
 	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
 	if(dir_len > 0) {
 		memcpy(res, dir_path, dir_len * sizeof(wchar_t));

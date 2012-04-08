@@ -38,30 +38,6 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 	}
 }
 
-#if 0
-/**
- * Parse given base32 string and store result to bin.
- *
- * @param str string to parse
- * @param bin result
- * @param len string length
- */
-void rhash_base32_to_byte(const char* str, unsigned char* bin, int len)
-{
-	const char* e = str + len;
-	unsigned shift = 0;
-	unsigned char b;
-	for(; str<e; str++) {
-		b = BASE32_TO_DIGIT(*str);
-		shift = (shift + 5) % 8;
-		if(shift < 5) {
-			*bin++ |= (b >> shift);
-		}
-		*bin |= b << (8 - shift);
-	}
-}
-#endif
-
 /**
  * Decode an URL-encoded string in the specified buffer.
  *

@@ -1,14 +1,18 @@
+Sun Apr 08 2012 Aleksey
+	* Bugfix: handling UNC filenames on Windows
+	* option --bt-batch for batch torrents
+
 Sat Jan  7 2012 Aleksey
 	* librhash: rhash_print_magnet function
 
 Sun Nov 06 2011 Sergey Basalaev
 	* .NET/Mono bindings to librhash
 
-Wed Sep 14 2011 Aleksey, SBasalaev
-	* LibRHash bindings to Java, Perl, Python, Ruby
-
 Wed Sep 14 2011 Aleksey
 	* === Version 1.2.8 ===
+
+Wed Sep 14 2011 Aleksey, SBasalaev
+	* LibRHash bindings to Java, Perl, Python, Ruby
 
 Tue Sep  6 2011 Aleksey
 	* librhash: implemented auto-final feature, turned on by default
