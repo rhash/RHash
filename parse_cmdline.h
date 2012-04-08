@@ -38,7 +38,6 @@ enum {
 	OPT_LOWERCASE = 0x4000,
 	OPT_GOST_REVERSE = 0x8000,
 	OPT_BENCH_RAW = 0x10000,
-	OPT_BATCH_TORRENT = 0x20000,
 
 #ifdef _WIN32
 	OPT_UTF8 = 0x10000000,
@@ -74,9 +73,10 @@ struct options_t {
 	int   find_max_depth;
 	struct vector_t *files_accept; /* suffixes of files for which sums will be calculated */
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
-	size_t bt_piece_length; /* BitTorrent piece length */
-	char*  bt_announce;
 	unsigned openssl_mask;  /* mask which openssl hashes to use */
+	size_t bt_piece_length; /* BitTorrent piece length */
+	char*  bt_announce;     /* BitTorrent announce url */
+	char*  bt_batch_file;   /* path to save batch torrent to */
 
 	char** argv;
 	char** files; /* the files to process */

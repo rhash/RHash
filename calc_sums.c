@@ -32,7 +32,7 @@ static void init_btih_data(struct file_info *info)
 {
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
 	rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
-		RHASH_STR2UPTR((char*)get_basename(file_info_get_utf8_print_path(info))), (rhash_uptr_t)&info->size);
+		RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
 	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(PROGRAM_NAME "/" VERSION), 0);
 
 	if(opt.flags & OPT_BT_PRIVATE) {
@@ -45,7 +45,7 @@ static void init_btih_data(struct file_info *info)
 
 	if(opt.bt_piece_length) {
 		rhash_transmit(RMSG_BT_SET_PIECE_LENGTH, info->rctx, RHASH_STR2UPTR(opt.bt_piece_length), 0);
-	} else if((opt.flags & OPT_BATCH_TORRENT) && rhash_data.batch_size) {
+	} else if(opt.bt_batch_file && rhash_data.batch_size) {
 		rhash_transmit(RMSG_BT_SET_BATCH_SIZE, info->rctx, RHASH_STR2UPTR(&rhash_data.batch_size), 0);
 	}
 }
@@ -63,12 +63,12 @@ static void re_init_rhash_context(struct file_info *info)
 			rhash_data.rctx = 0;
 		} else {
 			info->rctx = rhash_data.rctx;
-			if((opt.flags & OPT_BATCH_TORRENT) == 0) {
+			if(!opt.bt_batch_file) {
 				rhash_reset(rhash_data.rctx);
 			} else {
 				/* add another file to the torrent batch */
 				rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
-					RHASH_STR2UPTR((char*)get_basename(file_info_get_utf8_print_path(info))), (rhash_uptr_t)&info->size);
+					RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
 			}
 			return;
 		}
@@ -93,6 +93,7 @@ static int calc_sums(struct file_info *info)
 {
 	FILE* fd = stdin; /* stdin */
 	int res;
+	uint64_t initial_size;
 
 	if(IS_DASH_STR(info->full_path)) {
 		info->print_path = "(stdin)";
@@ -128,6 +129,7 @@ static int calc_sums(struct file_info *info)
 	}
 
 	re_init_rhash_context(info);
+	initial_size = info->rctx->msg_size;
 
 	if(percents_output->update != 0) {
 		rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
@@ -135,15 +137,12 @@ static int calc_sums(struct file_info *info)
 
 	/* read and hash file content */
 	if((res = rhash_file_update(info->rctx, fd)) != -1) {
-		if(opt.flags & OPT_BATCH_TORRENT) {
-			rhash_data.total_size = info->size = info->rctx->msg_size;
-		} else {
+		if(!opt.bt_batch_file) {
 			rhash_final(info->rctx, 0); /* finalize hashing */
-
-			info->size = info->rctx->msg_size;
-			rhash_data.total_size += info->size;
 		}
 	}
+	info->size = info->rctx->msg_size - initial_size;
+	rhash_data.total_size += info->size;
 
 	if(fd != stdin) fclose(fd);
 	return res;
@@ -324,17 +323,23 @@ void save_torrent_to(const char* path, rhash_context* rctx)
 	assert(text_len != RHASH_ERROR);
 
 	if(rsh_stat(path, &stat_buf) >= 0) {
-		errno = EEXIST;
-		log_file_error(path);
-	} else {
-		fd = rsh_fopen_bin(path, "wb");
-		if(fd && text_len == fwrite(str, 1, text_len, fd) && !ferror(fd)) {
-			log_msg(_("%s saved\n"), path);
-		} else {
-			log_file_error(path);
-		}
-		if(fd) fclose(fd);
+		/* make backup copy of the existing torrent file */
+		char *bak_path = str_append(path, ".bak");
+		unlink(bak_path);
+		rename(path, bak_path);
+		free(bak_path);
 	}
+
+	/* write torrent file */
+	fd = rsh_fopen_bin(path, "wb");
+	if(fd && text_len == fwrite(str, 1, text_len, fd) &&
+		!ferror(fd) && !fflush(fd))
+	{
+		log_msg(_("%s saved\n"), path);
+	} else {
+		log_file_error(path);
+	}
+	if(fd) fclose(fd);
 }
 
 /**
@@ -344,13 +349,8 @@ void save_torrent_to(const char* path, rhash_context* rctx)
  */
 static void save_torrent(struct file_info* info)
 {
-	size_t path_len = strlen(info->full_path);
-	char* path = (char*)rsh_malloc(path_len + 9);
-
 	/* append .torrent extension to the file path */
-	memcpy(path, info->full_path, path_len);
-	memcpy(path + path_len, ".torrent", 9);
-
+	char* path = str_append(info->full_path, ".torrent");
 	save_torrent_to(path, info->rctx);
 	free(path);
 }
@@ -367,7 +367,6 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 {
 	struct file_info info;
 	timedelta_t timer;
-	int is_batch_torrent = (opt.flags & OPT_BATCH_TORRENT);
 	int res = 0;
 
 	memset(&info, 0, sizeof(info));
@@ -402,7 +401,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	info.time = rhash_timer_stop(&timer);
 	finish_percents(&info, res);
 
-	if((opt.mode & MODE_TORRENT) && !is_batch_torrent) {
+	if((opt.mode & MODE_TORRENT) && !opt.bt_batch_file) {
 		save_torrent(&info);
 	}
 
@@ -425,7 +424,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	}
 
 	if(rhash_data.print_list && res >= 0) {
-		if (!is_batch_torrent) {
+		if (!opt.bt_batch_file) {
 			print_line(out, rhash_data.print_list, &info);
 			fflush(out);
 

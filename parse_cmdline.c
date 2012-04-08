@@ -339,7 +339,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
 	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
 	{ F_CSTR,   0,   0, "bt-announce", &opt.bt_announce, 0 },
-	{ F_UFLG,   0,   0, "bt-batch", &opt.flags, OPT_BATCH_TORRENT },
+	{ F_CSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
 	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
 
@@ -871,7 +871,7 @@ void options_destroy(struct options_t* o)
 
 /**
  * Check that options do not conflict with each other.
- * Also do some final options processing steps.
+ * Also make some final options processing steps.
  */
 static void make_final_options_checks(void)
 {
@@ -882,6 +882,9 @@ static void make_final_options_checks(void)
 		log_msg(_("Config file: %s\n"), (conf_opt.config_file ? conf_opt.config_file : _("None")));
 	}
 
+	if(opt.bt_batch_file) opt.mode |= MODE_TORRENT;
+	if(opt.mode & MODE_TORRENT) opt.sum_flags |= RHASH_BTIH;
+
 	/* check that no more than one program mode specified */
 	if(opt.mode & (opt.mode - 1)) {
 		die(_("incompatible program modes\n"));
@@ -891,9 +894,6 @@ static void make_final_options_checks(void)
 	if((opt.fmt & (opt.fmt - 1)) || (ff & (ff - 1))) {
 		die(_("too many formating options\n"));
 	}
-
-	if(opt.mode & MODE_TORRENT) opt.sum_flags |= RHASH_BTIH;
-	else opt.flags &= ~OPT_BATCH_TORRENT; /* batch requires torrent mode */
 
 	if(!opt.crc_accept) opt.crc_accept = file_mask_new_from_list(".sfv");
 

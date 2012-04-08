@@ -162,6 +162,25 @@ char* str_set(char* buf, int ch, int length)
 }
 
 /**
+ * Concatenates two strings and returns allocated buffer with result.
+ *
+ * @param orig original string
+ * @param append the string to append
+ * @return the buffer
+ */
+char* str_append(const char* orig, const char* append)
+{
+	size_t len1 = strlen(orig);
+	size_t len2 = strlen(append);
+	char* res = (char*)rsh_malloc(len1 + len2 + 1);
+
+	/* concatenate two strings */
+	memcpy(res, orig, len1);
+	memcpy(res + len1, append, len2 + 1);
+	return res;
+}
+
+/**
  * Check if a string is a binary string, which means the string contain
  * a character with ACII code below 0x20 other than '\r', '\n', '\t'.
  *

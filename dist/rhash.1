@@ -147,6 +147,10 @@ See openssl documentation for the full list.
 Reverse bytes in hexadecimal output of the GOST hash sum.
 The most significant bytes of the hash will be printed first.
 Default order is the least significant bytes first.
+.IP "\-\-bt\-batch=<file\-path>"
+Turn on torrent batch mode (implies torrent mode). Calculates batch-torrent
+for the files specified at command line and saves the torrent file to
+the file\-path. The option \-r <directory> can be useful in this mode.
 .IP "\-\-bt\-private"
 Generate BTIH for a private BitTorrent tracker.
 .IP "\-\-bt\-piece\-length"

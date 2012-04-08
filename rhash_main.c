@@ -172,7 +172,6 @@ static void i18n_initialize(void)
 #endif /* USE_GETTEXT */
 }
 
-
 /**
  * RHash program entry point.
  *
@@ -241,7 +240,7 @@ int main(int argc, char *argv[])
 	}
 
 	memset(&search_opt, 0, sizeof(search_opt));
-	search_opt.max_depth = (opt.flags & OPT_RECURSIVE ? opt.find_max_depth : 1);
+	search_opt.max_depth = (opt.flags & OPT_RECURSIVE ? opt.find_max_depth : 0);
 	search_opt.options = FIND_SKIP_DIRS;
 	search_opt.call_back = find_file_callback;
 
@@ -250,7 +249,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* pre-process files */
-	if(sfv || (opt.flags & OPT_BATCH_TORRENT)) {
+	if(sfv || opt.bt_batch_file) {
 		/* note: errors are not reported on pre-processing */
 		search_opt.call_back_data = (void*)1;
 		process_files((const char**)opt.files, opt.n_files, &search_opt);
@@ -267,9 +266,9 @@ int main(int argc, char *argv[])
 	search_opt.call_back_data = (void*)0;
 	process_files((const char**)opt.files, opt.n_files, &search_opt);
 
-	if((opt.flags & OPT_BATCH_TORRENT) && rhash_data.rctx) {
+	if(opt.bt_batch_file && rhash_data.rctx) {
 		rhash_final(rhash_data.rctx, 0);
-		save_torrent_to("batch.torrent", rhash_data.rctx);
+		save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
 	}
 
 	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {

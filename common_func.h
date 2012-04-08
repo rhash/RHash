@@ -46,6 +46,7 @@ int  is_binary_string(const char* str);
 char* str_tolower(const char* str);
 char* str_trim(char* str);
 char* str_set(char* buf, int ch, int size);
+char* str_append(const char* orig, const char* append);
 size_t strlen_utf8_c(const char *str);
 
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
