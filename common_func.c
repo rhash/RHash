@@ -395,6 +395,7 @@ int rsh_file_stat(file_t* file)
 
 void rsh_file_cleanup(file_t* file)
 {
+	(void)file;
 #ifdef _WIN32
 	if(file->wpath) {
 		free(file->wpath);

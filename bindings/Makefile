@@ -67,17 +67,18 @@ copy-dist:
 	mkdir -p $(COPYDIR)
 	find java ruby python -type f -regex '.*\(\.\([hc]\|java\|py\|rb\|txt\)\|Makefile\)' -exec $(CP) '{}' $(COPYDIR)/ \;
 	find perl -type f -regex '.*\(\.\(t\|PL\|pm\|xs\)\|MANIFEST\|typemap\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
-	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
+	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(FILES) "$(COPYDIR)/"
 
 gzip:
-	[ ! -r "$(COPYDIR)" ] || rm -rf "$(COPYDIR)"
-	rm -rf $(ARCHIVE_GZIP)
+	rm -rf "$(COPYDIR)" $(ARCHIVE_GZIP)
 	make copy-dist
 	tar -czf $(ARCHIVE_GZIP) "$(COPYDIR)"
+	rm -rf "$(COPYDIR)"
 
 distclean:
 	$(MAKE) -C java distclean
 	$(MAKE) -C mono clean
 	[ ! -f ruby/Makefile ] || $(MAKE) -C ruby distclean
 	[ ! -f perl/Makefile ] || $(MAKE) -C perl distclean
+	rm -f python/*.pyc
