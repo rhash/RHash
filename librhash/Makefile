@@ -7,13 +7,15 @@ OPTLDFLAGS =
 CFLAGS     = $(OPTFLAGS)
 LDFLAGS    = $(OPTLDFLAGS)
 ADDCFLAGS  =
+LIBCFLAGS  =
 ADDLDFLAGS =
 DEFS    = -DIN_RHASH
-ALLCFLAGS  = -pipe $(DEFS) $(ADDCFLAGS) $(CFLAGS) \
+PRGCFLAGS  = -pipe $(DEFS) $(ADDCFLAGS) $(CFLAGS) \
   -Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith \
   -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations
+ALLCFLAGS = $(LIBCFLAGS) $(PRGCFLAGS)
 LDRHASH    = -L. -lrhash
-LDLIBFLAGS = $(LDFLAGS) $(ADDLDFLAGS)
+LIBLDFLAGS = $(LDFLAGS) $(ADDLDFLAGS)
 ALLLDFLAGS = $(LDRHASH) $(LDFLAGS) $(ADDLDFLAGS)
 HEADERS = algorithms.h aich.h timing.h byte_order.h plug_openssl.h rhash.h crc32.h util.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h ripemd-160.h gost.h has160.h snefru.h tiger.h              tth.h torrent.h whirlpool.h
 SOURCES = algorithms.c aich.c timing.c byte_order.c plug_openssl.c rhash.c crc32.c util.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c ripemd-160.c gost.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
@@ -159,18 +161,16 @@ DLLNAME = librhash.dll
 
 dll: $(DLLNAME)
 $(DLLNAME): $(SOURCES)
-#	rm -f $@
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
-	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared -Wl,--version-script,exports.sym,-soname,$@ $(LDLIBFLAGS) $(SOURCES) -o $@
+	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$@ $(LIBLDFLAGS) -o $@
 
 test-dll: $(DLLNAME) test_hashes.o
-	$(CC) test_hashes.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
+	$(CC) $(PRGCFLAGS) test_hashes.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
 
 # shared and static libraries
 $(SONAME): $(SOURCES)
-#	rm -f $@
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
-	$(CC) -fpic $(ALLCFLAGS) -shared -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LDLIBFLAGS) $(SOURCES) -o $@
+	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
 $(LIBRARY): $(OBJECTS)
@@ -178,13 +178,13 @@ $(LIBRARY): $(OBJECTS)
 #	$(AR) cr $(LIBRARY) $(OBJECTS) && runlib $(LIBRARY)
 
 $(TEST_TARGET): $(LIBRARY) test_hashes.o
-	$(CC) test_hashes.o $(ALLLDFLAGS) -o $@
+	$(CC) $(ALLCFLAGS) test_hashes.o $(LDRHASH) $(LIBLDFLAGS) -o $@
 
 #$(TEST_SHARED): $(DLLNAME) test_hashes.o
 #	$(CC) test_hashes.o $(DLLNAME) -o $@
 
 test-shared: $(SONAME) test_hashes.o
-	$(CC) test_hashes.o $(SONAME) $(LDLIBFLAGS) -o $(TEST_SHARED)
+	$(CC) $(PRGCFLAGS) test_hashes.o $(SONAME) -o $(TEST_SHARED)
 	LD_LIBRARY_PATH=. ./$(TEST_SHARED)
 
 test: $(TEST_TARGET)

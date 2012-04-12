@@ -52,7 +52,7 @@ DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC
 WIN_SUFFIX     = win32
 ARCHIVE_BZIP   = rhash-$(VERSION)-src.tar.bz2
 ARCHIVE_GZIP   = rhash-$(VERSION)-src.tar.gz
-ARCHIVE_DEB_GZ = ../rhash_$(VERSION).orig.tar.gz
+ARCHIVE_DEB_GZ = rhash_$(VERSION).orig.tar.gz
 ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
 ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
 WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
@@ -76,6 +76,7 @@ uninstall: uninstall-program uninstall-symlinks
 dist: gzip
 gzip: check $(ARCHIVE_GZIP)
 bzip: check $(ARCHIVE_BZIP)
+dgz:  check $(ARCHIVE_DEB_GZ)
 7z:   check $(ARCHIVE_7Z)
 zip : $(ARCHIVE_ZIP)
 win-dist: $(ARCHIVE_ZIP)
@@ -100,24 +101,26 @@ uninstall-symlinks:
 	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f; done
 
 install-lib-static:
-	cd librhash && make install-lib-static
+	make -C librhash install-lib-static
 
 install-lib-shared:
-	cd librhash && make install-lib-shared
+	make -C librhash install-lib-shared
 
 lib-static: $(LIBRHASH)
 
 lib-shared:
-	cd librhash && make lib-shared
+	make -C librhash lib-shared
 
-test-hashes:
-	cd librhash && make test
+test-hashes: test-lib
+test-lib:
+	make -C librhash test
 
-test: $(TARGET) test-hashes
+test: $(TARGET) test-lib
 	chmod +x tests/test_$(PROGNAME).sh
 	tests/test_$(PROGNAME).sh
 
 test-shared: rhash-shared
+	make -C librhash test-shared
 	chmod +x tests/test_$(PROGNAME).sh
 	LD_LIBRARY_PATH=../librhash tests/test_rhash.sh ./$(SHARED_TRG)
 
@@ -134,7 +137,7 @@ check: version.h bindings/version.properties
 	[ -s dist/rhash.1.html ]
 
 $(LIBRHASH): $(LIBRHASH_FILES)
-	cd librhash && make lib-static
+	make -C librhash lib-static
 
 $(TARGET): $(OBJECTS) $(LIBRHASH)
 	$(CC) $(OBJECTS) -o $@ $(ALLLDFLAGS)
@@ -208,7 +211,7 @@ dist/rhash.1.win.html: dist/rhash.1 dist/rhash.1.win.sed
 	grep -q "APPDATA" dist/rhash.1.win.html
 
 dist/rhash.1.html: dist/rhash.1
-	-which rman &>/dev/null && (rman -fHTML -roff dist/rhash.1 | sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > $@)
+	-which rman 2>/dev/null && (rman -fHTML -roff dist/rhash.1 | sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > $@)
 
 dist/rhash.1.txt: dist/rhash.1
 	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
@@ -217,35 +220,35 @@ cpp-doc:
 	cppdoc_cmd -title=RHash -company=Animegorodok -classdir=classdoc -module="cppdoc-standard" -overwrite -extensions="c,h" -languages="c=cpp,h=cpp" -generate-deprecations-list=false $(SOURCES) $(HEADERS) ./Documentation/CppDoc/index.html
 
 permissions:
-	chmod -x $(DIST_FILES)
+	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
 	chmod +x tests/test_$(PROGNAME).sh
 
 clean-bindings:
 	make -C bindings distclean
 
-$(ARCHIVE_GZIP): $(DIST_FILES) clean-bindings
-	make permissions
+copy-dist: $(DIST_FILES) permissions
 	rm -rf $(PROGNAME)-$(VERSION)
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+
+gzip-rhash: copy-dist
+	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
+	rm -rf $(PROGNAME)-$(VERSION)
+
+gzip-bindings:
+	make -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
+
+$(ARCHIVE_GZIP): clean-bindings copy-dist
 	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-$(ARCHIVE_BZIP): $(DIST_FILES)
-	make permissions
-	rm -rf $(PROGNAME)-$(VERSION)
-	mkdir $(PROGNAME)-$(VERSION)
-	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+$(ARCHIVE_BZIP): clean-bindings copy-dist
 	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-$(ARCHIVE_7Z): $(DIST_FILES)
-	make permissions
-	rm -rf $(PROGNAME)-$(VERSION)
-	mkdir $(PROGNAME)-$(VERSION)
-	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+$(ARCHIVE_7Z): clean-bindings copy-dist
 	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
@@ -256,7 +259,7 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	mkdir $(WIN_ZIP_DIR)
 	cp $(TARGET).exe ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	cp dist/rhash.1.win.html $(WIN_ZIP_DIR)/rhash-doc.html
-	-[ -f $(OUTDIR)libeay32.dll ] && cp $(OUTDIR)libeay32.dll $(WIN_ZIP_DIR)/
+#	-[ -f $(OUTDIR)libeay32.dll ] && cp $(OUTDIR)libeay32.dll $(WIN_ZIP_DIR)/
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
 
@@ -278,7 +281,7 @@ rpm: gzip
 distclean: clean
 
 clean:
-	cd librhash && make clean
+	make -C librhash clean
 	rm -f *.o $(SHARED_TRG) $(TARGET)
 	rm -f po/*.gmo po/*.po~
 
