@@ -90,7 +90,7 @@ typedef struct rhash_context_ext
  * Then the context must be freed by calling rhash_free().
  *
  * @param hash_id union of bit flags, containing ids of hashes to calculate.
- * @return initialized rhash context
+ * @return initialized rhash context, NULL on error and errno is set
  */
 RHASH_API rhash rhash_init(unsigned hash_id)
 {
@@ -105,7 +105,10 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	char* phash_ctx;
 
 	hash_id &= RHASH_ALL_HASHES;
-	if(hash_id == 0) return NULL;
+	if(hash_id == 0) {
+		errno = EINVAL;
+		return NULL;
+	}
 
 	tail_bit_index = rhash_ctz(hash_id); /* get trailing bit index */
 	assert(tail_bit_index < RHASH_HASH_COUNT);
@@ -443,7 +446,10 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
 	int res;
 
 	hash_id &= RHASH_ALL_HASHES;
-	if(hash_id == 0) return -1;
+	if(hash_id == 0) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	if((fd = fopen(filepath, "rb")) == NULL) return -1;
 
@@ -475,7 +481,10 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 	int res;
 
 	hash_id &= RHASH_ALL_HASHES;
-	if(hash_id == 0) return -1;
+	if(hash_id == 0) {
+		errno = EINVAL;
+		return -1;
+	}
 
 	if((fd = _wfsopen(filepath, L"rb", _SH_DENYWR)) == NULL) return -1;
 
@@ -486,7 +495,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 
 	rhash_final(ctx, result);
 	rhash_free(ctx);
-	return 0;
+	return res;
 }
 #endif
 
