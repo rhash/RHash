@@ -1,3 +1,6 @@
+Fri Apr 13 2012 Aleksey, Sergey Basalaev
+	* translations: de, en_AU, es, gl, it
+
 Sun Apr 08 2012 Aleksey
 	* Bugfix: handling UNC filenames on Windows
 	* option --bt-batch for batch torrents
