@@ -5,7 +5,7 @@ PERL = /usr/bin/perl
 DESTDIR =
 PREFIX = /usr/local
 PERL_OPTIMIZE = -O2 -g -Wall
-VERSION = $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
+VERSION := $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
 FILES = Makefile version.properties
 BINDINGS = java mono perl python ruby
 ARCHIVE_GZIP = rhash-bindings-$(VERSION)-src.tar.gz

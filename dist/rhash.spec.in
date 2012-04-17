@@ -30,9 +30,9 @@ for a long-term storing or transferring.
 
 Features:
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
- * Calculation of Magnet links and EDonkey 2000 links.
- * Updating hash files (adding hash sums of files missing in the hash file).
+ * Calculation of Magnet links.
  * Ability to process directories recursively.
+ * Updating hash files (adding hash sums of files missing in the hash file).
  * Portability: the program works the same on Linux, *BSD or Windows.
 
 # LibRHash shared library, contains librhash.so.[major] only
@@ -66,13 +66,13 @@ for a long-term storing or transferring.
 %setup
 
 %build
-%{__make} CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl lib-shared all
+%{__make} rhash-shared lib-static CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl SHARED_TRG=rhash
 
 %check
-%{__make} CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl test
+%{__make} test-shared CFLAGS="$RPM_OPT_FLAGS -DNDEBUG" SHARED_TRG=rhash
 
 %install
-%{__make} PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" install install-lib-static install-lib-shared
+%{__make} install install-lib-static install-lib-shared PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" LIBDIR="%{_libdir}"
 
 %clean
 rm -rf "$RPM_BUILD_ROOT"

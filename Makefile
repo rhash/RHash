@@ -69,7 +69,7 @@ INSTALL_PROGRAM = $(INSTALL) -m 755
 INSTALL_DATA    = $(INSTALL) -m 644
 
 all: $(TARGET)
-install: install-program install-symlinks
+install: all install-program install-symlinks
 uninstall: uninstall-program uninstall-symlinks
 
 # creating archives
@@ -81,7 +81,7 @@ dgz:  check $(ARCHIVE_DEB_GZ)
 zip : $(ARCHIVE_ZIP)
 win-dist: $(ARCHIVE_ZIP)
 
-install-program: all
+install-program:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)/etc
 	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)
 	$(INSTALL_DATA) dist/rhash.1 $(DESTDIR)$(MANDIR)/man1/rhash.1
@@ -90,8 +90,8 @@ install-program: all
 
 # dependencies should be properly set, otherwise 'make -j<n>' can run install targets in parallel
 install-symlinks: install-program
-	for f in $(SYMLINKS); do ln -s rhash $(DESTDIR)$(BINDIR)/$$f; done
-	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -s rhash.1* $$f.1; done
+	for f in $(SYMLINKS); do ln -fs rhash $(DESTDIR)$(BINDIR)/$$f; done
+	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-program:
 	rm -f $(DESTDIR)$(BINDIR)/$(PROGNAME)
