@@ -23,14 +23,20 @@ install: $(patsubst %, install-%, $(filter perl ruby, $(BINDINGS)))
 configure-perl:
 	cd perl && perl Makefile.PL INSTALLDIRS=vendor
 
+configure-php:
+	cd php && phpize && ./configure --with-rhash
+
 configure-ruby:
 	$(RUBY) -C ruby extconf.rb
 
 build-java:
-	$(MAKE) -C java/
+	$(MAKE) -C java
 
 build-perl:
 	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
+
+build-php:
+	$(MAKE) -C php
 
 build-python:
 # not required
@@ -46,6 +52,9 @@ test-java:
 
 test-perl:
 	$(MAKE) -C perl test
+
+test-php:
+#	$(MAKE) -C php test
 
 test-ruby:
 	$(RUBY) -C ruby test_rhash.rb
@@ -81,4 +90,5 @@ distclean:
 	$(MAKE) -C mono clean
 	[ ! -f ruby/Makefile ] || $(MAKE) -C ruby distclean
 	[ ! -f perl/Makefile ] || $(MAKE) -C perl distclean
+	[ ! -f php/configure ] || (cd php && phpize --clean)
 	rm -f python/*.pyc
