@@ -20,7 +20,7 @@ that supports many hashing algorithms. The  simplest  way  to
 calculate  hash  of  a message  or  a file is by using one of
 the functions:
 
-hash_for_message(message, hash_id)
+hash_for_msg(message, hash_id)
 hash_for_file(filename, hash_id)
 magnet_for_file(filename, hash_ids)
 
@@ -55,30 +55,31 @@ Finally, call finish() to end up all remaining calculations.
 
 To  receive  text represenation of the message digest use one
 of the methods hex(), HEX(), base32(), BASE32(), base64() and
-BASE64().  Binary  message digest may be obtained with raw().
-All of these methods accept hash_id as argument.  It  may  be
-omitted  if  RHash  was  created  to  compute hash for only a
-single hashing algorithm.
+BASE64().  The hash() method  outputs  message digest  in its
+default format.  Binary  message digest may be obtained  with
+raw().  All of these  methods  accept  hash_id  as  argument.
+It may  be omitted  if  RHash  was  created  to  compute hash
+for only a single hashing algorithm.
 
-Method magnet(filename) will generate magnet link with  all
+Method  magnet(filename)  will generate magnet link with  all
 hashes computed by the RHash object.
 '''
 
 # public API
 __all__ = ['ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
-	'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
-	'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
-	'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
-	'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
+    'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
+    'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
+    'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
+    'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
 import sys
 from ctypes import *
 
 # initialization
 if sys.platform == 'win32':
-	libname = 'librhash.dll'
+    libname = 'librhash.dll'
 else:
-	libname = 'librhash.so.0'
+    libname = 'librhash.so.0'
 librhash = CDLL(libname)
 librhash.rhash_library_init()
 
@@ -118,91 +119,94 @@ RHPR_NO_MAGNET = 0x20
 RHPR_FILESIZE  = 0x40
 
 class RHash(object):
-	'Incremental hasher'
-	
-	def __init__(self, hash_ids):
-		if hash_ids == 0:
-			self._ctx = None
-			raise ValueError('Invalid argument')
-		self._ctx = librhash.rhash_init(hash_ids)
-		#switching off autofinal feature
-		librhash.rhash_transmit(5, self._ctx, 0, 0)
+    'Incremental hasher'
 
-	def __del__(self):
-		if self._ctx != None:
-			librhash.rhash_free(self._ctx)
-	
-	def reset(self):
-		librhash.rhash_reset(self._ctx)
-		return self
-	
-	def update(self, message):
-		message = str(message)
-		librhash.rhash_update(self._ctx, message, len(message))
-		return self
-		
-	def __lshift__(self, message):
-		return self.update(message)
-	
-	def update_file(self, filename):
-		f = open(filename, 'rb')
-		buf = f.read(8192)
-		while len(buf) > 0:
-			self.update(buf)
-			buf = f.read(8192)
-		f.close()
-		return self
-	
-	def finish(self):
-		librhash.rhash_final(self._ctx, None)
-		return self
-	
-	def _print(self, hash_id, flags):
-		buf = create_string_buffer(130)
-		ln = librhash.rhash_print(buf, self._ctx, hash_id, flags)
-		return buf[0:ln]
-	
-	def raw(self, hash_id = 0):
-		return self._print(hash_id, RHPR_RAW)
-	
-	def hex(self, hash_id = 0):
-		return self._print(hash_id, RHPR_HEX)
-	
-	def HEX(self, hash_id = 0):
-		return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
-	
-	def base32(self, hash_id = 0):
-		return self._print(hash_id, RHPR_BASE32)
-	
-	def BASE32(self, hash_id = 0):
-		return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
-	
-	def base64(self, hash_id = 0):
-		return self._print(hash_id, RHPR_BASE64)
-	
-	def BASE64(self, hash_id = 0):
-		return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
-	
-	def magnet(self, filepath):
-		ln = librhash.rhash_print_magnet(None, filepath, self._ctx, ALL, RHPR_FILESIZE)
-		buf = create_string_buffer(ln)
-		librhash.rhash_print_magnet(buf, filepath, self._ctx, ALL, RHPR_FILESIZE)
-		return buf[0:ln-1]
-	
-	def __str__(self, hash_id = 0):
-		return self._print(hash_id, 0)
+    def __init__(self, hash_ids):
+        if hash_ids == 0:
+            self._ctx = None
+            raise ValueError('Invalid argument')
+        self._ctx = librhash.rhash_init(hash_ids)
+        #switching off autofinal feature
+        librhash.rhash_transmit(5, self._ctx, 0, 0)
+
+    def __del__(self):
+        if self._ctx != None:
+            librhash.rhash_free(self._ctx)
+
+    def reset(self):
+        librhash.rhash_reset(self._ctx)
+        return self
+
+    def update(self, message):
+        message = str(message)
+        librhash.rhash_update(self._ctx, message, len(message))
+        return self
+
+    def __lshift__(self, message):
+        return self.update(message)
+
+    def update_file(self, filename):
+        f = open(filename, 'rb')
+        buf = f.read(8192)
+        while len(buf) > 0:
+            self.update(buf)
+            buf = f.read(8192)
+        f.close()
+        return self
+
+    def finish(self):
+        librhash.rhash_final(self._ctx, None)
+        return self
+
+    def _print(self, hash_id, flags):
+        buf = create_string_buffer(130)
+        ln = librhash.rhash_print(buf, self._ctx, hash_id, flags)
+        return buf[0:ln]
+
+    def raw(self, hash_id = 0):
+        return self._print(hash_id, RHPR_RAW)
+
+    def hex(self, hash_id = 0):
+        return self._print(hash_id, RHPR_HEX)
+
+    def HEX(self, hash_id = 0):
+        return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
+
+    def base32(self, hash_id = 0):
+        return self._print(hash_id, RHPR_BASE32)
+
+    def BASE32(self, hash_id = 0):
+        return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
+
+    def base64(self, hash_id = 0):
+        return self._print(hash_id, RHPR_BASE64)
+
+    def BASE64(self, hash_id = 0):
+        return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
+
+    def magnet(self, filepath):
+        ln = librhash.rhash_print_magnet(None, filepath, self._ctx, ALL, RHPR_FILESIZE)
+        buf = create_string_buffer(ln)
+        librhash.rhash_print_magnet(buf, filepath, self._ctx, ALL, RHPR_FILESIZE)
+        return buf[0:ln-1]
+
+    def hash(self, hash_id = 0):
+        return self._print(hash_id, 0)
+
+    def __str__(self):
+        return self._print(0, 0)
 
 def hash_for_msg(message, hash_id):
-	h = RHash(hash_id)
-	h.update(message).finish()
-	return str(h)
+    h = RHash(hash_id)
+    h.update(message).finish()
+    return str(h)
 
 def hash_for_file(filename, hash_id):
-	h = RHash(hash_id)
-	h.update_file(filename).finish()
-	return str(h)
+    h = RHash(hash_id)
+    h.update_file(filename).finish()
+    return str(h)
 
 def magnet_for_file(filename, hash_mask):
-	h = RHash(hash_mask)
-	h.update_file(filename).finish()
-	return h.magnet(filename)
+    h = RHash(hash_mask)
+    h.update_file(filename).finish()
+    return h.magnet(filename)
