@@ -162,7 +162,7 @@ DLLNAME = librhash.dll
 dll: $(DLLNAME)
 $(DLLNAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
-	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$@ $(LIBLDFLAGS) -o $@
+	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,--output-def,librhash.def,-soname,$@ $(LIBLDFLAGS) -o $@
 
 test-dll: $(DLLNAME) test_hashes.o
 	$(CC) $(PRGCFLAGS) test_hashes.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
@@ -193,4 +193,4 @@ test: $(TEST_TARGET)
 #	if [ -f $(DLLNAME) ]; then make test-dll; fi
 
 clean:
-	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) exports.sym
+	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) exports.sym $(DLLNAME) librhash.def

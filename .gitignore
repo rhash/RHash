@@ -4,5 +4,6 @@
 *.[ao]
 *.exe
 *.dll
+*.def
 *.so
 *.log

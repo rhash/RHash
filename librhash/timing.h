@@ -1,6 +1,6 @@
 /** @file timing.h timer and benchmarking functions */
-#ifndef TIMING_H
-#define TIMING_H
+#ifndef RHASH_TIMING_H
+#define RHASH_TIMING_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,4 +40,4 @@ RHASH_API void rhash_run_benchmark(unsigned hash_id, unsigned flags,
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* TIMING_H */
+#endif /* RHASH_TIMING_H */
