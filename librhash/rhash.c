@@ -606,7 +606,7 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	}
 
 	/* loop through hash values */
-	for(bit = hash & -hash; bit <= hash; bit <<= 1) {
+	for(bit = hash & -(int)hash; bit <= hash; bit <<= 1) {
 		const char* name;
 		if((bit & hash) == 0) continue;
 		if((name = rhash_get_magnet_name(bit)) == 0) continue;
@@ -671,7 +671,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 		if(!hash) continue;
 
 		/* loop through hash values */
-		for(bit = hash & -hash; bit <= hash; bit <<= 1) {
+		for(bit = hash & -(int)hash; bit <= hash; bit <<= 1) {
 			const char* name;
 			if((bit & hash) == 0) continue;
 			if(!(name = rhash_get_magnet_name(bit))) continue;

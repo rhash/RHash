@@ -4,7 +4,6 @@ test RHash basic  methods
 <?php
 $r = new RHash();
 $r->update('a')->final();
-echo $r->hash_id() . "\n";
 echo $r->hashed_length() . "\n";
 
 echo $r->hash(RHASH_CRC32) . "\n";
@@ -38,7 +37,6 @@ echo $r->update('a')->final()->magnet('file.txt') . "\n";
 echo "Done\n";
 ?>
 --EXPECTF--
-4194303
 1
 e8b7be43
 bde52cb31de33e46245e05fbdbd6fb24

@@ -175,10 +175,10 @@ ZEND_GET_MODULE(rhash)
 /* {{{ PHP_MINIT_FUNCTION(rhash) */
 PHP_MINIT_FUNCTION(rhash)
 {
+	zend_class_entry ce;
 	rhash_library_init(); /* initialize LibRHash */
 
 	/* register RHash class, its methods and handlers */
-	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce, "RHash", rhash_methods);
 	rhash_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	rhash_ce->create_object = rhash_create_handler;
@@ -281,6 +281,7 @@ PHP_FUNCTION(rhash_msg) {
 	long hash_id = 0;
 	char *s;
 	int s_len;
+	int length;
 	rhash context = NULL;
 	char buffer[130];
 
@@ -294,7 +295,7 @@ PHP_FUNCTION(rhash_msg) {
 
 	rhash_update(context, s, s_len);
 	rhash_final(context, 0);
-	int length = rhash_print(buffer, context, hash_id, 0);
+	length = rhash_print(buffer, context, hash_id, 0);
 	rhash_free(context);
 	RETURN_STRINGL(buffer, length, 1);
 }
@@ -349,6 +350,7 @@ PHP_FUNCTION(rhash_file) {
 	int path_len;
 	rhash context = NULL;
 	char buffer[130];
+	int buffer_length;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
 		RETURN_NULL();
@@ -358,9 +360,9 @@ PHP_FUNCTION(rhash_file) {
 	}
 	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
 	rhash_final(context, 0);
-	int length = rhash_print(buffer, context, hash_id, 0);
+	buffer_length = rhash_print(buffer, context, hash_id, 0);
 	rhash_free(context);
-	RETURN_STRINGL(buffer, length, 1);
+	RETURN_STRINGL(buffer, buffer_length, 1);
 }
 /* }}} */
 
@@ -371,6 +373,8 @@ PHP_FUNCTION(rhash_magnet) {
 	char *path;
 	int path_len;
 	rhash context = NULL;
+	char* buffer;
+	size_t buffer_size;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
 		RETURN_NULL();
@@ -381,8 +385,8 @@ PHP_FUNCTION(rhash_magnet) {
 	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
 	rhash_final(context, 0);
 
-	size_t buf_size = rhash_print_magnet(0, path, context, hash_id, RHPR_FILESIZE);
-	char* buffer = (char*)emalloc(buf_size);
+	buffer_size = rhash_print_magnet(0, path, context, hash_id, RHPR_FILESIZE);
+	buffer = (char*)emalloc(buffer_size);
 	if (!buffer) {
 		rhash_free(context);
 		RETURN_FALSE;
@@ -390,7 +394,7 @@ PHP_FUNCTION(rhash_magnet) {
 
 	rhash_print_magnet(buffer, path, context, hash_id, RHPR_FILESIZE);
 	rhash_free(context);
-	RETURN_STRINGL(buffer, buf_size - 1, 0);
+	RETURN_STRINGL(buffer, buffer_size - 1, 0);
 }
 /* }}} */
 
@@ -421,6 +425,7 @@ static zend_object_value rhash_create_handler(zend_class_entry *class_type TSRML
 	zend_hash_copy(obj->std.properties, &class_type->default_properties,
 		(copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
 #else
+	(void)tmp;
 	object_properties_init(&obj->std, class_type);
 #endif
 	retval.handle = zend_objects_store_put(obj, NULL,
@@ -488,21 +493,16 @@ PHP_METHOD(RHash, update_stream)
 /* }}} */
 
 /* {{{ proto boolean RHash::update_file(string path[, int start[, int size]])
-   Returns true if successfuly calculated hashes for a (part of) file, false on error */
+   Returns true if successfully calculated hashes for a (part of) file, false on error */
 PHP_METHOD(RHash, update_file)
 {
 	char *path;
 	int len;
 	long start = -1, size = -1;
-	php_stream *stream;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|ll", &path, &len, &start, &size) == FAILURE) {
 		RETURN_FALSE;
 	}
 	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, path, start, size);
-//	stream = php_stream_open_wrapper(path, "rb", 0, 0);
-//	if (stream == NULL) RETURN_FALSE;
-//	_php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, stream, start, size);
-//	php_stream_close(stream);
 }
 /* }}} */
 
@@ -536,7 +536,7 @@ PHP_METHOD(RHash, hashed_length)
 {
 	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 	if (obj->rhash == NULL) RETURN_FALSE;
-	RETURN_LONG(obj->rhash->msg_size);
+	RETURN_LONG((long)obj->rhash->msg_size);
 }
 /* }}} */
 
@@ -546,12 +546,13 @@ static void _php_get_hash(INTERNAL_FUNCTION_PARAMETERS, int print_flags)
 {
 	long hash_id = 0;
 	char buffer[130];
+	int length;
 	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
 	if (obj->rhash == NULL ||
 		zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &hash_id) == FAILURE) {
 		RETURN_FALSE;
 	}
-	int length = rhash_print(buffer, obj->rhash, hash_id, print_flags);
+	length = rhash_print(buffer, obj->rhash, hash_id, print_flags);
 	RETURN_STRINGL(buffer, length, 1)
 }
 /* }}} */
