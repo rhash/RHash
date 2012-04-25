@@ -20,7 +20,7 @@ ALLLDFLAGS = $(LDRHASH) $(LDFLAGS) $(ADDLDFLAGS)
 HEADERS = algorithms.h aich.h timing.h byte_order.h plug_openssl.h rhash.h crc32.h util.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h ripemd-160.h gost.h has160.h snefru.h tiger.h              tth.h torrent.h whirlpool.h
 SOURCES = algorithms.c aich.c timing.c byte_order.c plug_openssl.c rhash.c crc32.c util.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c ripemd-160.c gost.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
 OBJECTS = algorithms.o aich.o timing.o byte_order.o plug_openssl.o rhash.o crc32.o util.o ed2k.o edonr.o hex.o md4.o md5.o sha1.o sha256.o sha512.o ripemd-160.o gost.o has160.o snefru.o tiger.o tiger_sbox.o tth.o torrent.o whirlpool.o whirlpool_sbox.o
-HEADERS_LIB = rhash.h timing.h
+LIB_HEADERS = rhash.h timing.h
 # installation directories and names
 DESTDIR =
 PREFIX  = /usr/local
@@ -41,26 +41,32 @@ lib-static: $(LIBRARY)
 lib-shared: $(SONAME)
 dist-clean: clean
 
-install-lib-static: $(LIBRARY)
-	$(INSTALL) -d $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR)
+install-lib-static: $(LIBRARY) install-headers
+	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(LIBRARY) $(DESTDIR)$(LIBDIR)/
-	$(INSTALL_DATA) $(HEADERS_LIB) $(DESTDIR)$(INCDIR)/
 	ln -s $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 install-lib-shared: $(SONAME)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_SHARED) $(SONAME) $(DESTDIR)$(LIBDIR)/
 
-uninstall-lib-static:
+uninstall-lib-static: uninstall-headers
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRARY) $(DESTDIR)$(INCDIR)/*.h
 	rm -f $(DESTDIR)$(LIBDIR)/$(SOLINK)
-	-rmdir $(DESTDIR)$(INCDIR)
 
 uninstall-lib-shared:
 	rm -f $(DESTDIR)$(LIBDIR)/$(SONAME)
 
+install-headers:
+	$(INSTALL) -d $(DESTDIR)$(INCDIR)
+	$(INSTALL_DATA) $(LIB_HEADERS) $(DESTDIR)$(INCDIR)/
+
 install-all-headers:
 	$(INSTALL_DATA) $(HEADERS) $(DESTDIR)$(INCDIR)/
+
+uninstall-headers:
+	rm -f $(DESTDIR)$(INCDIR)/*.h
+	-rmdir $(DESTDIR)$(INCDIR)
 
 # not using GNU make extensions for compatibility with Unix/*BSD make
 #%.o: %.c
@@ -171,6 +177,7 @@ test-dll: $(DLLNAME) test_hashes.o
 $(SONAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
 	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
+	ln -s $(SONAME) $(SOLINK)
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
 $(LIBRARY): $(OBJECTS)
@@ -193,4 +200,4 @@ test: $(TEST_TARGET)
 #	if [ -f $(DLLNAME) ]; then make test-dll; fi
 
 clean:
-	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) exports.sym $(DLLNAME) librhash.def
+	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) exports.sym $(DLLNAME) librhash.def
