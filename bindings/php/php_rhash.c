@@ -89,9 +89,6 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO(arginfo_rhash_hashed_length, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO(arginfo_rhash_hash_id, 0)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_INFO_EX(arginfo_rhash_hash, 0, 0, 0)
 	ZEND_ARG_INFO(0, hash_id)
 ZEND_END_ARG_INFO()
@@ -127,7 +124,6 @@ zend_function_entry rhash_methods[] = {
 	PHP_ME(RHash,  final,           arginfo_rhash_final, ZEND_ACC_PUBLIC)
 	PHP_ME(RHash,  reset,           arginfo_rhash_reset, ZEND_ACC_PUBLIC)
 	PHP_ME(RHash,  hashed_length,   arginfo_rhash_hashed_length, ZEND_ACC_PUBLIC)
-	PHP_ME(RHash,  hash_id,         arginfo_rhash_hash_id, ZEND_ACC_PUBLIC)
 	PHP_ME(RHash,  hash,            arginfo_rhash_hash, ZEND_ACC_PUBLIC)
 	PHP_ME(RHash,  raw,             arginfo_rhash_raw, ZEND_ACC_PUBLIC)
 	PHP_ME(RHash,  hex,             arginfo_rhash_hex, ZEND_ACC_PUBLIC)
@@ -543,17 +539,6 @@ PHP_METHOD(RHash, hashed_length)
 	RETURN_LONG(obj->rhash->msg_size);
 }
 /* }}} */
-
-/* {{{ proto int RHash::hash_id()
-   Returns the bit-mask of ids of hashes calculated by the rhash object */
-PHP_METHOD(RHash, hash_id)
-{
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
-	if (obj->rhash == NULL) RETURN_FALSE;
-	RETURN_LONG(obj->rhash->hash_id);
-}
-/* }}} */
-
 
 /* {{{ _php_get_hash(RHash this_class[, int hash_id], int print_flags)
    Returns calculated hash in the specified format */

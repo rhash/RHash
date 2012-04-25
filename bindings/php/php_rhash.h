@@ -25,7 +25,6 @@ PHP_METHOD(RHash, update_file);
 PHP_METHOD(RHash, final);
 PHP_METHOD(RHash, reset);
 PHP_METHOD(RHash, hashed_length);
-PHP_METHOD(RHash, hash_id);
 
 PHP_METHOD(RHash, hash);
 PHP_METHOD(RHash, raw);
