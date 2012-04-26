@@ -337,6 +337,7 @@ static void _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* p
 {
 	php_stream *stream = php_stream_open_wrapper(path, "rb", 0, 0);
 	if (stream == NULL) RETURN_FALSE;
+	/* note: _php_rhash_stream sets return_value to BOOL */
 	_php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, stream, start, size);
 	php_stream_close(stream);
 }
@@ -353,15 +354,16 @@ PHP_FUNCTION(rhash_file) {
 	int buffer_length;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
-		RETURN_NULL();
+		RETURN_FALSE;
 	}
 	if (!hash_id || !(context = rhash_init(hash_id))) {
-		RETURN_NULL();
+		RETURN_FALSE;
 	}
 	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
 	rhash_final(context, 0);
 	buffer_length = rhash_print(buffer, context, hash_id, 0);
 	rhash_free(context);
+	if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value)) return;
 	RETURN_STRINGL(buffer, buffer_length, 1);
 }
 /* }}} */
@@ -383,6 +385,7 @@ PHP_FUNCTION(rhash_magnet) {
 		RETURN_NULL();
 	}
 	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
+	if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value)) return;
 	rhash_final(context, 0);
 
 	buffer_size = rhash_print_magnet(0, path, context, hash_id, RHPR_FILESIZE);
@@ -472,12 +475,13 @@ PHP_METHOD(RHash, update)
 		RETURN_FALSE;
 	}
 	rhash_update(obj->rhash, s, s_len);
+	Z_ADDREF(*object);
 	*return_value = *object;
 }
 /* }}} */
 
 /* {{{ proto boolean RHash::update_stream(resource handle[, int start[, int size]])
-   Returns true if successfuly calculated hashes for a (part of) stream, false on error */
+   Returns true if successfully calculated hashes for a (part of) stream, false on error */
 PHP_METHOD(RHash, update_stream)
 {
 	zval *handle;
@@ -514,6 +518,7 @@ PHP_METHOD(RHash, final)
 	rhash_object *obj = (rhash_object *)zend_object_store_get_object(object TSRMLS_CC);
 	if (obj->rhash == NULL) RETURN_FALSE;
 	rhash_final(obj->rhash, NULL);
+	Z_ADDREF(*object);
 	*return_value = *object;
 }
 /* }}} */
@@ -526,6 +531,7 @@ PHP_METHOD(RHash, reset)
 	rhash_object *obj = (rhash_object *)zend_object_store_get_object(object TSRMLS_CC);
 	if (obj->rhash == NULL) RETURN_FALSE;
 	rhash_reset(obj->rhash);
+	Z_ADDREF(*object);
 	*return_value = *object;
 }
 /* }}} */
@@ -611,7 +617,6 @@ PHP_METHOD(RHash, magnet)
 		zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s", &s, &s_len) == FAILURE) {
 		RETURN_FALSE;
 	}
-	
 
 	buf_size = rhash_print_magnet(0, s, obj->rhash, RHASH_ALL_HASHES, RHPR_FILESIZE);
 	buffer = (char*)emalloc(buf_size);
