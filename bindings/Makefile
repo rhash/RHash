@@ -74,7 +74,6 @@ install-ruby:
 
 install-perl:
 	$(MAKE) -C perl install DESTDIR=$(DESTDIR)
-#	$(MAKE) -C perl install DESTDIR=$(DESTDIR) PREFIX=$(PREFIX) SITEPREFIX=$(PREFIX)
 
 copy-dist:
 	mkdir -p $(COPYDIR)
