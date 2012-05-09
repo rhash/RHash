@@ -20,28 +20,32 @@ build: $(patsubst %, build-%, $(BINDINGS))
 test: $(patsubst %, test-%, $(BINDINGS))
 install: $(patsubst %, install-%, $(filter perl ruby, $(BINDINGS)))
 
-configure-perl:
+configure-perl: perl/Makefile
+configure-ruby: ruby/Makefile
+configure-php: php/Makefile
+
+perl/Makefile: perl/Makefile.PL
 	cd perl && perl Makefile.PL INSTALLDIRS=vendor
 
-configure-php:
+php/Makefile: php/config.m4
 	cd php && phpize && ./configure --with-rhash
 
-configure-ruby:
+ruby/Makefile: ruby/extconf.rb
 	$(RUBY) -C ruby extconf.rb
 
 build-java:
 	$(MAKE) -C java
 
-build-perl:
+build-perl: configure-perl
 	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
 
-build-php:
+build-php: configure-php
 	$(MAKE) -C php
 
 build-python:
 # not required
 
-build-ruby:
+build-ruby: configure-ruby
 	$(MAKE) -C ruby
 
 build-mono:
