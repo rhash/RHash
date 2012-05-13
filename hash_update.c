@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "librhash/timing.h"
+#include "librhash/rhash_timing.h"
 #include "win_utils.h"
 #include "parse_cmdline.h"
 #include "output.h"

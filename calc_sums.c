@@ -12,7 +12,7 @@
 #include <assert.h>
 
 #include "librhash/rhash.h"
-#include "librhash/timing.h"
+#include "librhash/rhash_timing.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "hash_print.h"

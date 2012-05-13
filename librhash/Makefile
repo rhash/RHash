@@ -17,14 +17,14 @@ ALLCFLAGS = $(LIBCFLAGS) $(PRGCFLAGS)
 LDRHASH    = -L. -lrhash
 LIBLDFLAGS = $(LDFLAGS) $(ADDLDFLAGS)
 ALLLDFLAGS = $(LDRHASH) $(LDFLAGS) $(ADDLDFLAGS)
-HEADERS = algorithms.h aich.h timing.h byte_order.h plug_openssl.h rhash.h crc32.h util.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h ripemd-160.h gost.h has160.h snefru.h tiger.h              tth.h torrent.h whirlpool.h
-SOURCES = algorithms.c aich.c timing.c byte_order.c plug_openssl.c rhash.c crc32.c util.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c ripemd-160.c gost.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
-OBJECTS = algorithms.o aich.o timing.o byte_order.o plug_openssl.o rhash.o crc32.o util.o ed2k.o edonr.o hex.o md4.o md5.o sha1.o sha256.o sha512.o ripemd-160.o gost.o has160.o snefru.o tiger.o tiger_sbox.o tth.o torrent.o whirlpool.o whirlpool_sbox.o
-LIB_HEADERS = rhash.h timing.h
+HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_timing.h util.h aich.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h ripemd-160.h gost.h has160.h snefru.h tiger.h              tth.h torrent.h whirlpool.h
+SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c util.c aich.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c ripemd-160.c gost.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
+OBJECTS = algorithms.o byte_order.o plug_openssl.o rhash.o rhash_timing.o util.o aich.o crc32.o ed2k.o edonr.o hex.o md4.o md5.o sha1.o sha256.o sha512.o ripemd-160.o gost.o has160.o snefru.o tiger.o tiger_sbox.o tth.o torrent.o whirlpool.o whirlpool_sbox.o
+LIB_HEADERS = rhash.h rhash_timing.h
 # installation directories and names
 DESTDIR =
 PREFIX  = /usr/local
-INCDIR  = $(PREFIX)/include/rhash
+INCDIR  = $(PREFIX)/include
 LIBDIR  = $(PREFIX)/lib
 LIBRARY = librhash.a
 SONAME  = librhash.so.0
@@ -51,7 +51,7 @@ install-lib-shared: $(SONAME)
 	$(INSTALL_SHARED) $(SONAME) $(DESTDIR)$(LIBDIR)/
 
 uninstall-lib-static: uninstall-headers
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRARY) $(DESTDIR)$(INCDIR)/*.h
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRARY)
 	rm -f $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 uninstall-lib-shared:
@@ -61,12 +61,8 @@ install-headers:
 	$(INSTALL) -d $(DESTDIR)$(INCDIR)
 	$(INSTALL_DATA) $(LIB_HEADERS) $(DESTDIR)$(INCDIR)/
 
-install-all-headers:
-	$(INSTALL_DATA) $(HEADERS) $(DESTDIR)$(INCDIR)/
-
 uninstall-headers:
-	rm -f $(DESTDIR)$(INCDIR)/*.h
-	-rmdir $(DESTDIR)$(INCDIR)
+	for f in $(LIB_HEADERS); do rm -f "$(DESTDIR)$(INCDIR)/$$f"; done
 
 # not using GNU make extensions for compatibility with Unix/*BSD make
 #%.o: %.c
@@ -118,6 +114,9 @@ rhash.o: rhash.c byte_order.h config.h algorithms.h rhash.h torrent.h \
  sha1.h plug_openssl.h util.h hex.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
+rhash_timing.o: rhash_timing.c byte_order.h config.h rhash.h rhash_timing.h
+	$(CC) -c $(ALLCFLAGS) $< -o $@
+
 ripemd-160.o: ripemd-160.c byte_order.h config.h ripemd-160.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
@@ -133,7 +132,7 @@ sha512.o: sha512.c byte_order.h config.h sha512.h
 snefru.o: snefru.c byte_order.h config.h snefru.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
-test_hashes.o: test_hashes.c byte_order.h config.h timing.h rhash.h \
+test_hashes.o: test_hashes.c byte_order.h config.h rhash_timing.h rhash.h \
  test_hashes.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
@@ -141,9 +140,6 @@ tiger.o: tiger.c byte_order.h config.h tiger.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 tiger_sbox.o: tiger_sbox.c byte_order.h config.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
-
-timing.o: timing.c byte_order.h config.h rhash.h timing.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 torrent.o: torrent.c byte_order.h config.h algorithms.h rhash.h hex.h \
@@ -167,7 +163,7 @@ DLLNAME = librhash.dll
 
 dll: $(DLLNAME)
 $(DLLNAME): $(SOURCES)
-	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
+	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(LIB_HEADERS) > exports.sym
 	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,--output-def,librhash.def,-soname,$@ $(LIBLDFLAGS) -o $@
 
 test-dll: $(DLLNAME) test_hashes.o
@@ -175,7 +171,7 @@ test-dll: $(DLLNAME) test_hashes.o
 
 # shared and static libraries
 $(SONAME): $(SOURCES)
-	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' rhash.h timing.h > exports.sym
+	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(LIB_HEADERS) > exports.sym
 	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
 	ln -s $(SONAME) $(SOLINK)
 # use 'nm -Cg --defined-only $@' to view exported symbols

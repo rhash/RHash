@@ -1,4 +1,4 @@
-/** @file timing.h timer and benchmarking functions */
+/** @file rhash_timing.h timer and benchmarking functions */
 #ifndef RHASH_TIMING_H
 #define RHASH_TIMING_H
 

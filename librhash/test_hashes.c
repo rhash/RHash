@@ -18,7 +18,7 @@
 #include <ctype.h>
 
 #include "byte_order.h"
-#include "timing.h"
+#include "rhash_timing.h"
 
 #ifdef USE_RHASH_DLL
 # define RHASH_API __declspec(dllimport)

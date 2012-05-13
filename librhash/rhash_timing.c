@@ -1,4 +1,4 @@
-/* timing.c - functions to benchmark hash algorithms,
+/* rhash_timing.c - functions to benchmark hash algorithms,
  *
  * Copyright: 2010 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
@@ -17,7 +17,7 @@
 
 #include "byte_order.h"
 #include "rhash.h"
-#include "timing.h"
+#include "rhash_timing.h"
 
 /* DEFINE read_tsc() if possible */
 

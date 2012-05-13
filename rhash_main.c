@@ -16,8 +16,8 @@
 #include <locale.h>
 #include <assert.h>
 
-#include "librhash/timing.h"
 #include "librhash/rhash.h"
+#include "librhash/rhash_timing.h"
 #include "win_utils.h"
 #include "find_file.h"
 #include "calc_sums.h"
