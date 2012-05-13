@@ -7,12 +7,12 @@ PHP_ARG_WITH(rhash, for RHash support,
 dnl                          DIR is the RHash install prefix [BUNDLED]], yes, no)
 
 if test "$PHP_RHASH" != "no"; then
-  if test -r $PHP_RHASH/include/rhash/rhash.h; then
+  if test -r $PHP_RHASH/include/rhash.h; then
     RHASH_DIR=$PHP_RHASH
   else
     AC_MSG_CHECKING(for RHash in default path)
     for i in /usr/local /usr; do
-      if test -r $i/include/rhash/rhash.h; then
+      if test -r $i/include/rhash.h; then
         RHASH_DIR=$i
         AC_MSG_RESULT(found in $i)
         break
@@ -23,7 +23,7 @@ if test "$PHP_RHASH" != "no"; then
   if test -z "$RHASH_DIR"; then
     AC_MSG_RESULT(not found)
     AC_MSG_ERROR(Please reinstall the librhash -
-    rhash.h should be in <rhash-dir>/include/rhash/)
+    rhash.h should be in <rhash-dir>/include/)
   fi
 
   dnl PHP_RHASH_CFLAGS="-I@ext_builddir@/lib"

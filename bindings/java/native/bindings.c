@@ -15,7 +15,7 @@
  * FOR A PARTICULAR PURPOSE. Use it at your own risk!
  */
 
-#include <rhash/rhash.h>
+#include <rhash.h>
 #include <stdlib.h>
 
 #ifdef __GNUC__

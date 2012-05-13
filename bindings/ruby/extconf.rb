@@ -1,11 +1,12 @@
 require 'mkmf'
 
-if ENV['LIBRHASH_INC'] and ENV['LIBRHASH_LD']
+if ENV['LIBRHASH_INC']
     $CFLAGS  += ENV['LIBRHASH_INC']
-    $LDFLAGS += ' ' + ENV['LIBRHASH_LD']
 else
-    have_header('rhash/rhash.h')
+    have_header('rhash.h')
 end
+
+$LDFLAGS += ' ' + ENV['LIBRHASH_LD'] if ENV['LIBRHASH_LD']
 $LDFLAGS += ' -lrhash'
 
 dir_config('rhash')

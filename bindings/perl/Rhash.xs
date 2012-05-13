@@ -2,7 +2,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include <rhash/rhash.h>
+#include <rhash.h>
 
 /* helper macros and functions */
 #define BASE32_LENGTH(size) (((size) * 8 + 4) / 5)

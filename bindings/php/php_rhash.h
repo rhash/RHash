@@ -1,8 +1,6 @@
 #ifndef PHP_RHASH_H
 #define PHP_RHASH_H
 
-#include <rhash/rhash.h>
-
 extern zend_module_entry rhash_module_entry;
 #define phpext_rhash_ptr &rhash_module_entry
 

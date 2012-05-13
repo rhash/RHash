@@ -16,7 +16,7 @@
  */
 
 #include <ruby.h>
-#include <rhash/rhash.h>
+#include <rhash.h>
 
 /* RHash class. */
 static VALUE cRHash;
