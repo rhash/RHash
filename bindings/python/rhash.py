@@ -83,6 +83,19 @@ else:
 librhash = CDLL(libname)
 librhash.rhash_library_init()
 
+# function prototypes
+librhash.rhash_init.argtypes = [c_uint]
+librhash.rhash_init.restype = c_void_p
+librhash.rhash_free.argtypes = [c_void_p]
+librhash.rhash_reset.argtypes = [c_void_p]
+librhash.rhash_update.argtypes = [c_void_p, c_char_p, c_size_t]
+librhash.rhash_final.argtypes = [c_void_p, c_char_p]
+librhash.rhash_print.argtypes = [c_char_p, c_void_p, c_uint, c_int]
+librhash.rhash_print.restype = c_size_t
+librhash.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_int]
+librhash.rhash_print_magnet.restype = c_size_t
+librhash.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
+
 # hash_id values
 CRC32 = 0x01
 MD4   = 0x02
