@@ -1,16 +1,15 @@
-MAKE = make
-RUBY = ruby
-PYTHON = python
-PERL = /usr/bin/perl
+VERSION := $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
+BINDINGS = java mono perl python ruby
+FILES = Makefile version.properties
 DESTDIR =
 PREFIX = /usr/local
+RUBY = ruby
+PYTHON = python
+PERL = perl
+CP = cp -l --parents
 PERL_OPTIMIZE = -O2 -g -Wall
-VERSION := $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
-FILES = Makefile version.properties
-BINDINGS = java mono perl python ruby
 ARCHIVE_GZIP = rhash-bindings-$(VERSION)-src.tar.gz
 COPYDIR = rhash-bindings-$(VERSION)
-CP = cp -l --parents
 
 all: configure build test
 clean: distclean
@@ -25,7 +24,7 @@ configure-ruby: ruby/Makefile
 configure-php: php/Makefile
 
 perl/Makefile: perl/Makefile.PL
-	cd perl && perl Makefile.PL INSTALLDIRS=vendor
+	cd perl && $(PERL) Makefile.PL INSTALLDIRS=vendor
 
 php/Makefile: php/config.m4
 	cd php && phpize && ./configure --with-rhash
@@ -70,7 +69,8 @@ test-python:
 	$(PYTHON) python/test_rhash.py
 
 install-ruby:
-	$(MAKE) -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
+# clear MAKEFLAGS to overcome ruby1.8 mkmf concurrency bug
+	MAKEFLAGS= make -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
 
 install-perl:
 	$(MAKE) -C perl install DESTDIR=$(DESTDIR)
@@ -84,7 +84,7 @@ copy-dist:
 
 gzip: distclean
 	rm -rf "$(COPYDIR)" $(ARCHIVE_GZIP)
-	make copy-dist
+	$(MAKE) copy-dist
 	tar -czf $(ARCHIVE_GZIP) "$(COPYDIR)"
 	rm -rf "$(COPYDIR)"
 

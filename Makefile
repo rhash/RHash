@@ -2,9 +2,9 @@
 # compile with debug info: make CFLAGS=-g
 # compile for pentiumpro: make CFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
 # create rpm with statically linked program: make rpm ADDLDFLAGS="-static -s -Wl,--gc-sections"
-CC      = gcc
 VERSION = 1.2.9
 PREFIX  = /usr/local
+CC      = gcc
 # using OPTFLAGS/OPTLDFLAGS for compatibilty with old scripts using this makefile
 OPTFLAGS = -O2 -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections
 OPTLDFLAGS =
@@ -101,26 +101,26 @@ uninstall-symlinks:
 	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f; done
 
 install-lib-static:
-	make -C librhash install-lib-static
+	+make -C librhash install-lib-static
 
 install-lib-shared:
-	make -C librhash install-lib-shared
+	+make -C librhash install-lib-shared
 
 lib-static: $(LIBRHASH)
 
 lib-shared:
-	make -C librhash lib-shared
+	+make -C librhash lib-shared
 
 test-hashes: test-lib
 test-lib:
-	make -C librhash test
+	+make -C librhash test
 
 test: $(TARGET) test-lib
 	chmod +x tests/test_$(PROGNAME).sh
 	tests/test_$(PROGNAME).sh
 
 test-shared: rhash-shared
-	make -C librhash test-shared
+	+make -C librhash test-shared
 	chmod +x tests/test_$(PROGNAME).sh
 	LD_LIBRARY_PATH=../librhash tests/test_rhash.sh ./$(SHARED_TRG)
 
@@ -137,7 +137,7 @@ check: version.h bindings/version.properties
 	[ -s dist/rhash.1.html ]
 
 $(LIBRHASH): $(LIBRHASH_FILES)
-	make -C librhash lib-static
+	+make -C librhash lib-static
 
 $(TARGET): $(OBJECTS) $(LIBRHASH)
 	$(CC) $(OBJECTS) -o $@ $(ALLLDFLAGS)
@@ -224,7 +224,7 @@ permissions:
 	chmod +x tests/test_$(PROGNAME).sh
 
 clean-bindings:
-	make -C bindings distclean
+	+make -C bindings distclean
 
 copy-dist: $(DIST_FILES) permissions
 	rm -rf $(PROGNAME)-$(VERSION)
@@ -236,20 +236,20 @@ gzip-rhash: copy-dist
 	rm -rf $(PROGNAME)-$(VERSION)
 
 gzip-bindings:
-	make -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
+	+make -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
 
 $(ARCHIVE_GZIP): clean-bindings copy-dist
-	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 $(ARCHIVE_BZIP): clean-bindings copy-dist
-	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 $(ARCHIVE_7Z): clean-bindings copy-dist
-	make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -264,7 +264,7 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	rm -rf $(WIN_ZIP_DIR)
 
 $(ARCHIVE_DEB_GZ) : $(DIST_FILES)
-	make $(ARCHIVE_GZIP)
+	+make $(ARCHIVE_GZIP)
 	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
 
 # rpm packaging
@@ -281,7 +281,7 @@ rpm: gzip
 distclean: clean
 
 clean:
-	make -C librhash clean
+	+make -C librhash clean
 	rm -f *.o $(SHARED_TRG) $(TARGET)
 	rm -f po/*.gmo po/*.po~
 
