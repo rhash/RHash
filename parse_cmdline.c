@@ -26,6 +26,11 @@ typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
 struct options_t opt;      /* command line options */
 
+static void print_help_line(const char* option, const char* text)
+{
+	fprintf(rhash_data.out, "%s%s", option, text);
+}
+
 /**
  * Print program help.
  */
@@ -37,58 +42,54 @@ static void print_help(void)
 	fprintf(rhash_data.out, _("%s\n"
 		"Usage: %s [OPTION...] [FILE | -]...\n"
 		"       %s --printf=<format string> [FILE | -]...\n\n"), VERSION_STRING, CMD_FILENAME, CMD_FILENAME);
+	fprintf(rhash_data.out, _("Options:\n"));
 
-	fprintf(rhash_data.out, "%s%s%s%s",
-		_("Options:\n"
-		"  -V, --version Print program version and exit.\n"
-		"  -h, --help    Print this help screen.\n"
-		"  -C, --crc32   Calculate CRC32 hash sum.\n"
-		"      --md4     Calculate MD4   hash sum.\n"
-		"  -M, --md5     Calculate MD5   hash sum.\n"
-		"  -H, --sha1    Calculate SHA1  hash sum.\n"
-		"      --sha224, --sha256, --sha384, --sha512 Calculate SHA2 hash sum.\n"
-		"  -T, --tth     Calculate TTH sum.\n"
-		"      --btih    Calculate BitTorrent InfoHash.\n"
-		"  -A, --aich    Calculate AICH hash.\n"
-		"  -E, --ed2k    Calculate eDonkey hash sum.\n"
-		"  -L, --ed2k-link  Calculate and print eDonkey link.\n"
-		"      --tiger   Calculate Tiger hash sum.\n"
-		"  -G, --gost    Calculate GOST R 34.11-94 hash.\n"
-		"      --gost-cryptopro CryptoPro version of the GOST R 34.11-94 hash.\n"
-		"      --ripemd160  Calculate RIPEMD-160 hash.\n"
-		"      --has160  Calculate HAS-160 hash.\n"
-		"      --edonr256, --edonr512  Calculate EDON-R 256/512 hash.\n"
-		"      --snefru128, --snefru256  Calculate SNEFRU-128/256 hash.\n"
-		"  -a, --all     Calculate all supported hashes.\n"),
-		_("  -c, --check   Check hash files specified by command line.\n"
-		"  -u, --update  Update hash files specified by command line.\n"
-		"  -e, --embed-crc  Rename files by inserting crc32 sum into name.\n"
-		"      --check-embedded  Verify files by crc32 sum embedded in their names.\n"
-		"      --list-hashes  List the names of supported hashes, one per line.\n"
-		"  -B, --benchmark  Benchmark selected algorithm.\n"
-		"  -v, --verbose Be verbose.\n"
-		"  -r, --recursive  Process directories recursively.\n"
-		"      --skip-ok Don't print OK messages for successfully verified files.\n"
-		"  -i, --ignore-case  Ignore case of filenames when updating hash files.\n"
-		"      --percents   Show percents, while calculating or checking hashes.\n"
-		"      --speed   Output per-file and total processing speed.\n"
-		"      --maxdepth=<n> Descend at most <n> levels of directories.\n"
-		"  -o, --output=<file> File to output calculation or checking results.\n"
-		"  -l, --log=<file>    File to log errors and verbose information.\n"
-		"      --sfv     Print hash sums, using SFV format (default).\n"
-		"      --bsd     Print hash sums, using BSD-like format.\n"
-		"      --simple  Print hash sums, using simple format.\n"
-		"  -m, --magnet  Print hash sums  as magnet links.\n"
-		"      --torrent Create torrent files.\n"),
+	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
+	print_help_line("  -h, --help    ", _("Print this help screen.\n"));
+	print_help_line("  -C, --crc32   ", _("Calculate CRC32 hash sum.\n"));
+	print_help_line("      --md4     ", _("Calculate MD4   hash sum.\n"));
+	print_help_line("  -M, --md5     ", _("Calculate MD5   hash sum.\n"));
+	print_help_line("  -H, --sha1    ", _("Calculate SHA1  hash sum.\n"));
+	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", _("Calculate SHA2 hash sum.\n"));
+	print_help_line("  -T, --tth     ", _("Calculate TTH sum.\n"));
+	print_help_line("      --btih    ", _("Calculate BitTorrent InfoHash.\n"));
+	print_help_line("  -A, --aich    ", _("Calculate AICH hash.\n"));
+	print_help_line("  -E, --ed2k    ", _("Calculate eDonkey hash sum.\n"));
+	print_help_line("  -L, --ed2k-link  ", _("Calculate and print eDonkey link.\n"));
+	print_help_line("      --tiger   ", _("Calculate Tiger hash sum.\n"));
+	print_help_line("  -G, --gost    ", _("Calculate GOST R 34.11-94 hash.\n"));
+	print_help_line("      --gost-cryptopro ", _("CryptoPro version of the GOST R 34.11-94 hash.\n"));
+	print_help_line("      --ripemd160  ", _("Calculate RIPEMD-160 hash.\n"));
+	print_help_line("      --has160  ", _("Calculate HAS-160 hash.\n"));
+	print_help_line("      --edonr256, --edonr512  ", _("Calculate EDON-R 256/512 hash.\n"));
+	print_help_line("      --snefru128, --snefru256  ", _("Calculate SNEFRU-128/256 hash.\n"));
+	print_help_line("  -a, --all     ", _("Calculate all supported hashes.\n"));
+	print_help_line("  -c, --check   ", _("Check hash files specified by command line.\n"));
+	print_help_line("  -u, --update  ", _("Update hash files specified by command line.\n"));
+	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
+	print_help_line("      --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
+	print_help_line("      --list-hashes  ", _("List the names of supported hashes, one per line.\n"));
+	print_help_line("  -B, --benchmark  ", _("Benchmark selected algorithm.\n"));
+	print_help_line("  -v, --verbose ", _("Be verbose.\n"));
+	print_help_line("  -r, --recursive  ", _("Process directories recursively.\n"));
+	print_help_line("      --skip-ok ", _("Don't print OK messages for successfully verified files.\n"));
+	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
+	print_help_line("      --percents   ", _("Show percents, while calculating or checking hashes.\n"));
+	print_help_line("      --speed   ", _("Output per-file and total processing speed.\n"));
+	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
+	print_help_line("  -o, --output=<file> ", _("File to output calculation or checking results.\n"));
+	print_help_line("  -l, --log=<file>    ", _("File to log errors and verbose information.\n"));
+	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));
+	print_help_line("      --bsd     ", _("Print hash sums, using BSD-like format.\n"));
+	print_help_line("      --simple  ", _("Print hash sums, using simple format.\n"));
+	print_help_line("  -m, --magnet  ", _("Print hash sums  as magnet links.\n"));
+	print_help_line("      --torrent ", _("Create torrent files.\n"));
 #ifdef _WIN32
-		_("      --ansi    Use Windows codepage for output (Windows only).\n"),
-#else
-		"",
+	print_help_line("      --ansi    ", _("Use Windows codepage for output (Windows only).\n"));
 #endif
-		_("      --template=<file> Load a printf-like template from the <file>\n"
-		"  -p, --printf=<format string>  Format and print hash sums.\n"
-		"                See the RHash manual for details.\n")
-		);
+	print_help_line("      --template=<file> ", _("Load a printf-like template from the <file>\n"));
+	print_help_line("  -p, --printf=<format string>  ",
+		_("Format and print hash sums.\n                See the RHash manual for details.\n"));
 	rsh_exit(0);
 }
 
