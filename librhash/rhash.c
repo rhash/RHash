@@ -217,7 +217,9 @@ RHASH_API void rhash_reset(rhash ctx)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	assert(ectx->hash_vector_size > 0 && ectx->hash_vector_size < RHASH_HASH_COUNT);
+
+	assert(ectx->hash_vector_size > 0);
+	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
 	ectx->state = STATE_ACTIVE; /* re-activate the structure */
 
 	/* re-initialize every hash in a loop */
