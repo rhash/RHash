@@ -24,7 +24,7 @@ LDFLAGS = -lrhash $(LIBRHASH_LD)
 ALLCFLAGS = $(CFLAGS) $(LIBRHASH_INC) -fPIC
 
 #Platform dependent
-JNI_INCLUDES = /usr/lib/jvm/default-java/include
+JNI_CFLAGS = -I/usr/lib/jvm/default-java/include
 LIB_PREFIX = lib
 LIB_SUFFIX = .so
 
@@ -34,7 +34,7 @@ LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
 all: $(LIBRARY)
 
 bindings.o: bindings.c bindings.h
-	$(CC) $(ALLCFLAGS) -I$(JNI_INCLUDES) -c $< -o $@
+	$(CC) $(ALLCFLAGS) $(JNI_CFLAGS) -c $< -o $@
 
 digest.o: digest.c digest.h
 	$(CC) $(ALLCFLAGS) -c $< -o $@
