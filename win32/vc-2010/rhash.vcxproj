@@ -28,13 +28,11 @@
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>Intel C++ Compiler XE 12.0</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>Intel C++ Compiler XE 12.0</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -51,12 +49,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>Intel C++ Compiler XE 12.0</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>Intel C++ Compiler XE 12.0</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -224,9 +220,9 @@
     <ClCompile Include="..\..\librhash\edonr.c" />
     <ClCompile Include="..\..\librhash\plug_openssl.c" />
     <ClCompile Include="..\..\librhash\rhash.c" />
+    <ClCompile Include="..\..\librhash\rhash_timing.c" />
     <ClCompile Include="..\..\librhash\sha256.c" />
     <ClCompile Include="..\..\librhash\sha512.c" />
-    <ClCompile Include="..\..\librhash\timing.c" />
     <ClCompile Include="..\..\librhash\torrent.c" />
     <ClCompile Include="..\..\output.c" />
     <ClCompile Include="..\..\parse_cmdline.c" />
@@ -263,10 +259,10 @@
     <ClInclude Include="..\..\librhash\edonr.h" />
     <ClInclude Include="..\..\librhash\plug_openssl.h" />
     <ClInclude Include="..\..\librhash\rhash.h" />
+    <ClInclude Include="..\..\librhash\rhash_timing.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
     <ClInclude Include="..\..\librhash\test_sums.h" />
-    <ClInclude Include="..\..\librhash\timing.h" />
     <ClInclude Include="..\dirent.h" />
     <ClInclude Include="..\platform-dependent.h" />
     <ClInclude Include="..\stdint.h" />
