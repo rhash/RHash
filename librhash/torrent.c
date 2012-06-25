@@ -62,6 +62,20 @@ void bt_init(torrent_ctx* ctx)
 }
 
 /**
+ * Free memory allocated by properties of torrent_vect structure.
+ *
+ * @param vect vector to clean
+ */
+static void bt_vector_clean(torrent_vect *vect)
+{
+	size_t i;
+	for(i = 0; i < vect->size; i++) {
+		free(vect->array[i]);
+	}
+	free(vect->array);
+}
+
+/**
  * Clean up torrent context by freeing all dynamically
  * allocated memory.
  *
@@ -69,18 +83,11 @@ void bt_init(torrent_ctx* ctx)
  */
 void bt_cleanup(torrent_ctx *ctx)
 {
-	size_t i;
 	assert(ctx != NULL);
 
-	/* destroy array of hash blocks */
-	for(i = 0; i < ctx->hash_blocks.size; i++) {
-		free(ctx->hash_blocks.array[i]);
-	}
-
-	/* destroy array of file paths */
-	for(i = 0; i < ctx->files.size; i++) {
-		free(ctx->files.array[i]);
-	}
+	/* destroy arrays of hash blocks and file paths */
+	bt_vector_clean(&ctx->hash_blocks);
+	bt_vector_clean(&ctx->files);
 
 	free(ctx->program_name);
 	free(ctx->announce);

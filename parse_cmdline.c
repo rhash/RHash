@@ -392,7 +392,7 @@ typedef struct parsed_option_t
 static void apply_option(options_t *opts, parsed_option_t* option)
 {
 	cmdline_opt_t* o = option->o;
-	char option_type = o->type;
+	unsigned short option_type = o->type;
 	char* value = NULL;
 	
 	/* check if option requires a parameter */
