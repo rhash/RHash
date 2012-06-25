@@ -59,6 +59,7 @@ static void re_init_rhash_context(struct file_info *info)
 {
 	if(rhash_data.rctx != 0) {
 		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+			/* a set of hash sums can change from file to file */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
 		} else {
@@ -67,16 +68,18 @@ static void re_init_rhash_context(struct file_info *info)
 				rhash_reset(rhash_data.rctx);
 			} else {
 				/* add another file to the torrent batch */
-				rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
+				rhash_transmit(RMSG_BT_ADD_FILE, rhash_data.rctx,
 					RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
+				return;
 			}
-			return;
 		}
 	}
 
-	info->rctx = rhash_data.rctx = rhash_init(info->sums_flags);
+	if(rhash_data.rctx == 0) {
+		info->rctx = rhash_data.rctx = rhash_init(info->sums_flags);
+	}
 
-	/* initialize BitTorrent data */
+	/* re-initialize BitTorrent data */
 	if(info->sums_flags & RHASH_BTIH) {
 		init_btih_data(info);
 	}

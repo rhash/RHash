@@ -1,3 +1,6 @@
+Mon Jun 25 2012 Aleksey
+	Bugfix: different BTIH were generated for the same file
+
 Sun May 13 2012 Aleksey
 	BugFix: python crashed on ia64
 
