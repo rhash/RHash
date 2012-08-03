@@ -1,3 +1,6 @@
+Sat Aug  4 2012 Aleksey
+	Bugfix: path issue with verification of hash files
+
 Mon Jun 25 2012 Aleksey
 	Bugfix: different BTIH were generated for the same file
 

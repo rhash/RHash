@@ -55,15 +55,15 @@ static int find_file_callback(file_t* file, void* data)
 			rhash_data.batch_size += file->size;
 		} else {
 			char* filepath = file->path;
+			int not_root = !(file->mode & FILE_ISROOT);
 
-			/* only check an update modes use crc_accept mask */
+			/* only check and update modes use crc_accept mask */
 			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
 				opt.crc_accept : opt.files_accept);
-			if(!(file->mode & FILE_ISROOT) &&
-				!file_mask_match(masks, filepath)) return 0;
+			if(not_root && !file_mask_match(masks, filepath)) return 0;
 
 			if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-				res = check_hash_file(file, 1);
+				res = check_hash_file(file, not_root);
 			} else {
 				if(opt.mode & MODE_UPDATE) {
 					res = update_hash_file(file);
