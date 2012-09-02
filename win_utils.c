@@ -8,6 +8,7 @@
 #include <io.h> /* for isatty */
 #include <assert.h>
 #include <errno.h>
+#include <locale.h>
 
 #include "common_func.h"
 #include "parse_cmdline.h"
@@ -329,6 +330,8 @@ void setup_console(void)
 	{
 		rhash_data.saved_console_codepage = GetConsoleOutputCP();
 		SetConsoleOutputCP(cp);
+		setlocale(LC_CTYPE, opt.flags&OPT_UTF8 ? "C" :
+			opt.flags&OPT_ANSI ? ".ACP" : ".OCP");
 		rsh_exit = rhash_exit;
 	}
 

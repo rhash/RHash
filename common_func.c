@@ -140,8 +140,8 @@ char* str_tolower(const char* str)
 char* str_trim(char* str)
 {
 	char* last = str + strlen(str) - 1;
-	while(isspace(*str)) str++;
-	while(isspace(*last) && last > str) *(last--) = 0;
+	while(isspace((unsigned char)*str)) str++;
+	while(isspace((unsigned char)*last) && last > str) *(last--) = 0;
 	return str;
 }
 

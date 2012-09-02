@@ -353,8 +353,8 @@ static int hash_check_find_str(hc_search *search, const char* format)
 		case '\6':
 		case '\7':
 		case ' ':
-			if(backward) for(; begin < end && isspace(end[-1]); end--, len++);
-			else for(; isspace(*begin) && begin < end; begin++, len++);
+			if(backward) for(; begin < end && isspace((unsigned char)end[-1]); end--, len++);
+			else for(; isspace((unsigned char)*begin) && begin < end; begin++, len++);
 			/* check if space is mandatory */
 			if(*search_str != ' ' && len == 0) {
 				/* for '\6' check (len > 0) */
@@ -415,8 +415,11 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	if( line[0]=='\0' || (le[-1] != '\n' && check_eol) ) return 0;
 
 	/* note: not using str_tim because 'le' is re-used below */
-	while(isspace(le[-1]) && le > line) *(--le) = 0; /* remove trailing white spaces */
-	while(isspace(*line)) line++;  /* skip white spaces at the start of the line */
+
+	/* remove trailing white spaces */
+	while(isspace((unsigned char)le[-1]) && le > line) *(--le) = 0;
+	/* skip white spaces at the start of the line */
+	while(isspace((unsigned char)*line)) line++;
 
 	memset(&hs, 0, sizeof(hs));
 	hs.begin = line;
