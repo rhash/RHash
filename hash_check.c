@@ -224,6 +224,16 @@ static unsigned char test_hash_string(char **ptr, char *end, int *p_len)
 }
 
 /**
+ * Detect ASCII-7 white spaces (not including Unicode whitespaces).
+ * Note that isspace() is locale specific and detect Unicode spaces,
+ * like U+00A0.
+ */
+static int rhash_isspace(char ch)
+{
+	return (((unsigned char)ch) <= 0x7F && isspace((unsigned char)ch));
+}
+
+/**
  * Information about found token
  */
 typedef struct hc_search
@@ -353,8 +363,8 @@ static int hash_check_find_str(hc_search *search, const char* format)
 		case '\6':
 		case '\7':
 		case ' ':
-			if(backward) for(; begin < end && isspace((unsigned char)end[-1]); end--, len++);
-			else for(; isspace((unsigned char)*begin) && begin < end; begin++, len++);
+			if(backward) for(; begin < end && rhash_isspace(end[-1]); end--, len++);
+			else for(; rhash_isspace(*begin) && begin < end; begin++, len++);
 			/* check if space is mandatory */
 			if(*search_str != ' ' && len == 0) {
 				/* for '\6' check (len > 0) */
@@ -417,9 +427,9 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	/* note: not using str_tim because 'le' is re-used below */
 
 	/* remove trailing white spaces */
-	while(isspace((unsigned char)le[-1]) && le > line) *(--le) = 0;
+	while(rhash_isspace(le[-1]) && le > line) *(--le) = 0;
 	/* skip white spaces at the start of the line */
-	while(isspace((unsigned char)*line)) line++;
+	while(rhash_isspace(*line)) line++;
 
 	memset(&hs, 0, sizeof(hs));
 	hs.begin = line;
