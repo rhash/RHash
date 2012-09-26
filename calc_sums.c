@@ -399,6 +399,10 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 			log_file_error(file->path);
 			res = -1;
 		}
+		if(rhash_data.interrupted) {
+			report_interrupted();
+			return 0;
+		}
 	}
 
 	info.time = rhash_timer_stop(&timer);
@@ -416,6 +420,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	if((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
 		file_t file;
 		file.path = info.full_path;
+		file.wpath = 0;
 		rsh_file_stat2(&file, 0);
 
 		print_sfv_header_line(rhash_data.upd_fd, &file, info.full_path);
@@ -469,6 +474,11 @@ static int verify_sums(struct file_info *info)
 	}
 	info->time = rhash_timer_stop(&timer);
 
+	if(rhash_data.interrupted) {
+		report_interrupted();
+		return 0;
+	}
+
 	if((opt.flags & OPT_EMBED_CRC) && find_embedded_crc32(
 		info->print_path, &info->hc.embedded_crc32_be)) {
 			info->hc.flags |= HC_HAS_EMBCRC32;
@@ -521,10 +531,11 @@ int check_hash_file(file_t* file, int chdir)
 
 			res = verify_sums(&info);
 			fflush(rhash_data.out);
-
-			if(res == 0) rhash_data.ok++;
-			else if(res == -1 && errno == ENOENT) rhash_data.miss++;
-			rhash_data.processed++;
+			if(!rhash_data.interrupted) {
+				if(res == 0) rhash_data.ok++;
+				else if(res == -1 && errno == ENOENT) rhash_data.miss++;
+				rhash_data.processed++;
+			}
 
 			free(info.full_path);
 			file_info_destroy(&info);
@@ -581,7 +592,6 @@ int check_hash_file(file_t* file, int chdir)
 		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		memset(&info, 0, sizeof(info));
-		rhash_data.processed++;
 
 		if(!hash_check_parse_line(line, &info.hc, !feof(fd))) continue;
 		if(info.hc.hash_mask == 0) continue;
@@ -608,9 +618,9 @@ int check_hash_file(file_t* file, int chdir)
 			/* if filename shall be prepent by a directory path */
 			if(pos && !is_absolute) {
 				size_t len = strlen(info.print_path);
-				info.full_path = (char*)rsh_malloc(pos+len+1);
+				info.full_path = (char*)rsh_malloc(pos + len + 1);
 				memcpy(info.full_path, hash_file_path, pos);
-				strcpy(info.full_path+pos, info.print_path);
+				strcpy(info.full_path + pos, info.print_path);
 			} else {
 				info.full_path = rsh_strdup(info.print_path);
 			}
@@ -621,9 +631,15 @@ int check_hash_file(file_t* file, int chdir)
 			free(info.full_path);
 			file_info_destroy(&info);
 
+			if(rhash_data.interrupted) {
+				free(path_without_ext);
+				break;
+			}
+
 			/* update statistics */
 			if(res == 0) rhash_data.ok++;
 			else if(res == -1 && errno == ENOENT) rhash_data.miss++;
+			rhash_data.processed++;
 		}
 		free(path_without_ext);
 	}

@@ -15,6 +15,7 @@ extern "C" {
 #define FIND_FOLLOW_LINKS 2
 #define FIND_SKIP_DIRS 4
 #define FIND_LOG_ERRORS 8
+#define FIND_CANCEL 16
 
 /* mask for file flags  */
 /*#define FIND_IFFIRST 0x10*/
@@ -25,6 +26,7 @@ typedef struct find_file_options {
 	int max_depth;
 	int (*call_back)(file_t* file, void* data);
 	void* call_back_data;
+	int errors_count;
 } find_file_options;
 
 void process_files(const char** paths, size_t count,

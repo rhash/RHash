@@ -1,3 +1,7 @@
+Thu Sep 27 2012 Aleksey
+	* Bugfix: non-zero exit code if some files were not found
+	* improved Ctrl-C processing
+
 Sat Aug  4 2012 Aleksey
 	Bugfix: path issue with verification of hash files
 

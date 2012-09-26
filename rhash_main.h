@@ -20,6 +20,8 @@ struct rhash_t
 	struct print_item *print_list;
 	struct strbuf_t *template_text;
 	struct rhash_context* rctx;
+	struct find_file_options *search_opt;
+	int interrupted; /* non-zero if program was interrupted */
 
 	/* missed, ok and processed files statistics */
 	unsigned processed;

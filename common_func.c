@@ -342,7 +342,7 @@ unsigned rhash_get_ticks(void)
  * @return 0 on success, -1 on error
  */
 int rsh_file_stat2(file_t* file, int use_lstat)
-{
+ {
 	struct rsh_stat_struct st;
 	int res = -1;
 
@@ -363,7 +363,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 			file->wpath = wpath;
 			file->size  = st.st_size;
 
-			/* set correct filesize for large files under win32 */
+			/* set correct file size for large files under win32 */
 			win32_set_filesize64(file->path, &file->size);
 			break;
 		}

@@ -44,35 +44,40 @@ static int find_file_callback(file_t* file, void* data)
 {
 	int res = 0;
 	assert((file->mode & FILE_IFDIR) == 0);
+	assert(rhash_data.search_opt);
 
-	if(!(file->mode & FILE_IFDIR)) {
-		if(data) {
-			if(!file_mask_match(opt.files_accept, file->path)) return 0;
+	if(rhash_data.interrupted) {
+		rhash_data.search_opt->options |= FIND_CANCEL;
+		return 0;
+	}
 
-			if(opt.fmt & FMT_SFV)
-				print_sfv_header_line(rhash_data.out, file, 0);
+	if(data) {
+		if(!file_mask_match(opt.files_accept, file->path)) return 0;
 
-			rhash_data.batch_size += file->size;
+		if(opt.fmt & FMT_SFV)
+			print_sfv_header_line(rhash_data.out, file, 0);
+
+		rhash_data.batch_size += file->size;
+	} else {
+		char* filepath = file->path;
+		int not_root = !(file->mode & FILE_ISROOT);
+
+		/* only check and update modes use crc_accept mask */
+		file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
+			opt.crc_accept : opt.files_accept);
+		if(not_root && !file_mask_match(masks, filepath)) return 0;
+
+		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+			res = check_hash_file(file, not_root);
 		} else {
-			char* filepath = file->path;
-			int not_root = !(file->mode & FILE_ISROOT);
-
-			/* only check and update modes use crc_accept mask */
-			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
-				opt.crc_accept : opt.files_accept);
-			if(not_root && !file_mask_match(masks, filepath)) return 0;
-
-			if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-				res = check_hash_file(file, not_root);
+			if(opt.mode & MODE_UPDATE) {
+				res = update_hash_file(file);
 			} else {
-				if(opt.mode & MODE_UPDATE) {
-					res = update_hash_file(file);
-				} else {
-					/* default mode: calculate hash */
-					if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
-					res = calculate_and_print_sums(rhash_data.out, file, filepath);
-					rhash_data.processed++;
-				}
+				/* default mode: calculate hash */
+				if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
+				res = calculate_and_print_sums(rhash_data.out, file, filepath);
+				if(rhash_data.interrupted) return 0;
+				rhash_data.processed++;
 			}
 		}
 	}
@@ -91,22 +96,11 @@ void (*prev_sigint_handler)(int) = NULL;
  */
 static void ctrl_c_handler(int signum)
 {
-	fflush(rhash_data.out);
-	fprintf(rhash_data.log, _("Interrupted by user...\n"));
-	fflush(rhash_data.log);
-
-	/* print intermediate check results if process was interrupted */
-	if((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && rhash_data.processed > 0) {
-		print_check_stats();
-		fflush(rhash_data.out);
+	(void)signum;
+	rhash_data.interrupted = 1;
+	if(rhash_data.rctx) {
+		rhash_cancel(rhash_data.rctx);
 	}
-
-	/* restore precious signal handler and call it */
-	if(prev_sigint_handler && prev_sigint_handler != SIG_ERR) {
-		signal(signum, prev_sigint_handler);
-		prev_sigint_handler(signum);
-	}
-	rsh_exit(1); /* exit the program */
 }
 
 #define MAX_TEMPLATE_SIZE 65536
@@ -190,6 +184,7 @@ int main(int argc, char *argv[])
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	rhash_data.out = stdout; /* set initial output streams */
 	rhash_data.log = stderr; /* can be altered by options later */
+	rhash_data.search_opt = &search_opt;
 
 	init_hash_info_table();
 
@@ -266,22 +261,33 @@ int main(int argc, char *argv[])
 	search_opt.call_back_data = (void*)0;
 	process_files((const char**)opt.files, opt.n_files, &search_opt);
 
-	if(opt.bt_batch_file && rhash_data.rctx) {
-		rhash_final(rhash_data.rctx, 0);
-		save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
-	}
-
 	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		print_check_stats();
 	}
 
-	if((opt.flags & OPT_SPEED) && !(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
-		rhash_data.processed > 1) {
-		double time = rhash_timer_stop(&timer);
-		print_time_stats(time, rhash_data.total_size, 1);
+	if(!rhash_data.interrupted)
+	{
+		if(opt.bt_batch_file && rhash_data.rctx) {
+			rhash_final(rhash_data.rctx, 0);
+			save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
+		}
+
+		if((opt.flags & OPT_SPEED) &&
+			!(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
+			rhash_data.processed > 1) {
+			double time = rhash_timer_stop(&timer);
+			print_time_stats(time, rhash_data.total_size, 1);
+		}
+	} else {
+		/* check if interruption was not reported yet */
+		if(rhash_data.interrupted == 1) report_interrupted();
 	}
 
 	options_destroy(&opt);
 	rhash_destroy(&rhash_data);
-	return (rhash_data.error_flag ? 1 : 0);
+
+	/* return non-zero error code if error occurred */
+	return (rhash_data.error_flag ? 1 :
+		search_opt.errors_count ? 2 :
+		rhash_data.interrupted ? 3 : 0);
 }

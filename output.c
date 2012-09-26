@@ -93,6 +93,14 @@ void log_file_error(const char* filepath)
 	log_error("%s: %s\n", filepath, strerror(errno));
 }
 
+void report_interrupted(void)
+{
+	assert(rhash_data.interrupted == 1);
+	rhash_data.interrupted = 2;
+	fprintf(rhash_data.log, _("Interrupted by user...\n"));
+	fflush(rhash_data.log);
+}
+
 /**
  * Information about printed percents.
  */

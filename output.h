@@ -34,6 +34,7 @@ void log_msg(const char* format, ...);
 void log_error(const char* format, ...);
 void log_warning(const char* format, ...);
 void log_file_error(const char* filepath);
+void report_interrupted(void);
 void print_check_stats(void);
 
 void print_time_stats(double time, uint64_t size, int total);

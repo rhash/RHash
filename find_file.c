@@ -33,12 +33,14 @@ void process_files(const char* paths[], size_t count,
 	size_t i;
 	memset(&file, 0, sizeof(file));
 
-	for(i = 0; i < count; i++) {
+	for(i = 0; i < count && !(opt->options & FIND_CANCEL); i++) {
 		file.path = (char*)paths[i];
 
 		if(!IS_DASH_STR(file.path) && rsh_file_stat2(&file, USE_LSTAT) < 0) {
-			if((opt->options & FIND_LOG_ERRORS) != 0)
+			if((opt->options & FIND_LOG_ERRORS) != 0) {
 				log_file_error(file.path);
+				opt->errors_count++;
+			}
 			continue;
 		}
 		if(!IS_DASH_STR(file.path) && (file.mode & FILE_IFDIR) != 0) {
@@ -178,7 +180,7 @@ int find_file(file_t* start_dir, find_file_options* options)
 		return -1;
 	}
 
-	for(;;) {
+	while(!(options->options & FIND_CANCEL)) {
 		dir_entry *dir, **insert_at;
 		char* dir_path;
 		DIR *dp;
