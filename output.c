@@ -66,7 +66,7 @@ void log_error(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, _("%s: "), PROGRAM_NAME);
+	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -79,7 +79,7 @@ void log_warning(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, _("%s: "), PROGRAM_NAME);
+	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -90,7 +90,7 @@ void log_warning(const char* format, ...)
  */
 void log_file_error(const char* filepath)
 {
-	log_error(_("%s: %s\n"), filepath, strerror(errno));
+	log_error("%s: %s\n", filepath, strerror(errno));
 }
 
 /**
