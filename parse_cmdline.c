@@ -67,7 +67,7 @@ static void print_help(void)
 	print_help_line("  -c, --check   ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update  ", _("Update hash files specified by command line.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
-	print_help_line("      --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
+	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hashes, one per line.\n"));
 	print_help_line("  -B, --benchmark  ", _("Benchmark selected algorithm.\n"));
 	print_help_line("  -v, --verbose ", _("Be verbose.\n"));
@@ -275,7 +275,7 @@ cmdline_opt_t cmdline_opt[] =
 {
 	/* program modes */
 	{ F_UFLG, 'c',   0, "check",  &opt.mode, MODE_CHECK },
-	{ F_UFLG,   0,   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
+	{ F_UFLG, 'k',   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
 	{ F_UFLG, 'u',   0, "update", &opt.mode, MODE_UPDATE },
 	{ F_UFLG, 'B',   0, "benchmark", &opt.mode, MODE_BENCHMARK },
 	{ F_UFLG,   0,   0, "torrent", &opt.mode, MODE_TORRENT },

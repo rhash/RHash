@@ -1,15 +1,18 @@
+Mon Oct  8 2012 Aleksey
+	* Shortcut -k for --check-embedded
+
 Thu Sep 27 2012 Aleksey
 	* Bugfix: non-zero exit code if some files were not found
 	* improved Ctrl-C processing
 
 Sat Aug  4 2012 Aleksey
-	Bugfix: path issue with verification of hash files
+	* Bugfix: path issue with verification of hash files
 
 Mon Jun 25 2012 Aleksey
-	Bugfix: different BTIH were generated for the same file
+	* Bugfix: different BTIH were generated for the same file
 
 Sun May 13 2012 Aleksey
-	BugFix: python crashed on ia64
+	* BugFix: python crashed on ia64
 
 Tue Apr 17 2012 Aleksey
 	* PHP bindings for librhash
