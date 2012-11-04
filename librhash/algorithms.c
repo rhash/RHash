@@ -149,7 +149,7 @@ void rhash_init_algorithms(unsigned mask)
 /**
  * Initialize crc32 hash.
  *
- * @param crc32 pointer to the hash to initalize
+ * @param crc32 pointer to the hash to initialize
  */
 static void rhash_crc32_init(uint32_t* crc32)
 {

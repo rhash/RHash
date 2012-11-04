@@ -2,7 +2,7 @@
  * based on the article by
  * Ross Anderson and Eli Biham "Tiger: A Fast New Hash Function".
  *
- * Copyright: 2007 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2007-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -10,6 +10,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
 #include <string.h>
@@ -19,7 +23,7 @@
 /**
  * Initialize algorithm context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_tiger_init(tiger_ctx *ctx)
 {
@@ -157,12 +161,11 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
 void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
 {
 	size_t index = (size_t)ctx->length & 63;
-	size_t left;
 	ctx->length += size;
 
-	/* Try to fill partial block */
+	/* fill partial block */
 	if(index) {
-		left = tiger_block_size - index;
+		size_t left = tiger_block_size - index;
 		if(size < left) {
 			memcpy(ctx->message + index, msg, size);
 			return;

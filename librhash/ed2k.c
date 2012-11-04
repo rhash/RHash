@@ -1,6 +1,6 @@
 /* ed2k.c - an implementation of EDonkey 2000 Hash Algorithm.
  *
- * Copyright: 2006 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2006-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -8,6 +8,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  *
  * This file implements eMule-compatible version of algorithm.
  * Note that eDonkey and eMule ed2k hashes are different only for
@@ -33,7 +37,7 @@
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_ed2k_init(ed2k_ctx *ctx)
 {

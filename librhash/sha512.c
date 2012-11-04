@@ -1,7 +1,7 @@
 /* sha512.c - an implementation of SHA-384/512 hash functions
  * based on FIPS 180-3 (Federal Information Processing Standart).
  *
- * Copyright: 2010 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2010-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -9,6 +9,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
 #include <string.h>
@@ -98,7 +102,7 @@ void rhash_sha512_init(sha512_ctx *ctx)
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_sha384_init(struct sha512_ctx *ctx)
 {

@@ -1,9 +1,9 @@
 /* ripemd-160.c - an implementation of RIPEMD-160 Hash function
  * based on the original aritcle:
- * H. Dobbertin, A. Bosselaers, B. Preneel, RIPEMD-160: A strengthened version of RIPEMD,
- * Lecture Notes in Computer, 1996, V.1039, pp.71-82
+ * H. Dobbertin, A. Bosselaers, B. Preneel, RIPEMD-160: A strengthened version
+ * of RIPEMD, Lecture Notes in Computer, 1996, V.1039, pp.71-82
  *
- * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -11,6 +11,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
 #include <string.h>
@@ -20,7 +24,7 @@
 /**
  * Initialize algorithm context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_ripemd160_init(ripemd160_ctx *ctx)
 {
@@ -253,8 +257,6 @@ static void rhash_ripemd160_process_block(unsigned *hash, const unsigned* X)
 	hash[3] = hash[4] + a1 + B;
 	hash[4] = hash[0] + b1 + C;
 	hash[0] = D;
-
-	return;
 }
 
 /**

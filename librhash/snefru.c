@@ -1,6 +1,6 @@
 /* snefru.c - an implementation of Snefru-128/256 Message-Digest Algorithms
  *
- * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -8,6 +8,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  *
  * Specification: Ralph C. Merkle, A Fast Software One-Way Hash Function,
  *   J. Cryptology, Vol. 3, No 1, pp. 43-58, 1990
@@ -732,7 +736,7 @@ static const unsigned rhash_snefru_sbox[SNEFRU_NUMBER_OF_ROUNDS * 512] = {
 /**
  * Initialize algorithm context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_snefru128_init(struct snefru_ctx *ctx)
 {
@@ -743,7 +747,7 @@ void rhash_snefru128_init(struct snefru_ctx *ctx)
 /**
  * Initialize algorithm context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_snefru256_init(struct snefru_ctx *ctx)
 {

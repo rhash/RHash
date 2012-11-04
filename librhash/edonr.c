@@ -1,6 +1,6 @@
 /* edonr.c - an implementation of EDON-R 256/224/384/512 hash functions
  *
- * Copyright: 2011 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2011-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -8,6 +8,10 @@
  * the rights to  use, copy, modify,  merge, publish, distribute, sublicense,
  * and/or sell copies  of  the Software,  and to permit  persons  to whom the
  * Software is furnished to do so.
+ *
+ * This program  is  distributed  in  the  hope  that it will be useful,  but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  *
  * This implementation is based on the article:
  *    D. Gligoroski, R. S. Odegard, M. Mihova, S. J. Knapskog, ...,
@@ -24,7 +28,7 @@
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_edonr256_init(edonr_ctx *ctx)
 {
@@ -42,7 +46,7 @@ void rhash_edonr256_init(edonr_ctx *ctx)
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_edonr224_init(struct edonr_ctx *ctx)
 {
@@ -60,7 +64,7 @@ void rhash_edonr224_init(struct edonr_ctx *ctx)
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_edonr512_init(edonr_ctx *ctx)
 {
@@ -81,7 +85,7 @@ void rhash_edonr512_init(edonr_ctx *ctx)
 /**
  * Initialize context before calculaing hash.
  *
- * @param ctx context to initalize
+ * @param ctx context to initialize
  */
 void rhash_edonr384_init(struct edonr_ctx *ctx)
 {
