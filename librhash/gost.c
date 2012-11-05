@@ -325,10 +325,10 @@ static void rhash_gost_compute_sum_and_hash(gost_ctx * ctx, const unsigned* bloc
 
 	/* compute the 256-bit sum */
 	for(i = 0; i < 8; i++) {
-		const unsigned old = ctx->sum[i];
 		LOAD_BLOCK_LE(i);
 		ctx->sum[i] += block_le[i] + carry;
-		carry = (ctx->sum[i] < old || ctx->sum[i] < block_le[i] ? 1 : 0);
+		carry = (ctx->sum[i] < block_le[i] ? 1 :
+			ctx->sum[i] == block_le[i] ? carry : 0);
 	}
 #endif /* USE_GCC_ASM_IA32 */
 

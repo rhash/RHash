@@ -506,7 +506,7 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
 	char msg_name[20];
 	memset(msg_chunk, ch, 8192);
 	if(ch >= 32) sprintf(msg_name, "\"%c\"x%d", ch, (int)msg_size);
-	else sprintf(msg_name, "\"\\%o\"x%d", (unsigned)ch, (int)msg_size);
+	else sprintf(msg_name, "\"\\%o\"x%d", (unsigned)(unsigned char)ch, (int)msg_size);
 	assert_hash_long_msg(hash_id, msg_chunk, 8192, msg_size, hash, msg_name);
 }
 
@@ -605,7 +605,9 @@ static void test_long_strings(void)
 		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash);
 	}
 
-	/* note: it would be better to check with more complex pre-generated messages */
+	/* now we verify some specific cases */
+	assert_rep_hash(RHASH_GOST, 0xFF, 64, "13416C4EC74A63C3EC90CB1748FD462C7572C6C6B41844E48CC1184D1E916098");
+	assert_rep_hash(RHASH_GOST_CRYPTOPRO, 0xFF, 64, "58504D26B3677E756BA3F4A9FD2F14B3BA5457066A4AA1D700659B90DCDDD3C6");
 
 	/* these messages verified by eMule LinkCreator (which uses eMule variant of ED2K hash) */
 	assert_rep_hash(RHASH_ED2K, 0, 9728000, "FC21D9AF828F92A8DF64BEAC3357425D");
