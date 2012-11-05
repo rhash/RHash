@@ -1,0 +1,26 @@
+Sun May 13 2012 Aleksey
+	* BugFix: python crashed on ia64
+
+Tue Apr 17 2012 Aleksey
+	* PHP bindings for librhash
+
+Sat Apr 14 2012 Aleksey
+	* === Version 1.2.9 ===
+
+Sun Nov 06 2011 Sergey Basalaev
+	* .NET/Mono bindings to librhash
+
+Wed Sep 14 2011 Aleksey
+	* === Version 1.2.8 ===
+
+Wed Sep 14 2011 Aleksey
+	* Perl bindings
+
+Sat Jul  9 2011 Sergey Basalaev
+	* Ruby bindings
+
+Thu Jun 16 2011 Sergey Basalaev
+	* Python bindings
+
+Sun Jun 12 2011 Sergey Basalaev
+	* LibRHash Java bindings
