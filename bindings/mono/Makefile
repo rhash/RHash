@@ -46,4 +46,4 @@ clean:
 	rm -f RHash.dll RHash.dll.mdb
 	rm -f RHash.tree RHash.zip
 	rm -rf html
-	$(MAKE) -C test/ clean
+	$(MAKE) -C test clean

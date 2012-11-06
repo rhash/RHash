@@ -49,13 +49,6 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/util.c librhash/util.h librhash/config.h librhash/Makefile
 I18N_FILES = po/de.po po/en_AU.po po/es.po po/gl.po po/it.po po/ru.po
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
-WIN_SUFFIX     = win32
-ARCHIVE_BZIP   = rhash-$(VERSION)-src.tar.bz2
-ARCHIVE_GZIP   = rhash-$(VERSION)-src.tar.gz
-ARCHIVE_DEB_GZ = rhash_$(VERSION).orig.tar.gz
-ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
-ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
-WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
 DESTDIR = 
 BINDIR  = $(PREFIX)/bin
 MANDIR  = $(PREFIX)/share/man
@@ -73,13 +66,19 @@ install: all install-program install-symlinks
 uninstall: uninstall-program uninstall-symlinks
 
 # creating archives
-dist: gzip
-gzip: check $(ARCHIVE_GZIP)
-bzip: check $(ARCHIVE_BZIP)
-dgz:  check $(ARCHIVE_DEB_GZ)
-7z:   check $(ARCHIVE_7Z)
+WIN_SUFFIX     = win32
+ARCHIVE_BZIP   = rhash-$(VERSION)-src.tar.bz2
+ARCHIVE_GZIP   = rhash-$(VERSION)-src.tar.gz
+ARCHIVE_FULL   = rhash-$(VERSION)-full-src.tar.gz
+ARCHIVE_DEB_GZ = rhash_$(VERSION).orig.tar.gz
+ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
+ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
+WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
+dist: gzip gzip-bindings
+dist-full: gzip-full
+win-dist: zip
 zip : $(ARCHIVE_ZIP)
-win-dist: $(ARCHIVE_ZIP)
+dgz:  check $(ARCHIVE_DEB_GZ)
 
 install-program:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)/etc
@@ -115,6 +114,7 @@ $(LIBRHASH): $(LIBRHASH_FILES)
 
 test-lib:
 	+make -C librhash test
+
 test-shared-lib:
 	+make -C librhash test-shared
 
@@ -233,25 +233,27 @@ copy-dist: $(DIST_FILES) permissions
 	mkdir $(PROGNAME)-$(VERSION)
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
 
-gzip-rhash: copy-dist
+gzip: check
+	+make copy-dist
 	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 gzip-bindings:
 	+make -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
 
-$(ARCHIVE_GZIP): clean-bindings copy-dist
+gzip-full: check clean-bindings
+	+make copy-dist
 	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
-	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
+	tar czf $(ARCHIVE_FULL) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-$(ARCHIVE_BZIP): clean-bindings copy-dist
-	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+bzip: check clean-bindings
+	+make copy-dist
 	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-$(ARCHIVE_7Z): clean-bindings copy-dist
-	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+7z: check clean-bindings
+	+make copy-dist
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -307,3 +309,7 @@ install-gmo: compile-gmo
 		$(INSTALL_DATA) -T $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
+.PHONY: all install uninstall lib-shared lib-static dist dist-full zip \
+	test test-static test-shared test-lib test-shared-lib \
+	check copy-dist gzip gzip-bindings gzip-full bzip 7z zip clean clean-bindings \
+	update-po compile-gmo install-gmo
