@@ -241,7 +241,7 @@
     <ClCompile Include="..\..\librhash\ripemd-160.c" />
     <ClCompile Include="..\..\librhash\sha1.c" />
     <ClCompile Include="..\..\librhash\snefru.c" />
-    <ClCompile Include="..\..\librhash\test_sums.c">
+    <ClCompile Include="..\..\librhash\test_hashes.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -262,7 +262,7 @@
     <ClInclude Include="..\..\librhash\rhash_timing.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
-    <ClInclude Include="..\..\librhash\test_sums.h" />
+    <ClInclude Include="..\..\librhash\test_hashes.h" />
     <ClInclude Include="..\dirent.h" />
     <ClInclude Include="..\platform-dependent.h" />
     <ClInclude Include="..\stdint.h" />
