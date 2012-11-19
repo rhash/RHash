@@ -29,14 +29,14 @@ for a long-term storing or transferring.
 Features:
  * Small and easy to learn interface.
  * Hi-level and Low-level API.
- * Allows calculating of several hash functions simultaniously.
+ * Allows calculating of several hash functions simultaneously.
  * Portability: the library works on Linux, *BSD and Windows.
 
 
                                === Links ===
 
  * Project Home Page: http://rhash.sourceforge.net/
- * Oficial Releases: http://sf.net/projects/rhash/files/rhash/
+ * Official Releases: http://sf.net/projects/rhash/files/rhash/
 
  * RHash hash functions descriptions http://rhash.anz.ru/hashes.php
  * The table of the hash functions supported by RHash
@@ -55,7 +55,7 @@ The latest source code can be obtained from Git repository by command:
                        === Notes on RHash License ===
 
 The RHash program and LibRHash library are distributed under  RHash License,
-see the COPYING file for details.  In particluar,  the program,  the library
+see the COPYING file for details.  In particular,  the program,  the library
 and  source code  can be  used  free of charge  under  the  MIT,  BSD,  GPL,
 commercial or freeware license without additional restrictions.  In the case
 the OSI-approved license is required the  MIT license should be used.
