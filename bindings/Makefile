@@ -78,8 +78,9 @@ install-perl:
 copy-dist:
 	mkdir -p $(COPYDIR)
 	find java ruby python -type f -regex '.*\(\.\([hc]\|java\|py\|rb\|txt\)\|Makefile\)' -exec $(CP) '{}' $(COPYDIR)/ \;
-	find perl -type f -regex '.*\(\.\(t\|PL\|pm\|xs\)\|MANIFEST\|typemap\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\|sln\|csproj\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
+	find perl -type f -regex '.*\(\.\(t\|PL\|pm\|xs\)\|MANIFEST\|typemap\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
+	find php -type f -regex '.*\.\(m4\|c\|h\|phpt\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(FILES) "$(COPYDIR)/"
 
 gzip: distclean
