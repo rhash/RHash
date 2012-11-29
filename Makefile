@@ -62,8 +62,9 @@ INSTALL_PROGRAM = $(INSTALL) -m 755
 INSTALL_DATA    = $(INSTALL) -m 644
 
 all: $(TARGET)
-install: all install-program install-symlinks
-uninstall: uninstall-program uninstall-symlinks
+install: all install-binary install-data install-symlinks
+install-shared: $(SHARED_TRG) install-shared-binary install-data install-symlinks
+uninstall: uninstall-binary uninstall-data uninstall-symlinks
 
 # creating archives
 WIN_SUFFIX     = win32
@@ -80,20 +81,30 @@ win-dist: zip
 zip : $(ARCHIVE_ZIP)
 dgz:  check $(ARCHIVE_DEB_GZ)
 
-install-program:
-	$(INSTALL) -d $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)/etc
+install-binary:
+	$(INSTALL) -d $(DESTDIR)$(BINDIR)
 	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)
+
+# install dynamically linked binary
+install-shared-binary:
+	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) $(SHARED_TRG) $(DESTDIR)$(BINDIR)/rhash
+
+install-data:
+	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)/etc
 	$(INSTALL_DATA) dist/rhash.1 $(DESTDIR)$(MANDIR)/man1/rhash.1
 	sed -e 's/\x0D//g' dist/rhashrc.sample > rhashrc && $(INSTALL_DATA) rhashrc $(DESTDIR)/etc/rhashrc
 	rm -f rhashrc
 
 # dependencies should be properly set, otherwise 'make -j<n>' can run install targets in parallel
-install-symlinks: install-program
+install-symlinks:
 	for f in $(SYMLINKS); do ln -fs rhash $(DESTDIR)$(BINDIR)/$$f; done
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
-uninstall-program:
+uninstall-binary:
 	rm -f $(DESTDIR)$(BINDIR)/$(PROGNAME)
+
+uninstall-data:
 	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
 
 uninstall-symlinks:
@@ -247,12 +258,12 @@ gzip-full: check clean-bindings
 	tar czf $(ARCHIVE_FULL) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-bzip: check clean-bindings
+bzip: check
 	+make copy-dist
 	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
-7z: check clean-bindings
+7z: check
 	+make copy-dist
 	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
