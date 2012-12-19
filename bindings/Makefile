@@ -14,10 +14,10 @@ COPYDIR = rhash-bindings-$(VERSION)
 all: configure build test
 clean: distclean
 
-configure: $(patsubst %, configure-%, $(filter perl ruby, $(BINDINGS)))
+configure: $(patsubst %, configure-%, $(filter perl ruby php, $(BINDINGS)))
 build: $(patsubst %, build-%, $(BINDINGS))
 test: $(patsubst %, test-%, $(BINDINGS))
-install: $(patsubst %, install-%, $(filter perl ruby, $(BINDINGS)))
+install: $(patsubst %, install-%, $(filter perl ruby php, $(BINDINGS)))
 
 configure-perl: perl/Makefile
 configure-ruby: ruby/Makefile
@@ -57,7 +57,7 @@ test-perl:
 	$(MAKE) -C perl test
 
 test-php:
-#	$(MAKE) -C php test
+	$(MAKE) -C php test TEST_PHP_ARGS=-q
 
 test-ruby:
 	$(RUBY) -C ruby test_rhash.rb
@@ -74,6 +74,9 @@ install-ruby:
 
 install-perl:
 	$(MAKE) -C perl install DESTDIR=$(DESTDIR)
+
+install-php:
+	$(MAKE) -C php install INSTALL_ROOT=$(DESTDIR)
 
 copy-dist:
 	mkdir -p $(COPYDIR)
