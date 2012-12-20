@@ -85,7 +85,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_sf_rhash_Bindings_rhash_1print_1bytes
 	char output[130];
 	int len = rhash_print_bytes(output, obj->hash_data, obj->hash_len, flags);
 	jbyteArray arr = (*env)->NewByteArray(env, len);
-	(*env)->SetByteArrayRegion(env, arr, 0, len, output);
+	(*env)->SetByteArrayRegion(env, arr, 0, len, (jbyte*)output);
 	return arr;
 }
 
@@ -185,7 +185,7 @@ JNIEXPORT jlong JNICALL Java_org_sf_rhash_Bindings_rhash_1print
 	Digest obj = malloc(sizeof(DigestStruct));
 	obj->hash_len  = rhash_get_digest_size(hash_id);
 	obj->hash_data = calloc(obj->hash_len, sizeof(unsigned char));
-	rhash_print(obj->hash_data, TO_RHASH(context), hash_id, RHPR_RAW);
+	rhash_print((char*)obj->hash_data, TO_RHASH(context), hash_id, RHPR_RAW);
 	return TO_JLONG(obj);
 }
 

@@ -40,6 +40,6 @@ int hashcodeForDigest(Digest obj) {
 			case 3: hash ^= obj->hash_data[i] << 24;
 		}
 	}
-	return hash ^ obj->hash_id + obj->hash_len;
+	return hash ^ (obj->hash_id + obj->hash_len);
 }
 
