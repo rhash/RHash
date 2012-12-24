@@ -18,9 +18,10 @@
 
 CC = gcc
 CFLAGS = -g -O2
+LDFLAGS =
 LIBRHASH_INC =
 LIBRHASH_LD  =
-LDFLAGS = -lrhash $(LIBRHASH_LD)
+ALLLDFLAGS = $(LDFLAGS) -lrhash $(LIBRHASH_LD)
 ALLCFLAGS = $(CFLAGS) $(LIBRHASH_INC) -fPIC
 
 #Platform dependent
@@ -40,7 +41,7 @@ digest.o: digest.c digest.h
 	$(CC) $(ALLCFLAGS) -c $< -o $@
 
 $(LIBRARY): $(OBJECTS)
-	$(CC) -shared -o $@ $(OBJECTS) $(LDFLAGS)
+	$(CC) -shared -o $@ $(OBJECTS) $(ALLLDFLAGS)
 
 clean:
 	rm -f *.o $(LIBRARY)

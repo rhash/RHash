@@ -33,38 +33,53 @@ CLASSES_DIR = classes
 JAVADOC_DIR = javadoc
 TEST_DIR    = test
 
+JAVA_FILES := $(shell find $(JAVASRC_DIR) -name '*.java')
+JNI_FILES := $(shell find $(CSRC_DIR) -name '*.c' -o -name '*.h')
+LIB_PREFIX = lib
+LIB_SUFFIX = .so
+JNI_LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
+JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
+JAVADOC_FILE = $(DEST_DIR)/rhash-$(VERSION)-javadoc.zip
 JAVADOC_API_URL = http://download.oracle.com/javase/6/docs/api/
 
-JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
 
-all: jar jar-symlink jni javadoc
-
-jar: compile-classes
-	mkdir -p $(DEST_DIR)
-	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
+all: build-binary javadoc
+build-binary: jar jar-symlink jni
+jar: $(JARFILE)
+jni: $(DEST_DIR)/$(JNI_LIBRARY)
+zip-javadoc: $(JAVADOC_FILE)
 
 jar-symlink:
 	mkdir -p $(DEST_DIR)
 	ln -fs rhash-$(VERSION).jar $(DEST_DIR)/rhash.jar
 
+$(JARFILE): $(JAVA_FILES)
+	$(MAKE) compile-classes
+	mkdir -p $(DEST_DIR)
+	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
+
 compile-classes:
 	mkdir -p $(CLASSES_DIR)
-	$(JAVAC) -d $(CLASSES_DIR) -sourcepath $(JAVASRC_DIR) `find ${JAVASRC_DIR} -name '*.java'`
+	$(JAVAC) -d $(CLASSES_DIR) -sourcepath $(JAVASRC_DIR) $(JAVA_FILES)
 
 update-header: compile-classes
 	$(JAVAH) -o $(CSRC_DIR)/bindings.h -classpath $(CLASSES_DIR)  org.sf.rhash.Bindings
 
-jni:
+$(DEST_DIR)/$(JNI_LIBRARY): $(JNI_FILES)
 	$(MAKE) -C $(CSRC_DIR)
 	mkdir -p $(DEST_DIR)
-	cp $(CSRC_DIR)/*rhash-jni* $(DEST_DIR)
+	cp $(CSRC_DIR)/$(JNI_LIBRARY) $(DEST_DIR)
 
 javadoc: clean-javadoc
 	$(JAVADOC) -windowtitle 'RHash' \
-	           -sourcepath src \
+	           -sourcepath $(JAVASRC_DIR) \
 	           -subpackages org \
 	           -d $(JAVADOC_DIR) \
 	           -link $(JAVADOC_API_URL)
+
+$(JAVADOC_FILE): $(JAVA_FILES)
+	$(MAKE) javadoc
+	jar -cMf $(JAVADOC_FILE) $(JAVADOC_DIR)
 
 test: jar jni
 	$(JAVAC) -classpath $(JARFILE):$(JUNIT_CLASSPATH) $(TEST_DIR)/RHashTest.java

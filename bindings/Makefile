@@ -33,7 +33,7 @@ ruby/Makefile: ruby/extconf.rb
 	$(RUBY) -C ruby extconf.rb
 
 build-java:
-	$(MAKE) -C java
+	$(MAKE) -C java build-binary
 
 build-perl: configure-perl
 	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
