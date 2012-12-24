@@ -1,3 +1,6 @@
+Tue Dec 25 2012 Aleksey
+	* === Version 1.2.10 ===
+
 Mon Nov  5 2012 Aleksey
 	* Bugfix: incorrect GOST hash for ("\FF" x 64) on non-x86 CPU
 
