@@ -66,13 +66,13 @@ for a long-term storing or transferring.
 %setup
 
 %build
-%{__make} rhash-shared lib-static CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl SHARED_TRG=rhash
+%{__make} build-shared lib-static CFLAGS="$RPM_OPT_FLAGS -DNDEBUG -DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" LDFLAGS=-ldl
 
 %check
-%{__make} test-shared CFLAGS="$RPM_OPT_FLAGS -DNDEBUG" SHARED_TRG=rhash
+%{__make} test-shared CFLAGS="$RPM_OPT_FLAGS -DNDEBUG"
 
 %install
-%{__make} install install-lib-static install-lib-shared PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" LIBDIR="%{_libdir}"
+%{__make} install-shared install-lib-static install-lib-shared PREFIX=/usr DESTDIR="$RPM_BUILD_ROOT" MANDIR="%{_mandir}" LIBDIR="%{_libdir}"
 
 %clean
 rm -rf "$RPM_BUILD_ROOT"
@@ -88,7 +88,7 @@ rm -rf "$RPM_BUILD_ROOT"
 %defattr(-,root,root)
 %{_libdir}/librhash.a
 %{_libdir}/librhash.so
-%{_includedir}/rhash/*.h
+%{_includedir}/*.h
 
 %files -n %{libname}
 %defattr(-,root,root)
@@ -102,6 +102,7 @@ ldconfig
 ldconfig
 
 %changelog
+* Tue Dec 25 2012 Aleksey <rhash.admin@gmail.com> 1.2.10-1mdk
 * Sat Apr 14 2012 Aleksey <rhash.admin@gmail.com> 1.2.9-1mdk
 * Wed Sep 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.8-1mdk
 * Sun Aug 14 2011 Aleksey <rhash.admin@gmail.com> 1.2.7-1mdk
