@@ -1,7 +1,7 @@
 /* has160.h */
 #ifndef HAS160_H
 #define HAS160_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

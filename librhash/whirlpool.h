@@ -1,7 +1,7 @@
 /* whirlpool.h */
 #ifndef WHIRLPOOL_H
 #define WHIRLPOOL_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,7 @@
 /* md4.h */
 #ifndef MD4_HIDER
 #define MD4_HIDER
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

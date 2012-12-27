@@ -2,7 +2,7 @@
 #ifndef HEX_H
 #define HEX_H
 
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,4 +1,4 @@
-/* util.c - memory, vector and strings utility functions
+/* util.c - utility functions
  *
  * Copyright: 2010-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
@@ -14,11 +14,4 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
-#include <unistd.h>
-#include <stdlib.h> /* size_t for vc6.0 */
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <wchar.h>
 #include "util.h"
-

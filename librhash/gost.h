@@ -1,7 +1,7 @@
 /* gost.h */
 #ifndef GOST_H
 #define GOST_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

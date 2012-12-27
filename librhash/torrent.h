@@ -1,7 +1,7 @@
 /* torrent.h */
 #ifndef TORRENT_H
 #define TORRENT_H
-#include <stdint.h>
+#include "ustd.h"
 #include "sha1.h"
 
 #ifdef __cplusplus

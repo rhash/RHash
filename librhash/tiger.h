@@ -1,7 +1,7 @@
 /* tiger.h */
 #ifndef TIGER_H
 #define TIGER_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

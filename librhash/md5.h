@@ -1,7 +1,7 @@
 /* md5.h */
 #ifndef MD5_HIDER
 #define MD5_HIDER
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

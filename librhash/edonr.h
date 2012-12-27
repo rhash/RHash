@@ -1,7 +1,7 @@
 /* edonr.h EDON-R 224/256/384/512 hash functions */
 #ifndef EDONR_H
 #define EDONR_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

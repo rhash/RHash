@@ -1,7 +1,7 @@
 /* sha.h sha256 and sha224 hash functions */
 #ifndef SHA256_H
 #define SHA256_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,9 +13,6 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
-
-#include <unistd.h>
-#include <stdlib.h> /* size_t for vc6.0 */
 #include "byte_order.h"
 
 #if !(__GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4)) /* if !GCC or GCC < 4.3 */

@@ -1,15 +1,11 @@
 /* byte_order.h */
 #ifndef BYTE_ORDER_H
 #define BYTE_ORDER_H
-#include <stdint.h>
+#include "ustd.h"
 #include <stdlib.h>
 
 #ifdef IN_RHASH
 #include "config.h"
-#endif
-
-#if _MSC_VER > 1000
-#include "platform-dependent.h"
 #endif
 
 #ifdef __GLIBC__

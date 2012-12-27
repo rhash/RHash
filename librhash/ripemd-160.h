@@ -1,7 +1,7 @@
 /* ripemd-160.h */
 #ifndef  RMD160_H
 #define  RMD160_H
-#include <stdint.h>
+#include "ustd.h"
 
 #ifdef __cplusplus
 extern "C" {

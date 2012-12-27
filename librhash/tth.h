@@ -1,7 +1,7 @@
 #ifndef TTH_H
 #define TTH_H
 
-#include <stdint.h>
+#include "ustd.h"
 #include "tiger.h"
 
 #ifdef __cplusplus
