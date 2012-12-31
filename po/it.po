@@ -8,22 +8,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2012-11-22 00:04+0700\n"
-"PO-Revision-Date: 2011-09-25 15:50+0000\n"
+"POT-Creation-Date: 2012-06-15 13:08+0700\n"
+"PO-Revision-Date: 2012-06-15 18:22+0000\n"
 "Last-Translator: Valter Mura <valtermura@gmail.com>\n"
 "Language-Team: Italian <ubuntu-l10n-it@lists.ubuntu.com>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2011-09-25 19:36+0000\n"
-"X-Generator: Launchpad (build 14012)\n"
+"X-Launchpad-Export-Date: 2012-11-12 15:28+0000\n"
+"X-Generator: Launchpad (build 16251)\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:269
 #, c-format
 msgid "wrong embedded CRC32, should be %s\n"
-msgstr "somma incorporata sbagliata, deve essere %s\n"
+msgstr "CRC32 incorporato non corretto, dovrebbe essere %s\n"
 
 #: calc_sums.c:293 hash_update.c:358
 #, c-format
@@ -310,11 +310,13 @@ msgstr "Non mostra i messaggi di OK per i file verificati correttamente.\n"
 
 #: parse_cmdline.c:76
 msgid "Ignore case of filenames when updating hash files.\n"
-msgstr "Ignora le maiuscole dei nomi_file quando si aggiornano i file hash.\n"
+msgstr ""
+"Ignora le maiuscole dei nomi_file quando si aggiornano i file hash.\n"
 
 #: parse_cmdline.c:77
 msgid "Show percents, while calculating or checking hashes.\n"
-msgstr "Mostra le percentuali durante il calcolo o il controllo degli hash.\n"
+msgstr ""
+"Mostra le percentuali durante il calcolo o il controllo degli hash.\n"
 
 #: parse_cmdline.c:78
 msgid "Output per-file and total processing speed.\n"
@@ -455,7 +457,8 @@ msgstr "%s v%s benchmark in corso...\n"
 
 #: rhash_main.c:207
 msgid "no files/directories were specified at command line\n"
-msgstr "nessun file o directory sono stati specificati alla riga di comando\n"
+msgstr ""
+"nessun file o directory sono stati specificati alla riga di comando\n"
 
 #: rhash_main.c:211
 #, c-format
@@ -472,6 +475,3 @@ msgstr ""
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "La stringa del formato: %s\n"
-
-#~ msgid "%s: "
-#~ msgstr "%s: "
