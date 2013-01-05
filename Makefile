@@ -127,13 +127,16 @@ $(SHAREDLIB):
 $(LIBRHASH): $(LIBRHASH_FILES)
 	+make -C librhash lib-static
 
-test-lib: $(LIBRHASH)
+test-static-lib: $(LIBRHASH)
 	+make -C librhash test-static
 
 test-shared-lib: $(SHAREDLIB)
 	+make -C librhash test-shared
 
-test: test-static test-lib
+test-libs: $(LIBRHASH) $(SHAREDLIB)
+	+make -C librhash test-static test-shared
+
+test: test-static
 test-static: $(TARGET)
 	chmod +x tests/test_$(PROGNAME).sh
 	tests/test_$(PROGNAME).sh
@@ -145,13 +148,12 @@ test-shared: $(SHARED_TRG) test-shared-lib
 version.h: Makefile
 	echo "#define VERSION \"$(VERSION)\"" > version.h
 
-bindings/version.properties: Makefile
-	echo "version=$(VERSION)" > bindings/version.properties
-
 # check version
-check: version.h bindings/version.properties
+check: version.h
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
+	[ ! -d bindings -o bindings/version.properties -nt Makefile ] || \
+		echo "version=$(VERSION)" > bindings/version.properties
 	[ -s dist/rhash.1.html ]
 
 $(TARGET): $(OBJECTS) $(LIBRHASH)
@@ -323,6 +325,6 @@ install-gmo: compile-gmo
 	done
 
 .PHONY: all install uninstall lib-shared lib-static dist dist-full zip \
-	test test-static test-shared test-lib test-shared-lib \
+	test test-static test-shared test-libs test-static-lib test-shared-lib \
 	check copy-dist gzip gzip-bindings gzip-full bzip 7z zip clean clean-bindings \
 	update-po compile-gmo install-gmo
