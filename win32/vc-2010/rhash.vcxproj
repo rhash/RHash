@@ -254,7 +254,10 @@
     <ClCompile Include="..\..\librhash\whirlpool_sbox.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\hash_check.h" />
+    <ClInclude Include="..\dirent.h" />
+    <ClInclude Include="..\platform-dependent.h" />
+    <ClInclude Include="..\stdint.h" />
+    <ClInclude Include="..\unistd.h" />
     <ClInclude Include="..\..\librhash\algorithms.h" />
     <ClInclude Include="..\..\librhash\edonr.h" />
     <ClInclude Include="..\..\librhash\plug_openssl.h" />
@@ -263,10 +266,6 @@
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
     <ClInclude Include="..\..\librhash\test_hashes.h" />
-    <ClInclude Include="..\dirent.h" />
-    <ClInclude Include="..\platform-dependent.h" />
-    <ClInclude Include="..\stdint.h" />
-    <ClInclude Include="..\unistd.h" />
     <ClInclude Include="..\..\librhash\aich.h" />
     <ClInclude Include="..\..\librhash\byte_order.h" />
     <ClInclude Include="..\..\librhash\config.h" />
@@ -281,10 +280,14 @@
     <ClInclude Include="..\..\librhash\sha1.h" />
     <ClInclude Include="..\..\librhash\snefru.h" />
     <ClInclude Include="..\..\librhash\tiger.h" />
+    <ClInclude Include="..\..\librhash\torrent.h" />
     <ClInclude Include="..\..\librhash\tth.h" />
+    <ClInclude Include="..\..\librhash\ustd.h" />
+    <ClInclude Include="..\..\librhash\util.h" />
     <ClInclude Include="..\..\librhash\whirlpool.h" />
     <ClInclude Include="..\..\calc_sums.h" />
     <ClInclude Include="..\..\common_func.h" />
+    <ClInclude Include="..\..\hash_check.h" />
     <ClInclude Include="..\..\hash_print.h" />
     <ClInclude Include="..\..\hash_update.h" />
     <ClInclude Include="..\..\file_mask.h" />
@@ -293,8 +296,6 @@
     <ClInclude Include="..\..\output.h" />
     <ClInclude Include="..\..\parse_cmdline.h" />
     <ClInclude Include="..\..\rhash_main.h" />
-    <ClInclude Include="..\..\librhash\torrent.h" />
-    <ClInclude Include="..\..\librhash\util.h" />
     <ClInclude Include="..\..\version.h" />
     <ClInclude Include="..\..\win_utils.h" />
   </ItemGroup>
