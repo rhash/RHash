@@ -13,7 +13,7 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 
 #include <string.h>
 #include <assert.h>
@@ -200,4 +200,4 @@ int rhash_plug_openssl(void)
 	rhash_info_table = rhash_openssl_hash_info;
 	return 1;
 }
-#endif /* USE_OPENSSL */
+#endif /* defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME) */

@@ -23,7 +23,7 @@ typedef struct torrent_ctx
 	unsigned char btih[20]; /* resulting BTIH hash sum */
 	unsigned options;       /* algorithm options */
 	sha1_ctx sha1_context;  /* context for hashing current file piece */
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for OpenSSL SHA1 context */
 	void *sha_init, *sha_update, *sha_final;
 #endif

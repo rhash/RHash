@@ -11,10 +11,9 @@ extern "C" {
 typedef struct aich_ctx
 {
 	sha1_ctx sha1_context; /* context used to hash tree leaves */
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for openssl sha1 context */
 	void *sha_init, *sha_update, *sha_final;
-	unsigned long sha1_length;
 #endif
 	unsigned index;        /* algorithm position in the current ed2k chunk */
 	unsigned char (*block_hashes)[sha1_hash_size];

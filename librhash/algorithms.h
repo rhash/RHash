@@ -79,6 +79,10 @@ extern rhash_info info_edr512;
 
 void rhash_init_algorithms(unsigned mask);
 
+#if defined(OPENSSL_RUNTIME) && !defined(USE_OPENSSL)
+# define USE_OPENSSL
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

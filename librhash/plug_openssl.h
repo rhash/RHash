@@ -1,7 +1,7 @@
 /* plug_openssl.h - plug-in openssl algorithms */
 #ifndef RHASH_PLUG_OPENSSL_H
 #define RHASH_PLUG_OPENSSL_H
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,5 +19,5 @@ extern unsigned rhash_openssl_hash_mask; /* mask of hash sums to use */
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* USE_OPENSSL */
+#endif /* defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME) */
 #endif /* RHASH_PLUG_OPENSSL_H */

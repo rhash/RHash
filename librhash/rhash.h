@@ -246,12 +246,12 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0);
 
 /** The bit mask of hash algorithms implemented by OpenSSL */
-#ifdef USE_OPENSSL
-#define RHASH_OPENSSL_SUPPORTED_HASHES (RHASH_MD4 | RHASH_MD5 | \
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
+# define RHASH_OPENSSL_SUPPORTED_HASHES (RHASH_MD4 | RHASH_MD5 | \
 	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | \
 	RHASH_SHA512 | RHASH_RIPEMD160 | RHASH_WHIRLPOOL)
 #else
-#define RHASH_OPENSSL_SUPPORTED_HASHES 0
+# define RHASH_OPENSSL_SUPPORTED_HASHES 0
 #endif
 
 #ifdef __cplusplus

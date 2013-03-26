@@ -254,6 +254,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef USE_OPENSSL
 	" USE_OPENSSL"
 #endif
+#ifdef OPENSSL_RUNTIME
+	" OPENSSL_RUNTIME"
+#endif
 
 /* detect endianness */
 #ifdef CPU_LITTLE_ENDIAN
