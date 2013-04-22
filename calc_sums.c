@@ -238,13 +238,13 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32_be)
 }
 
 /**
- * Rename given file inserting its crc32 sum enclosed in braces just before
- * the file extension.
+ * Rename given file inserting its crc32 sum enclosed into square braces
+ * and placing it right before the file extension.
  *
  * @param info pointer to the data of the file to rename.
  * @return 0 on success, -1 on fail with error code in errno
  */
-int rename_file_to_embed_crc32(struct file_info *info)
+int rename_file_by_embeding_crc32(struct file_info *info)
 {
 	size_t len = strlen(info->full_path);
 	const char* p = info->full_path + len;
@@ -373,6 +373,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	int res = 0;
 
 	memset(&info, 0, sizeof(info));
+	info.file = file;
 	info.full_path = rsh_strdup(file->path);
 	file_info_set_print_path(&info, print_path);
 	info.size = 0;
@@ -381,7 +382,6 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 
 	if(IS_DASH_STR(info.full_path)) {
 		print_path = "(stdin)";
-		memset(&info.stat_buf, 0, sizeof(info.stat_buf));
 	} else {
 		if(file->mode & FILE_IFDIR) return 0; /* don't handle directories */
 		info.size = file->size; /* total size, in bytes */
@@ -414,21 +414,17 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 
 	if(opt.flags & OPT_EMBED_CRC) {
 		/* rename the file */
-		rename_file_to_embed_crc32(&info);
+		rename_file_by_embeding_crc32(&info);
 	}
 
 	if((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
-		file_t file;
-		file.path = info.full_path;
-		file.wpath = 0;
-		rsh_file_stat2(&file, 0);
-
-		print_sfv_header_line(rhash_data.upd_fd, &file, info.full_path);
+		/* updating SFV file: print SFV header line */
+		print_sfv_header_line(rhash_data.upd_fd, file, 0);
 		if(opt.flags & OPT_VERBOSE) {
-			print_sfv_header_line(rhash_data.log, &file, info.full_path);
+			print_sfv_header_line(rhash_data.log, file, 0);
 			fflush(rhash_data.log);
 		}
-		rsh_file_cleanup(&file);
+		rsh_file_cleanup(file);
 	}
 
 	if(rhash_data.print_list && res >= 0) {

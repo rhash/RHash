@@ -402,7 +402,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 				fprintf(out, "%s", url);
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
-				print_time(out, info->stat_buf.st_mtime);
+				print_time64(out, info->file->mtime);
 				break;
 			case PRINT_SIZE: /* file size */
 				fprintI64(out, info->size, list->width, (list->flags & PRINT_FLAG_PAD_WITH_ZERO));

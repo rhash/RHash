@@ -342,7 +342,7 @@ unsigned rhash_get_ticks(void)
  * @return 0 on success, -1 on error
  */
 int rsh_file_stat2(file_t* file, int use_lstat)
- {
+{
 	struct rsh_stat_struct st;
 	int res = -1;
 
@@ -350,6 +350,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	int i;
 	(void)use_lstat; /* ignore on windows */
 
+	file->mtime = 0;
 	if(file->wpath) {
 		free(file->wpath);
 		file->wpath = NULL;
@@ -362,6 +363,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		if(res == 0) {
 			file->wpath = wpath;
 			file->size  = st.st_size;
+			file->mtime = st.st_mtime;
 
 			/* set correct file size for large files under win32 */
 			win32_set_filesize64(file->path, &file->size);
@@ -373,9 +375,9 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	res = (use_lstat ? lstat(file->path, &st) :
 		rsh_stat(file->path, &st));
 	file->size  = st.st_size;
+	file->mtime = st.st_mtime;
 #endif /* _WIN32 */
 
-	file->mtime = st.st_mtime;
 	file->mode  = 0;
 	if(S_ISDIR(st.st_mode)) file->mode |= FILE_IFDIR;
 
