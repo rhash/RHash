@@ -763,8 +763,8 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
  */
 static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 {
-	int count = cmd_line->options.size;
-	int i;
+	size_t count = cmd_line->options.size;
+	size_t i;
 	for(i = 0; i < count; i++) {
 		parsed_option_t* o = (parsed_option_t*)rsh_blocks_vector_get_ptr(
 			&cmd_line->options, i, 16, sizeof(parsed_option_t));

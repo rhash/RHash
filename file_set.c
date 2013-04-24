@@ -169,7 +169,7 @@ int file_set_exist(file_set *set, const char* filepath)
 	hash = file_set_make_hash(search_filepath);
 
 	/* fast binary search */
-	for(a = -1, b = set->size; (a + 1) < b;) {
+	for(a = -1, b = (int)set->size; (a + 1) < b;) {
 		file_set_item *item;
 
 		c = (a + b) / 2;

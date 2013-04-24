@@ -117,7 +117,7 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	/* check if there is enough space allocated */
 	if(index >= ctx->allocated) {
 		/* resize the table by allocating some extra space */
-		int new_size = (ctx->allocated == 0 ? 64 : ctx->allocated * 2);
+		size_t new_size = (ctx->allocated == 0 ? 64 : ctx->allocated * 2);
 		assert(index == ctx->allocated);
 
 		/* re-allocate the chunk table to contain new_size void*-pointers */
@@ -147,8 +147,8 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
  */
 void rhash_aich_cleanup(aich_ctx* ctx)
 {
-	unsigned i;
-	unsigned table_size = (ctx->chunks_number + CT_GROUP_SIZE - 1) / CT_GROUP_SIZE;
+	size_t i;
+	size_t table_size = (ctx->chunks_number + CT_GROUP_SIZE - 1) / CT_GROUP_SIZE;
 
 	if(ctx->chunk_table != 0) {
 		assert(table_size <= ctx->allocated);
@@ -190,7 +190,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 	assert(type == AICH_HASH_FULL_TREE ? ctx->chunk_table != 0 : ctx->block_hashes != 0);
 
 	/* calculate number of leafs in the tree */
-	blocks_stack[0] = blocks = (type == AICH_HASH_FULL_TREE ?
+	blocks_stack[0] = blocks = (unsigned)(type == AICH_HASH_FULL_TREE ?
 		ctx->chunks_number : (ctx->index + FULL_BLOCK_SIZE - 1) / FULL_BLOCK_SIZE);
 
 	while(1) {
@@ -281,7 +281,7 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
 
 		/* ensure, that we have the space to store tree hash */
 		if(CT_INDEX(ctx->chunks_number) == 0) {
-			rhash_aich_chunk_table_extend(ctx, ctx->chunks_number);
+			rhash_aich_chunk_table_extend(ctx, (unsigned)ctx->chunks_number);
 			if(ctx->error) return;
 		}
 		assert(ctx->chunk_table  != 0);

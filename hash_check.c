@@ -324,9 +324,9 @@ static int hash_check_find_str(hc_search *search, const char* format)
 		case '\3':
 			if(backward) {
 				hv.format = test_hash_string(&end, begin, &len);
-				hv.offset = end - hc->data;
+				hv.offset = (unsigned short)(end - hc->data);
 			} else {
-				hv.offset = begin - hc->data;
+				hv.offset = (unsigned short)(begin - hc->data);
 				hv.format = test_hash_string(&begin, end, &len);
 			}
 			if(!hv.format) return 0;

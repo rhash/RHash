@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* free() */
-#include <unistd.h> /* S_ISDIR under VC6 */
-#include <sys/stat.h> /* stat(), S_ISDIR */
 #include <signal.h>
 #include <locale.h>
 #include <assert.h>

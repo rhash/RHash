@@ -335,7 +335,7 @@ static void bt_bencode_str(torrent_ctx* ctx, const char* name, const char* str)
  */
 static void bt_bencode_pieces(torrent_ctx* ctx)
 {
-	int pieces_length = ctx->piece_count * BT_HASH_SIZE;
+	size_t pieces_length = ctx->piece_count * BT_HASH_SIZE;
 	int num_len;
 	int size, i;
 	char* p;
@@ -350,7 +350,7 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 	*(p++) = ':';
 	p[pieces_length] = '\0'; /* terminate with \0 just in case */
 
-	for(size = ctx->piece_count, i = 0; size > 0;
+	for(size = (int)ctx->piece_count, i = 0; size > 0;
 		size -= BT_BLOCK_SIZE, i++)
 	{
 		memcpy(p, ctx->hash_blocks.array[i],
