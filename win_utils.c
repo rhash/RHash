@@ -249,7 +249,10 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
 	if(dir_len > 0) {
 		memcpy(res, dir_path, dir_len * sizeof(wchar_t));
-		res[dir_len++] = (wchar_t)SYS_PATH_SEPARATOR;
+		if(res[dir_len - 1] != (wchar_t)SYS_PATH_SEPARATOR) {
+			/* append path separator to the directory */
+			res[dir_len++] = (wchar_t)SYS_PATH_SEPARATOR;
+		}
 	}
 
 	/* append filename */
@@ -291,10 +294,10 @@ void expand_wildcards(vector_t* vect, wchar_t* filepath)
 				if((0 == wcscmp(d.cFileName, L".")) || (0 == wcscmp(d.cFileName, L".."))) continue;
 				if(NULL == (wpath = make_pathw(parent, index + 1, d.cFileName))) continue;
 				cstr = wchar_to_cstr(wpath, WIN_DEFAULT_ENCODING, &failed);
+				free(wpath);
 				/* note: just quietly skip unconvertible file names */
 				if(!cstr || failed) {
 					free(cstr);
-					free(wpath);
 					continue;
 				}
 				rsh_vector_add_ptr(vect, cstr);
@@ -308,6 +311,7 @@ void expand_wildcards(vector_t* vect, wchar_t* filepath)
 		wchar_t* wpath = make_pathw(0, 0, filepath);
 		char* cstr = w2c(wpath);
 		if(cstr) rsh_vector_add_ptr(vect, cstr);
+		free(wpath);
 	}
 }
 

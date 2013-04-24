@@ -283,8 +283,9 @@ char* make_path(const char* dir_path, const char* filename)
 	strcpy(buf, dir_path);
 
 	/* separate directory from filename */
-	if(len > 0 && !IS_PATH_SEPARATOR(buf[len-1]))
+	if(len > 0 && !IS_PATH_SEPARATOR(buf[len-1])) {
 		buf[len++] = SYS_PATH_SEPARATOR;
+	}
 
 	/* append filename */
 	strcpy(buf+len, filename);

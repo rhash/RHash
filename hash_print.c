@@ -425,6 +425,7 @@ void free_print_list(print_item* list)
 {
 	while(list) {
 		print_item* next = list->next;
+		free((char*)list->data);
 		free(list);
 		list = next;
 	}
