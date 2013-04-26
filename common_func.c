@@ -405,6 +405,8 @@ void rsh_file_cleanup(file_t* file)
 		file->wpath = NULL;
 	}
 #endif /* _WIN32 */
+	file->mtime = file->size = 0;
+	file->mode = 0;
 }
 
 /* program exit and error reporting functions */

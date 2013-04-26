@@ -20,35 +20,46 @@
 #include "find_file.h"
 
 #if !defined(_WIN32) && (defined(_BSD_SOURCE) || _XOPEN_SOURCE >= 500)
-# define USE_LSTAT_FOR_SYMLINKS
 # define USE_LSTAT 1
 #else
 # define USE_LSTAT 0
 #endif
 
-void process_files(const char* paths[], size_t count,
-	find_file_options* opt)
+#define IS_CURRENT_OR_PARENT_DIR(s) ((s)[0]=='.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
+
+void process_files(const char* paths[], size_t count, find_file_options* opt)
 {
 	struct file_t file;
 	size_t i;
 	memset(&file, 0, sizeof(file));
 
-	for(i = 0; i < count && !(opt->options & FIND_CANCEL); i++) {
+	for(i = 0; i < count && !(opt->options & FIND_CANCEL); i++)
+	{
+		rsh_file_cleanup(&file);
 		file.path = (char*)paths[i];
 
-		if(!IS_DASH_STR(file.path) && rsh_file_stat2(&file, USE_LSTAT) < 0) {
-			if((opt->options & FIND_LOG_ERRORS) != 0) {
-				log_file_error(file.path);
-				opt->errors_count++;
-			}
-			continue;
-		}
-		if(!IS_DASH_STR(file.path) && (file.mode & FILE_IFDIR) != 0) {
-			find_file(&file, opt);
+		if (IS_DASH_STR(file.path)) {
+			file.mode = FILE_IFSTDIN;
 		} else {
-			file.mode |= FILE_ISROOT;
-			opt->call_back(&file, opt->call_back_data);
+			/* read attributes of the file */
+			if(rsh_file_stat2(&file, USE_LSTAT) < 0) {
+				if((opt->options & FIND_LOG_ERRORS) != 0) {
+					log_file_error(file.path);
+					opt->errors_count++;
+				}
+				continue;
+			}
+			/* check if file is a directory */
+			if(FILE_ISDIR(&file)) {
+				find_file(&file, opt);
+				continue;
+			}
 		}
+		assert(!FILE_ISDIR(&file));
+
+		/* process a regular file or a dash '-' path */
+		file.mode |= FILE_IFROOT;
+		opt->call_back(&file, opt->call_back_data);
 	}
 
 	rsh_file_cleanup(&file);
@@ -103,12 +114,14 @@ static dir_entry* dir_entry_insert(dir_entry **at, char* filename, unsigned type
 }
 
 /**
- * Free memory allocated by a dir_entry object.
+ * Free the first entry of the list of dir_entry elements.
  *
- * @param e pointer to object to deallocate
+ * @param p pointer to the list.
  */
-static void dir_entry_free(dir_entry* e)
+static void dir_entry_drop_head(dir_entry** p)
 {
+	dir_entry* e = *p;
+	*p = e->next;
 	free(e->filename);
 	free(e);
 }
@@ -119,7 +132,7 @@ static void dir_entry_free(dir_entry* e)
 typedef struct dir_iterator
 {
 	int left;
-	char* prev_dir;
+	char* dir_path;
 } dir_iterator;
 #define MAX_DIRS_DEPTH 64
 
@@ -128,29 +141,25 @@ typedef struct dir_iterator
  *
  * @param start_dir path to the directory to walk recursively
  * @param options the options specifying how to walk the directory tree
+ * @return 0 on success, -1 on error
  */
 int find_file(file_t* start_dir, find_file_options* options)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
-	int level = 1;
+	int level = 0;
 	int max_depth = options->max_depth;
 	int flags = options->options;
-	dir_entry* entry;
 	file_t file;
 
 	if(max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
-		max_depth = MAX_DIRS_DEPTH;
+		max_depth = MAX_DIRS_DEPTH - 1;
 	}
 
 	/* skip the directory if max_depth == 0 */
-	if(max_depth == 0) {
-		return 0;
-	}
+	if(!max_depth) return 0;
 
-	memset(&file, 0, sizeof(file));
-
-	if((start_dir->mode & FILE_IFDIR) == 0) {
+	if(!FILE_ISDIR(start_dir)) {
 		errno = ENOTDIR;
 		return -1;
 	}
@@ -161,107 +170,117 @@ int find_file(file_t* start_dir, find_file_options* options)
 			return 0;
 	}
 
-	it = (dir_iterator*)malloc(MAX_DIRS_DEPTH * sizeof(dir_iterator));
-	if(!it) return 0;
+	/* allocate array of counters of directory elements */
+	it = (dir_iterator*)malloc((MAX_DIRS_DEPTH + 1) * sizeof(dir_iterator));
+	if(!it) {
+		errno = ENOMEM;
+		return -1;
+	}
 
-	/* push root directory into dirs_stack */
+	/* push dummy counter for the root element */
 	it[0].left = 1;
-	it[0].prev_dir = rsh_strdup(start_dir->path);
-	it[1].prev_dir = NULL;
-	if(!it[0].prev_dir) {
-		errno = ENOMEM;
-		return -1;
-	}
-	entry = dir_entry_insert(&dirs_stack, NULL, 0);
-	if(!entry) {
-		free(it[0].prev_dir);
-		free(it);
-		errno = ENOMEM;
-		return -1;
-	}
+	it[0].dir_path = 0;
 
-	while(!(options->options & FIND_CANCEL)) {
-		dir_entry *dir, **insert_at;
+	memset(&file, 0, sizeof(file));
+
+	while(!(options->options & FIND_CANCEL))
+	{
+		dir_entry **insert_at;
 		char* dir_path;
 		DIR *dp;
 		struct dirent *de;
 
-		/* walk back */
-		while((--level) >= 0 && it[level].left <= 0) free(it[level+1].prev_dir);
-		if(level < 0) break;
-		assert(dirs_stack != NULL);
-		/* on the first cycle: level == 0, stack[0] == 0; */
+		/* climb down from the tree */
+		while(--it[level].left < 0) {
+			/* do not need this dir_path anymore */
+			free(it[level].dir_path);
 
-		dir = dirs_stack; /* take last dir from the list */
-		dirs_stack = dirs_stack->next; /* remove last dir from the list */
-		it[level].left--;
+			if(--level < 0) {
+				/* walked the whole tree */
+				assert(!dirs_stack);
+				free(it);
+				rsh_file_cleanup(&file);
+				return 0;
+			}
+		}
+		assert(level >= 0 && it[level].left >= 0);
 
-		dir_path = (!dir->filename ? rsh_strdup(it[level].prev_dir) :
-			make_path(it[level].prev_dir, dir->filename) );
-		dir_entry_free(dir);
+		/* take a filename from dirs_stack and construct the next path */
+		if(level) {
+			assert(!dirs_stack);
+			dir_path = make_path(it[level].dir_path, dirs_stack->filename);
+			dir_entry_drop_head(&dirs_stack);
+		} else {
+			/* the first cycle: start from a root directory */
+			dir_path = rsh_strdup(start_dir->path);
+		}
+
 		if(!dir_path) continue;
 
+		/* fill the next level of directories */
 		level++;
+		assert(level < MAX_DIRS_DEPTH);
 		it[level].left = 0;
-		it[level].prev_dir = dir_path;
+		it[level].dir_path = dir_path;
 
 		if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))
-			== FIND_WALK_DEPTH_FIRST) {
-			rsh_file_cleanup(&file);
+			== FIND_WALK_DEPTH_FIRST)
+		{
 			file.path = dir_path;
+			rsh_file_stat2(&file, USE_LSTAT);
+
 			/* check if we should skip the directory */
 			if(!options->call_back(&file, options->call_back_data))
 				continue;
 		}
 
-		/* read dir */
+		/* step into directory */
 		dp = opendir(dir_path);
-		if(dp == NULL) continue;
+		if(!dp) continue;
 
 		insert_at = &dirs_stack;
 
 		while((de = readdir(dp)) != NULL) {
 			int res;
-			/* skip "." and ".." dirs */
-			if(de->d_name[0] == '.' && (de->d_name[1] == 0 ||
-				(de->d_name[1] == '.' && de->d_name[2] == 0 )))
-				continue;
 
-			if( !(file.path = make_path(dir_path, de->d_name)) ) continue;
+			/* skip "." and ".." dirs */
+			if(IS_CURRENT_OR_PARENT_DIR(de->d_name)) continue;
+
+			file.path = make_path(dir_path, de->d_name);
+			if(!file.path) continue;
 
 			res  = rsh_file_stat2(&file, USE_LSTAT);
-			/* process */
 			if(res >= 0) {
-				if((file.mode & FILE_IFDIR) &&
-					(flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) res = 1;
-				else {
+				/* process the file or directory */
+				if(FILE_ISDIR(&file) && (flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
+					res = 1;
+				} else {
 					/* handle file by callback function */
 					res = options->call_back(&file, options->call_back_data);
 				}
 
-				/* if file is a directory and we need to walk it */
-				if((file.mode & FILE_IFDIR) && res && level < max_depth) {
-					/* don't go deeper if max_depth reached */
-
-					/* add directory to dirs_stack */
+				/* check if file is a directory and we need to walk it, */
+				/* but don't go deeper than max_depth */
+				if(FILE_ISDIR(&file) && res && level < max_depth) {
+					/* add the directory name to the dirs_stack */
 					if(dir_entry_insert(insert_at, de->d_name, file.mode)) {
-						/* if really added */
+						/* the directory name was successfuly inserted */
 						insert_at = &((*insert_at)->next);
 						it[level].left++;
 					}
 				}
 			} else if (options->options & FIND_LOG_ERRORS) {
+				/* report error only if FIND_LOG_ERRORS option is set */
 				log_file_error(file.path);
 			}
-			rsh_file_cleanup(&file);
 			free(file.path);
 		}
 		closedir(dp);
-
-		if(it[level].left > 0) level++;
 	}
-	assert(dirs_stack == NULL);
 
+	while(dirs_stack) dir_entry_drop_head(&dirs_stack);
+	while(level) free(it[level--].dir_path);
 	free(it);
+	rsh_file_cleanup(&file);
 	return 0;
 }
