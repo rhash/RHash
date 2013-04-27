@@ -98,7 +98,8 @@ static int calc_sums(struct file_info *info)
 	int res;
 	uint64_t initial_size;
 
-	if(IS_DASH_STR(info->full_path)) {
+	assert(info->file);
+	if(info->file->mode & FILE_IFSTDIN) {
 		info->print_path = "(stdin)";
 
 #ifdef _WIN32
@@ -380,7 +381,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 
 	info.sums_flags = opt.sum_flags;
 
-	if(IS_DASH_STR(info.full_path)) {
+	if(file->mode & FILE_IFSTDIN) {
 		print_path = "(stdin)";
 	} else {
 		if(file->mode & FILE_IFDIR) return 0; /* don't handle directories */
@@ -520,6 +521,7 @@ int check_hash_file(file_t* file, int chdir)
 			/* initialize file_info structure */
 			memset(&info, 0, sizeof(info));
 			info.full_path = rsh_strdup(hash_file_path);
+			info.file = file;
 			file_info_set_print_path(&info, info.full_path);
 			info.sums_flags = info.hc.hash_mask = RHASH_CRC32;
 			info.hc.flags = HC_HAS_EMBCRC32;
@@ -546,7 +548,7 @@ int check_hash_file(file_t* file, int chdir)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
-	if( IS_DASH_STR(hash_file_path) ) {
+	if(file->mode & FILE_IFSTDIN) {
 		fd = stdin;
 		hash_file_path = "<stdin>";
 	} else if( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
@@ -608,6 +610,7 @@ int check_hash_file(file_t* file, int chdir)
 		}
 
 		if(info.print_path != NULL) {
+			file_t file_to_check;
 			int is_absolute = IS_PATH_SEPARATOR(info.print_path[0]);
 			IF_WINDOWS(is_absolute = is_absolute || (info.print_path[0] && info.print_path[1] == ':'));
 
@@ -620,6 +623,9 @@ int check_hash_file(file_t* file, int chdir)
 			} else {
 				info.full_path = rsh_strdup(info.print_path);
 			}
+			memset(&file_to_check, 0, sizeof(file_t));
+			file_to_check.path = info.full_path;
+			info.file = &file_to_check;
 
 			/* verify hash sums of the file */
 			res = verify_sums(&info);

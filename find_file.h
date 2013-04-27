@@ -17,10 +17,9 @@ extern "C" {
 #define FIND_LOG_ERRORS 8
 #define FIND_CANCEL 16
 
-/* file flags  */
-#define FILE_IFROOT  0x10
-#define FILE_IFSTDIN 0x20
-
+/**
+ * Options for file search.
+ */
 typedef struct find_file_options {
 	int options;
 	int max_depth;

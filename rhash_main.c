@@ -58,7 +58,7 @@ static int find_file_callback(file_t* file, void* data)
 		rhash_data.batch_size += file->size;
 	} else {
 		char* filepath = file->path;
-		int not_root = !(file->mode & FILE_ISROOT);
+		int not_root = !(file->mode & FILE_IFROOT);
 
 		/* only check and update modes use crc_accept mask */
 		file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?

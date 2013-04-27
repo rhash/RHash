@@ -25,6 +25,7 @@
 # define USE_LSTAT 0
 #endif
 
+#define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_CURRENT_OR_PARENT_DIR(s) ((s)[0]=='.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
 
 void process_files(const char* paths[], size_t count, find_file_options* opt)

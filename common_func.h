@@ -49,12 +49,14 @@ char* str_set(char* buf, int ch, int size);
 char* str_append(const char* orig, const char* append);
 size_t strlen_utf8_c(const char *str);
 
-#define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
 
 /* modes for file_t.mode */
 #define FILE_IFDIR   0x01
 #define FILE_IFLNK   0x02
+#define FILE_IFROOT  0x10
+#define FILE_IFSTDIN 0x20
+#define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
 
 /* portable file information */
 typedef struct file_t {
