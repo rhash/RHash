@@ -425,11 +425,12 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 		if(length == (size_t)-1) {
 			res = -1; /* note: fread sets errno */
 			break;
-		}
-		rhash_update(ctx, buffer, length);
+		} else if (length) {
+			rhash_update(ctx, buffer, length);
 
-		if(ectx->callback) {
-			((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
+			if(ectx->callback) {
+				((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
+			}
 		}
 	}
 
@@ -739,17 +740,19 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
 }
 
 /**
- * Print text presentation of a hash sum with given hash_id to output buffer.
- * If hash_id is zero, then print hash sum with the lowest id stored in hash
- * context. Function fails if hash_id doesn't exist within the context.
+ * Print text presentation of a hash sum with given hash_id to the specified
+ * output buffer. If the hash_id is zero, then print the hash sum with 
+ * the lowest id stored in the hash context. 
+ * The function call fails if the context doesn't include a hash with the
+ * given hash_id.
  *
  * @param output a buffer to print the hash to
  * @param context algorithms state
  * @param hash_id id of the hash sum to print or 0 to print the first hash
  *                saved in the context.
- * @param flags  controls how to print the sum, can contain flags
+ * @param flags  a bitmask controling how to print the hash. Can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
- * @return number of written characters on success, 0 on fail
+ * @return the number of written characters on success or 0 on fail
  */
 size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int flags)
 {

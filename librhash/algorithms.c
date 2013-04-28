@@ -35,6 +35,7 @@
 #include "sha1.h"
 #include "sha256.h"
 #include "sha512.h"
+#include "sha3.h"
 #include "tiger.h"
 #include "torrent.h"
 #include "tth.h"
@@ -79,18 +80,22 @@ rhash_info info_btih = { RHASH_BTIH,      0, 20, "BTIH", "btih" };
 rhash_info info_ed2k = { RHASH_ED2K,      F_LE32, 16, "ED2K", "ed2k" };
 rhash_info info_aich = { RHASH_AICH,      F_BS32, 20, "AICH", "aich" };
 rhash_info info_whirlpool = { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL", "whirlpool" };
-rhash_info info_rmd160 = { RHASH_RIPEMD160, F_LE32, 20, "RIPEMD-160", "ripemd160" };
-rhash_info info_gost = { RHASH_GOST,      F_LE32, 32, "GOST", "gost" };
+rhash_info info_rmd160 = { RHASH_RIPEMD160,  F_LE32, 20, "RIPEMD-160", "ripemd160" };
+rhash_info info_gost =   { RHASH_GOST,       F_LE32, 32, "GOST", "gost" };
 rhash_info info_gostpro = { RHASH_GOST_CRYPTOPRO, F_LE32, 32, "GOST-CRYPTOPRO", "gost-cryptopro" };
-rhash_info info_has160 = { RHASH_HAS160,    F_LE32, 20, "HAS-160", "has160" };
-rhash_info info_snf128 = { RHASH_SNEFRU128, F_BE32, 16, "SNEFRU-128", "snefru128" };
-rhash_info info_snf256 = { RHASH_SNEFRU256, F_BE32, 32, "SNEFRU-256", "snefru256" };
-rhash_info info_sha224 = { RHASH_SHA224,    F_BE32, 28, "SHA-224", "sha224" };
-rhash_info info_sha256 = { RHASH_SHA256,    F_BE32, 32, "SHA-256", "sha256" };
-rhash_info info_sha384 = { RHASH_SHA384,    F_BE64, 48, "SHA-384", "sha384" };
-rhash_info info_sha512 = { RHASH_SHA512,    F_BE64, 64, "SHA-512", "sha512" };
-rhash_info info_edr256 = { RHASH_EDONR256,  F_LE32, 32, "EDON-R256", "edon-r256" };
-rhash_info info_edr512 = { RHASH_EDONR512,  F_LE64, 64, "EDON-R512", "edon-r512" };
+rhash_info info_has160 = { RHASH_HAS160,     F_LE32, 20, "HAS-160", "has160" };
+rhash_info info_snf128 = { RHASH_SNEFRU128,  F_BE32, 16, "SNEFRU-128", "snefru128" };
+rhash_info info_snf256 = { RHASH_SNEFRU256,  F_BE32, 32, "SNEFRU-256", "snefru256" };
+rhash_info info_sha224 = { RHASH_SHA224,     F_BE32, 28, "SHA-224", "sha224" };
+rhash_info info_sha256 = { RHASH_SHA256,     F_BE32, 32, "SHA-256", "sha256" };
+rhash_info info_sha384 = { RHASH_SHA384,     F_BE64, 48, "SHA-384", "sha384" };
+rhash_info info_sha512 = { RHASH_SHA512,     F_BE64, 64, "SHA-512", "sha512" };
+rhash_info info_edr256 = { RHASH_EDONR256,   F_LE32, 32, "EDON-R256", "edon-r256" };
+rhash_info info_edr512 = { RHASH_EDONR512,   F_LE64, 64, "EDON-R512", "edon-r512" };
+rhash_info info_sha3_224 = { RHASH_SHA3_224, F_LE64, 28, "SHA3-224", "sha3-224" };
+rhash_info info_sha3_256 = { RHASH_SHA3_256, F_LE64, 32, "SHA3-256", "sha3-256" };
+rhash_info info_sha3_384 = { RHASH_SHA3_384, F_LE64, 48, "SHA3-384", "sha3-384" };
+rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" };
 
 /* some helper macroses
  * like shift in bytes of a message digest in a hash sum context */
@@ -127,6 +132,10 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ &info_sha512, sizeof(sha512_ctx), dgshft(sha512), iuf(rhash_sha512), 0 },  /* 512 bit */
 	{ &info_edr256, sizeof(edonr_ctx), dgshft2(edonr, u.data256.hash) + 32, iuf(rhash_edonr256), 0 },  /* 256 bit */
 	{ &info_edr512, sizeof(edonr_ctx), dgshft2(edonr, u.data512.hash) + 64, iuf(rhash_edonr512), 0 },  /* 512 bit */
+	{ &info_sha3_224, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_224), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 224 bit */
+	{ &info_sha3_256, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_256), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 256 bit */
+	{ &info_sha3_384, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_384), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 384 bit */
+	{ &info_sha3_512, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_512), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 512 bit */
 };
 
 /**

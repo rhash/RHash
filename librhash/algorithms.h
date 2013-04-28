@@ -56,6 +56,10 @@ extern rhash_info info_sha224;
 extern rhash_info info_sha256;
 extern rhash_info info_sha384;
 extern rhash_info info_sha512;
+extern rhash_info info_sha3_224;
+extern rhash_info info_sha3_256;
+extern rhash_info info_sha3_384;
+extern rhash_info info_sha3_512;
 extern rhash_info info_edr256;
 extern rhash_info info_edr512;
 

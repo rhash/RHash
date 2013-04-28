@@ -51,6 +51,7 @@ static void print_help(void)
 	print_help_line("  -M, --md5     ", _("Calculate MD5   hash sum.\n"));
 	print_help_line("  -H, --sha1    ", _("Calculate SHA1  hash sum.\n"));
 	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", _("Calculate SHA2 hash sum.\n"));
+	print_help_line("      --sha3-224, --sha3-256, --sha3-384, --sha3-512 ", _("Calculate SHA3 hash sum.\n"));
 	print_help_line("  -T, --tth     ", _("Calculate TTH sum.\n"));
 	print_help_line("      --btih    ", _("Calculate BitTorrent InfoHash.\n"));
 	print_help_line("  -A, --aich    ", _("Calculate AICH hash.\n"));
@@ -293,6 +294,10 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "sha256", &opt.sum_flags, RHASH_SHA256 },
 	{ F_UFLG,   0,   0, "sha384", &opt.sum_flags, RHASH_SHA384 },
 	{ F_UFLG,   0,   0, "sha512", &opt.sum_flags, RHASH_SHA512 },
+	{ F_UFLG,   0,   0, "sha3-224", &opt.sum_flags, RHASH_SHA3_224 },
+	{ F_UFLG,   0,   0, "sha3-256", &opt.sum_flags, RHASH_SHA3_256 },
+	{ F_UFLG,   0,   0, "sha3-384", &opt.sum_flags, RHASH_SHA3_384 },
+	{ F_UFLG,   0,   0, "sha3-512", &opt.sum_flags, RHASH_SHA3_512 },
 	{ F_UFLG,   0,   0, "tiger",  &opt.sum_flags, RHASH_TIGER },
 	{ F_UFLG, 'T',   0, "tth",    &opt.sum_flags, RHASH_TTH },
 	{ F_UFLG,   0,   0, "btih",   &opt.sum_flags, RHASH_BTIH },
@@ -830,6 +835,10 @@ static void set_default_sums_flags(const char* progName)
 	if(strstr(buf, "sha512")) res |= RHASH_SHA512;
 	if(strstr(buf, "sha224")) res |= RHASH_SHA224;
 	if(strstr(buf, "sha384")) res |= RHASH_SHA384;
+	if(strstr(buf, "sha3-256")) res |= RHASH_SHA3_256;
+	if(strstr(buf, "sha3-512")) res |= RHASH_SHA3_512;
+	if(strstr(buf, "sha3-224")) res |= RHASH_SHA3_224;
+	if(strstr(buf, "sha3-384")) res |= RHASH_SHA3_384;
 	if(strstr(buf, "tiger")) res |= RHASH_TIGER;
 	if(strstr(buf, "tth"))   res |= RHASH_TTH;
 	if(strstr(buf, "btih"))  res |= RHASH_BTIH;

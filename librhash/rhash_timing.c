@@ -176,7 +176,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 
 	/* set message size for fast and slow hash functions */
 	msg_size = 1073741824 / 2;
-	if(hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256)) {
+	if(hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
 		msg_size /= 8;
 	} else if(hash_id & (RHASH_GOST | RHASH_GOST_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
 		msg_size /= 2;

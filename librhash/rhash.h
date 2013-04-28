@@ -40,19 +40,24 @@ enum rhash_ids
 	RHASH_SHA256    = 0x20000,
 	RHASH_SHA384    = 0x40000,
 	RHASH_SHA512    = 0x80000,
-	RHASH_EDONR256    = 0x100000,
-	RHASH_EDONR512    = 0x200000,
-	
+	RHASH_EDONR256  = 0x0100000,
+	RHASH_EDONR512  = 0x0200000,
+	RHASH_SHA3_224  = 0x0400000,
+	RHASH_SHA3_256  = 0x0800000,
+	RHASH_SHA3_384  = 0x1000000,
+	RHASH_SHA3_512  = 0x2000000,
+
 	/** The bit-mask containing all supported hashe functions */
 	RHASH_ALL_HASHES = RHASH_CRC32 | RHASH_MD4 | RHASH_MD5 | RHASH_ED2K | RHASH_SHA1 |
 		RHASH_TIGER | RHASH_TTH | RHASH_GOST | RHASH_GOST_CRYPTOPRO |
 		RHASH_BTIH | RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 |
 		RHASH_HAS160 | RHASH_SNEFRU128 | RHASH_SNEFRU256 |
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 |
+		RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512 |
 		RHASH_EDONR256 | RHASH_EDONR512,
 	
 	/** The number of supported hash functions */
-	RHASH_HASH_COUNT = 22
+	RHASH_HASH_COUNT = 26
 };
 
 /**
@@ -159,14 +164,14 @@ enum rhash_print_sum_flags
 	RHPR_FILESIZE  = 0x40,
 };
 
-/* output hash into given buffer */
+/* output hash into the given buffer */
 RHASH_API size_t rhash_print_bytes(char* output,
 	const unsigned char* bytes, size_t size, int flags);
 
 RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
 	int flags);
 
-/* output magnet URL into given buffer */
+/* output magnet URL into the given buffer */
 RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	rhash context, unsigned hash_mask, int flags);
 
