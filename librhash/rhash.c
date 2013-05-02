@@ -195,7 +195,7 @@ void rhash_free(rhash ctx)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	
+
 	if(ctx == 0) return;
 	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
 	ectx->state = STATE_DELETED; /* mark memory block as being removed */
@@ -252,7 +252,7 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	
+
 	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
 	if(ectx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
 
@@ -688,7 +688,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 			strcpy(output, name);
 			output += strlen(name);
 			*(output++) = ':';
-			output += rhash_print(output, context, bit, 
+			output += rhash_print(output, context, bit,
 				(bit & (RHASH_SHA1 | RHASH_BTIH) ? flags | RHPR_BASE32 : flags));
 			*(output++) = '&';
 		}
@@ -741,8 +741,8 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
 
 /**
  * Print text presentation of a hash sum with given hash_id to the specified
- * output buffer. If the hash_id is zero, then print the hash sum with 
- * the lowest id stored in the hash context. 
+ * output buffer. If the hash_id is zero, then print the hash sum with
+ * the lowest id stored in the hash context.
  * The function call fails if the context doesn't include a hash with the
  * given hash_id.
  *

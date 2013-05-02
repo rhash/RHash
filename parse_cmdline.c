@@ -399,7 +399,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 	cmdline_opt_t* o = option->o;
 	unsigned short option_type = o->type;
 	char* value = NULL;
-	
+
 	/* check if option requires a parameter */
 	if(is_param_required(option_type)) {
 		if(!option->parameter) {
@@ -607,7 +607,7 @@ static void parse_long_option(parsed_option_t* option, rsh_tchar ***parg)
 			}
 		}
 		name[i] = '\0';
-		
+
 		name += 2; /* skip  "--" */
 		length -= 2;
 	} else fail = 1;
@@ -687,7 +687,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		}
 
 		assert((*parg)[0] == RSH_T('-') && (*parg)[1] != 0);
-		
+
 		if((*parg)[1] == L'-' && (*parg)[2] == 0) {
 			b_opt_end = 1; /* string "--" means end of options */
 			continue;
@@ -712,7 +712,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		} else if((*parg)[1] != 0) {
 			/* found '-'<some string> */
 			rsh_tchar* ptr;
-			
+
 			/* parse short options. A string of several characters is interpreted
 			 * as separate short options */
 			for(ptr = *parg + 1; *ptr; ptr++) {
@@ -732,7 +732,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 				next_opt->buf[0] = '-', next_opt->buf[1] = ch, next_opt->buf[2] = '\0';
 				next_opt->name = next_opt->buf;
 				next_opt->parameter = NULL;
-				
+
 				/* search for the short option */
 				for(t = cmdline_opt; t->type && ch != t->short1 && ch != t->short2; t++);
 				if(!t->type) fail_on_unknow_option(next_opt->buf);
@@ -936,7 +936,7 @@ void read_options(int argc, char *argv[])
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
 	read_config();
-	
+
 #ifdef _WIN32
 	/* set default encoding if no encoding options were specified, */
 	/* this should be done here, even if config file was not found. */
@@ -951,7 +951,7 @@ void read_options(int argc, char *argv[])
 
 	/* options were processed, so we don't need them anymore */
 	rsh_blocks_vector_destroy(&cmd_line.options);
-	
+
 #ifdef _WIN32
 	expanded_cnames = rsh_vector_new_simple();
 

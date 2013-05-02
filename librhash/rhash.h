@@ -55,7 +55,7 @@ enum rhash_ids
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 |
 		RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512 |
 		RHASH_EDONR256 | RHASH_EDONR512,
-	
+
 	/** The number of supported hash functions */
 	RHASH_HASH_COUNT = 26
 };
@@ -67,7 +67,7 @@ typedef struct rhash_context
 {
 	/** The size of the hashed message */
 	unsigned long long msg_size;
-	
+
 	/**
 	 * The bit-mask containing identifiers of the hashes being calculated
 	 */
@@ -153,7 +153,7 @@ enum rhash_print_sum_flags
 	 */
 	RHPR_UPPERCASE = 0x8,
 
-	/** 
+	/**
 	 * Reverse hash bytes. Can be used for GOST hash.
 	 */
 	RHPR_REVERSE   = 0x10,

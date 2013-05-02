@@ -415,7 +415,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 	d->hFind = (wpath != NULL ?
 		FindFirstFileW(wpath, &d->findFileData) : INVALID_HANDLE_VALUE);
 	free(wpath);
-	
+
 	if(d->hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ACCESS_DENIED) {
 		wpath = c2w(path, 1); /* try to use secondary codepage */
 		if(wpath) {
@@ -424,7 +424,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 		}
 	}
 	free(path);
-	
+
 	if(d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
 		free(d);
 		errno = EACCES;

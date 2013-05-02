@@ -41,7 +41,7 @@ struct rhash_t rhash_data;
 static int find_file_callback(file_t* file, void* data)
 {
 	int res = 0;
-	assert((file->mode & FILE_IFDIR) == 0);
+	assert(!FILE_ISDIR(file));
 	assert(rhash_data.search_opt);
 
 	if(rhash_data.interrupted) {

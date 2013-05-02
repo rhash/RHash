@@ -123,7 +123,7 @@ static struct percents_t percents;
 
 /**
  * Print verbose error on hash sums mismatch.
- * 
+ *
  * @param info file information with path and its hash sums.
  */
 static void print_verbose_error(struct file_info *info)

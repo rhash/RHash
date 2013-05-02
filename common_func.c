@@ -87,7 +87,7 @@ static char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
 /**
  * URL-encode a string.
  *
- * @param dst buffer to receive result or NULL to calculate 
+ * @param dst buffer to receive result or NULL to calculate
  *    the lengths of encoded string
  * @param filename the file name
  * @return the length of the result string

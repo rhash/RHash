@@ -135,7 +135,7 @@ static unsigned hash_check_mask_by_digest_size(int digest_size)
 	static unsigned mask[26] = { 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0, 0,0 };
 	int code;
-	
+
 	if(mask[25] == 0) {
 		unsigned hid;
 		for(hid = 1; hid <= RHASH_ALL_HASHES; hid <<= 1) {
@@ -252,7 +252,7 @@ typedef struct hc_search
  * string. The format string can contain the following special characters:
  * '\1' - hash function name, '\2' - any hash, '\3' - specified hash,
  * '\4' - an URL-encoded file name, '\5' - a file size,
- * '\6' - a required-space, '\7' - a space or string end. 
+ * '\6' - a required-space, '\7' - a space or string end.
  * A space ' ' means 0 or more space characters.
  * '$' - parse the rest of the buffer and the format string backward.
  * Other (non-special) symbols mean themselves.
@@ -634,7 +634,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 	int j;
 
 	/* verify file size, if present */
-	if((hashes->flags & HC_HAS_FILESIZE) != 0 && 
+	if((hashes->flags & HC_HAS_FILESIZE) != 0 &&
 		hashes->file_size != ctx->msg_size) {
 		hashes->flags |= HC_WRONG_FILESIZE;
 	}

@@ -355,7 +355,7 @@ static int fix_sfv_header(const char* hash_file_path)
 		unlink(hash_file_path);
 #endif
 		if(rename(tmp_file, hash_file_path) < 0) {
-			log_error(_("can't move %s to %s: %s\n"), 
+			log_error(_("can't move %s to %s: %s\n"),
 				tmp_file, hash_file_path, strerror(errno));
 			err = 1;
 		}
