@@ -1,3 +1,12 @@
+Mon Apr 29 2013 Aleksey
+	* Supported SHA3 (Keccak) hash function
+
+Sat Apr 27 2013 Aleksey
+	* Fixed memory leaks
+
+Tue Apr 23 2013 Aleksey
+	* Bugfix: %{mtime} formating option was broken
+
 Mon Dec 31 2012 Aleksey
 	* imported translations from Launchpad: de, es, gl, it
 
