@@ -109,19 +109,12 @@ static int calc_sums(struct file_info *info)
 		}
 #endif
 	} else {
-		struct rsh_stat_struct stat_buf;
-		/* skip non-existing files */
-		if(rsh_stat(info->full_path, &stat_buf) < 0) {
-			return -1;
-		}
-
-		if((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && S_ISDIR(stat_buf.st_mode)) {
+		if((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && FILE_ISDIR(info->file)) {
 			errno = EISDIR;
 			return -1;
 		}
 
-		info->size = stat_buf.st_size; /* total size, in bytes */
-		IF_WINDOWS(win32_set_filesize64(info->full_path, &info->size)); /* set correct filesize for large files under win32 */
+		info->size = info->file->size; /* total size, in bytes */
 
 		if(!info->sums_flags) return 0;
 

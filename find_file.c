@@ -52,7 +52,12 @@ void process_files(const char* paths[], size_t count, find_file_options* opt)
 			}
 			/* check if file is a directory */
 			if(FILE_ISDIR(&file)) {
-				find_file(&file, opt);
+				if(opt->max_depth) {
+					find_file(&file, opt);
+				} else {
+					errno = EISDIR;
+					log_file_error(file.path);
+				}
 				continue;
 			}
 		}
@@ -174,7 +179,6 @@ int find_file(file_t* start_dir, find_file_options* options)
 	/* allocate array of counters of directory elements */
 	it = (dir_iterator*)malloc((MAX_DIRS_DEPTH + 1) * sizeof(dir_iterator));
 	if(!it) {
-		errno = ENOMEM;
 		return -1;
 	}
 
