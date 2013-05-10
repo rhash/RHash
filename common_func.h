@@ -102,17 +102,14 @@ typedef  char rsh_tchar;
 /* rhash stat function */
 #if (__MSVCRT_VERSION__ >= 0x0601) || (_MSC_VER >= 1400)
 # define rsh_stat_struct __stat64
-# define rsh_time_struct __time64_t
 # define rsh_stat(path, st) win_stat(path, st)
 # define clib_wstat(path, st) _wstat64(path, st)
 #elif defined(_WIN32) && (defined(__MSVCRT__) || defined(_MSC_VER))
 # define rsh_stat_struct _stati64
-# define rsh_time_struct __time64_t
 # define rsh_stat(path, st) win_stat(path, st)
 # define clib_wstat(path, st) _wstati64(path, st)
 #else
 # define rsh_stat_struct stat
-# define rsh_time_struct time_t
 # define rsh_stat(path, st) stat(path, st)
 /* # define clib_wstat(path, st) _wstat32(path, st) */
 #endif
@@ -147,12 +144,12 @@ typedef struct vector_t
 	void (*destructor)(void*);
 } vector_t;
 
-struct vector_t* rsh_vector_new(void (*destructor)(void*));
-struct vector_t* rsh_vector_new_simple(void);
-void rsh_vector_free(struct vector_t* vect);
-void rsh_vector_destroy(struct vector_t* vect);
-void rsh_vector_add_ptr(struct vector_t* vect, void *item);
-void rsh_vector_add_empty(struct vector_t* vect, size_t item_size);
+vector_t* rsh_vector_new(void (*destructor)(void*));
+vector_t* rsh_vector_new_simple(void);
+void rsh_vector_free(vector_t* vect);
+void rsh_vector_destroy(vector_t* vect);
+void rsh_vector_add_ptr(vector_t* vect, void *item);
+void rsh_vector_add_empty(vector_t* vect, size_t item_size);
 #define rsh_vector_add_uint32(vect, item) { \
 	rsh_vector_add_empty(vect, item_size); \
 	((unsigned*)(vect)->array)[(vect)->size - 1] = item; \
@@ -169,8 +166,8 @@ typedef struct blocks_vector_t
 	vector_t blocks;
 } blocks_vector_t;
 
-void rsh_blocks_vector_init(struct blocks_vector_t*);
-void rsh_blocks_vector_destroy(struct blocks_vector_t* vect);
+void rsh_blocks_vector_init(blocks_vector_t*);
+void rsh_blocks_vector_destroy(blocks_vector_t* vect);
 #define rsh_blocks_vector_get_item(bvector, index, blocksize, item_type) \
 	(&((item_type*)((bvector)->blocks.array[(index) / (blocksize)]))[(index) % (blocksize)])
 #define rsh_blocks_vector_get_ptr(bvector, index, blocksize, item_size) \

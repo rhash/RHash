@@ -167,41 +167,6 @@ int win_stat(const char* path, struct rsh_stat_struct *buffer)
 }
 
 /**
- * Get 64-bit file size and store it into given 64-bit integer.
- *
- * @param path file path
- * @param pSize pointer to a 64-bit integer to store file size into
- */
-void win32_set_filesize64(const char* path, uint64_t *pSize)
-{
-	int try_no;
-	for(try_no = 0; try_no < 2; try_no++) {
-		HANDLE hFile;
-		DWORD fileSizeLow, fileSizeHigh;
-
-		wchar_t* wpath = c2w(path, try_no);
-		if(wpath == NULL) continue;
-		hFile = CreateFileW(wpath, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		free(wpath);
-		if(hFile == INVALID_HANDLE_VALUE) {
-			UINT error = GetLastError();
-			if(error != ERROR_FILE_NOT_FOUND && error != ERROR_PATH_NOT_FOUND) break;
-		} else {
-			fileSizeLow = GetFileSize(hFile, &fileSizeHigh);
-
-			/* it is strange but the correct method to check for error */
-			if(fileSizeLow == 0xffffffff && GetLastError() != 0) {
-				/* printf("error code = %u: %s\n", GetLastError(), filepath); */
-			} else {
-				*pSize = fileSizeLow + ( (uint64_t)fileSizeHigh << 32 );
-			}
-			CloseHandle(hFile);
-			break;
-		}
-	}
-}
-
-/**
  * Check if given file can be opened with exclusive write access.
  *
  * @param path path to the file
