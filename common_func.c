@@ -503,30 +503,6 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 }
 
 /**
- * Duplicate wide string with reporting memory error to stderr.
- *
- * @param str the zero-terminated string to duplicate
- * @param srcfile source file to report error on fail
- * @param srcline source code line to be reported on fail
- * @return allocated memory buffer with copied string
- */
-wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
-{
-#ifndef __STRICT_ANSI__
-	wchar_t* res = wcsdup(str);
-#else
-	wchar_t* res = (wchar_t*)malloc((wcslen(str) + 1) * sizeof(wchar_t));
-	if(res) wcscpy(res, str);
-#endif
-
-	if(!res) {
-		rsh_report_error(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
-		rsh_exit(2);
-	}
-	return res;
-}
-
-/**
  * Reallocates a buffer via realloc with reporting memory error to stderr.
  *
  * @param mem a memory block to re-allocate

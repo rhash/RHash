@@ -124,12 +124,10 @@ void  rhash_exit(int code);
 #define rsh_malloc(size) rhash_malloc(size, __FILE__, __LINE__)
 #define rsh_calloc(num, size) rhash_calloc(num, size, __FILE__, __LINE__)
 #define rsh_strdup(str)  rhash_strdup(str,  __FILE__, __LINE__)
-#define rsh_wcsdup(str)  rhash_wcsdup(str,  __FILE__, __LINE__)
 #define rsh_realloc(mem, size) rhash_realloc(mem, size, __FILE__, __LINE__)
 void* rhash_malloc(size_t size, const char* srcfile, int srcline);
 void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline);
 char* rhash_strdup(const char* str, const char* srcfile, int srcline);
-wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 
 extern void (*rsh_exit)(int code);
