@@ -297,11 +297,12 @@ static void dots_finish_percents(struct file_info *info, int process_res)
  * Output percents by printing one dot per each processed 1MiB.
  *
  * @param info pointer to the file-info structure
- * @param offset current file offset in bytes
+ * @param offset the number of hashed bytes
  */
 static void dots_update_percents(struct file_info *info, uint64_t offset)
 {
 	const int pt_size = 1024*1024; /* 1MiB */
+	offset -= info->msg_offset; /* get real file offset */
 	if( (offset % pt_size) != 0 ) return;
 
 	if(percents.points == 0) {
@@ -374,11 +375,11 @@ static int p_init_percents(struct file_info *info)
 
 /**
  * Output one-line percents by printing them after file path.
- * In the case the total file length is unknow (i.e. hashing stdin)
- * output a rotating stick.
+ * If the total file length is unknow (i.e. hashing stdin),
+ * then output a rotating stick.
  *
  * @param info pointer to the file-info structure
- * @param offset current file offset in bytes
+ * @param offset the number of hashed bytes
  */
 static void p_update_percents(struct file_info *info, uint64_t offset)
 {
@@ -392,6 +393,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 #endif
 
 	if(info->size > 0) {
+		offset -= info->msg_offset;
 		/* use only two digits to display percents: 0%-99% */
 		perc = (int)( offset * 99.9 / (uint64_t)info->size );
 		if(percents.points == perc) return;

@@ -23,6 +23,7 @@ struct file_info {
 	const char* print_path; /* the part of the path for printing */
 	char* utf8_print_path;  /* file path in UTF8 */
 	uint64_t size;          /* the size of the hashed file */
+	uint64_t msg_offset;    /* rctx->msg_size before hashing this file */
 	double time;            /* file processing time in seconds */
 	struct file_t* file;    /* the file being processed */
 	struct rhash_context* rctx; /* state of hash algorithms */

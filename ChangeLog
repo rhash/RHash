@@ -1,3 +1,6 @@
+Tue May 21 2013 Aleksey
+	* Fixed output of percents when two or more files are hashed
+
 Mon Apr 29 2013 Aleksey
 	* Supported SHA3 (Keccak) hash function
 

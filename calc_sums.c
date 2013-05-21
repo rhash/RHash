@@ -96,7 +96,6 @@ static int calc_sums(struct file_info *info)
 {
 	FILE* fd = stdin; /* stdin */
 	int res;
-	uint64_t initial_size;
 
 	assert(info->file);
 	if(info->file->mode & FILE_IFSTDIN) {
@@ -126,7 +125,8 @@ static int calc_sums(struct file_info *info)
 	}
 
 	re_init_rhash_context(info);
-	initial_size = info->rctx->msg_size;
+	/* save initial msg_size, for correct calculation of percents */
+	info->msg_offset = info->rctx->msg_size;
 
 	if(percents_output->update != 0) {
 		rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
@@ -138,8 +138,10 @@ static int calc_sums(struct file_info *info)
 			rhash_final(info->rctx, 0); /* finalize hashing */
 		}
 	}
-	info->size = info->rctx->msg_size - initial_size;
+	/* calculate real file size */
+	info->size = info->rctx->msg_size - info->msg_offset;
 	rhash_data.total_size += info->size;
+	assert(rhash_data.total_size == info->rctx->msg_size);
 
 	if(fd != stdin) fclose(fd);
 	return res;
@@ -402,13 +404,13 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	info.time = rhash_timer_stop(&timer);
 	finish_percents(&info, res);
 
-	if((opt.mode & MODE_TORRENT) && !opt.bt_batch_file) {
-		save_torrent(&info);
-	}
-
 	if(opt.flags & OPT_EMBED_CRC) {
 		/* rename the file */
 		rename_file_by_embeding_crc32(&info);
+	}
+
+	if((opt.mode & MODE_TORRENT) && !opt.bt_batch_file) {
+		save_torrent(&info);
 	}
 
 	if((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
