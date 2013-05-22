@@ -374,6 +374,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		}
 		free(wpath);
 	}
+	errno = ENOENT; /* no such file or directory */
 	return -1;
 #else
 	struct rsh_stat_struct st;

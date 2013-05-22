@@ -117,7 +117,8 @@ static int calc_sums(struct file_info *info)
 
 		if(!info->sums_flags) return 0;
 
-		/* skip files opened with exclusive rights without reporting an error */
+		/* skip without reporting an error the files
+		 * opened exclusively by another process */
 		fd = rsh_fopen_bin(info->full_path, "rb");
 		if(!fd) {
 			return -1;
@@ -620,6 +621,7 @@ int check_hash_file(file_t* file, int chdir)
 			}
 			memset(&file_to_check, 0, sizeof(file_t));
 			file_to_check.path = info.full_path;
+			rsh_file_stat(&file_to_check);
 			info.file = &file_to_check;
 
 			/* verify hash sums of the file */
