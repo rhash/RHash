@@ -63,29 +63,6 @@ int RHASH_API rhash_count(void)
 	return rhash_info_size;
 }
 
-/**
- * Information on a hash function and its context
- */
-typedef struct rhash_vector_item
-{
-	struct rhash_hash_info* hash_info;
-	void *context;
-} rhash_vector_item;
-
-/**
- * The rhash context containing contexts for several hash functions
- */
-typedef struct rhash_context_ext
-{
-	struct rhash_context rc;
-	unsigned hash_vector_size; /* number of contained hash sums */
-	unsigned flags;
-	unsigned state;
-	void *callback, *callback_data;
-	void *bt_ctx;
-	rhash_vector_item vector[1]; /* contexts of contained hash sums */
-} rhash_context_ext;
-
 /* Lo-level rhash library functions */
 
 /**
