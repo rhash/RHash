@@ -96,7 +96,7 @@ void bt_cleanup(torrent_ctx *ctx)
 	free(ctx->program_name);
 	free(ctx->announce);
 	ctx->announce = ctx->program_name = 0;
-	free(ctx->torrent_str);
+	free(ctx->content.str);
 }
 
 static void bt_generate_torrent(torrent_ctx *ctx);
@@ -251,18 +251,18 @@ void bt_final(torrent_ctx *ctx, unsigned char result[20])
 static int bt_str_ensure_length(torrent_ctx* ctx, size_t length)
 {
 	char* new_str;
-	if(length >= ctx->torrent_allocated && !ctx->error) {
+	if(length >= ctx->content.allocated && !ctx->error) {
 		length++; /* allocate one character more */
 		if(length < 64) length = 64;
 		else length = (length + 255) & ~255;
-		new_str = (char*)realloc(ctx->torrent_str, length);
+		new_str = (char*)realloc(ctx->content.str, length);
 		if(new_str == NULL) {
 			ctx->error = 1;
-			ctx->torrent_allocated = 0;
+			ctx->content.allocated = 0;
 			return 0;
 		}
-		ctx->torrent_str = new_str;
-		ctx->torrent_allocated = length;
+		ctx->content.str = new_str;
+		ctx->content.allocated = length;
 	}
 	return 1;
 }
@@ -277,10 +277,10 @@ static void bt_str_append(torrent_ctx *ctx, const char* text)
 {
 	size_t length = strlen(text);
 
-	if(!bt_str_ensure_length(ctx, ctx->torrent_length + length)) return;
-	memcpy(ctx->torrent_str + ctx->torrent_length, text, length);
-	ctx->torrent_length += length;
-	ctx->torrent_str[ctx->torrent_length] = '\0';
+	if(!bt_str_ensure_length(ctx, ctx->content.length + length)) return;
+	memcpy(ctx->content.str + ctx->content.length, text, length);
+	ctx->content.length += length;
+	ctx->content.str[ctx->content.length] = '\0';
 }
 
 /**
@@ -295,14 +295,14 @@ static void bt_bencode_int(torrent_ctx* ctx, const char* name, uint64_t number)
 	if(name) bt_str_append(ctx, name);
 
 	/* add up to 20 digits and 2 letters */
-	if(!bt_str_ensure_length(ctx, ctx->torrent_length + 22)) return;
-	p = ctx->torrent_str + ctx->torrent_length;
+	if(!bt_str_ensure_length(ctx, ctx->content.length + 22)) return;
+	p = ctx->content.str + ctx->content.length;
 	*(p++) = 'i';
 	p += rhash_sprintI64(p, number);
 	*(p++) = 'e';
 	*p = '\0'; /* terminate string with \0 */
 
-	ctx->torrent_length = (p - ctx->torrent_str);
+	ctx->content.length = (p - ctx->content.str);
 }
 
 /**
@@ -318,11 +318,11 @@ static void bt_bencode_str(torrent_ctx* ctx, const char* name, const char* str)
 	char* p;
 
 	if(name) bt_str_append(ctx, name);
-	if(!bt_str_ensure_length(ctx, ctx->torrent_length + len + 21)) return;
+	if(!bt_str_ensure_length(ctx, ctx->content.length + len + 21)) return;
 
-	p = ctx->torrent_str + ctx->torrent_length;
+	p = ctx->content.str + ctx->content.length;
 	p += (num_len = rhash_sprintI64(p, len));
-	ctx->torrent_length += len + num_len + 1;
+	ctx->content.length += len + num_len + 1;
 
 	*(p++) = ':';
 	memcpy(p, str, len + 1); /* copy with trailing '\0' */
@@ -340,12 +340,12 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 	int size, i;
 	char* p;
 
-	if(!bt_str_ensure_length(ctx, ctx->torrent_length + pieces_length + 21))
+	if(!bt_str_ensure_length(ctx, ctx->content.length + pieces_length + 21))
 		return;
 
-	p = ctx->torrent_str + ctx->torrent_length;
+	p = ctx->content.str + ctx->content.length;
 	p += (num_len = rhash_sprintI64(p, pieces_length));
-	ctx->torrent_length += pieces_length + num_len + 1;
+	ctx->content.length += pieces_length + num_len + 1;
 
 	*(p++) = ':';
 	p[pieces_length] = '\0'; /* terminate with \0 just in case */
@@ -415,8 +415,7 @@ static void bt_generate_torrent(torrent_ctx *ctx)
 	uint64_t total_size = 0;
 	size_t info_start_pos;
 
-	assert(ctx->torrent_str == NULL);
-	/*assert(ctx->files.size <= 1);*/
+	assert(ctx->content.str == NULL);
 
 	if(ctx->piece_length == 0) {
 		if(ctx->files.size == 1) {
@@ -441,7 +440,7 @@ static void bt_generate_torrent(torrent_ctx *ctx)
 	bt_str_append(ctx, "8:encoding5:UTF-8");
 
 	bt_str_append(ctx, "4:infod"); /* start info dictionary */
-	info_start_pos = ctx->torrent_length - 1;
+	info_start_pos = ctx->content.length - 1;
 
 	if(ctx->files.size > 1) {
 		size_t i;
@@ -477,8 +476,8 @@ static void bt_generate_torrent(torrent_ctx *ctx)
 
 	/* calculate BTIH */
 	SHA1_INIT(ctx);
-	SHA1_UPDATE(ctx, (unsigned char*)ctx->torrent_str + info_start_pos,
-		ctx->torrent_length - info_start_pos - 1);
+	SHA1_UPDATE(ctx, (unsigned char*)ctx->content.str + info_start_pos,
+		ctx->content.length - info_start_pos - 1);
 	SHA1_FINAL(ctx, ctx->btih);
 }
 
@@ -566,7 +565,7 @@ int bt_set_announce(torrent_ctx *ctx, const char* announce_url)
  */
 size_t bt_get_text(torrent_ctx *ctx, char** pstr)
 {
-	assert(ctx->torrent_str);
-	*pstr = ctx->torrent_str;
-	return ctx->torrent_length;
+	assert(ctx->content.str);
+	*pstr = ctx->content.str;
+	return ctx->content.length;
 }

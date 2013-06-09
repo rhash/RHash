@@ -11,11 +11,20 @@ extern "C" {
 #define btih_hash_size  20
 
 /* vector structure */
-typedef struct torrent_vect {
+typedef struct torrent_vect
+{
 	void **array;     /* array of elements of the vector */
 	size_t size;      /* vector size */
 	size_t allocated; /* number of allocated elements */
 } torrent_vect;
+
+/* a binary string */
+typedef struct torrent_str
+{
+	char* str;
+	size_t length;
+	size_t allocated;
+} torrent_str;
 
 /* BitTorrent algorithm context */
 typedef struct torrent_ctx
@@ -35,9 +44,7 @@ typedef struct torrent_ctx
 	char* program_name;       /* the name of the program */
 	char* announce;           /* announce URL */
 
-	char*  torrent_str;       /* content of generated torrent file */
-	size_t torrent_length;    /* length of generated torrent file */
-	size_t torrent_allocated; /* bytes allocated for torrent file */
+	torrent_str content;      /* the content of generated torrent file */
 	int error; /* non-zero if error occurred, zero otherwise */
 } torrent_ctx;
 
@@ -46,8 +53,8 @@ void bt_update(torrent_ctx *ctx, const void* msg, size_t size);
 void bt_final(torrent_ctx *ctx, unsigned char result[20]);
 void bt_cleanup(torrent_ctx *ctx);
 
-size_t bt_get_text(torrent_ctx *ctx, char** pstr);
 unsigned char* bt_get_btih(torrent_ctx *ctx);
+size_t bt_get_text(torrent_ctx *ctx, char** pstr);
 
 /* possible options */
 #define BT_OPT_PRIVATE 1
