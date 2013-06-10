@@ -38,6 +38,7 @@ INSTALL_SHARED  = $(INSTALL) -m 644
 all: $(LIBRARY)
 lib-static: $(LIBRARY)
 lib-shared: $(SONAME)
+libs-all: lib-static lib-shared
 dist-clean: clean
 
 install-lib-static: $(LIBRARY) install-headers
