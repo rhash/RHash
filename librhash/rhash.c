@@ -315,9 +315,11 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 	}
 	digest = ((unsigned char*)item->context + info->digest_diff);
 	if(info->info->flags & F_SWAP32) {
-		rhash_u32_swap_copy(result, 0, digest, info->info->digest_size);
+		assert((info->info->digest_size & 4) == 0);
+		/* NB: the next call is correct only for multiple of 4 byte size */
+		rhash_swap_copy_str_to_u32(result, 0, digest, info->info->digest_size);
 	} else if(info->info->flags & F_SWAP64) {
-		rhash_u64_swap_copy(result, 0, digest, info->info->digest_size);
+		rhash_swap_copy_u64_to_str(result, digest, info->info->digest_size);
 	} else {
 		memcpy(result, digest, info->info->digest_size);
 	}

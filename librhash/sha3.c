@@ -322,5 +322,5 @@ void rhash_sha3_final(sha3_ctx *ctx, unsigned char* result)
 	}
 
 	assert(block_size > digest_length);
-	if(result) le64_copy(result, 0, ctx->hash, digest_length);
+	if(result) me64_to_le_str(result, ctx->hash, digest_length);
 }

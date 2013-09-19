@@ -84,9 +84,10 @@ extern "C" {
 unsigned rhash_ctz(unsigned); /* define as function */
 #endif
 
-void rhash_u32_swap_copy(void* to, int index, const void* from, size_t length);
-void rhash_u64_swap_copy(void* to, int index, const void* from, size_t length);
-void rhash_u32_memswap(unsigned *p, int length_in_u32);
+void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t length);
+void rhash_swap_copy_str_to_u64(void* to, int index, const void* from, size_t length);
+void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length);
+void rhash_u32_mem_swap(unsigned *p, int length_in_u32);
 
 /* define bswap_32 */
 #if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__)
@@ -137,19 +138,24 @@ static inline uint64_t bswap_64(uint64_t x) {
 # define le2me_64(x) bswap_64(x)
 
 # define be32_copy(to, index, from, length) memcpy((to) + (index), (from), (length))
-# define le32_copy(to, index, from, length) rhash_u32_swap_copy((to), (index), (from), (length))
+# define le32_copy(to, index, from, length) rhash_swap_copy_str_to_u32((to), (index), (from), (length))
 # define be64_copy(to, index, from, length) memcpy((to) + (index), (from), (length))
-# define le64_copy(to, index, from, length) rhash_u64_swap_copy((to), (index), (from), (length))
+# define le64_copy(to, index, from, length) rhash_swap_copy_str_to_u64((to), (index), (from), (length))
+# define me64_to_be_str(to, from, length) memcpy((to), (from), (length))
+# define me64_to_le_str(to, from, length) rhash_swap_copy_u64_to_str((to), (from), (length))
+
 #else /* CPU_BIG_ENDIAN */
 # define be2me_32(x) bswap_32(x)
 # define be2me_64(x) bswap_64(x)
 # define le2me_32(x) (x)
 # define le2me_64(x) (x)
 
-# define be32_copy(to, index, from, length) rhash_u32_swap_copy((to), (index), (from), (length))
+# define be32_copy(to, index, from, length) rhash_swap_copy_str_to_u32((to), (index), (from), (length))
 # define le32_copy(to, index, from, length) memcpy((to) + (index), (from), (length))
-# define be64_copy(to, index, from, length) rhash_u64_swap_copy((to), (index), (from), (length))
+# define be64_copy(to, index, from, length) rhash_swap_copy_str_to_u64((to), (index), (from), (length))
 # define le64_copy(to, index, from, length) memcpy((to) + (index), (from), (length))
+# define me64_to_be_str(to, from, length) rhash_swap_copy_u64_to_str((to), (from), (length))
+# define me64_to_le_str(to, from, length) memcpy((to), (from), (length))
 #endif /* CPU_BIG_ENDIAN */
 
 /* ROTL/ROTR macros rotate a 32/64-bit word left/right by n bits */

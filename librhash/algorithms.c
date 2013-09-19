@@ -97,8 +97,7 @@ rhash_info info_sha3_256 = { RHASH_SHA3_256, F_LE64, 32, "SHA3-256", "sha3-256" 
 rhash_info info_sha3_384 = { RHASH_SHA3_384, F_LE64, 48, "SHA3-384", "sha3-384" };
 rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" };
 
-/* some helper macroses
- * like shift in bytes of a message digest in a hash sum context */
+/* some helper macros */
 #define dgshft(name) (((char*)&((name##_ctx*)0)->hash) - (char*)0)
 #define dgshft2(name, field) (((char*)&((name##_ctx*)0)->field) - (char*)0)
 #define ini(name) ((pinit_t)(name##_init))
