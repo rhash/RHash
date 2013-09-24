@@ -112,12 +112,12 @@ void rhash_swap_copy_str_to_u64(void* to, int index, const void* from, size_t le
 }
 
 /**
- * Copy data from a sequence of 64-bit words to a binary string of given length
+ * Copy data from a sequence of 64-bit words to a binary string of given length,
  * while changing byte order.
  *
  * @param to     the binary string to receive data
- * @param from   the sequence of 64-bit words
- * @param length size of the data being copied in bytes
+ * @param from   the source sequence of 64-bit words
+ * @param length the size in bytes of the data being copied
  */
 void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length)
 {
