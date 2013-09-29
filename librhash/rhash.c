@@ -729,7 +729,7 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes,
  * @param context algorithms state
  * @param hash_id id of the hash sum to print or 0 to print the first hash
  *                saved in the context.
- * @param flags  a bitmask controling how to print the hash. Can contain flags
+ * @param flags  a bitmask controlling how to print the hash. Can contain flags
  *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
  * @return the number of written characters on success or 0 on fail
  */
