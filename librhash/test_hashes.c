@@ -680,6 +680,45 @@ static void test_long_strings(void)
 }
 
 /**
+ * Verify for all algorithms, that rhash_final() returns the same result as
+ * rhash_print().
+ */
+static void test_results_consistency(void)
+{
+	const char * msg = "a";
+	size_t msg_size = strlen(msg);
+
+	size_t digest_size;
+	struct rhash_context *ctx;
+	char res1[70];
+	char res2[70];
+	unsigned i, hash_id;
+
+	for(i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
+		digest_size = rhash_get_digest_size(hash_id);
+		assert(digest_size < 70);
+
+		ctx = rhash_init(hash_id);
+
+#ifdef USE_BTIH_WITH_TEST_FILENAME
+		if((hash_id & RHASH_BTIH) != 0) {
+			unsigned long long total_size = msg_size;
+			rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
+		}
+#endif
+
+		rhash_update(ctx, msg, msg_size);
+		rhash_final(ctx, res1);
+		rhash_print(res2, ctx, hash_id, RHPR_RAW);
+		rhash_free(ctx);
+
+		if(memcmp(res1, res2, digest_size) != 0) {
+			log_message("failed: inconsistent %s(\"%s\") hash results\n", rhash_get_name(hash_id), msg);
+		}
+	}
+}
+
+/**
  * Verify that calculated hash doesn't depend on message alignment.
  */
 static void test_alignment(void)
@@ -820,10 +859,11 @@ static unsigned find_hash(const char* name)
 #ifndef UNDER_CE /* if not Windows CE */
 
 /**
- * The application entry point under linux and windows.
+ * The application entry point under Linux and Windows.
  *
  * @param argc number of arguments including the program name
  * @param argv program arguments including the program name
+ * @return program exit code
  */
 int main(int argc, char *argv[])
 {
@@ -850,6 +890,7 @@ int main(int argc, char *argv[])
 		test_all_known_strings();
 		test_long_strings();
 		test_alignment();
+		test_results_consistency();
 		test_magnet();
 		if(g_errors == 0) printf("All sums are working properly!\n");
 		fflush(stdout);
