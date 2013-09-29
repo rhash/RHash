@@ -216,30 +216,31 @@
     <ClCompile Include="..\..\file_set.c" />
     <ClCompile Include="..\..\find_file.c" />
     <ClCompile Include="..\..\hash_check.c" />
-    <ClCompile Include="..\..\librhash\algorithms.c" />
-    <ClCompile Include="..\..\librhash\edonr.c" />
-    <ClCompile Include="..\..\librhash\plug_openssl.c" />
-    <ClCompile Include="..\..\librhash\rhash.c" />
-    <ClCompile Include="..\..\librhash\rhash_timing.c" />
-    <ClCompile Include="..\..\librhash\sha256.c" />
-    <ClCompile Include="..\..\librhash\sha512.c" />
-    <ClCompile Include="..\..\librhash\torrent.c" />
     <ClCompile Include="..\..\output.c" />
     <ClCompile Include="..\..\parse_cmdline.c" />
     <ClCompile Include="..\..\rhash_main.c" />
     <ClCompile Include="..\..\librhash\util.c" />
     <ClCompile Include="..\..\win_utils.c" />
     <ClCompile Include="..\..\librhash\aich.c" />
+    <ClCompile Include="..\..\librhash\algorithms.c" />
     <ClCompile Include="..\..\librhash\byte_order.c" />
     <ClCompile Include="..\..\librhash\crc32.c" />
     <ClCompile Include="..\..\librhash\ed2k.c" />
+    <ClCompile Include="..\..\librhash\edonr.c" />
     <ClCompile Include="..\..\librhash\gost.c" />
     <ClCompile Include="..\..\librhash\has160.c" />
     <ClCompile Include="..\..\librhash\hex.c" />
     <ClCompile Include="..\..\librhash\md4.c" />
     <ClCompile Include="..\..\librhash\md5.c" />
+    <ClCompile Include="..\..\librhash\plug_openssl.c" />
+    <ClCompile Include="..\..\librhash\rhash.c" />
+    <ClCompile Include="..\..\librhash\rhash_timing.c" />
+    <ClCompile Include="..\..\librhash\rhash_torrent.c" />
     <ClCompile Include="..\..\librhash\ripemd-160.c" />
     <ClCompile Include="..\..\librhash\sha1.c" />
+    <ClCompile Include="..\..\librhash\sha256.c" />
+    <ClCompile Include="..\..\librhash\sha512.c" />
+    <ClCompile Include="..\..\librhash\sha3.c" />
     <ClCompile Include="..\..\librhash\snefru.c" />
     <ClCompile Include="..\..\librhash\test_hashes.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -249,6 +250,7 @@
     </ClCompile>
     <ClCompile Include="..\..\librhash\tiger.c" />
     <ClCompile Include="..\..\librhash\tiger_sbox.c" />
+    <ClCompile Include="..\..\librhash\torrent.c" />
     <ClCompile Include="..\..\librhash\tth.c" />
     <ClCompile Include="..\..\librhash\whirlpool.c" />
     <ClCompile Include="..\..\librhash\whirlpool_sbox.c" />
@@ -263,6 +265,7 @@
     <ClInclude Include="..\..\librhash\plug_openssl.h" />
     <ClInclude Include="..\..\librhash\rhash.h" />
     <ClInclude Include="..\..\librhash\rhash_timing.h" />
+    <ClInclude Include="..\..\librhash\rhash_torrent.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
     <ClInclude Include="..\..\librhash\test_hashes.h" />
@@ -278,6 +281,7 @@
     <ClInclude Include="..\..\librhash\md5.h" />
     <ClInclude Include="..\..\librhash\ripemd-160.h" />
     <ClInclude Include="..\..\librhash\sha1.h" />
+    <ClInclude Include="..\..\librhash\sha3.h" />
     <ClInclude Include="..\..\librhash\snefru.h" />
     <ClInclude Include="..\..\librhash\tiger.h" />
     <ClInclude Include="..\..\librhash\torrent.h" />
