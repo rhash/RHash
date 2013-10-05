@@ -16,7 +16,7 @@ For internationalization support RHash should be compiled with gettext library
   make ADDCFLAGS="-DUSE_GETTEXT"
 
 To compile with openssl support use the following flags
-  make ADDCFLAGS="-DUSE_OPENSSL -DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS="-ldl"
+  make ADDCFLAGS="-DOPENSSL_RUNTIME -rdynamic" ADDLDFLAGS="-ldl"
 
 The LibRHash static/shared library can be compiled by
   'make lib-static' or 'make lib-shared'
