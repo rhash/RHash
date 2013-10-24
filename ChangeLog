@@ -1,3 +1,6 @@
+Fri Oct 25 2013 Aleksey
+	* Fixed 'value too large' error on 32-bit Linux
+
 Thu Sep 19 2013 Aleksey
 	* Bugfix: corrected sha3-224 for big-endian processors
 
