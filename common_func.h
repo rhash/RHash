@@ -2,6 +2,11 @@
 #ifndef COMMON_FUNC_H
 #define COMMON_FUNC_H
 
+/* use 64-bit off_t.
+ * these macros must be defined before any include file */
+#define _LARGEFILE64_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 /* internationalization support via gettext/libintl */
 #ifdef USE_GETTEXT
 # include <libintl.h>
@@ -14,10 +19,6 @@
 #else
 # define _(str) (str)
 #endif /* USE_GETTEXT */
-
-/* use 64-bit off_t */
-#define _LARGEFILE64_SOURCE
-#define _FILE_OFFSET_BITS 64
 
 #include <stdint.h>
 #include <stdio.h>
