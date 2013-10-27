@@ -142,7 +142,6 @@ static int calc_sums(struct file_info *info)
 	/* calculate real file size */
 	info->size = info->rctx->msg_size - info->msg_offset;
 	rhash_data.total_size += info->size;
-	assert(rhash_data.total_size == info->rctx->msg_size);
 
 	if(fd != stdin) fclose(fd);
 	return res;
