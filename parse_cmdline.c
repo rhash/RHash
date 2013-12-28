@@ -130,7 +130,7 @@ static void crc_accept(options_t *o, char* accept_string, unsigned type)
  */
 static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 {
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	char *cur, *next;
 	(void)type;
 	o->openssl_mask = 0x80000000; /* turn off using default mask */
