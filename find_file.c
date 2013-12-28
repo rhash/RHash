@@ -52,9 +52,9 @@ void process_files(const char* paths[], size_t count, find_file_options* opt)
 			}
 			/* check if file is a directory */
 			if(FILE_ISDIR(&file)) {
-				if(opt->max_depth) {
+				if(opt->max_depth != 0) {
 					find_file(&file, opt);
-				} else {
+				} else if((opt->options & FIND_LOG_ERRORS) != 0) {
 					errno = EISDIR;
 					log_file_error(file.path);
 				}
