@@ -112,7 +112,7 @@ rhash_hash_info rhash_openssl_methods[] = {
 };
 
 /* The rhash_openssl_hash_info static array initialized by rhash_plug_openssl() replaces
- * rhash internal algorithms table. It is kept in an unitialized-data segment
+ * rhash internal algorithms table. It is kept in an uninitialized-data segment
  * taking no space in the executable. */
 rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 
@@ -132,7 +132,7 @@ rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 #endif /* _WIN32 */
 
 /**
- * Load OpenSSL dll at runtime, store pointers to functions of all
+ * Load OpenSSL DLL at runtime, store pointers to functions of all
  * supported hash algorithms.
  *
  * @return 1 on success, 0 if the library not found
@@ -140,7 +140,14 @@ rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 static int load_openssl_runtime(void)
 {
 #ifdef _WIN32
-	HMODULE handle = LoadLibraryA("libeay32.dll");
+	HMODULE handle;
+	/* suppress the error popup dialogs */
+	UINT oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+	SetErrorMode(oldErrorMode | SEM_FAILCRITICALERRORS);
+
+	handle = LoadLibraryA("libeay32.dll");
+
+	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
 	void* handle = dlopen("libcrypto.so", RTLD_NOW);
 	if(!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW); /* hotfix */
@@ -177,7 +184,7 @@ int rhash_plug_openssl(void)
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
 
 	if( (rhash_openssl_hash_mask & RHASH_OPENSSL_SUPPORTED_HASHES) == 0) {
-		return 1; /* do not load openssl */
+		return 1; /* do not load OpenSSL */
 	}
 
 #ifdef OPENSSL_RUNTIME
@@ -186,7 +193,7 @@ int rhash_plug_openssl(void)
 
 	memcpy(rhash_openssl_hash_info, rhash_info_table, sizeof(rhash_openssl_hash_info));
 
-	/* replace internal rhash methods with the openssl ones */
+	/* replace internal rhash methods with the OpenSSL ones */
 	for(i = 0; i < (int)(sizeof(rhash_openssl_methods) / sizeof(rhash_hash_info)); i++)
 	{
 		rhash_hash_info *method = &rhash_openssl_methods[i];
