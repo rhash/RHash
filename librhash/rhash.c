@@ -13,6 +13,11 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
+
+/* macros for large file support, must be defined before any include file */
+#define _LARGEFILE64_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 #include <string.h> /* memset() */
 #include <stdlib.h> /* free() */
 #include <stddef.h> /* ptrdiff_t */
