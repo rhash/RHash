@@ -14,6 +14,12 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 #include <assert.h>
+
+/* modifier for Windows DLL */
+#if defined(_WIN32) && defined(RHASH_EXPORTS)
+# define RHASH_API __declspec(dllexport)
+#endif
+
 #include "algorithms.h"
 #include "torrent.h"
 #include "rhash_torrent.h"

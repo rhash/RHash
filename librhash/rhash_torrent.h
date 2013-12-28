@@ -6,6 +6,11 @@
 extern "C" {
 #endif
 
+#ifndef RHASH_API
+/* modifier for LibRHash functions */
+# define RHASH_API
+#endif
+
 typedef struct rhash_context* rhash;
 
 /* a binary string with length */
