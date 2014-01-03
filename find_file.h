@@ -6,6 +6,8 @@
 #ifndef FIND_FILE_H
 #define FIND_FILE_H
 
+#include "common_func.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,18 +22,22 @@ extern "C" {
 /**
  * Options for file search.
  */
-typedef struct find_file_options {
+typedef struct file_search_data
+{
 	int options;
 	int max_depth;
-	int (*call_back)(file_t* file, void* data);
-	void* call_back_data;
+	blocks_vector_t root_files;
+	int (*call_back)(file_t* file, int data);
+	int call_back_data;
 	int errors_count;
-} find_file_options;
+} file_search_data;
 
-void process_files(const char** paths, size_t count,
-	find_file_options* options);
+file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int max_depth);
+void destroy_file_search_data(file_search_data* data);
 
-int find_file(file_t* start_dir, find_file_options* options);
+void process_files(file_search_data* data);
+
+int find_file(file_t* start_dir, file_search_data* options);
 
 #ifdef __cplusplus
 } /* extern "C" */

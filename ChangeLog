@@ -1,3 +1,6 @@
+Sat Jan  4 2014 Aleksey
+	Improved directory scanning
+
 Sat Dec 28 2013 Aleksey
 	* Bugfix: suppress the R6034 error popup on Windows
 

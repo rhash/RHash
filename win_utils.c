@@ -79,7 +79,10 @@ char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
 	lpUsedDefaultChar = (failed && codepage != CP_UTF8 ? &bUsedDefChar : NULL);
 
 	size = WideCharToMultiByte(codepage, 0, wstr, -1, 0, 0, 0, 0);
-	if(size == 0) return NULL; /* conversion failed */
+	if(size == 0) {
+		if (failed) *failed = 1;
+		return NULL; /* conversion failed */
+	}
 	buf = (char*)rsh_malloc(size);
 	WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, lpUsedDefaultChar);
 	if(failed) *failed = (lpUsedDefaultChar && *lpUsedDefaultChar);
@@ -223,61 +226,6 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	/* append filename */
 	memcpy(res + dir_len, filename, (len + 1) * sizeof(wchar_t));
 	return res;
-}
-
-/**
- * Expand wildcards in the given filepath and store results into vector.
- * If no wildcards are found then just the filepath is stored.
- * Note: only wildcards in the last filename of the path are expanded.
- *
- * @param vect the vector to receive wide-strings with file paths
- * @param filepath the filepath to process
- */
-void expand_wildcards(vector_t* vect, wchar_t* filepath)
-{
-	int added = 0;
-	size_t len = wcslen(filepath);
-	size_t index = wcscspn(filepath, L"*?");
-
-	/* if a wildcard has been found without a directory separator after it */
-	if(index < len && wcscspn(filepath + index, L"/\\") >= (len - index))
-	{
-		wchar_t* parent;
-		WIN32_FIND_DATAW d;
-		HANDLE h;
-
-		/* find directory separator */
-		for(; index > 0 && !IS_PATH_SEPARATOR(filepath[index]); index--);
-		parent = (IS_PATH_SEPARATOR(filepath[index]) ? filepath : 0);
-
-		h = FindFirstFileW(filepath, &d);
-		if(INVALID_HANDLE_VALUE != h) {
-			do {
-				wchar_t* wpath;
-				char* cstr;
-				int failed;
-				if((0 == wcscmp(d.cFileName, L".")) || (0 == wcscmp(d.cFileName, L".."))) continue;
-				if(NULL == (wpath = make_pathw(parent, index + 1, d.cFileName))) continue;
-				cstr = wchar_to_cstr(wpath, WIN_DEFAULT_ENCODING, &failed);
-				free(wpath);
-				/* note: just quietly skip unconvertible file names */
-				if(!cstr || failed) {
-					free(cstr);
-					continue;
-				}
-				rsh_vector_add_ptr(vect, cstr);
-				added++;
-			} while(FindNextFileW(h, &d));
-			FindClose(h);
-		}
-	}
-
-	if(added == 0) {
-		wchar_t* wpath = make_pathw(0, 0, filepath);
-		char* cstr = w2c(wpath);
-		if(cstr) rsh_vector_add_ptr(vect, cstr);
-		free(wpath);
-	}
 }
 
 /* functions to setup/restore console */

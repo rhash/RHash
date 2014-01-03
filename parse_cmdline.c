@@ -14,6 +14,7 @@
 #include "librhash/rhash.h"
 #include "win_utils.h"
 #include "file_mask.h"
+#include "find_file.h"
 #include "hash_print.h"
 #include "output.h"
 #include "rhash_main.h"
@@ -799,6 +800,7 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 	if(opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = conf_opt.embed_crc_delimiter;
 	if(!opt.path_separator) opt.path_separator = conf_opt.path_separator;
 	if(opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
+	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
 	if(opt.flags & OPT_EMBED_CRC) opt.sum_flags |= RHASH_CRC32;
 	if(opt.openssl_mask == 0) opt.openssl_mask = conf_opt.openssl_mask;
 
@@ -875,8 +877,8 @@ void options_destroy(struct options_t* o)
 {
 	file_mask_free(o->files_accept);
 	file_mask_free(o->crc_accept);
-	rsh_vector_free(o->cmd_vec);
 	rsh_vector_free(o->mem);
+	destroy_file_search_data(o->search_data);
 }
 
 /**
@@ -918,10 +920,6 @@ static void make_final_options_checks(void)
 void read_options(int argc, char *argv[])
 {
 	struct parsed_cmd_line_t cmd_line;
-#ifdef _WIN32
-	int i;
-	vector_t *expanded_cnames;
-#endif
 
 	memset(&opt, 0, sizeof(opt));
 	opt.mem = rsh_vector_new_simple();
@@ -952,28 +950,14 @@ void read_options(int argc, char *argv[])
 	/* options were processed, so we don't need them anymore */
 	rsh_blocks_vector_destroy(&cmd_line.options);
 
-#ifdef _WIN32
-	expanded_cnames = rsh_vector_new_simple();
+	/* */
+	opt.search_data = create_file_search_data(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
+	opt.n_files = (opt.search_data ? opt.search_data->root_files.size : 0);
 
-	/* convert paths to internal encoding and expand wildcards. */
-	for(i = 0; i < cmd_line.n_files; i++) {
-		wchar_t* path = cmd_line.files[i];
-		wchar_t* p = wcschr(path, L'\0') - 1;
-
-		/* strip trailing '\','/' symbols (if not preceded by ':') */
-		for(; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--) *p = 0;
-		expand_wildcards(expanded_cnames, path);
-	}
-
-	opt.cmd_vec = expanded_cnames;
-	opt.files = (char**)expanded_cnames->array;
-	opt.n_files = (int)expanded_cnames->size;
 	free(cmd_line.files);
+
+#ifdef _WIN32
 	LocalFree(cmd_line.warg);
-#else
-	opt.files = cmd_line.files;
-	opt.n_files = cmd_line.n_files;
-	rsh_vector_add_ptr(opt.mem, opt.files);
 #endif
 
 	make_final_options_checks();

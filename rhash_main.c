@@ -35,25 +35,25 @@ struct rhash_t rhash_data;
  * a directory. It hashes, checks or updates a file according to work mode.
  *
  * @param file the file to process
- * @param data the paramater specified, when calling find_file(). It shall be
- *             non-zero for printing SFV header, zero for actual processing.
+ * @param preprocess non-zero when preprocessing files, zero for actual processing.
  */
-static int find_file_callback(file_t* file, void* data)
+static int find_file_callback(file_t* file, int preprocess)
 {
 	int res = 0;
 	assert(!FILE_ISDIR(file));
-	assert(rhash_data.search_opt);
+	assert(opt.search_data);
 
 	if(rhash_data.interrupted) {
-		rhash_data.search_opt->options |= FIND_CANCEL;
+		opt.search_data->options |= FIND_CANCEL;
 		return 0;
 	}
 
-	if(data) {
+	if(preprocess) {
 		if(!file_mask_match(opt.files_accept, file->path)) return 0;
 
-		if(opt.fmt & FMT_SFV)
+		if(opt.fmt & FMT_SFV) {
 			print_sfv_header_line(rhash_data.out, file, 0);
+		}
 
 		rhash_data.batch_size += file->size;
 	} else {
@@ -173,8 +173,8 @@ static void i18n_initialize(void)
  */
 int main(int argc, char *argv[])
 {
-	find_file_options search_opt;
 	timedelta_t timer;
+	int exit_code;
 	int sfv;
 
 	i18n_initialize(); /* initialize locale and translation */
@@ -182,7 +182,6 @@ int main(int argc, char *argv[])
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	rhash_data.out = stdout; /* set initial output streams */
 	rhash_data.log = stderr; /* can be altered by options later */
-	rhash_data.search_opt = &search_opt;
 
 	init_hash_info_table();
 
@@ -210,6 +209,7 @@ int main(int argc, char *argv[])
 			"Run `%s --help' for more help.\n"), CMD_FILENAME, CMD_FILENAME);
 		rsh_exit(0);
 	}
+	assert(opt.search_data != 0);
 
 	/* setup printf formating string */
 	rhash_data.printf_str = opt.printf_str;
@@ -232,20 +232,18 @@ int main(int argc, char *argv[])
 		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
 	}
 
-	memset(&search_opt, 0, sizeof(search_opt));
-	search_opt.max_depth = (opt.flags & OPT_RECURSIVE ? opt.find_max_depth : 0);
-	search_opt.options = FIND_SKIP_DIRS;
-	search_opt.call_back = find_file_callback;
+	opt.search_data->options = FIND_SKIP_DIRS;
+	opt.search_data->call_back = find_file_callback;
 
 	if((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
 		print_sfv_banner(rhash_data.out);
 	}
 
-	/* pre-process files */
+	/* preprocess files */
 	if(sfv || opt.bt_batch_file) {
-		/* note: errors are not reported on pre-processing */
-		search_opt.call_back_data = (void*)1;
-		process_files((const char**)opt.files, opt.n_files, &search_opt);
+		/* note: errors are not reported on preprocessing */
+		opt.search_data->call_back_data = 1;
+		process_files(opt.search_data);
 
 		fflush(rhash_data.out);
 	}
@@ -255,9 +253,9 @@ int main(int argc, char *argv[])
 	rhash_data.processed = 0;
 
 	/* process files */
-	search_opt.options |= FIND_LOG_ERRORS;
-	search_opt.call_back_data = (void*)0;
-	process_files((const char**)opt.files, opt.n_files, &search_opt);
+	opt.search_data->options = FIND_SKIP_DIRS | FIND_LOG_ERRORS;
+	opt.search_data->call_back_data = 0;
+	process_files(opt.search_data);
 
 	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		print_check_stats();
@@ -281,11 +279,12 @@ int main(int argc, char *argv[])
 		if(rhash_data.interrupted == 1) report_interrupted();
 	}
 
+	exit_code = (rhash_data.error_flag ? 1 :
+		opt.search_data->errors_count ? 2 :
+		rhash_data.interrupted ? 3 : 0);
 	options_destroy(&opt);
 	rhash_destroy(&rhash_data);
 
 	/* return non-zero error code if error occurred */
-	return (rhash_data.error_flag ? 1 :
-		search_opt.errors_count ? 2 :
-		rhash_data.interrupted ? 3 : 0);
+	return exit_code;
 }

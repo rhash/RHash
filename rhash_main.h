@@ -8,6 +8,9 @@
 extern "C" {
 #endif
 
+/**
+ * Runtime data.
+ */
 struct rhash_t
 {
 	FILE *out;
@@ -20,7 +23,6 @@ struct rhash_t
 	struct print_item *print_list;
 	struct strbuf_t *template_text;
 	struct rhash_context* rctx;
-	struct find_file_options *search_opt;
 	int interrupted; /* non-zero if program was interrupted */
 
 	/* missed, ok and processed files statistics */
@@ -33,6 +35,7 @@ struct rhash_t
 	int error_flag;     /* non-zero if any error occurred */
 };
 
+/** static variable, holding most of the runtime data */
 extern struct rhash_t rhash_data;
 
 void rhash_destroy(struct rhash_t*);

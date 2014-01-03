@@ -18,8 +18,6 @@ char* win_to_utf8(const char* str);
 #define WIN_DEFAULT_ENCODING -1
 char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed);
 
-void expand_wildcards(struct vector_t* vect, wchar_t* filepath);
-
 /* file functions */
 FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
 

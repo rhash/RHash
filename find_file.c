@@ -19,6 +19,10 @@
 #include "win_utils.h"
 #include "find_file.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 #if !defined(_WIN32) && (defined(_BSD_SOURCE) || _XOPEN_SOURCE >= 500)
 # define USE_LSTAT 1
 #else
@@ -27,55 +31,203 @@
 
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_CURRENT_OR_PARENT_DIR(s) ((s)[0]=='.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
+#define IS_CURRENT_OR_PARENT_DIRW(s) ((s)[0]==L'.' && (!(s)[1] || ((s)[1] == L'.' && !(s)[2])))
 
-void process_files(const char* paths[], size_t count, find_file_options* opt)
+#define RF_BLOCK_SIZE 256
+#define add_root_file(data, file) rsh_blocks_vector_add(&(data)->root_files, (file), RF_BLOCK_SIZE, sizeof(file_t))
+#define get_root_file(data, index) rsh_blocks_vector_get_item(&(data)->root_files, (index), RF_BLOCK_SIZE, file_t);
+
+/* allocate and fill the file_search_data */
+file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int max_depth)
 {
-	struct file_t file;
 	size_t i;
-	memset(&file, 0, sizeof(file));
 
-	for(i = 0; i < count && !(opt->options & FIND_CANCEL); i++)
+	file_search_data* data = (file_search_data*)rsh_malloc(sizeof(file_search_data));
+	memset(data, 0, sizeof(file_search_data));
+	rsh_blocks_vector_init(&data->root_files);
+	data->max_depth = max_depth;
+
+#ifdef _WIN32
+	/* expand wildcards and fill the root_files */
+	for(i = 0; i < count; i++)
 	{
-		rsh_file_cleanup(&file);
-		file.path = (char*)paths[i];
+		int added = 0;
+		size_t length, index;
+		wchar_t* path = paths[i];
+		wchar_t* p = wcschr(path, L'\0') - 1;
 
-		if (IS_DASH_STR(file.path)) {
-			file.mode = FILE_IFSTDIN;
-		} else {
-			/* read attributes of the file */
-			if(rsh_file_stat2(&file, USE_LSTAT) < 0) {
-				if((opt->options & FIND_LOG_ERRORS) != 0) {
-					log_file_error(file.path);
-					opt->errors_count++;
-				}
-				continue;
-			}
-			/* check if file is a directory */
-			if(FILE_ISDIR(&file)) {
-				if(opt->max_depth != 0) {
-					find_file(&file, opt);
-				} else if((opt->options & FIND_LOG_ERRORS) != 0) {
-					errno = EISDIR;
-					log_file_error(file.path);
-				}
-				continue;
+		/* strip trailing '\','/' symbols (if not preceded by ':') */
+		for(; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--) *p = 0;
+
+		/* Expand a wildcard in the current file path and store results into data->root_files.
+		 * If a wildcard is not found then just the file path is stored.
+		 * NB, only wildcards in the last filename of the path are expanded. */
+
+		length = p - path + 1;
+		index = wcscspn(path, L"*?");
+
+		if(index < length && wcscspn(path + index, L"/\\") >= (length - index))
+		{
+			/* a wildcard is found without a directory separator after it */
+			wchar_t* parent;
+			WIN32_FIND_DATAW d;
+			HANDLE handle;
+
+			/* find a directory separator before the file name */
+			for(; index > 0 && !IS_PATH_SEPARATOR(path[index]); index--);
+			parent = (IS_PATH_SEPARATOR(path[index]) ? path : 0);
+
+			handle = FindFirstFileW(path, &d);
+			if(INVALID_HANDLE_VALUE != handle)
+			{
+				do {
+					file_t file;
+					int failed;
+					if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName)) continue;
+
+					file.wpath = make_pathw(parent, index + 1, d.cFileName);
+					if (!file.wpath) continue;
+
+					/* skip directories if not in recursive mode */
+					if (data->max_depth == 0 && (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+
+					/* convert file name */
+					file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
+					if (!failed) {
+						failed = (rsh_file_statw(&file) < 0);
+					}
+
+					/* quietly skip unconvertible file names */
+					if(!file.path || failed) {
+						free(file.path);
+						free(file.wpath);
+						continue;
+					}
+
+					/* fill the file information */
+					file.mode |= FILE_IFROOT;
+					add_root_file(data, &file);
+					added++;
+				} while(FindNextFileW(handle, &d));
+				FindClose(handle);
+			} else {
+				/* report error on the specified wildcard */
+				DWORD dw = GetLastError();
+				char * cpath = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, NULL);
+				errno = (dw == ERROR_ACCESS_DENIED || dw == ERROR_SHARING_VIOLATION ? EACCES :
+					dw == ERROR_TOO_MANY_OPEN_FILES ? EMFILE : ENOENT);
+				log_file_error(cpath);
+				free(cpath);
 			}
 		}
-		assert(!FILE_ISDIR(&file));
+		else
+		{
+			file_t file;
+			int failed;
+			file.wpath = path;
 
-		/* process a regular file or a dash '-' path */
+			/* if filepath is a dash string "-" */
+			if ((path[0] == L'-' && path[1] == L'\0'))
+			{
+				file.mtime = file.size = 0;
+				file.mode = FILE_IFSTDIN;
+				file.path = rsh_strdup("(stdin)");
+			} else {
+				file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
+				if (failed) {
+					log_error(_("Can't convert the path to local encoding: %s\n"), file.path);
+					free(file.path);
+					continue;
+				}
+				if (rsh_file_statw(&file) < 0) {
+					errno = ENOENT;
+					log_file_error(file.path);
+					free(file.path);
+					continue;
+				}
+			}
+
+			/* fill the file_t structure */
+			file.mode |= FILE_IFROOT;
+			/* duplicate the string */
+			file.wpath = make_pathw(0, 0, path);
+			add_root_file(data, &file);
+		}
+	} /* for */
+#else
+	/* copy file paths */
+	for(i = 0; i < count; i++)
+	{
+		file_t file;
+		file.path = rsh_strdup(paths[i]);
+		file.wpath = 0;
+		file.mtime = file.size = 0;
+
+		if (IS_DASH_STR(FILE.path))
+		{
+			file.mode = FILE_IFSTDIN;
+		}
+		else if (rsh_file_stat2(&file, USE_LSTAT) < 0) {
+			log_file_error(file.path);
+			free(file.path);
+			continue;
+		}
+
 		file.mode |= FILE_IFROOT;
-		opt->call_back(&file, opt->call_back_data);
 	}
-
-	rsh_file_cleanup(&file);
+#endif
+	return data;
 }
 
+/**
+ * Free memory allocated by the file_search_data structure
+ */
+void destroy_file_search_data(file_search_data* data)
+{
+	size_t i;
+	/* clean the memory allocated by file_t elements */
+	for (i = 0; i < data->root_files.size; i++)
+	{
+		file_t* file = get_root_file(data, i);
+		rsh_file_cleanup(file);
+	}
+	rsh_blocks_vector_destroy(&data->root_files);
+}
+
+void process_files(file_search_data* data)
+{
+	size_t i;
+	size_t count = data->root_files.size;
+
+	for(i = 0; i < count && !(data->options & FIND_CANCEL); i++)
+	{
+		file_t* file = get_root_file(data, i);
+		assert(!!(file->mode & FILE_IFROOT));
+
+		/* check if file is a directory */
+		if(FILE_ISDIR(file)) {
+			if(data->max_depth != 0) {
+				find_file(file, data);
+			} else if((data->options & FIND_LOG_ERRORS) != 0) {
+				errno = EISDIR;
+				log_file_error(file->path);
+			}
+			continue;
+		} else {
+			/* process a regular file or a dash '-' path */
+			data->call_back(file, data->call_back_data);
+		}
+	}
+}
+
+/**
+ * A entry of a list containing files from a directory.
+ */
 typedef struct dir_entry
 {
 	struct dir_entry *next;
 	char* filename;
-	unsigned type; /* dir,link, etc. */
+	unsigned type; /* a directory, symlink, etc. */
 } dir_entry;
 
 /**
@@ -149,7 +301,7 @@ typedef struct dir_iterator
  * @param options the options specifying how to walk the directory tree
  * @return 0 on success, -1 on error
  */
-int find_file(file_t* start_dir, find_file_options* options)
+int find_file(file_t* start_dir, file_search_data* options)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
@@ -204,7 +356,6 @@ int find_file(file_t* start_dir, find_file_options* options)
 				/* walked the whole tree */
 				assert(!dirs_stack);
 				free(it);
-				rsh_file_cleanup(&file);
 				return 0;
 			}
 		}
@@ -212,7 +363,7 @@ int find_file(file_t* start_dir, find_file_options* options)
 
 		/* take a filename from dirs_stack and construct the next path */
 		if(level) {
-			assert(!dirs_stack);
+			assert(dirs_stack != NULL);
 			dir_path = make_path(it[level].dir_path, dirs_stack->filename);
 			dir_entry_drop_head(&dirs_stack);
 		} else {
@@ -228,15 +379,16 @@ int find_file(file_t* start_dir, find_file_options* options)
 		it[level].left = 0;
 		it[level].dir_path = dir_path;
 
-		if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))
-			== FIND_WALK_DEPTH_FIRST)
+		if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
-			file.path = dir_path;
+			file.path = rsh_strdup(dir_path);
 			rsh_file_stat2(&file, USE_LSTAT);
 
 			/* check if we should skip the directory */
-			if(!options->call_back(&file, options->call_back_data))
+			if(!options->call_back(&file, options->call_back_data)) {
+				rsh_file_cleanup(&file);
 				continue;
+			}
 		}
 
 		/* step into directory */
@@ -245,10 +397,11 @@ int find_file(file_t* start_dir, find_file_options* options)
 
 		insert_at = &dirs_stack;
 
-		while((de = readdir(dp)) != NULL) {
+		while((de = readdir(dp)) != NULL)
+		{
 			int res;
 
-			/* skip "." and ".." dirs */
+			/* skip the "." and ".." directories */
 			if(IS_CURRENT_OR_PARENT_DIR(de->d_name)) continue;
 
 			file.path = make_path(dir_path, de->d_name);
@@ -269,7 +422,7 @@ int find_file(file_t* start_dir, find_file_options* options)
 				if(FILE_ISDIR(&file) && res && level < max_depth) {
 					/* add the directory name to the dirs_stack */
 					if(dir_entry_insert(insert_at, de->d_name, file.mode)) {
-						/* the directory name was successfuly inserted */
+						/* the directory name was successfully inserted */
 						insert_at = &((*insert_at)->next);
 						it[level].left++;
 					}
@@ -278,13 +431,17 @@ int find_file(file_t* start_dir, find_file_options* options)
 				/* report error only if FIND_LOG_ERRORS option is set */
 				log_file_error(file.path);
 			}
-			free(file.path);
+			rsh_file_cleanup(&file);
 		}
 		closedir(dp);
 	}
 
-	while(dirs_stack) dir_entry_drop_head(&dirs_stack);
-	while(level) free(it[level--].dir_path);
+	while (dirs_stack) {
+		dir_entry_drop_head(&dirs_stack);
+	}
+	while (level) {
+		free(it[level--].dir_path);
+	}
 	free(it);
 	rsh_file_cleanup(&file);
 	return 0;

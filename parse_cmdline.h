@@ -73,15 +73,14 @@ struct options_t {
 	int   find_max_depth;
 	struct vector_t *files_accept; /* suffixes of files for which sums will be calculated */
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
-	unsigned openssl_mask;  /* mask which openssl hashes to use */
+	unsigned openssl_mask;  /* mask which OpenSSL hashes to use */
 	size_t bt_piece_length; /* BitTorrent piece length */
-	char*  bt_announce;     /* BitTorrent announce url */
+	char*  bt_announce;     /* BitTorrent announce URL */
 	char*  bt_batch_file;   /* path to save batch torrent to */
 
 	char** argv;
-	char** files; /* the files to process */
-	int n_files; /* the number of files */
-	struct vector_t *cmd_vec; /* vector for command line arguments */
+	int n_files; /* the number of files obtained from the command line */
+	struct file_search_data* search_data; /* files obtained from the command line */
 	struct vector_t *mem; /* heap variables that should be freed */
 };
 extern struct options_t opt;

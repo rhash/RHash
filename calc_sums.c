@@ -609,7 +609,7 @@ int check_hash_file(file_t* file, int chdir)
 			int is_absolute = IS_PATH_SEPARATOR(info.print_path[0]);
 			IF_WINDOWS(is_absolute = is_absolute || (info.print_path[0] && info.print_path[1] == ':'));
 
-			/* if filename shall be prepent by a directory path */
+			/* if filename shall be prepended by a directory path */
 			if(pos && !is_absolute) {
 				size_t len = strlen(info.print_path);
 				info.full_path = (char*)rsh_malloc(pos + len + 1);
@@ -625,8 +625,9 @@ int check_hash_file(file_t* file, int chdir)
 
 			/* verify hash sums of the file */
 			res = verify_sums(&info);
+
 			fflush(rhash_data.out);
-			free(info.full_path);
+			rsh_file_cleanup(&file_to_check);
 			file_info_destroy(&info);
 
 			if(rhash_data.interrupted) {
@@ -659,9 +660,9 @@ int check_hash_file(file_t* file, int chdir)
 }
 
 /**
- * Print a file info line in SFV header format.
+ * Format file information into SFV line and print it to the specified stream.
  *
- * @param out a stream to print info to
+ * @param out the stream to print the file information to
  * @param file the file info to print
  * @return 0 on success, -1 on fail with error code stored in errno
  */
@@ -669,8 +670,8 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 {
 	char buf[24];
 
-	if(!printpath) printpath = file->path;
-	if(printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
+	/* skip stdin stream */
+	if ((file->mode & FILE_IFSTDIN) != 0) return 0;
 
 #ifdef _WIN32
 	/* skip file if it can't be opened with exclusive sharing rights */
@@ -678,6 +679,9 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 		return 0;
 	}
 #endif
+
+	if(!printpath) printpath = file->path;
+	if(printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
 
 	sprintI64(buf, file->size, 12);
 	fprintf(out, "; %s  ", buf);

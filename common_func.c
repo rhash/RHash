@@ -335,6 +335,34 @@ unsigned rhash_get_ticks(void)
 #endif
 }
 
+#ifdef _WIN32
+/**
+ * Fill file information in the file_t structure.
+ *
+ * @param file the file information
+ * @return 0 on success, -1 on error
+ */
+int rsh_file_statw(file_t* file)
+{
+	WIN32_FILE_ATTRIBUTE_DATA data;
+
+	/* read file attributes */
+	if(GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
+		uint64_t u;
+		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
+		file->mode = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : 0);
+
+		/* the number of 100-nanosecond intervals since January 1, 1601 */
+		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
+		/* convert to second and subtract the epoch difference */
+		file->mtime = u / 10000000 - 11644473600LL;
+		return 0;
+	}
+	errno = ENOENT;
+	return -1;
+}
+#endif
+
 /**
  * Fill file information in the file_t structure.
  *
@@ -355,24 +383,14 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	}
 
 	for(i = 0; i < 2; i++) {
-		WIN32_FILE_ATTRIBUTE_DATA data;
-		wchar_t* wpath = c2w(file->path, i);
-		if(wpath == NULL) continue;
+		file->wpath = c2w(file->path, i);
+		if(file->wpath == NULL) continue;
 
-		/* read file attributes */
-		if(GetFileAttributesExW(wpath, GetFileExInfoStandard, &data)) {
-			uint64_t u;
-			file->wpath = wpath;
-			file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
-			file->mode = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : 0);
+		/* return on success */
+		if (rsh_file_statw(file) == 0) return 0;
 
-			/* the number of 100-nanosecond intervals since January 1, 1601 */
-			u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
-			/* convert to second and substract epoch difference */
-			file->mtime = u / 10000000 - 11644473600LL;
-			return 0;
-		}
-		free(wpath);
+		free(file->wpath);
+		file->wpath = NULL;
 	}
 	errno = ENOENT; /* no such file or directory */
 	return -1;
@@ -403,13 +421,14 @@ int rsh_file_stat(file_t* file)
 
 void rsh_file_cleanup(file_t* file)
 {
-	(void)file;
+	free(file->path);
+	file->path = NULL;
+
 #ifdef _WIN32
-	if(file->wpath) {
-		free(file->wpath);
-		file->wpath = NULL;
-	}
+	free(file->wpath);
+	file->wpath = NULL;
 #endif /* _WIN32 */
+
 	file->mtime = file->size = 0;
 	file->mode = 0;
 }
@@ -587,7 +606,7 @@ void rsh_vector_free(vector_t* vect)
  */
 void rsh_vector_add_ptr(vector_t* vect, void* item)
 {
-	/* check if vect contains enough space for next item */
+	/* check if vect contains enough space for the next item */
 	if(vect->size >= vect->allocated) {
 		size_t size = (vect->allocated==0 ? 128 : vect->allocated * 2);
 		vect->array = (void**)rsh_realloc(vect->array, size * sizeof(void*));
