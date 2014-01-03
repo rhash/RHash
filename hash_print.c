@@ -329,7 +329,7 @@ static void fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
  * @param out the stream to output to
  * @param filesize the 64-bit integer to output, usually a file size
  * @param width minimal width of integer to output
- * @param flag =1 if the integer shall be prepent by zeros
+ * @param flag =1 if the integer shall be prepended by zeros
  */
 static void fprintI64(FILE* out, uint64_t filesize, int width, int zero_pad)
 {

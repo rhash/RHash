@@ -20,7 +20,7 @@ new_test() {
   test_num=$((test_num+1));
 }
 
-# verify obtained value $1 aginst the expected value $2
+# verify obtained value $1 against the expected value $2
 check() {
   if [ "$1" = "$2" ]; then 
     test "$3" = "." || echo "Ok"
