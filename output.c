@@ -90,6 +90,7 @@ void log_warning(const char* format, ...)
  */
 void log_file_error(const char* filepath)
 {
+	if (!filepath) filepath = "(null)";
 	log_error("%s: %s\n", filepath, strerror(errno));
 }
 
