@@ -40,9 +40,8 @@ struct percents_output_info_t *percents_output = NULL;
  */
 static void log_va_msg(const char* format, va_list args)
 {
-	FILE* log = rhash_data.log;
-	vfprintf(log, format, args);
-	fflush(log);
+	vfprintf(rhash_data.log, format, args);
+	fflush(rhash_data.log);
 }
 
 /**
@@ -94,13 +93,17 @@ void log_file_error(const char* filepath)
 	log_error("%s: %s\n", filepath, strerror(errno));
 }
 
+/**
+ * Log the message, that the program was interrupted.
+ * The function should be called only once.
+ */
 void report_interrupted(void)
 {
 	assert(rhash_data.interrupted == 1);
 	rhash_data.interrupted = 2;
-	fprintf(rhash_data.log, _("Interrupted by user...\n"));
-	fflush(rhash_data.log);
+	log_msg(_("Interrupted by user...\n"));
 }
+
 
 /**
  * Information about printed percents.
@@ -491,20 +494,22 @@ void setup_output(void)
 	rhash_data.out = stdout;
 	rhash_data.log = stderr;
 
+	setup_log_stream(&rhash_data.log, opt.log);
+	setup_log_stream(&rhash_data.out, opt.output);
+
 	if(opt.flags & OPT_PERCENTS) {
-		/* we don't use _fileno() cause it is not in ISO C90, and so
+		/* NB: we don't use _fileno() cause it is not in ISO C90, and so
 		 * is incompatible with the GCC -ansi option */
 		if(rhash_data.log == stderr && isatty(2)) {
-			percents_output  = &p_perc; /* one-line percents */
+			/* use one-line percents by default on console */
+			percents_output  = &p_perc;
 		} else {
-			percents_output  = &dots_perc; /* print percents as dots */
+			/* print percents as dots */
+			percents_output  = &dots_perc;
 		}
 	} else {
 		percents_output  = &dummy_perc; /* no percents */
 	}
-
-	setup_log_stream(&rhash_data.out, opt.output);
-	setup_log_stream(&rhash_data.log, opt.log);
 }
 
 /* misc output functions */
