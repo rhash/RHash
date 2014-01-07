@@ -31,6 +31,23 @@
 struct rhash_t rhash_data;
 
 /**
+ * Check if the file must be skipped. Returns 1 if the file path
+ * is the same as the output or the log file path.
+ *
+ * @param file the file to check
+ * @param mask the mask of accepted files
+ * @return 1 if the file should be skipped, 0 otherwise
+ */
+static int must_skip_file(file_t* file)
+{
+	const rsh_tchar* path = get_file_tpath(file);
+
+	/* check if the file path is the same as the output or the log file path */
+	return (opt.output && are_paths_equal(path, opt.output)) ||
+		(opt.log && are_paths_equal(path, opt.log));
+}
+
+/**
  * Callback function to process files while recursively traversing a directory.
  * It hashes, checks or updates a file according to the current work mode.
  *
@@ -49,7 +66,9 @@ static int find_file_callback(file_t* file, int preprocess)
 	}
 
 	if (preprocess) {
-		if(!file_mask_match(opt.files_accept, file->path)) return 0;
+		if (!file_mask_match(opt.files_accept, file->path) || must_skip_file(file)) {
+			return 0;
+		}
 
 		if (opt.fmt & FMT_SFV) {
 			print_sfv_header_line(rhash_data.out, file, 0);
@@ -65,6 +84,7 @@ static int find_file_callback(file_t* file, int preprocess)
 				opt.crc_accept : opt.files_accept);
 			if (!file_mask_match(masks, file->path)) return 0;
 		}
+		if (must_skip_file(file)) return 0;
 
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			res = check_hash_file(file, not_root);

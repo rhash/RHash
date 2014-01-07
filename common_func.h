@@ -101,6 +101,8 @@ typedef struct file_t
 const char* get_basename(const char* path);
 char* get_dirname(const char* path);
 char* make_path(const char* dir, const char* filename);
+int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
+
 void print_time(FILE *out, time_t time);
 void print_time64(FILE *out, uint64_t time);
 void rsh_file_cleanup(file_t* file);

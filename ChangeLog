@@ -1,5 +1,8 @@
+Wed Jan  8 2014
+	* Exclude the files specified by -o and -l from processing
+
 Sat Jan  4 2014 Aleksey
-	Improved directory scanning
+	* Improved directory scanning
 
 Sat Dec 28 2013 Aleksey
 	* Bugfix: suppress the R6034 error popup on Windows

@@ -292,6 +292,33 @@ char* make_path(const char* dir_path, const char* filename)
 	return buf;
 }
 
+#define IS_ANY_SLASH(c) ((c) == RSH_T('/') || (c) == RSH_T('\\'))
+
+/**
+ * Compare paths.
+ *
+ * @param a the first path
+ * @param b the second path
+ */
+int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
+{
+	if (!a || !b) return 0;
+	if (a[0] == RSH_T('.') && IS_ANY_SLASH(a[1])) a += 2;
+	if (b[0] == RSH_T('.') && IS_ANY_SLASH(b[1])) b += 2;
+	
+	for (; *a; ++a, ++b)
+	{
+		if (*a != *b && (!IS_ANY_SLASH(*b) || !IS_ANY_SLASH(*a)))
+		{
+			/* paths are different */
+			return 0;
+		}
+		
+	}
+	/* check if both paths terminated */
+	return (*a == *b);
+}
+
 /**
  * Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
  *
