@@ -6,7 +6,7 @@
  * ED2K, GOST and many other.
  */
 
-#include "common_func.h" /* should be included before the C library files */
+#include "common_func.h" /* shall be included before the C library files */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* free() */
@@ -31,8 +31,8 @@
 struct rhash_t rhash_data;
 
 /**
- * Callback function to process a file found while recursively traversing
- * a directory. It hashes, checks or updates a file according to work mode.
+ * Callback function to process files while recursively traversing a directory.
+ * It hashes, checks or updates a file according to the current work mode.
  *
  * @param file the file to process
  * @param preprocess non-zero when preprocessing files, zero for actual processing.
@@ -43,43 +43,45 @@ static int find_file_callback(file_t* file, int preprocess)
 	assert(!FILE_ISDIR(file));
 	assert(opt.search_data);
 
-	if(rhash_data.interrupted) {
+	if (rhash_data.interrupted) {
 		opt.search_data->options |= FIND_CANCEL;
 		return 0;
 	}
 
-	if(preprocess) {
+	if (preprocess) {
 		if(!file_mask_match(opt.files_accept, file->path)) return 0;
 
-		if(opt.fmt & FMT_SFV) {
+		if (opt.fmt & FMT_SFV) {
 			print_sfv_header_line(rhash_data.out, file, 0);
 		}
 
 		rhash_data.batch_size += file->size;
 	} else {
-		char* filepath = file->path;
 		int not_root = !(file->mode & FILE_IFROOT);
 
-		/* only check and update modes use crc_accept mask */
-		file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
-			opt.crc_accept : opt.files_accept);
-		if(not_root && !file_mask_match(masks, filepath)) return 0;
+		if (not_root) {
+			/* only check and update modes use the crc_accept mask */
+			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
+				opt.crc_accept : opt.files_accept);
+			if (!file_mask_match(masks, file->path)) return 0;
+		}
 
-		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			res = check_hash_file(file, not_root);
 		} else {
-			if(opt.mode & MODE_UPDATE) {
+			if (opt.mode & MODE_UPDATE) {
 				res = update_hash_file(file);
 			} else {
 				/* default mode: calculate hash */
-				if(filepath[0] == '.' && IS_PATH_SEPARATOR(filepath[1])) filepath += 2;
-				res = calculate_and_print_sums(rhash_data.out, file, filepath);
-				if(rhash_data.interrupted) return 0;
+				const char* print_path = file->path;
+				if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1])) print_path += 2;
+				res = calculate_and_print_sums(rhash_data.out, file, print_path);
+				if (rhash_data.interrupted) return 0;
 				rhash_data.processed++;
 			}
 		}
 	}
-	if(res < 0) rhash_data.error_flag = 1;
+	if (res < 0) rhash_data.error_flag = 1;
 	return 1;
 }
 
@@ -96,7 +98,7 @@ static void ctrl_c_handler(int signum)
 {
 	(void)signum;
 	rhash_data.interrupted = 1;
-	if(rhash_data.rctx) {
+	if (rhash_data.rctx) {
 		rhash_cancel(rhash_data.rctx);
 	}
 }
@@ -113,25 +115,25 @@ static int load_printf_template(void)
 	size_t len;
 	int error = 0;
 
-	if(!fd) {
+	if (!fd) {
 		log_file_error(opt.template_file);
 		return 0;
 	}
 
 	rhash_data.template_text = rsh_str_new();
 
-	while(!feof(fd)) {
+	while (!feof(fd)) {
 		len = fread(buffer, 1, 8192, fd);
 		/* read can return -1 on error */
-		if(len == (size_t)-1) break;
+		if (len == (size_t)-1) break;
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
-		if(rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
+		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
 			log_msg(_("%s: template file is too big\n"), opt.template_file);
 			error = 1;
 		}
 	}
 
-	if(ferror(fd)) {
+	if (ferror(fd)) {
 		log_file_error(opt.template_file);
 		error = 1;
 	}
@@ -150,7 +152,7 @@ void rhash_destroy(struct rhash_t* ptr)
 {
 	free_print_list(ptr->print_list);
 	rsh_str_free(ptr->template_text);
-	if(ptr->rctx) rhash_free(ptr->rctx);
+	if (ptr->rctx) rhash_free(ptr->rctx);
 	IF_WINDOWS(restore_console());
 }
 
@@ -243,7 +245,7 @@ int main(int argc, char *argv[])
 	if(sfv || opt.bt_batch_file) {
 		/* note: errors are not reported on preprocessing */
 		opt.search_data->call_back_data = 1;
-		process_files(opt.search_data);
+		scan_files(opt.search_data);
 
 		fflush(rhash_data.out);
 	}
@@ -255,7 +257,7 @@ int main(int argc, char *argv[])
 	/* process files */
 	opt.search_data->options = FIND_SKIP_DIRS | FIND_LOG_ERRORS;
 	opt.search_data->call_back_data = 0;
-	process_files(opt.search_data);
+	scan_files(opt.search_data);
 
 	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		print_check_stats();
@@ -270,7 +272,8 @@ int main(int argc, char *argv[])
 
 		if((opt.flags & OPT_SPEED) &&
 			!(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
-			rhash_data.processed > 1) {
+			rhash_data.processed > 1)
+		{
 			double time = rhash_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);
 		}

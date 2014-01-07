@@ -194,7 +194,7 @@ void destroy_file_search_data(file_search_data* data)
 	rsh_blocks_vector_destroy(&data->root_files);
 }
 
-void process_files(file_search_data* data)
+void scan_files(file_search_data* data)
 {
 	size_t i;
 	size_t count = data->root_files.size;
