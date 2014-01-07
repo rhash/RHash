@@ -52,12 +52,30 @@ size_t strlen_utf8_c(const char *str);
 
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
 
-/* bit constants for the file_t.mode bit mask */
-#define FILE_IFDIR   0x01
-#define FILE_IFLNK   0x02
-#define FILE_IFROOT  0x10
-#define FILE_IFSTDIN 0x20
-#define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
+#ifdef _WIN32
+typedef wchar_t rsh_tchar;
+# define RSH_T(str) L##str
+#else
+typedef  char rsh_tchar;
+# define RSH_T(str) str
+#endif /* _WIN32 */
+
+#ifdef _WIN32
+# define IF_WINDOWS(code) code
+# define SYS_PATH_SEPARATOR '\\'
+# define IS_PATH_SEPARATOR(c) ((c) == '\\' || (c) == '/')
+# define IS_PATH_SEPARATOR_W(c) ((c) == L'\\' || (c) == L'/')
+# define is_utf8() win_is_utf8()
+# define to_utf8(str) win_to_utf8(str)
+#else /* non _WIN32 part */
+# define IF_WINDOWS(code)
+# define SYS_PATH_SEPARATOR '/'
+# define IS_PATH_SEPARATOR(c) ((c) == '/')
+/* stub for utf8 */
+# define is_utf8() 1
+# define to_utf8(str) NULL
+#endif /* _WIN32 */
+
 
 /**
  * Portable file information.
@@ -71,6 +89,13 @@ typedef struct file_t
 	unsigned mode;
 } file_t;
 
+/* bit constants for the file_t.mode bit mask */
+#define FILE_IFDIR   0x01
+#define FILE_IFLNK   0x02
+#define FILE_IFROOT  0x10
+#define FILE_IFSTDIN 0x20
+#define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
+
 /* file functions */
 
 const char* get_basename(const char* path);
@@ -81,31 +106,16 @@ void print_time64(FILE *out, uint64_t time);
 void rsh_file_cleanup(file_t* file);
 int rsh_file_stat(file_t* file);
 int rsh_file_stat2(file_t* file, int use_lstat);
-#ifdef _WIN32
-int rsh_file_statw(file_t* file);
-#endif
 
 #ifdef _WIN32
-# define IF_WINDOWS(code) code
-# define SYS_PATH_SEPARATOR '\\'
-# define IS_PATH_SEPARATOR(c) ((c) == '\\' || (c) == '/')
-# define IS_PATH_SEPARATOR_W(c) ((c) == L'\\' || (c) == L'/')
+# define get_file_tpath(file) ((file)->wpath)
+int rsh_file_statw(file_t* file);
 # define rsh_fopen_bin(path, mode) win_fopen_bin(path, mode)
-# define is_utf8() win_is_utf8()
-# define to_utf8(str) win_to_utf8(str)
-typedef wchar_t rsh_tchar;
-# define RSH_T(str) L##str
-#else /* non _WIN32 part */
-# define IF_WINDOWS(code)
-# define SYS_PATH_SEPARATOR '/'
-# define IS_PATH_SEPARATOR(c) ((c) == '/')
+#else
+# define get_file_tpath(file) ((file)->path)
 # define rsh_fopen_bin(path, mode) fopen(path, mode)
-  /* stub for utf8 */
-# define is_utf8() 1
-# define to_utf8(str) NULL
-typedef  char rsh_tchar;
-# define RSH_T(str) str
-#endif /* _WIN32 */
+#endif
+
 
 /* rhash stat function */
 #if (__MSVCRT_VERSION__ >= 0x0601) || (_MSC_VER >= 1400)
@@ -212,7 +222,7 @@ void rsh_str_append(strbuf_t *str, const char* text);
 #define rsh_str_ensure_length(str, len) \
 	if((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);
 #define rsh_wstr_ensure_length(str, len) \
-	if((size_t)((len) + 2) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 2);
+	if((size_t)((len) + sizeof(wchar_t)) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + sizeof(wchar_t));
 
 #ifdef __cplusplus
 } /* extern "C" */
