@@ -15,19 +15,23 @@ fi
 HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
 
 test_num=1;
+sub_test=0;
 new_test() {
   printf "%2u. %s" $test_num "$1"
   test_num=$((test_num+1));
+  sub_test=0;
 }
 
 # verify obtained value $1 against the expected value $2
 check() {
+  sub_test=$((sub_test+1));
   if [ "$1" = "$2" ]; then 
     test "$3" = "." || echo "Ok"
   else 
-    echo "Failed";
-    echo "obtained: $1"
-    echo "expected: $2"
+    tt=$( test "$3" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
+    echo "Failed$tt"
+    echo "obtained: \"$1\""
+    echo "expected: \"$2\""
     return 1; # error
   fi
   return 0;
@@ -36,7 +40,7 @@ check() {
 # match obtained value $1 against given grep-regexp $2
 match_line() {
   if echo "$1" | grep -vq "$2"; then
-    printf "obtained: %s\n" "$1"
+    printf "obtained: \"%s\"\n" "$1"
     echo "regexp:  /$2/"
     return 1;
   fi
@@ -45,9 +49,11 @@ match_line() {
 
 # match obtained value $1 against given grep-regexp $2
 match() {
+  sub_test=$((sub_test+1));
   if echo "$1" | grep -vq "$2"; then
-    echo Failed
-    echo "obtained: $1"
+    tt=$( test "$3" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
+    echo "Failed$tt"
+    echo "obtained: \"$1\""
     echo "regexp:  /$2/"
     return 1; # error
   else
@@ -83,7 +89,7 @@ $rhash test1K.data | (
   read l; match_line "$l" "^; *1024  [0-9:\.]\{8\} [0-9-]\{10\} test1K.data\$"
   read l; match_line "$l" "^test1K.data B70B4C26\$"
 ) > match_err.log
-[ ! -s match_err.log ] && echo Ok || echo Failed && cat match_err.log
+[ ! -s match_err.log ] && echo "Ok" || echo "Failed" && cat match_err.log
 rm -f match_err.log
 
 new_test "test %x, %b, %B modifiers:  "
@@ -174,6 +180,14 @@ check "$TEST_RESULT" "00000000  test_dir\\file.txt" .
 TEST_RESULT=$( $rhash -rc --crc-accept=.bin test_dir 2>/dev/null | sed -n '/Verifying/s/-//gp' )
 match "$TEST_RESULT" "( Verifying test_dir.file\\.bin )"
 rm -rf test_dir/
+
+new_test "test ignoring of log files: "
+touch test_file1.out test_file2.out
+TEST_RESULT=$( $rhash -C --simple test_file1.out test_file2.out -o test_file1.out -l test_file2.out 2>/dev/null )
+check "$TEST_RESULT" "" .
+TEST_RESULT=$( $rhash -c test_file1.out test_file2.out -o test_file1.out -l test_file2.out 2>/dev/null )
+check "$TEST_RESULT" ""
+rm test_file1.out test_file2.out
 
 new_test "test creating torrent file: "
 TEST_RESULT=$( $rhash --btih --torrent --bt-private --bt-piece-length=512 --bt-announce=http://tracker.org/ 'test1K.data' 2>/dev/null )
