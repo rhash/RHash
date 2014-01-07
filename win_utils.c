@@ -192,6 +192,80 @@ int can_open_exclusive(const char* path)
 	return res;
 }
 
+/* the range of error codes for access errors */
+#define MIN_EACCES_RANGE ERROR_WRITE_PROTECT
+#define MAX_EACCES_RANGE ERROR_SHARING_BUFFER_EXCEEDED
+
+/**
+ * Convert the GetLastError() value to the assignable to errno.
+ *
+ * @return errno-compatible error code
+ */
+static int convert_last_error_to_errno(void)
+{
+	DWORD error_code = GetLastError();
+	switch (error_code)
+	{
+	case NO_ERROR:
+		return 0;
+	case ERROR_FILE_NOT_FOUND:
+	case ERROR_PATH_NOT_FOUND:
+	case ERROR_INVALID_DRIVE:
+	case ERROR_BAD_NETPATH:
+	case ERROR_BAD_PATHNAME:
+	case ERROR_FILENAME_EXCED_RANGE:
+		return ENOENT;
+	case ERROR_TOO_MANY_OPEN_FILES:
+		return EMFILE;
+	case ERROR_ACCESS_DENIED:
+	case ERROR_SHARING_VIOLATION:
+		return EACCES;
+	case ERROR_NETWORK_ACCESS_DENIED:
+	case ERROR_FAIL_I24:
+	case ERROR_SEEK_ON_DEVICE:
+		return EACCES;
+	case ERROR_LOCK_VIOLATION:
+	case ERROR_DRIVE_LOCKED:
+	case ERROR_NOT_LOCKED:
+	case ERROR_LOCK_FAILED:
+		return EACCES;
+	case ERROR_INVALID_HANDLE:
+		return EBADF;
+	case ERROR_NOT_ENOUGH_MEMORY:
+	case ERROR_INVALID_BLOCK:
+	case ERROR_NOT_ENOUGH_QUOTA:
+		return ENOMEM;
+	case ERROR_INVALID_ACCESS:
+	case ERROR_INVALID_DATA:
+	case  ERROR_INVALID_PARAMETER:
+		return EINVAL;
+	case ERROR_BROKEN_PIPE:
+	case ERROR_NO_DATA:
+		return EPIPE;
+	case ERROR_DISK_FULL:
+		return ENOSPC;
+	case ERROR_ALREADY_EXISTS:
+		return EEXIST;
+	case ERROR_NESTING_NOT_ALLOWED:
+		return EAGAIN;
+	}
+
+	/* try to detect error by range */
+	if (MIN_EACCES_RANGE <= error_code && error_code <= MAX_EACCES_RANGE) {
+		return EACCES;
+	} else {
+		return EINVAL;
+	}
+}
+
+/**
+ * Assign errno to the error value converted from the GetLastError().
+ */
+void set_errno_from_last_file_error(void)
+{
+	errno = convert_last_error_to_errno();
+}
+
 /**
  * Concatenate directory path with filename, unicode version.
  *
@@ -343,6 +417,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 		errno = EACCES;
 		return NULL;
 	}
+	set_errno_from_last_file_error();
 
 	d->state = (d->hFind == INVALID_HANDLE_VALUE ? -1 : 0);
 	d->dir.d_name = NULL;

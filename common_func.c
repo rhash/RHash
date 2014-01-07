@@ -385,7 +385,7 @@ int rsh_file_statw(file_t* file)
 		file->mtime = u / 10000000 - 11644473600LL;
 		return 0;
 	}
-	errno = ENOENT;
+	set_errno_from_last_file_error();
 	return -1;
 }
 #endif
@@ -419,7 +419,8 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		free(file->wpath);
 		file->wpath = NULL;
 	}
-	errno = ENOENT; /* no such file or directory */
+	/* NB: usually errno is set by the rsh_file_statw() call */
+	if (!errno) errno = EINVAL;
 	return -1;
 #else
 	struct rsh_stat_struct st;

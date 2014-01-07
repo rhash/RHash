@@ -112,10 +112,8 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 				FindClose(handle);
 			} else {
 				/* report error on the specified wildcard */
-				DWORD dw = GetLastError();
 				char * cpath = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, NULL);
-				errno = (dw == ERROR_ACCESS_DENIED || dw == ERROR_SHARING_VIOLATION ? EACCES :
-					dw == ERROR_TOO_MANY_OPEN_FILES ? EMFILE : ENOENT);
+				set_errno_from_last_file_error();
 				log_file_error(cpath);
 				free(cpath);
 			}
@@ -140,7 +138,6 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 					continue;
 				}
 				if (rsh_file_statw(&file) < 0) {
-					errno = ENOENT;
 					log_file_error(file.path);
 					free(file.path);
 					continue;
