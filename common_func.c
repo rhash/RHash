@@ -522,6 +522,27 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 	return res;
 }
 
+#ifdef _WIN32
+/**
+ * Duplicate wide string with reporting memory error to stderr.
+ *
+ * @param str the zero-terminated string to duplicate
+ * @param srcfile source file to report error on fail
+ * @param srcline source code line to be reported on fail
+ * @return allocated memory buffer with copied string
+ */
+wchar_t* rhash_wcsdup(wchar_t* str, const char* srcfile, int srcline)
+{
+	wchar_t* res = wcsdup(str);
+
+	if(!res) {
+		rsh_report_error(srcfile, srcline, "wcsdup() failed\n");
+		rsh_exit(2);
+	}
+	return res;
+}
+#endif
+
 /**
  * Reallocates a buffer via realloc with reporting memory error to stderr.
  *

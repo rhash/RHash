@@ -263,7 +263,7 @@ enum option_type_t
 	F_UFLG = 1, /* set a bit flag in a uint32_t field */
 	F_UENC = F_UFLG | F_OUTPUT_OPT, /* an encoding changing option */
 	F_CSTR = 2 | F_NEED_PARAM, /* store parameter as a C string */
-	F_OPTH = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
+	F_TOUT = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 4, /* just call a function */
 	F_PFNC = 5 | F_NEED_PARAM, /* process option parameter by calling a handler */
 	F_PRNT = 6, /* print a constant C-string and exit */
@@ -336,8 +336,8 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG, 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
 	{ F_CSTR,   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },
 	{ F_PFNC,   0,   0, "path-separator", set_path_separator, 0 },
-	{ F_OPTH, 'o',   0, "output", &opt.output, 0 },
-	{ F_OPTH, 'l',   0, "log",    &opt.log,    0 },
+	{ F_TOUT, 'o',   0, "output", &opt.output, 0 },
+	{ F_TOUT, 'l',   0, "log",    &opt.log,    0 },
 	{ F_PFNC, 'q',   0, "accept", crc_accept, 0 },
 	{ F_PFNC, 't',   0, "crc-accept", crc_accept, 1 },
 	{ F_VFNC,   0,   0, "video",  accept_video, 0 },
@@ -407,16 +407,19 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 			log_error(_("argument is required for option %s\n"), option->name);
 			rsh_exit(2);
 		}
+
 #ifdef _WIN32
-		/* convert from UTF-16 if not a filepath */
-		if(option_type != F_OPTH) {
+		if(option_type == F_TOUT) {
+			/* leave the value in UTF-16 */
+			value = (char*)rsh_wcsdup((wchar_t*)option->parameter);
+		} else {
+			/* convert from UTF-16 */
 			value = w2c((wchar_t*)option->parameter);
-			rsh_vector_add_ptr(opt.mem, value);
-		} else
-#endif
-		{
-			value = (char*)option->parameter;
 		}
+		rsh_vector_add_ptr(opt.mem, value);
+#else
+		value = (char*)option->parameter;
+#endif
 	}
 
 	/* process option, choosing the method by type */
@@ -426,7 +429,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		*(unsigned*)((char*)opts + ((char*)o->ptr - (char*)&opt)) |= o->param;
 		break;
 	case F_CSTR:
-	case F_OPTH:
+	case F_TOUT:
 		/* save the option parameter */
 		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
 		break;
@@ -941,18 +944,18 @@ void read_options(int argc, char *argv[])
 	if( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= OPT_UTF8;
 #endif
 
-	/* note: encoding and -o/-l options are already applied */
+	/* setup the program output */
 	IF_WINDOWS(setup_console());
-	setup_output(); /* setup program output */
+	setup_output();
 
 	apply_cmdline_options(&cmd_line); /* process the rest of command options */
 
 	/* options were processed, so we don't need them anymore */
 	rsh_blocks_vector_destroy(&cmd_line.options);
 
-	/* */
+	/* set the files and directories to be processed later */
 	opt.search_data = create_file_search_data(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
-	opt.n_files = (opt.search_data ? opt.search_data->root_files.size : 0);
+	opt.n_files = cmd_line.n_files;
 
 	free(cmd_line.files);
 

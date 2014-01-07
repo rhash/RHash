@@ -148,6 +148,12 @@ void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline);
 char* rhash_strdup(const char* str, const char* srcfile, int srcline);
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 
+#ifdef _WIN32
+#define rsh_wcsdup(str) rhash_wcsdup(str, __FILE__, __LINE__)
+wchar_t* rhash_wcsdup(wchar_t* str, const char* srcfile, int srcline);
+#endif
+
+
 extern void (*rsh_exit)(int code);
 extern void (*rsh_report_error)(const char* srcfile, int srcline, const char* format, ...);
 

@@ -12,6 +12,12 @@ extern "C" {
 #define PROGRAM_NAME "RHash"
 #define CMD_FILENAME "rhash"
 
+#ifdef _WIN32
+typedef wchar_t opt_tchar;
+#else
+typedef char opt_tchar;
+#endif
+
 /**
  * Options bit flags and constants.
  */
@@ -58,7 +64,8 @@ struct vector_t;
 /**
  * Parsed program options.
  */
-struct options_t {
+struct options_t
+{
 	unsigned flags;      /* program options */
 	unsigned sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
@@ -66,8 +73,8 @@ struct options_t {
 	const char* config_file; /* config file path */
 	char* printf_str;        /* printf-like format */
 	char* template_file; /* printf-like template file path */
-	char* output;        /* file to output calculation or checking results to */
-	char* log;           /* file to log percents and other info to */
+	opt_tchar* output;       /* file to output calculation or checking results to */
+	opt_tchar* log;          /* file to log percents and other info to */
 	char* embed_crc_delimiter;
 	char  path_separator;
 	int   find_max_depth;

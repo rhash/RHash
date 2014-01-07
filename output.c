@@ -471,16 +471,16 @@ struct percents_output_info_t p_perc = {
 	p_init_percents, p_update_percents, p_finish_percents, "digits"
 };
 
-static void setup_log_stream(FILE **p_stream, const char *stream_path)
+static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path)
 {
 	if(stream_path) {
 #ifdef _WIN32
-		if( !(*p_stream = _wfsopen((wchar_t*)stream_path, L"w", _SH_DENYNO)) ) {
-			stream_path = w2c((wchar_t*)stream_path);
+		if( !(*p_stream = _wfsopen(stream_path, L"w", _SH_DENYNO)) ) {
+			log_file_error(w2c((wchar_t*)stream_path));
 #else
 		if( !(*p_stream = fopen(stream_path, "w")) ) {
+			log_file_error(stream_path);
 #endif
-			log_error(_("%s: %s\n"), stream_path, strerror(errno));
 			rsh_exit(2);
 		}
 	}
