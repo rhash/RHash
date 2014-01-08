@@ -1,6 +1,6 @@
 /* rhash_torrent.c - functions to make a torrent file.
  *
- * Copyright: 2013 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2013-2014 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
