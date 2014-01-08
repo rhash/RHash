@@ -2,7 +2,7 @@
 # compile with debug info: make CFLAGS=-g
 # compile for pentiumpro: make CFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
 # create rpm with statically linked program: make rpm ADDLDFLAGS="-static -s -Wl,--gc-sections"
-VERSION = 1.3.0
+VERSION = 1.3.1
 PREFIX  = /usr/local
 CC      = gcc
 # using OPTFLAGS/OPTLDFLAGS for compatibilty with old scripts using this makefile
