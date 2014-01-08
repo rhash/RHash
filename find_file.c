@@ -144,10 +144,9 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 				}
 			}
 
-			/* fill the file_t structure */
+			/* mark the file as obtained from the command line */
 			file.mode |= FILE_IFROOT;
-			/* duplicate the string */
-			file.wpath = make_pathw(0, 0, path);
+			file.wpath = rsh_wcsdup(path);
 			add_root_file(data, &file);
 		}
 	} /* for */
@@ -160,7 +159,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 		file.wpath = 0;
 		file.mtime = file.size = 0;
 
-		if (IS_DASH_STR(FILE.path))
+		if (IS_DASH_STR(file.path))
 		{
 			file.mode = FILE_IFSTDIN;
 		}
@@ -171,6 +170,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 		}
 
 		file.mode |= FILE_IFROOT;
+		add_root_file(data, &file);
 	}
 #endif
 	return data;
