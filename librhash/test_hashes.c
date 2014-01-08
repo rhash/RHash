@@ -690,7 +690,7 @@ static void test_results_consistency(void)
 
 	size_t digest_size;
 	struct rhash_context *ctx;
-	char res1[70];
+	unsigned char res1[70];
 	char res2[70];
 	unsigned i, hash_id;
 
