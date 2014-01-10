@@ -152,7 +152,7 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 
 #ifdef _WIN32
 #define rsh_wcsdup(str) rhash_wcsdup(str, __FILE__, __LINE__)
-wchar_t* rhash_wcsdup(wchar_t* str, const char* srcfile, int srcline);
+wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 #endif
 
 

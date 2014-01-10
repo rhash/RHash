@@ -559,12 +559,17 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
  * @param srcline source code line to be reported on fail
  * @return allocated memory buffer with copied string
  */
-wchar_t* rhash_wcsdup(wchar_t* str, const char* srcfile, int srcline)
+wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 {
+#ifndef __STRICT_ANSI__
 	wchar_t* res = wcsdup(str);
+#else
+	wchar_t* res = (wchar_t*)malloc((wcslen(str) + 1) * sizeof(wchar_t));
+	if(res) wcscpy(res, str);
+#endif
 
 	if(!res) {
-		rsh_report_error(srcfile, srcline, "wcsdup() failed\n");
+		rsh_report_error(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
 		rsh_exit(2);
 	}
 	return res;
