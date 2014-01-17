@@ -4,6 +4,8 @@
 
 #include <rhash.h>
 
+typedef unsigned long long ulonglong;
+
 /* helper macros and functions */
 #define BASE32_LENGTH(size) (((size) * 8 + 4) / 5)
 #define BASE64_LENGTH(size) ((((size) + 2) / 3) * 4)
@@ -176,7 +178,7 @@ rhash_get_hash_id(ctx)
 	OUTPUT:
 		RETVAL
 
-uint64_t
+ulonglong
 rhash_get_hashed_length(ctx)
 		rhash_context * ctx
 	PROTOTYPE: $
@@ -305,7 +307,7 @@ void
 rhash_bt_add_filename(ctx, filename, filesize)
 		rhash_context * ctx
 		char * filename
-		uint64_t filesize
+		ulonglong filesize
 	PROTOTYPE: $$$
 	CODE:
 		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR(filename), (rhash_uptr_t)&filesize);
