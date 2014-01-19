@@ -56,7 +56,7 @@ sub OPTIONAL {
 # see ExtUtils::MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written
 WriteMakefile(
-    NAME         => 'Rhash',
+    NAME         => 'Crypt::Rhash',
     ABSTRACT     => 'Library for computing hash sums and magnet links',
     AUTHOR       => 'Aleksey Kravchenko',
     VERSION_FROM => 'Rhash.pm', # finds $VERSION

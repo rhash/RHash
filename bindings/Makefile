@@ -24,7 +24,7 @@ configure-ruby: ruby/Makefile
 configure-php: php/Makefile
 
 perl/Makefile: perl/Makefile.PL
-	cd perl && $(PERL) Makefile.PL INSTALLDIRS=vendor
+	cd perl && $(PERL) Makefile.PL INSTALLDIRS=vendor USE_SYSTEM_LIBRHASH=1
 
 php/Makefile: php/config.m4
 	cd php && phpize && ./configure --with-rhash
@@ -91,6 +91,23 @@ gzip: distclean
 	$(MAKE) copy-dist
 	tar -czf $(ARCHIVE_GZIP) "$(COPYDIR)"
 	rm -rf "$(COPYDIR)"
+
+PERL_PKG_VER = $(shell [ -f perl/Rhash.pm ] && sed -ne "s/^our \+.VERSION *= *'\([0-9\.]*\)';/\1/p;" perl/Rhash.pm)
+PERL_PKG = Crypt-RHash-$(PERL_PKG_VER)
+
+cpan:
+	[ -f ../librhash/rhash.h ]
+	echo "$(PERL_PKG_VER)" | grep -q '^[0-9\.]\+$$'
+	rm -rf $(PERL_PKG)/ $(PERL_PKG).tar.gz
+	mkdir -p $(PERL_PKG)/librhash/
+	grep -q / perl/MANIFEST && mkdir -p `sed -ne '/\//s/\([^\/]*\/\).*/$(PERL_PKG)\/\1/p' perl/MANIFEST | sort -u`
+	sed -e 's/^.*/cp perl\/\0 $(PERL_PKG)\/\0/' perl/MANIFEST > _cpy.sh
+	sh _cpy.sh && rm -f _cpy.sh
+	cp ../librhash/*.[hc] $(PERL_PKG)/librhash/
+	cp perl/MANIFEST $(PERL_PKG)/
+	find $(PERL_PKG)/librhash/ -type f -printf "librhash/%f\n" | sort >> $(PERL_PKG)/MANIFEST
+	tar -czf $(PERL_PKG).tar.gz --owner=0:0 $(PERL_PKG)/
+	rm -rf $(PERL_PKG)/
 
 distclean:
 	$(MAKE) -C java distclean

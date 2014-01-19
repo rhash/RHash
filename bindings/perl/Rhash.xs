@@ -38,7 +38,7 @@ SV * allocate_string_buffer(STRLEN str_len)
 	return sv;
 }
 
-MODULE = Rhash             PACKAGE = Rhash
+MODULE = Crypt::Rhash      PACKAGE = Crypt::Rhash
 
 ##############################################################################
 # Initialize LibRHash in the module bootstrap function

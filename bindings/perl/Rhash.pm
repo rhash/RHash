@@ -1,4 +1,4 @@
-package Rhash;
+package Crypt::Rhash;
 
 use 5.008008;
 use strict;
@@ -10,41 +10,73 @@ our @ISA = (qw(Exporter));
 # define possible tags for functions export
 our %EXPORT_TAGS = (
 	Functions => [qw(raw2hex raw2base32 raw2base64)],
+	Constants => [qw(RHASH_CRC32 RHASH_MD4 RHASH_MD5 RHASH_SHA1 RHASH_TIGER
+		RHASH_TTH RHASH_BTIH RHASH_ED2K RHASH_AICH RHASH_WHIRLPOOL
+		RHASH_RIPEMD160 RHASH_GOST RHASH_GOST_CRYPTOPRO RHASH_HAS160
+		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_SHA224 RHASH_SHA256 RHASH_SHA384
+		RHASH_SHA512 RHASH_EDONR256 RHASH_EDONR512 RHASH_ALL
+		RHPR_DEFAULT RHPR_RAW RHPR_HEX RHPR_BASE32 RHPR_BASE64 RHPR_UPPERCASE RHPR_REVERSE)]
 );
 
 Exporter::export_tags( );
-Exporter::export_ok_tags( qw(Functions) );
+Exporter::export_ok_tags( qw(Functions Constants) );
 
-our $VERSION = '0.01';
+our $VERSION = '0.90';
 
 require XSLoader;
-XSLoader::load('Rhash', $VERSION);
+XSLoader::load('Crypt::Rhash', $VERSION);
 
 ##############################################################################
 # ids of hash functions
-use constant CRC32 => 0x01;
-use constant MD4   => 0x02;
-use constant MD5   => 0x04;
-use constant SHA1  => 0x08;
-use constant TIGER => 0x10;
-use constant TTH   => 0x20;
-use constant BTIH  => 0x40;
-use constant ED2K  => 0x80;
-use constant AICH  => 0x100;
-use constant WHIRLPOOL => 0x200;
-use constant RIPEMD160 => 0x400;
-use constant GOST      => 0x800;
-use constant GOST_CRYPTOPRO => 0x1000;
-use constant HAS160    => 0x2000;
-use constant SNEFRU128 => 0x4000;
-use constant SNEFRU256 => 0x8000;
-use constant SHA224    => 0x10000;
-use constant SHA256    => 0x20000;
-use constant SHA384    => 0x40000;
-use constant SHA512    => 0x80000;
-use constant EDONR256  => 0x100000;
-use constant EDONR512  => 0x200000;
-use constant ALL       => 0x3FFFFF;
+use constant RHASH_CRC32 => 0x01;
+use constant RHASH_MD4   => 0x02;
+use constant RHASH_MD5   => 0x04;
+use constant RHASH_SHA1  => 0x08;
+use constant RHASH_TIGER => 0x10;
+use constant RHASH_TTH   => 0x20;
+use constant RHASH_BTIH  => 0x40;
+use constant RHASH_ED2K  => 0x80;
+use constant RHASH_AICH  => 0x100;
+use constant RHASH_WHIRLPOOL => 0x200;
+use constant RHASH_RIPEMD160 => 0x400;
+use constant RHASH_GOST      => 0x800;
+use constant RHASH_GOST_CRYPTOPRO => 0x1000;
+use constant RHASH_HAS160    => 0x2000;
+use constant RHASH_SNEFRU128 => 0x4000;
+use constant RHASH_SNEFRU256 => 0x8000;
+use constant RHASH_SHA224    => 0x10000;
+use constant RHASH_SHA256    => 0x20000;
+use constant RHASH_SHA384    => 0x40000;
+use constant RHASH_SHA512    => 0x80000;
+use constant RHASH_EDONR256  => 0x100000;
+use constant RHASH_EDONR512  => 0x200000;
+use constant RHASH_ALL       => 0x3FFFFF;
+
+##############################################################################
+# legacy constants (deprecated)
+use constant CRC32 => RHASH_CRC32;
+use constant MD4   => RHASH_MD4;
+use constant MD5   => RHASH_MD5;
+use constant SHA1  => RHASH_SHA1;
+use constant TIGER => RHASH_TIGER;
+use constant TTH   => RHASH_TTH;
+use constant BTIH  => RHASH_BTIH;
+use constant ED2K  => RHASH_ED2K;
+use constant AICH  => RHASH_AICH;
+use constant WHIRLPOOL => RHASH_WHIRLPOOL;
+use constant RIPEMD160 => RHASH_RIPEMD160;
+use constant GOST      => RHASH_GOST;
+use constant GOST_CRYPTOPRO => RHASH_GOST_CRYPTOPRO;
+use constant HAS160    => RHASH_HAS160;
+use constant SNEFRU128 => RHASH_SNEFRU128;
+use constant SNEFRU256 => RHASH_SNEFRU256;
+use constant SHA224    => RHASH_SHA224;
+use constant SHA256    => RHASH_SHA256;
+use constant SHA384    => RHASH_SHA384;
+use constant SHA512    => RHASH_SHA512;
+use constant EDONR256  => RHASH_EDONR256;
+use constant EDONR512  => RHASH_EDONR512;
+use constant ALL       => RHASH_ALL;
 
 ##############################################################################
 # Rhash class methods
@@ -230,13 +262,13 @@ Rhash - Perl extension for LibRHash Hash library
   use Rhash;
   
   my $msg = "a message text";
-  print "MD5 = " . Rhash->new(Rhash::MD5)->update($msg)->hash() . "\n";
+  print "MD5 = " . Rhash->new(RHASH_MD5)->update($msg)->hash() . "\n";
   
   # more complex example - calculate two hash functions simultaniously
-  my $r = Rhash->new(Rhash::MD5 | Rhash::SHA1);
+  my $r = Rhash->new(RHASH_MD5 | RHASH_SHA1);
   $r->update("a message text")->update(" another message");
-  print  "MD5  = ". $r->hash(Rhash::MD5) . "\n";
-  print  "SHA1 = ". $r->hash(Rhash::SHA1) . "\n";
+  print  "MD5  = ". $r->hash(RHASH_MD5) . "\n";
+  print  "SHA1 = ". $r->hash(RHASH_SHA1) . "\n";
 
 =head1 DESCRIPTION
 
@@ -259,31 +291,31 @@ Creates and returns new Rhash object.
 
 The $hash_id parameter can be union (via bitwise OR) of any of the following bit-flags:
 
-  Rhash::CRC32,
-  Rhash::MD4,
-  Rhash::MD5,
-  Rhash::SHA1,
-  Rhash::TIGER,
-  Rhash::TTH,
-  Rhash::BTIH,
-  Rhash::ED2K,
-  Rhash::AICH,
-  Rhash::WHIRLPOOL,
-  Rhash::RIPEMD160,
-  Rhash::GOST,
-  Rhash::GOST_CRYPTOPRO,
-  Rhash::HAS160,
-  Rhash::SNEFRU128,
-  Rhash::SNEFRU256,
-  Rhash::SHA224,
-  Rhash::SHA256,
-  Rhash::SHA384,
-  Rhash::SHA512,
-  Rhash::EDONR256,
-  Rhash::EDONR512
+  RHASH_CRC32,
+  RHASH_MD4,
+  RHASH_MD5,
+  RHASH_SHA1,
+  RHASH_TIGER,
+  RHASH_TTH,
+  RHASH_BTIH,
+  RHASH_ED2K,
+  RHASH_AICH,
+  RHASH_WHIRLPOOL,
+  RHASH_RIPEMD160,
+  RHASH_GOST,
+  RHASH_GOST_CRYPTOPRO,
+  RHASH_HAS160,
+  RHASH_SNEFRU128,
+  RHASH_SNEFRU256,
+  RHASH_SHA224,
+  RHASH_SHA256,
+  RHASH_SHA384,
+  RHASH_SHA512,
+  RHASH_EDONR256,
+  RHASH_EDONR512
 
-Also the Rhash::ALL bit mask is the union of all listed bit-flags.
-So the object created via Rhash->new(Rhash::ALL) calculates all
+Also the RHASH_ALL bit mask is the union of all listed bit-flags.
+So the object created via Rhash->new(RHASH_ALL) calculates all
 supported hash functions for the same data.
 
 =head1 COMPUTING HASHES
@@ -296,7 +328,7 @@ Calculates hashes of the $msg string.
 The method can be called repeatedly with chunks of the message to be hashed.
 It returns the $rhash object itself allowing the following construct:
 
-  $rhash = Rhash->new(Rhash::MD5)->update( $chunk1 )->update( $chunk2 );
+  $rhash = Rhash->new(RHASH_MD5)->update( $chunk1 )->update( $chunk2 );
 
 =item $rhash->update_file( $file_path, $start, $size )
 
@@ -311,7 +343,7 @@ Returns the number of characters actually read, 0 at end of file,
 or undef if there was an error (in the latter case $! is also set).
 
   use Rhash;
-  my $r = new Rhash(Rhash::SHA1);
+  my $r = new Rhash(RHASH_SHA1);
   open(my $fd, "<", "input.txt") or die "cannot open < input.txt: $!";
   while ((my $n = $r->update_fd($fd, undef, 1024) != 0) {
       print "$n bytes hashed. The SHA1 hash is " . $r->final()->hash() . "\n";
@@ -352,7 +384,7 @@ reverse byte order), a base32/base64-encoded string or as raw binary data.
 Returns the hash string in the default format,
 which can be hexadecimal or base32. Actually the method is equvalent of
 
-  (Rhash::is_base32($hash_id) ? $rhash->hash_base32($hash_id) :
+  (Crypt::Rhash::is_base32($hash_id) ? $rhash->hash_base32($hash_id) :
     $rhash->hash_hex($hash_id))
 
 If the optional $hash_id parameter is omited or zero, then the method returns the hash
@@ -389,24 +421,24 @@ into the link.
 
 =over
 
-=item Rhash::count()
+=item Crypt::Rhash::count()
 
 Returns the number of supported hash algorithms
 
-=item Rhash::is_base32($hash_id)
+=item Crypt::Rhash::is_base32($hash_id)
 
 Returns nonzero if default output format is Base32 for the hash function specified by $hash_id.
 Retruns zero if default format is hexadecimal.
 
-=item Rhash::get_digest_size($hash_id)
+=item Crypt::Rhash::get_digest_size($hash_id)
 
 Returns the size in bytes of raw binary hash of the specified hash algorithm.
 
-=item Rhash::get_hash_length($hash_id)
+=item Crypt::Rhash::get_hash_length($hash_id)
 
 Returns the length of a hash string in default output format for the specified hash algorithm.
 
-=item Rhash::get_name($hash_id)
+=item Crypt::Rhash::get_name($hash_id)
 
 Returns the name of the specified hash algorithm.
 
@@ -416,12 +448,12 @@ Returns the name of the specified hash algorithm.
 
 =over
 
-=item Rhash::msg($hash_id, $message)
+=item Crypt::Rhash::msg($hash_id, $message)
 
 Computes and returns a single hash (in its default format) of the $message by the selected hash algorithm.
 
   use Rhash;
-  print "SHA1( 'abc' ) = " . Rhash::msg(Rhash::SHA1, "abc");
+  print "SHA1( 'abc' ) = " . Crypt::Rhash::msg(RHASH_SHA1, "abc");
 
 =back
 
