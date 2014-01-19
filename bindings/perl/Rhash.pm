@@ -7,7 +7,7 @@ use warnings;
 require Exporter;
 our @ISA = (qw(Exporter));
 
-# define possible tags for functions export
+# possible tags for export
 our %EXPORT_TAGS = (
 	Functions => [qw(raw2hex raw2base32 raw2base64)],
 	Constants => [qw(RHASH_CRC32 RHASH_MD4 RHASH_MD5 RHASH_SHA1 RHASH_TIGER
@@ -51,32 +51,6 @@ use constant RHASH_SHA512    => 0x80000;
 use constant RHASH_EDONR256  => 0x100000;
 use constant RHASH_EDONR512  => 0x200000;
 use constant RHASH_ALL       => 0x3FFFFF;
-
-##############################################################################
-# legacy constants (deprecated)
-use constant CRC32 => RHASH_CRC32;
-use constant MD4   => RHASH_MD4;
-use constant MD5   => RHASH_MD5;
-use constant SHA1  => RHASH_SHA1;
-use constant TIGER => RHASH_TIGER;
-use constant TTH   => RHASH_TTH;
-use constant BTIH  => RHASH_BTIH;
-use constant ED2K  => RHASH_ED2K;
-use constant AICH  => RHASH_AICH;
-use constant WHIRLPOOL => RHASH_WHIRLPOOL;
-use constant RIPEMD160 => RHASH_RIPEMD160;
-use constant GOST      => RHASH_GOST;
-use constant GOST_CRYPTOPRO => RHASH_GOST_CRYPTOPRO;
-use constant HAS160    => RHASH_HAS160;
-use constant SNEFRU128 => RHASH_SNEFRU128;
-use constant SNEFRU256 => RHASH_SNEFRU256;
-use constant SHA224    => RHASH_SHA224;
-use constant SHA256    => RHASH_SHA256;
-use constant SHA384    => RHASH_SHA384;
-use constant SHA512    => RHASH_SHA512;
-use constant EDONR256  => RHASH_EDONR256;
-use constant EDONR512  => RHASH_EDONR512;
-use constant ALL       => RHASH_ALL;
 
 ##############################################################################
 # Rhash class methods
