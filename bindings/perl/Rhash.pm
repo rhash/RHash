@@ -194,20 +194,18 @@ sub magnet_link($;$$)
 
 our $AUTOLOAD;
 
-# error checking: report unexisting method/field
+# report error if a script called unexisting method/field
 sub AUTOLOAD
 {
-	my $self = shift;
-	my $field = $AUTOLOAD;
+	my ($self, $field, $type, $pkg) = ($_[0], $AUTOLOAD, undef, __PACKAGE__);
 	$field =~ s/.*://;
 	die "function $field does not exist" if $field =~ /^(rhash_|raw2)/;
-	
-	my $type = ref($self) || die "$self is not an object";
-	if(exists $self->{$field}) {
-		die "$field is not accessible in class $type";
-	} else {
-		die "$field does not exist in class $type";
-	}
+	die "no arguments specified to $field()" if !@_;
+	die "the $field() argument is undefined" if !defined $self;
+
+	($type = ref($self)) && $type eq $pkg || die "the $field() argument is not a $pkg reference";
+	my $text = (exists $self->{$field} ? "is not accessible" : "does not exist");
+	die "the method $field() $text in the class $pkg";
 }
 
 # static functions
