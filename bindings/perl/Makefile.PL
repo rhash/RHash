@@ -61,7 +61,7 @@ WriteMakefile(
     AUTHOR       => 'Aleksey Kravchenko',
     VERSION_FROM => 'Rhash.pm', # finds $VERSION
     OPTIONAL( '6.31',
-        LICENSE => 'rhash',
+        LICENSE => 'unrestricted',
     ),
     OPTIONAL( '6.46',
         # Use META_ADD instead of META_MERGE so that we can remove
@@ -69,6 +69,7 @@ WriteMakefile(
         # the requires field.
         META_ADD => {
             resources => {
+                homepage    => 'http://rhash.sf.net/',
                 license     => 'http://rhash.anz.ru/license.php',
                 bugtracker  => 'https://sourceforge.net/p/rhash/bugs/',
                 repository  => 'https://github.com/rhash/RHash',
