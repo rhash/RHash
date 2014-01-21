@@ -1,0 +1,37 @@
+
+Crypt::Rhash module allows to compute various hash sums and magnet links.
+
+The following hash sums are supported: CRC32, MD4, MD5, SHA1,
+SHA256, SHA512, SHA3, Tiger, TTH, Torrent BTIH, AICH, ED2K,
+GOST R 34.11-94, RIPEMD-160, HAS-160, EDON-R 256/512, WHIRLPOOL
+and SNEFRU.
+
+BUILDING THE MODULE
+-------------------
+
+The module can be built using the sequence of commands:
+
+    perl Makefile.PL
+    make
+    make test
+
+INSTALLATION
+------------
+
+To install Crypt::Rhash, run the following command:
+
+    make install
+
+LICENSE
+-------
+
+Permission is hereby granted, free of charge,  to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction,  including without limitation the rights
+to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
+copies  of  the Software,  and  to permit  persons  to whom  the Software  is
+furnished to do so.
+
+This program  is distributed  in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  Use  this  program  at  your  own  risk!

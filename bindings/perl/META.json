@@ -1,0 +1,51 @@
+{
+   "abstract" : "Library for computing hash sums and magnet links",
+   "author" : [
+      "Aleksey Kravchenko"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 6.84, CPAN::Meta::Converter version 2.133380",
+   "license" : [
+      "unrestricted"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Crypt-Rhash",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {}
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://sourceforge.net/p/rhash/bugs/"
+      },
+      "homepage" : "http://rhash.sf.net/",
+      "license" : [
+         "http://rhash.anz.ru/license.php"
+      ],
+      "repository" : {
+         "url" : "https://github.com/rhash/RHash"
+      }
+   },
+   "version" : "0.90"
+}
