@@ -101,7 +101,7 @@ cpan:
 	rm -rf $(PERL_PKG)/ $(PERL_PKG).tar.gz
 	mkdir -p $(PERL_PKG)/librhash/
 	grep -q / perl/MANIFEST && mkdir -p `sed -ne '/\//s/\([^\/]*\/\).*/$(PERL_PKG)\/\1/p' perl/MANIFEST | sort -u`
-	sed -e 's/^.*/cp perl\/\0 $(PERL_PKG)\/\0/' perl/MANIFEST > _cpy.sh
+	sed -e 's/^\([^ ]*\)\( .*\)\?/cp perl\/\1 $(PERL_PKG)\/\1/' perl/MANIFEST > _cpy.sh
 	sh _cpy.sh && rm -f _cpy.sh
 	cp ../librhash/*.[hc] $(PERL_PKG)/librhash/
 	cp perl/MANIFEST $(PERL_PKG)/
