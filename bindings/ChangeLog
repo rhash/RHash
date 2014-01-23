@@ -1,5 +1,5 @@
 Sun Jan 19 2014 Aleksey
-	renamed perl module to the Crypt::Rhash
+	* renamed perl module to the Crypt::Rhash
 
 Tue Sep 17 2013 Aleksey
 	* === Version 1.3.0 ===
