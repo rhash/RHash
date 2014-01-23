@@ -229,25 +229,29 @@ __END__
 
 =head1 NAME
 
-Rhash - Perl extension for LibRHash Hash library
+Crypt::Rhash - Compute hash sums and magnet links
 
 =head1 SYNOPSIS
 
-  use Rhash;
+  use Crypt::Rhash;
   
   my $msg = "a message text";
-  print "MD5 = " . Rhash->new(RHASH_MD5)->update($msg)->hash() . "\n";
+  print "MD5 = " . Crypt::Rhash::msg(RHASH_MD5, $msg) . "\n";
   
-  # more complex example - calculate two hash functions simultaniously
-  my $r = Rhash->new(RHASH_MD5 | RHASH_SHA1);
+  # Calculate two hash functions simultaneously
+  my $r = Crypt::Rhash->new(RHASH_MD5 | RHASH_SHA1);
   $r->update("a message text")->update(" another message");
-  print  "MD5  = ". $r->hash(RHASH_MD5) . "\n";
-  print  "SHA1 = ". $r->hash(RHASH_SHA1) . "\n";
+  print  "MD5  = " . $r->hash(RHASH_MD5) . "\n";
+  print  "SHA1 = " . $r->hash(RHASH_SHA1) . "\n";
 
 =head1 DESCRIPTION
 
-Rhash module is an object-oriented interface to the LibRHash library,
-which allows one to simultaniously calculate several hash functions for a file or a text message.
+Crypt::Rhash module is an object-oriented interface to the LibRHash library,
+allowing simultaneous calculation of several hash functions for a file  or a
+text message.
+
+Resulting hash digest can be obtained in hexadecimal, BASE32, BASE64, raw
+binary format or as a magnet link.
 
 =head1 SUPPORTED ALGORITHMS
 
@@ -258,10 +262,10 @@ HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
 
 =head1 CONSTRUCTOR
 
-Creates and returns new Rhash object.
+Creates and returns new Crypt::Rhash object.
 
-  my $r = Rhash->new($hash_id);
-  my $p = new Rhash($hash_id); # alternative way to call the constructor
+  my $r = Crypt::Rhash->new($hash_id);
+  my $p = new Crypt::Rhash($hash_id); # alternative way to call the constructor
 
 The $hash_id parameter can be union (via bitwise OR) of any of the following bit-flags:
 
@@ -289,7 +293,7 @@ The $hash_id parameter can be union (via bitwise OR) of any of the following bit
   RHASH_EDONR512
 
 Also the RHASH_ALL bit mask is the union of all listed bit-flags.
-So the object created via Rhash->new(RHASH_ALL) calculates all
+So the object created via Crypt::Rhash->new(RHASH_ALL) calculates all
 supported hash functions for the same data.
 
 =head1 COMPUTING HASHES
@@ -302,7 +306,7 @@ Calculates hashes of the $msg string.
 The method can be called repeatedly with chunks of the message to be hashed.
 It returns the $rhash object itself allowing the following construct:
 
-  $rhash = Rhash->new(RHASH_MD5)->update( $chunk1 )->update( $chunk2 );
+  $rhash = Crypt::Rhash->new(RHASH_MD5)->update( $chunk1 )->update( $chunk2 );
 
 =item $rhash->update_file( $file_path, $start, $size )
 
@@ -311,13 +315,13 @@ It returns the $rhash object itself allowing the following construct:
 Calculate a hash of the file (or its part) specified by $file_path or a file descriptor $fd.
 The update_fd method doesn't close the $fd, leaving the file position after the hashed block.
 The optional $start and $size specify the block of the file to hash.
-No error is reported if the $size is grater than the number of the unread bytes left in the file.
+No error is reported if the $size is greater than the number of the unread bytes left in the file.
 
 Returns the number of characters actually read, 0 at end of file, 
 or undef if there was an error (in the latter case $! is also set).
 
-  use Rhash;
-  my $r = new Rhash(RHASH_SHA1);
+  use Crypt::Rhash;
+  my $r = new Crypt::Rhash(RHASH_SHA1);
   open(my $fd, "<", "input.txt") or die "cannot open < input.txt: $!";
   while ((my $n = $r->update_fd($fd, undef, 1024) != 0) {
       print "$n bytes hashed. The SHA1 hash is " . $r->final()->hash() . "\n";
@@ -348,7 +352,7 @@ Returns the hash mask, the $rhash object was constructed with.
 
 =head1 FORMATING HASH VALUE
 
-Computed hash can be formated as a hexadecimal string (in the forward or
+Computed hash can be formatted as a hexadecimal string (in the forward or
 reverse byte order), a base32/base64-encoded string or as raw binary data.
 
 =over
@@ -356,30 +360,34 @@ reverse byte order), a base32/base64-encoded string or as raw binary data.
 =item $rhash->hash( $hash_id )
 
 Returns the hash string in the default format,
-which can be hexadecimal or base32. Actually the method is equvalent of
+which can be hexadecimal or base32. Actually the method is equivalent of
 
   (Crypt::Rhash::is_base32($hash_id) ? $rhash->hash_base32($hash_id) :
     $rhash->hash_hex($hash_id))
 
-If the optional $hash_id parameter is omited or zero, then the method returns the hash
+If the optional $hash_id parameter is omitted or zero, then the method returns the hash
 for the algorithm contained in $rhash with the lowest identifier.
 
 =item $rhash->hash_hex( $hash_id )
 
-Returns a specified hash in the hexadecimal format.
+Returns the specified hash in the hexadecimal format.
+
+  use Crypt::Rhash;
+  my $msg = "abc";
+  print "MD5 = " . Crypt::Rhash->new(RHASH_MD5)->update($msg)->hash_hex() . "\n";
 
 =item $rhash->hash_rhex( $hash_id )
 
-Returns a hexadecimal string of the hash in reversed bytes order.
-Some programs prefer to output GOST hash in this format.
+Returns the specified hash in the hexadecimal format with reversed order of bytes.
+Some programs prefer to output the GOST R 34.11-94 hash in this format.
 
 =item $rhash->hash_base32( $hash_id )
 
-Returns a specified hash in the base32 format.
+Returns the specified hash in the base32 format.
 
 =item $rhash->hash_base64( $hash_id )
 
-Returns a specified hash in the base64 format.
+Returns the specified hash in the base64 format.
 
 =item $rhash->magnet_link( $filename, $hash_mask )
 
@@ -402,7 +410,7 @@ Returns the number of supported hash algorithms
 =item Crypt::Rhash::is_base32($hash_id)
 
 Returns nonzero if default output format is Base32 for the hash function specified by $hash_id.
-Retruns zero if default format is hexadecimal.
+Returns zero if default format is hexadecimal.
 
 =item Crypt::Rhash::get_digest_size($hash_id)
 
@@ -426,8 +434,8 @@ Returns the name of the specified hash algorithm.
 
 Computes and returns a single hash (in its default format) of the $message by the selected hash algorithm.
 
-  use Rhash;
-  print "SHA1( 'abc' ) = " . Crypt::Rhash::msg(RHASH_SHA1, "abc");
+  use Crypt::Rhash;
+  print "SHA1( 'abc' ) = " . Crypt::Rhash::msg(RHASH_SHA1, "abc") . "\n";
 
 =back
 
