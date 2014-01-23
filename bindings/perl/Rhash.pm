@@ -20,7 +20,7 @@ our %EXPORT_TAGS = (
 Exporter::export_tags( );
 Exporter::export_ok_tags( qw(Functions Constants) );
 
-our $VERSION = '0.90';
+our $VERSION = '0.91';
 
 require XSLoader;
 XSLoader::load('Crypt::Rhash', $VERSION);
@@ -398,7 +398,7 @@ into the link.
 
 =back
 
-=head1 STATIC INFORMATION METHODS
+=head1 STATIC METHODS
 
 =over
 
