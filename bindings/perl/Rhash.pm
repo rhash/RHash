@@ -13,8 +13,9 @@ our %EXPORT_TAGS = (
 	Constants => [qw(RHASH_CRC32 RHASH_MD4 RHASH_MD5 RHASH_SHA1 RHASH_TIGER
 		RHASH_TTH RHASH_BTIH RHASH_ED2K RHASH_AICH RHASH_WHIRLPOOL
 		RHASH_RIPEMD160 RHASH_GOST RHASH_GOST_CRYPTOPRO RHASH_HAS160
-		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_SHA224 RHASH_SHA256 RHASH_SHA384
-		RHASH_SHA512 RHASH_EDONR256 RHASH_EDONR512 RHASH_ALL)]
+		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_SHA224 RHASH_SHA256
+		RHASH_SHA384 RHASH_SHA512 RHASH_EDONR256 RHASH_EDONR512
+		RHASH_SHA3_224 RHASH_SHA3_256 RHASH_SHA3_384 RHASH_SHA3_512 RHASH_ALL)]
 );
 
 Exporter::export_tags( );
@@ -49,7 +50,11 @@ use constant RHASH_SHA384    => 0x40000;
 use constant RHASH_SHA512    => 0x80000;
 use constant RHASH_EDONR256  => 0x100000;
 use constant RHASH_EDONR512  => 0x200000;
-use constant RHASH_ALL       => 0x3FFFFF;
+use constant RHASH_SHA3_224  => 0x0400000;
+use constant RHASH_SHA3_256  => 0x0800000;
+use constant RHASH_SHA3_384  => 0x1000000;
+use constant RHASH_SHA3_512  => 0x2000000;
+use constant RHASH_ALL       => 0x3FFFFFF;
 
 ##############################################################################
 # Rhash class methods
@@ -255,7 +260,7 @@ binary format or as a magnet link.
 =head1 SUPPORTED ALGORITHMS
 
 The module supports the following hashing algorithms:
-CRC32,  MD4, MD5,  SHA1, SHA256, SHA512,
+CRC32,  MD4, MD5,  SHA1, SHA256, SHA512, SHA3,
 AICH, ED2K, Tiger,  DC++ TTH,  BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
 HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
 
@@ -288,6 +293,10 @@ The $hash_id parameter can be union (via bitwise OR) of any of the following bit
   RHASH_SHA256,
   RHASH_SHA384,
   RHASH_SHA512,
+  RHASH_SHA3_224,
+  RHASH_SHA3_256,
+  RHASH_SHA3_384,
+  RHASH_SHA3_512,
   RHASH_EDONR256,
   RHASH_EDONR512
 
