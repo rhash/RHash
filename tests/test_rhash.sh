@@ -12,7 +12,7 @@ fi
 [ "$rhash" != "../rhash" ] && echo "Testing $rhash"
 
 #version="`$rhash -V|sed 's/^.* v//'`"
-HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
+HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;/[^3]-/s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
 
 test_num=1;
 sub_test=0;
