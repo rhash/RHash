@@ -26,6 +26,10 @@ echo $r->hash(RHASH_SHA224) . "\n";
 echo $r->hash(RHASH_SHA256) . "\n";
 echo $r->hash(RHASH_SHA384) . "\n";
 echo $r->hash(RHASH_SHA512) . "\n";
+echo $r->hash(RHASH_SHA3_224) . "\n";
+echo $r->hash(RHASH_SHA3_256) . "\n";
+echo $r->hash(RHASH_SHA3_384) . "\n";
+echo $r->hash(RHASH_SHA3_512) . "\n";
 echo $r->hash(RHASH_EDONR256) . "\n";
 echo $r->hash(RHASH_EDONR512) . "\n";
 echo $r->raw(RHASH_SHA1) . "\n";
@@ -58,6 +62,10 @@ abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5
 ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb
 54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31
 1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75
+7cf87d912ee7088d30ec23f8e7100d9319bff090618b439d3fe91308
+3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb
+85e964c0843a7ee32e6b5889d50e130e6485cffc826a30167d1dc2b3a0cc79cba303501a1eeaba39915f13baab5abacf
+9c46dbec5d03f74352cc4a4da354b4e9796887eeb66ac292617692e765dbe400352559b16229f97b27614b51dbfbbb14613f2c10350435a8feaf53f73ba01c7c
 943aa9225a2cf154ec2e4dd81237720ba538ca8df2fd83c0b893c5d265f353a0
 b59ec44f7beef8a04ceed38a973d77c65e22e9458d5f67b497948da34986c093b5efc5483fbee55f2f740fcad31f18d80db44bb6b8843e7fd599188e7c07233b
 †÷ä7ú¥§üá]Ü¹êêê7vg¸
