@@ -10,13 +10,16 @@
   </Base>
   <Docs>
     <summary>Type of hashing algorithm.</summary>
-    <remarks><para>
+    <remarks>
+      <para>
 Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
 DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
 RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
-</para><para>
+</para>
+      <para>
 Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hashes.
-</para></remarks>
+</para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="AICH">
@@ -227,6 +230,62 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
       </ReturnValue>
       <Docs>
         <summary>SHA-256 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA3_224">
+      <MemberSignature Language="C#" Value="SHA3_224" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA3_224 = unsigned int32(4194304)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA3-224 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA3_256">
+      <MemberSignature Language="C#" Value="SHA3_256" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA3_256 = unsigned int32(8388608)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA3-256 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA3_384">
+      <MemberSignature Language="C#" Value="SHA3_384" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA3_384 = unsigned int32(16777216)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA3-384 hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="SHA3_512">
+      <MemberSignature Language="C#" Value="SHA3_512" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SHA3_512 = unsigned int32(33554432)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>SHA3-512 hash.</summary>
       </Docs>
     </Member>
     <Member MemberName="SHA384">

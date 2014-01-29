@@ -1,6 +1,6 @@
 /*
  * This file is a part of Java Bindings for Librhash
- * Copyright (c) 2011-2012, Sergey Basalaev <sbasalaev@gmail.com>
+ * Copyright (c) 2011-2012, 2014, Sergey Basalaev <sbasalaev@gmail.com>
  * Librhash is (c) 2011-2012, Aleksey Kravchenko <rhash.admin@gmail.com>
  * 
  * Permission is hereby granted, free of charge,  to any person obtaining a copy
@@ -68,6 +68,14 @@ namespace RHash {
 		/* EDON-R 256. */
 		EDONR256 = 1 << 20,
 		/* EDON-R 512. */
-		EDONR512 = 1 << 21
+		EDONR512 = 1 << 21,
+		/** SHA3-224 hash. */
+		SHA3_224 = 1 << 22,
+		/** SHA3-256 hash. */
+		SHA3_256 = 1 << 23,
+		/** SHA3-384 hash. */
+		SHA3_384 = 1 << 24,
+		/** SHA3-512 hash. */
+		SHA3_512 = 1 << 25
 	}
 }

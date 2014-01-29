@@ -46,6 +46,10 @@ class Test {
 		hashes.Add(HashType.SNEFRU256, "1b59927d85a9349a87796620fe2ff401a06a7ba48794498ebab978efc3a68912");
 		hashes.Add(HashType.EDONR256,  "c3d2bbfd63f7461a806f756bf4efeb224036331a9c1d867d251e9e480b18e6fb");
 		hashes.Add(HashType.EDONR512,  "a040056378fbd1f9a528677defd141c964fab9c429003fecf2eadfc20c8980cf2e083a1b4e74d5369af3cc0537bcf9b386fedf3613c9ee6c44f54f11bcf3feae");
+		hashes.Add(HashType.SHA3_224,  "85c4da0ecd8a48e3037b386bd8eda3fda126da3718e5915a7a278852");
+		hashes.Add(HashType.SHA3_256,  "2cdf0ba4e0e4030458a78d501aeacc7a7ae41828a426f131e6cfc970b2c9da07");
+		hashes.Add(HashType.SHA3_384,  "f3b149af9526580999ad5a114c1ee143840fe1b6d76d7a8c26a3fab38b0e8c70c989aed2c858903f5c4b66400de50874");
+		hashes.Add(HashType.SHA3_512,  "5edfdeca660f19975c192e8e24ef6deb8f76f334e6e3fa11dc4d7bfcd7dbfa760fc9a9fb205e4b2f92a427208dcfe6c03c26e02bfb143e0c2d8eefc645f4d076");
 
 		Console.WriteLine("\nTests: hashes for message");
 		int errcount1 = 0;
