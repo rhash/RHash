@@ -357,6 +357,14 @@ end");
 	rb_define_const(cRHash, "EDONR256",  INT2FIX(RHASH_EDONR256));
 	/** EDON-R 512. */
 	rb_define_const(cRHash, "EDONR512",  INT2FIX(RHASH_EDONR512));
+	/** SHA3-224 hash. */
+	rb_define_const(cRHash, "SHA3_224",    INT2FIX(RHASH_SHA3_224));
+	/** SHA3-256 hash. */
+	rb_define_const(cRHash, "SHA3_256",    INT2FIX(RHASH_SHA3_256));
+	/** SHA3-384 hash. */
+	rb_define_const(cRHash, "SHA3_384",    INT2FIX(RHASH_SHA3_384));
+	/** SHA3-512 hash. */
+	rb_define_const(cRHash, "SHA3_512",    INT2FIX(RHASH_SHA3_512));
 	/** Create RHash with this parameter to compute hashes for all available algorithms. */
 	rb_define_const(cRHash, "ALL",       INT2FIX(RHASH_ALL_HASHES));
 }
