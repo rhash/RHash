@@ -27,11 +27,11 @@ magnet_for_file(filename, hash_ids)
 Here  hash_id  is one of the constants CRC32, MD4, MD5, SHA1,
 TIGER, TTH, BTIH, ED2K,  AICH,  WHIRLPOOL,  RIPEMD160,  GOST,
 GOST_CRYPTOPRO, HAS160, SNEFRU128, SNEFRU256, SHA224, SHA256,
-SHA384, SHA512, EDONR256 or EDONR512. The first two functions
-will  return  the  default text representation of the message
-digest they compute. The latter will return magnet  link  for
-the  file.  In  this  function  you  can  OR-combine  several
-hash_ids, like
+SHA384,  SHA512,   SHA3_224,  SHA3_256,  SHA3_384,  SHA3_512,
+EDONR256 or EDONR512.  The first  two functions  will  return
+the  default text  representation of  the message digest they
+compute.  The latter will return magnet  link  for the  file.
+In this function  you can  OR-combine  several hash_ids, like
 
 >>> print magnet_for_file('rhash.py', CRC32 | MD5)
 magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:f88e6c1620361da9d04e2a2a1c788059
@@ -70,6 +70,7 @@ __all__ = ['ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
     'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
     'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
     'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
+    'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512',
     'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
 import sys
@@ -119,7 +120,11 @@ SHA384    = 0x40000
 SHA512    = 0x80000
 EDONR256  = 0x100000
 EDONR512  = 0x200000
-ALL       = EDONR512*2 - 1
+SHA3_224  = 0x0400000
+SHA3_256  = 0x0800000
+SHA3_384  = 0x1000000
+SHA3_512  = 0x2000000
+ALL       = SHA3_512*2 - 1
 
 
 #rhash_print values
