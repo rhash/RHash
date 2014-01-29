@@ -39,6 +39,10 @@ public class RHashTest {
 		assertEquals("1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75", r.getDigest(SHA512).toString());
 		assertEquals("943aa9225a2cf154ec2e4dd81237720ba538ca8df2fd83c0b893c5d265f353a0", r.getDigest(EDONR256).toString());
 		assertEquals("b59ec44f7beef8a04ceed38a973d77c65e22e9458d5f67b497948da34986c093b5efc5483fbee55f2f740fcad31f18d80db44bb6b8843e7fd599188e7c07233b", r.getDigest(EDONR512).toString());
+		assertEquals("7cf87d912ee7088d30ec23f8e7100d9319bff090618b439d3fe91308", r.getDigest(SHA3_224).toString());
+		assertEquals("3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb", r.getDigest(SHA3_256).toString());
+		assertEquals("85e964c0843a7ee32e6b5889d50e130e6485cffc826a30167d1dc2b3a0cc79cba303501a1eeaba39915f13baab5abacf", r.getDigest(SHA3_384).toString());
+		assertEquals("9c46dbec5d03f74352cc4a4da354b4e9796887eeb66ac292617692e765dbe400352559b16229f97b27614b51dbfbbb14613f2c10350435a8feaf53f73ba01c7c", r.getDigest(SHA3_512).toString());
 
 		r.reset();
 		r.finish();
