@@ -47,3 +47,5 @@ clean:
 	rm -f RHash.tree RHash.zip
 	rm -rf html
 	$(MAKE) -C test clean
+
+.PHONY : clean html test
