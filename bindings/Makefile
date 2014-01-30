@@ -24,7 +24,7 @@ configure-ruby: ruby/Makefile
 configure-php: php/Makefile
 
 perl/Makefile: perl/Makefile.PL
-	cd perl && $(PERL) Makefile.PL INSTALLDIRS=vendor USE_SYSTEM_LIBRHASH=1
+	cd perl && USE_SYSTEM_LIBRHASH=1 $(PERL) Makefile.PL INSTALLDIRS=vendor
 
 php/Makefile: php/config.m4
 	cd php && phpize && ./configure --with-rhash
