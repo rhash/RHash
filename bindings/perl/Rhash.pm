@@ -312,7 +312,7 @@ supported hash functions for the same data.
 
 Calculates hashes of the $msg string.
 The method can be called repeatedly with chunks of the message to be hashed.
-It returns the $rhash object itself allowing the following construct:
+It returns the $rhash object itself allowing the following construction:
 
   $rhash = Crypt::Rhash->new(RHASH_MD5)->update( $chunk1 )->update( $chunk2 );
 
@@ -331,7 +331,7 @@ or undef if there was an error (in the latter case $! is also set).
   use Crypt::Rhash;
   my $r = new Crypt::Rhash(RHASH_SHA1);
   open(my $fd, "<", "input.txt") or die "cannot open < input.txt: $!";
-  while ((my $n = $r->update_fd($fd, undef, 1024) != 0) {
+  while ((my $n = $r->update_fd($fd, undef, 1024) != 0)) {
       print "$n bytes hashed. The SHA1 hash is " . $r->final()->hash() . "\n";
       $r->reset();
   }
