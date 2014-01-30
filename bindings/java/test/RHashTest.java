@@ -8,7 +8,7 @@ import static org.sf.rhash.HashType.*;
 
 import org.junit.Test;
 import junit.framework.JUnit4TestAdapter;
-import static junit.framework.Assert.*;
+import static junit.framework.TestCase.*;
 
 public class RHashTest {
 

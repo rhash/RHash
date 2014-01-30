@@ -81,8 +81,10 @@ $(JAVADOC_FILE): $(JAVA_FILES)
 	$(MAKE) javadoc
 	jar -cMf $(JAVADOC_FILE) $(JAVADOC_DIR)
 
-test: jar jni
+$(TEST_DIR)/RHashTest.class: $(JARFILE) $(TEST_DIR)/RHashTest.java
 	$(JAVAC) -classpath $(JARFILE):$(JUNIT_CLASSPATH) $(TEST_DIR)/RHashTest.java
+
+test: $(TEST_DIR)/RHashTest.class jni
 	$(JAVA) -classpath $(TEST_DIR):$(JARFILE):$(JUNIT_CLASSPATH) -Djava.library.path=$(DEST_DIR) junit.textui.TestRunner RHashTest
 
 clean: clean-javadoc clean-jni clean-classes clean-test
@@ -102,4 +104,4 @@ clean-test:
 distclean: clean
 	rm -rf $(DEST_DIR)
 
-.PHONY: jar jni javadoc clean clean-javadoc distclean
+.PHONY: jar jni javadoc test clean clean-javadoc distclean
