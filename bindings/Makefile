@@ -60,7 +60,7 @@ test-php:
 	$(MAKE) -C php test TEST_PHP_ARGS=-q
 
 test-ruby:
-	$(RUBY) -C ruby test_rhash.rb
+	$(RUBY) -C ruby -I. test_rhash.rb
 
 test-mono:
 	$(MAKE) -C mono test
