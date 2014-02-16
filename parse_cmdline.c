@@ -23,6 +23,10 @@
 
 #define VERSION_STRING PROGRAM_NAME " v" VERSION "\n"
 
+#ifndef SYSCONFDIR
+#define SYSCONFDIR "/etc"
+#endif
+
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
 struct options_t opt;      /* command line options */
@@ -471,7 +475,7 @@ static const char* find_conf_file(void)
 		free(path);
 	}
 	/* then check for global config */
-	if(rsh_stat( (path = "/etc/" CONF_FILE_NAME), &st) >= 0) {
+	if(rsh_stat( (path = SYSCONFDIR "/" CONF_FILE_NAME), &st) >= 0) {
 		return (conf_opt.config_file = path);
 	}
 

@@ -1,5 +1,6 @@
 /dist/rhash.spec
 /dist/rhash.1.*
+/dist/rhashrc
 /librhash/exports.sym
 *.[ao]
 *.exe
@@ -7,3 +8,26 @@
 *.def
 *.so
 *.log
+# libtool output files
+.deps
+.libs
+*.lo
+librhash/librhash.la
+librhash/test_hashes
+rhash
+# emacs backup files
+*~
+# generated files by autoconf/automake
+*.trs
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.status
+configure
+libtool
+m4
+stamp-h1
+support
+version.h.in
+version.h
