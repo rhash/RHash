@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ "$1" = "--full" ]; then FULL_TEST=1; shift; fi
 
