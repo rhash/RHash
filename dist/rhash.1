@@ -12,7 +12,7 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.
 (Recursive Hasher)
 computes and verifies various message digests (hash sums) of files.
 Supported message digests include CRC32, MD4, MD5, SHA1, SHA256, SHA512,
-Tiger, DC++ TTH, BitTorrent BTIH, AICH, ED2K, GOST R 34.11\-94,
+SHA3, Tiger, DC++ TTH, BitTorrent BTIH, AICH, ED2K, GOST R 34.11\-94,
 RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links 
@@ -72,6 +72,8 @@ MD5: calculate and print MD5 hash sum.
 SHA1: calculate and print SHA1 hash sum.
 .IP "\-\-sha224, \-\-sha256, \-\-sha384, \-\-sha512"
 Calculate specified SHA2 hash sum.
+.IP "\-\-sha3-224, \-\-sha3-256, \-\-sha3-384, \-\-sha3-512"
+Calculate specified SHA3 hash sum.
 .IP "\-\-tiger"
 Tiger: calculate and print Tiger hash sum.
 .IP "\-T, \-\-tth"
