@@ -362,9 +362,9 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 /**
  * Calculate default torrent piece length, using uTorrent algorithm.
  * Algorithm:
- *  length = 64K for total_size < 64M,
- *  length = 4M for total_size >= 2G,
- *  length = top_bit(total_size) / 512 otherwise.
+ *  length = 16K for total_size < 16M,
+ *  length = 8M for total_size >= 4G,
+ *  length = top_bit(total_size) / 1024 otherwise.
  *
  * @param total_size total hashed batch size of torrent file
  * @return piece length used by torrent file
@@ -372,9 +372,9 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 size_t bt_default_piece_length(uint64_t total_size)
 {
 	uint64_t hi_bit;
-	if(total_size < 67108864) return 65536;
-	if(total_size >= I64(2147483648) ) return 4194304;
-	for(hi_bit = 67108864 << 1; hi_bit <= total_size; hi_bit <<= 1);
+	if(total_size < 16777216) return 16384;
+	if(total_size >= I64(4294967296) ) return 8388608;
+	for(hi_bit = 16777216 << 1; hi_bit <= total_size; hi_bit <<= 1);
 	return (size_t)(hi_bit >> 10);
 }
 
