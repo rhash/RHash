@@ -63,6 +63,14 @@ INSTALL = install
 INSTALL_PROGRAM = $(INSTALL) -m 755
 INSTALL_DATA    = $(INSTALL) -m 644
 
+ifneq ($(OS),Windows_NT)
+	UNAME_S := $(shell uname -s)
+
+	ifeq ($(UNAME_S),Darwin)
+		CC = clang
+	endif
+endif
+
 all: $(TARGET)
 build-shared: $(SHARED_TRG)
 lib-shared: $(SHAREDLIB)
