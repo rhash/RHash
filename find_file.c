@@ -209,7 +209,6 @@ void scan_files(file_search_data* data)
 				errno = EISDIR;
 				log_file_error(file->path);
 			}
-			continue;
 		} else {
 			/* process a regular file or a dash '-' path */
 			data->call_back(file, data->call_back_data);
@@ -218,7 +217,7 @@ void scan_files(file_search_data* data)
 }
 
 /**
- * A entry of a list containing files from a directory.
+ * An entry of a list containing content of a directory.
  */
 typedef struct dir_entry
 {
@@ -286,7 +285,7 @@ static void dir_entry_drop_head(dir_entry** p)
  */
 typedef struct dir_iterator
 {
-	int left;
+	int count;
 	char* dir_path;
 } dir_iterator;
 #define MAX_DIRS_DEPTH 64
@@ -295,16 +294,16 @@ typedef struct dir_iterator
  * Walk directory tree and call given callback function to process each file/directory.
  *
  * @param start_dir path to the directory to walk recursively
- * @param options the options specifying how to walk the directory tree
+ * @param data the options specifying how to walk the directory tree
  * @return 0 on success, -1 on error
  */
-int find_file(file_t* start_dir, file_search_data* options)
+int find_file(file_t* start_dir, file_search_data* data)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
 	int level = 0;
-	int max_depth = options->max_depth;
-	int flags = options->options;
+	int max_depth = data->max_depth;
+	int options = data->options;
 	file_t file;
 
 	if(max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
@@ -320,8 +319,8 @@ int find_file(file_t* start_dir, file_search_data* options)
 	}
 
 	/* check if we should descend into the root directory */
-	if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0) {
-		if(!options->call_back(start_dir, options->call_back_data))
+	if((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0) {
+		if(!data->call_back(start_dir, data->call_back_data))
 			return 0;
 	}
 
@@ -332,12 +331,12 @@ int find_file(file_t* start_dir, file_search_data* options)
 	}
 
 	/* push dummy counter for the root element */
-	it[0].left = 1;
+	it[0].count = 1;
 	it[0].dir_path = 0;
 
 	memset(&file, 0, sizeof(file));
 
-	while(!(options->options & FIND_CANCEL))
+	while(!(data->options & FIND_CANCEL))
 	{
 		dir_entry **insert_at;
 		char* dir_path;
@@ -345,7 +344,7 @@ int find_file(file_t* start_dir, file_search_data* options)
 		struct dirent *de;
 
 		/* climb down from the tree */
-		while(--it[level].left < 0) {
+		while(--it[level].count < 0) {
 			/* do not need this dir_path anymore */
 			free(it[level].dir_path);
 
@@ -356,7 +355,7 @@ int find_file(file_t* start_dir, file_search_data* options)
 				return 0;
 			}
 		}
-		assert(level >= 0 && it[level].left >= 0);
+		assert(level >= 0 && it[level].count >= 0);
 
 		/* take a filename from dirs_stack and construct the next path */
 		if(level) {
@@ -373,16 +372,16 @@ int find_file(file_t* start_dir, file_search_data* options)
 		/* fill the next level of directories */
 		level++;
 		assert(level < MAX_DIRS_DEPTH);
-		it[level].left = 0;
+		it[level].count = 0;
 		it[level].dir_path = dir_path;
 
-		if((flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
+		if((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
 			file.path = rsh_strdup(dir_path);
 			rsh_file_stat2(&file, USE_LSTAT);
 
 			/* check if we should skip the directory */
-			if(!options->call_back(&file, options->call_back_data)) {
+			if(!data->call_back(&file, data->call_back_data)) {
 				rsh_file_cleanup(&file);
 				continue;
 			}
@@ -407,11 +406,11 @@ int find_file(file_t* start_dir, file_search_data* options)
 			res  = rsh_file_stat2(&file, USE_LSTAT);
 			if(res >= 0) {
 				/* process the file or directory */
-				if(FILE_ISDIR(&file) && (flags & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
+				if(FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
 					res = 1;
 				} else {
 					/* handle file by callback function */
-					res = options->call_back(&file, options->call_back_data);
+					res = data->call_back(&file, data->call_back_data);
 				}
 
 				/* check if file is a directory and we need to walk it, */
@@ -421,10 +420,10 @@ int find_file(file_t* start_dir, file_search_data* options)
 					if(dir_entry_insert(insert_at, de->d_name, file.mode)) {
 						/* the directory name was successfully inserted */
 						insert_at = &((*insert_at)->next);
-						it[level].left++;
+						it[level].count++;
 					}
 				}
-			} else if (options->options & FIND_LOG_ERRORS) {
+			} else if (options & FIND_LOG_ERRORS) {
 				/* report error only if FIND_LOG_ERRORS option is set */
 				log_file_error(file.path);
 			}

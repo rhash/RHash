@@ -37,7 +37,7 @@ void destroy_file_search_data(file_search_data* data);
 
 void scan_files(file_search_data* data);
 
-int find_file(file_t* start_dir, file_search_data* options);
+int find_file(file_t* start_dir, file_search_data* data);
 
 #ifdef __cplusplus
 } /* extern "C" */
