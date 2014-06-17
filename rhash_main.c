@@ -255,6 +255,7 @@ int main(int argc, char *argv[])
 	}
 
 	opt.search_data->options = FIND_SKIP_DIRS;
+	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->call_back = find_file_callback;
 
 	if((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
@@ -275,7 +276,7 @@ int main(int argc, char *argv[])
 	rhash_data.processed = 0;
 
 	/* process files */
-	opt.search_data->options = FIND_SKIP_DIRS | FIND_LOG_ERRORS;
+	opt.search_data->options |= FIND_LOG_ERRORS;
 	opt.search_data->call_back_data = 0;
 	scan_files(opt.search_data);
 

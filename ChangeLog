@@ -1,4 +1,7 @@
-Wed Jan  8 2014
+Wed Jun 18 2014 Aleksey
+	* option --follow for following symlinks to directories
+
+Wed Jan  8 2014 Aleksey
 	* === Version 1.3.1 ===
 	* Exclude the files specified by -o and -l from processing
 

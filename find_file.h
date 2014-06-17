@@ -14,7 +14,7 @@ extern "C" {
 
 /* find_file options */
 #define FIND_WALK_DEPTH_FIRST 1
-#define FIND_FOLLOW_LINKS 2
+#define FIND_FOLLOW_SYMLINKS 2
 #define FIND_SKIP_DIRS 4
 #define FIND_LOG_ERRORS 8
 #define FIND_CANCEL 16

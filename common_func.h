@@ -95,6 +95,7 @@ typedef struct file_t
 #define FILE_IFROOT  0x10
 #define FILE_IFSTDIN 0x20
 #define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
+#define FILE_ISLNK(file) ((file)->mode & FILE_IFLNK)
 
 /* file functions */
 

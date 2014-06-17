@@ -195,6 +195,7 @@ void scan_files(file_search_data* data)
 {
 	size_t i;
 	size_t count = data->root_files.size;
+	int skip_symlink_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
 
 	for(i = 0; i < count && !(data->options & FIND_CANCEL); i++)
 	{
@@ -203,6 +204,11 @@ void scan_files(file_search_data* data)
 
 		/* check if file is a directory */
 		if(FILE_ISDIR(file)) {
+			/* silently skip symlinks to directories if required */
+			if(skip_symlink_dirs && FILE_ISLNK(file)) {
+				continue;
+			}
+
 			if(data->max_depth != 0) {
 				find_file(file, data);
 			} else if((data->options & FIND_LOG_ERRORS) != 0) {
@@ -407,7 +413,7 @@ int find_file(file_t* start_dir, file_search_data* data)
 			if(res >= 0) {
 				/* process the file or directory */
 				if(FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
-					res = 1;
+					res = ((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file));
 				} else {
 					/* handle file by callback function */
 					res = data->call_back(&file, data->call_back_data);
@@ -415,7 +421,9 @@ int find_file(file_t* start_dir, file_search_data* data)
 
 				/* check if file is a directory and we need to walk it, */
 				/* but don't go deeper than max_depth */
-				if(FILE_ISDIR(&file) && res && level < max_depth) {
+				if(FILE_ISDIR(&file) && res && level < max_depth &&
+					((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file)))
+				{
 					/* add the directory name to the dirs_stack */
 					if(dir_entry_insert(insert_at, de->d_name, file.mode)) {
 						/* the directory name was successfully inserted */

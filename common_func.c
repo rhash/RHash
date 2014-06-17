@@ -424,13 +424,27 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	return -1;
 #else
 	struct rsh_stat_struct st;
-	int res = -1;
-	res = (use_lstat ? lstat(file->path, &st) : rsh_stat(file->path, &st));
+	int res = 0;
+	file->mode  = 0;
+
+	do {
+		if(use_lstat) {
+			/* check for symlink */
+			if(lstat(file->path, &st) < 0) return -1;
+			if(!S_ISLNK(st.st_mode)) break;
+
+			/* it's a symlink */
+			file->mode |= FILE_IFLNK;
+		}
+
+		res = rsh_stat(file->path, &st);
+	} while(0);
+
 	file->size  = st.st_size;
 	file->mtime = st.st_mtime;
 
-	file->mode  = 0;
-	if(S_ISDIR(st.st_mode)) file->mode |= FILE_IFDIR;
+	if(S_ISDIR(st.st_mode))
+		file->mode |= FILE_IFDIR;
 
 	return res;
 #endif /* _WIN32 */
