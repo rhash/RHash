@@ -144,8 +144,8 @@ static int load_printf_template(void)
 
 	while (!feof(fd)) {
 		len = fread(buffer, 1, 8192, fd);
-		/* read can return -1 on error */
-		if (len == (size_t)-1) break;
+		if (ferror(fd)) break;
+
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
 			log_msg(_("%s: template file is too big\n"), opt.template_file);

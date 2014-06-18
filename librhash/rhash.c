@@ -402,12 +402,13 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	buffer = pmem + align8;
 
 	while(!feof(fd)) {
-		if(ectx->state != STATE_ACTIVE) break; /* stop if canceled */
+		/* stop if canceled */
+		if(ectx->state != STATE_ACTIVE) break;
 
 		length = fread(buffer, 1, block_size, fd);
 		/* read can return -1 on error */
-		if(length == (size_t)-1) {
-			res = -1; /* note: fread sets errno */
+		if(ferror(fd)) {
+			res = -1; /* note: errno contains error code */
 			break;
 		} else if (length) {
 			rhash_update(ctx, buffer, length);
