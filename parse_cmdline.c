@@ -379,7 +379,7 @@ static void die(const char* msg)
  */
 static void fail_on_unknow_option(const char* option_name)
 {
-	log_error(_("unknown option: %s"), (option_name ? option_name : "?"));
+	log_error(_("unknown option: %s\n"), (option_name ? option_name : "?"));
 	rsh_exit(2);
 }
 
