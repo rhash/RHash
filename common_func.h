@@ -92,10 +92,12 @@ typedef struct file_t
 /* bit constants for the file_t.mode bit mask */
 #define FILE_IFDIR   0x01
 #define FILE_IFLNK   0x02
+#define FILE_IFREG   0x04
 #define FILE_IFROOT  0x10
 #define FILE_IFSTDIN 0x20
 #define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
 #define FILE_ISLNK(file) ((file)->mode & FILE_IFLNK)
+#define FILE_ISREG(file) ((file)->mode & FILE_IFREG)
 
 /* file functions */
 

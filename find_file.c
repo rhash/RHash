@@ -414,7 +414,7 @@ int find_file(file_t* start_dir, file_search_data* data)
 				/* process the file or directory */
 				if(FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
 					res = ((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file));
-				} else {
+				} else if (FILE_ISREG(&file)) {
 					/* handle file by callback function */
 					res = data->call_back(&file, data->call_back_data);
 				}

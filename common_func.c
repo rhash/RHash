@@ -377,7 +377,7 @@ int rsh_file_statw(file_t* file)
 	if(GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
-		file->mode = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : 0);
+		file->mode = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : FILE_IFREG);
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
@@ -445,6 +445,8 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 
 	if(S_ISDIR(st.st_mode))
 		file->mode |= FILE_IFDIR;
+	if(!file->mode && S_ISREG(st.st_mode))
+		file->mode |= FILE_IFREG;
 
 	return res;
 #endif /* _WIN32 */
