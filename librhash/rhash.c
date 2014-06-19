@@ -406,7 +406,7 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 		if(ectx->state != STATE_ACTIVE) break;
 
 		length = fread(buffer, 1, block_size, fd);
-		/* read can return -1 on error */
+
 		if(ferror(fd)) {
 			res = -1; /* note: errno contains error code */
 			break;
