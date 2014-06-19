@@ -80,6 +80,18 @@ check "$TEST_RESULT" "$TEST_EXPECTED" .
 TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
+new_test "test handling empty files:  "
+echo -n "" > test-empty.file
+TEST_RESULT=$( $rhash -p "%m" test-empty.file )
+check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
+# now test processing of empty stdin
+TEST_RESULT=$( echo -n "" | $rhash -p "%m" - )
+check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
+# test verification of empty file
+TEST_RESULT=$( $rhash -c test-empty.file | grep "^[^-]" )
+check "$TEST_RESULT" "Everything OK"
+rm test-empty.file
+
 # Test the SFV format using test1K.data from the previous test
 new_test "test default format:        "
 $rhash test1K.data | (
