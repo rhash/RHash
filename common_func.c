@@ -443,10 +443,12 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	file->size  = st.st_size;
 	file->mtime = st.st_mtime;
 
-	if(S_ISDIR(st.st_mode))
+	if(S_ISDIR(st.st_mode)) {
 		file->mode |= FILE_IFDIR;
-	if(!file->mode && S_ISREG(st.st_mode))
+	} else if(S_ISREG(st.st_mode)) {
+		/* it's a regular file or a symlink pointing to a regular file */
 		file->mode |= FILE_IFREG;
+	}
 
 	return res;
 #endif /* _WIN32 */
