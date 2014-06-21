@@ -390,8 +390,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	if(info.sums_flags) {
 		/* calculate sums */
 		if(calc_sums(&info) < 0) {
-			/* print error unless sharing access error occurred */
-			if(errno == EACCES) return 0;
+			/* print i/o error */
 			log_file_error(file->path);
 			res = -1;
 		}
