@@ -313,24 +313,23 @@ void setup_console(void)
 	HANDLE hOut;
 	CONSOLE_CURSOR_INFO cci;
 
-	int cp = (opt.flags&OPT_UTF8 ? CP_UTF8 : opt.flags&OPT_ANSI ? GetACP() : GetOEMCP());
+	int cp = (opt.flags & OPT_UTF8 ? CP_UTF8 : opt.flags & OPT_ANSI ? GetACP() : GetOEMCP());
 	rhash_data.saved_console_codepage = -1;
 	/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
 	/* cause _fileno() is undefined,  when compiling as strict ansi C. */
-	if(cp > 0 && IsValidCodePage(cp) && (isatty(1) || isatty(2)) )
+	if(cp > 0 && IsValidCodePage(cp) && (isatty(1) || isatty(2)))
 	{
 		rhash_data.saved_console_codepage = GetConsoleOutputCP();
 		SetConsoleOutputCP(cp);
-		setlocale(LC_CTYPE, opt.flags&OPT_UTF8 ? "C" :
-			opt.flags&OPT_ANSI ? ".ACP" : ".OCP");
+		setlocale(LC_CTYPE, opt.flags & OPT_UTF8 ? "C" :
+			opt.flags & OPT_ANSI ? ".ACP" : ".OCP");
 		rsh_exit = rhash_exit;
 	}
 
-	if((opt.flags & OPT_PERCENTS) != 0) {
+	if((opt.flags & OPT_PERCENTS) != 0 && isatty(2)) {
 		hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if(hOut != INVALID_HANDLE_VALUE) {
+		if(hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci)) {
 			/* store current cursor size and visibility flag */
-			GetConsoleCursorInfo(hOut, &cci);
 			rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
 			/* now hide cursor */
