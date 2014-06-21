@@ -1,3 +1,6 @@
+Sat Jun 21 2014 Aleksey
+	* report warnings on files locked by some processes
+
 Thu Jun 19 2014 Brad Campbell
 	* ignore non-regular files while scanning directories recursively
 
