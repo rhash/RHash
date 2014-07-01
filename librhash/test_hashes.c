@@ -373,15 +373,15 @@ const char* edonr512_tests[] = {
 const char* btih_tests[] = {
 #ifdef USE_BTIH_WITH_TEST_FILENAME
 	/* BTIH calculated with filename = "test.txt", verified using uTorrent */
-	"", "B9E3C388E3D6B5F63EA5CE61F79C23E2C50EF95B",
-	"a", "C277260F7EC3DAB6D15F9B38796578029ED9B32B",
-	"abc", "D8C4B957D2EEB55D39B2FE68AB924EB007355050",
-	"message digest", "8FE65F36D46DEAB1A347CE005A025F302D35D408",
-	"abcdefghijklmnopqrstuvwxyz", "2932DC7AA83123F822E9431F8F10F2C740D0EDF0",
-	"The quick brown fox jumps over the lazy dog", "C39D1F8950FDB39C2366E9A6CD7814AC3686CA55",
-	"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "4405635D7611838250EEF66AA8F03980C42AD2CB",
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "A6583B70D9634170940AEEDFE2AD37DADC99B5D4",
-	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "545472D099CE50D075A318429C48BE54DDA02731",
+	"", "042C8E2D2780B0AFAE6599A02914D6C3F1515B12",
+	"a", "7527A903193C87093C05DE0F0F81126A4B98EE1A",
+	"abc", "CBF4F6D5CCDE0E6DD6BC8F013AA7F920900C11A2",
+	"message digest", "FFFCE897C2D5FB8ED4B6AD773CC0FFA071AEC393",
+	"abcdefghijklmnopqrstuvwxyz", "606A31B06B17547C226C9EA8EE00EEBA6E0E5BFC",
+	"The quick brown fox jumps over the lazy dog", "1EED1B4C56186456E3DE420FE69A67F53CA6A52A",
+	"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "6BD6F0B19FA3F54CE0311BF6D2D6D3955B1BD20C",
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "95880C5A8EB06C1AC28BA6A531505E0F2BCD77AE",
+	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "674E17AA21981A33892119E601DF3E2E689C4E62",
 #else
 	/* BTIH calculated without a filename, can't be verified by torrent tools */
 	"", "A66A2FA70401A9DCA25C7C39937921D377A24C1A",
@@ -651,7 +651,7 @@ static void test_long_strings(void)
 		{ RHASH_EDONR256, "56F4B8DC0A41C8EA0A6A42C949883CD5DC25DF8CF4E43AD474FD4492A7A07966" }, /* verified by eBASH SUPERCOP implementation */
 		{ RHASH_EDONR512, "B4A5A255D67869C990FE79B5FCBDA69958794B8003F01FD11E90FEFEC35F22BD84FFA2E248E8B3C1ACD9B7EFAC5BC66616E234A6E938D3526DEE26BD0DE9C562" }, /* verified by eBASH SUPERCOP implementation */
 #ifdef USE_BTIH_WITH_TEST_FILENAME
-		{ RHASH_BTIH, "0DA5C5A6BA0D067C4DE134BB5AD525544DB11A6C" }, /* BTIH with filename="test.txt", verified using uTorrent */
+		{ RHASH_BTIH, "90AE73EE72A12B5A3A39DCA4C5E24BE1F39B6A1B" }, /* BTIH with filename="test.txt", verified using uTorrent */
 #else
 		{ RHASH_BTIH, "30CF71DEFC48D497D4C6DCA8FAB203C1E253A53F" }, /* BTIH calculated without a filename, can't be verified by torrent tools */
 #endif
@@ -874,18 +874,21 @@ int main(int argc, char *argv[])
 #endif
 
 	test_generic_assumptions();
+	if(argc > 1) {
+		if(strcmp(argv[1], "--speed") == 0) {
+			unsigned hash_id = (argc > 2 ? find_hash(argv[2]) : RHASH_SHA1);
+			if(hash_id == 0) {
+				fprintf(stderr, "error: unknown hash_id: %s\n", argv[2]);
+				return 1;
+			}
+			test_known_strings(hash_id);
 
-	if(argc > 1 && strcmp(argv[1], "--speed") == 0) {
-		unsigned hash_id = (argc > 2 ? find_hash(argv[2]) : RHASH_SHA1);
-		if(hash_id == 0) {
-			fprintf(stderr, "error: unknown hash_id: %s\n", argv[2]);
-			return 1;
+			rhash_run_benchmark(hash_id, 0, stdout);
+		} else if(strcmp(argv[1], "--flags") == 0) {
+			printf("%s", compiler_flags);
+		} else {
+			printf("Options: [--speed [HASH_NAME]| --flags]\n");
 		}
-		test_known_strings(hash_id);
-
-		rhash_run_benchmark(hash_id, 0, stdout);
-	} else if(argc > 1 && strcmp(argv[1], "--flags") == 0) {
-		printf("%s", compiler_flags);
 	} else {
 		test_all_known_strings();
 		test_long_strings();

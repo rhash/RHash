@@ -7,6 +7,9 @@ Thu Jun 19 2014 Brad Campbell
 Wed Jun 18 2014 Aleksey
 	* option --follow for following symlinks to directories
 
+Sun Apr 13 2014 ZinnKid
+	* BTIH piece length calculation updated to follow the uTorrent algorithm change
+
 Wed Jan  8 2014 Aleksey
 	* === Version 1.3.1 ===
 	* Exclude the files specified by -o and -l from processing
