@@ -51,7 +51,7 @@ class TestRHash < Test::Unit::TestCase
 	assert_equal("5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6", r.to_hex(RHash::TTH))
 	assert_equal("2qoyzwmpaczaj2mabgmoz6ccpy", r.to_base32(RHash::MD5))
 #	assert_equal("1B2M2Y8AsgTpgAmY7PhCfg==", r.to_base64(RHash::MD5)) <- BASE64 is broken in 1.2.7 :-/
-	assert_equal("\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09\x98\xec\xf8\x42\x7e", r.to_raw(RHash::MD5))
+	assert_equal(["d41d8cd98f00b204e9800998ecf8427e"].pack('H*'), r.to_raw(RHash::MD5))
     end
 
     def test_magnet
