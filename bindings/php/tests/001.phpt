@@ -2,7 +2,7 @@
 test RHash global functions
 --FILE--
 <?php
-echo rhash_count() . "\n";
+echo (rhash_count() >= 26) . "\n";
 echo rhash_get_digest_size(RHASH_CRC32) . "\n";
 echo (int)rhash_is_base32(RHASH_MD5) . "\n";
 echo (int)rhash_is_base32(RHASH_AICH) . "\n";
@@ -11,7 +11,7 @@ echo rhash_msg(RHASH_TTH, 'abc') . "\n";
 echo "Done\n";
 ?>
 --EXPECTF--
-22
+1
 4
 0
 1

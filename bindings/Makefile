@@ -1,5 +1,5 @@
 VERSION := $(shell sed -ne 's/^version=\(.*\)/\1/p' version.properties)
-BINDINGS = java mono perl python ruby
+BINDINGS = java mono perl python ruby php
 FILES = Makefile version.properties ChangeLog COPYING
 DESTDIR =
 PREFIX = /usr/local
