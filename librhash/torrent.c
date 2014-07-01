@@ -35,6 +35,7 @@
 #define SHA1_FINAL(ctx, result) rhash_sha1_final(&ctx->sha1_context, (result))
 #endif
 
+#define BT_MIN_HASH_LENGTH 16384
 /** size of a SHA1 hash in bytes */
 #define BT_HASH_SIZE 20
 /** number of SHA1 hashes to store together in one block */
@@ -48,7 +49,8 @@
 void bt_init(torrent_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(torrent_ctx));
-	ctx->piece_length = 65536;
+	ctx->piece_length = BT_MIN_HASH_LENGTH;
+	assert(BT_MIN_HASH_LENGTH == bt_default_piece_length(0));
 
 #ifdef USE_OPENSSL
 	{
@@ -372,7 +374,7 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 size_t bt_default_piece_length(uint64_t total_size)
 {
 	uint64_t hi_bit;
-	if(total_size < 16777216) return 16384;
+	if(total_size < 16777216) return BT_MIN_HASH_LENGTH;
 	if(total_size >= I64(4294967296) ) return 8388608;
 	for(hi_bit = 16777216 << 1; hi_bit <= total_size; hi_bit <<= 1);
 	return (size_t)(hi_bit >> 10);

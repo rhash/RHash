@@ -368,11 +368,8 @@ const char* edonr512_tests[] = {
 	0
 };
 
-#define USE_BTIH_WITH_TEST_FILENAME
-
-const char* btih_tests[] = {
-#ifdef USE_BTIH_WITH_TEST_FILENAME
-	/* BTIH calculated with filename = "test.txt", verified using uTorrent */
+/* BTIH calculated with filename = "test.txt", verified using uTorrent */
+const char* btih_with_filename_tests[] = {
 	"", "042C8E2D2780B0AFAE6599A02914D6C3F1515B12",
 	"a", "7527A903193C87093C05DE0F0F81126A4B98EE1A",
 	"abc", "CBF4F6D5CCDE0E6DD6BC8F013AA7F920900C11A2",
@@ -382,18 +379,20 @@ const char* btih_tests[] = {
 	"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "6BD6F0B19FA3F54CE0311BF6D2D6D3955B1BD20C",
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "95880C5A8EB06C1AC28BA6A531505E0F2BCD77AE",
 	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "674E17AA21981A33892119E601DF3E2E689C4E62",
-#else
-	/* BTIH calculated without a filename, can't be verified by torrent tools */
-	"", "A66A2FA70401A9DCA25C7C39937921D377A24C1A",
-	"a", "FD408E9D024B58A57AA1313EFF14005FF8B2C5D1",
-	"abc", "83FFAAFFA483B91FBC284D1930F2DEE886515AFB",
-	"message digest", "8208E521BBECEA61711F787824FB301ED3E2C16C",
-	"abcdefghijklmnopqrstuvwxyz", "47D855AE785FEE80A210DF1512B72AE96A50C99E",
-	"The quick brown fox jumps over the lazy dog", "987147B78B586249263F89E8E7C4E636225BC1F7",
-	"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "5E4886F153F905528055DEB7C5181F459064D9F4",
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "867A6364D160679F8F7C41C126EAFCB9E8759CE6",
-	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "1BFF44EA31BDF301B9E02689815295C4BB25635F",
-#endif
+	0
+};
+
+/* BTIH calculated without a filename, can't be verified by torrent tools */
+const char* btih_without_a_filename_tests[] = {
+	"", "A4A6678B3A933D1D9A182CC38E73124F7672C7EB",
+	"a", "827CD89846FC132E2E67E29C2784C65443BB4DC1",
+	"abc", "88713704608141F4E86F58C86247CA1E3D91D864",
+	"message digest", "C654901E82A8FC13C343271520FAF52EBEEF2183",
+	"abcdefghijklmnopqrstuvwxyz", "4AE72ED186D196D8F117E449D34E216B0941FF61",
+	"The quick brown fox jumps over the lazy dog", "A9328020229C163BBF07181C8DF37CE84FC66589",
+	"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "DB9A7E577A346FF058D78576102F2EB9DC849018",
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "7F8FEED959E89BB097B5F741C0342B6DF0A7864D",
+	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "92D6F01285FDA7D43E7D09A5AFF01C383CEEE610",
 	0
 };
 
@@ -409,7 +408,8 @@ known_strings_t known_strings[] = {
 	{ RHASH_SHA1, sha1_tests },
 	{ RHASH_TIGER, tiger_hashes },
 	{ RHASH_TTH, tth_tests },
-	{ RHASH_BTIH, btih_tests },
+	{ RHASH_BTIH, btih_with_filename_tests },
+	{ RHASH_BTIH, btih_without_a_filename_tests },
 	{ RHASH_ED2K, ed2k_tests },
 	{ RHASH_AICH, aich_tests },
 	{ RHASH_WHIRLPOOL, whirlpool_tests },
@@ -436,7 +436,7 @@ known_strings_t known_strings[] = {
  *                    Helper functions to hash messages                    *
  *=========================================================================*/
 
-static int g_errors = 0;  /* total number of errors occured */
+static int g_errors = 0;  /* total number of errors occurred */
 
 #ifdef UNDER_CE /* if Windows CE */
 static char *g_msg = NULL; /* string buffer to store errors */
@@ -469,8 +469,9 @@ static void log_message(char* format, ...)
  * @param msg_chunk the message chunk as a null-terminated string
  * @param chunk_size the size of the chunk in bytes
  * @param count the number of chunks in the message
+ * @param set_filename need to set a filename for BTIH hash
  */
-static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size, size_t msg_size)
+static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size, size_t msg_size, int set_filename)
 {
 	struct rhash_context *ctx;
 	size_t left, size;
@@ -478,12 +479,11 @@ static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size,
 	assert(rhash_get_hash_length(hash_id) < 130);
 
 	ctx = rhash_init(hash_id);
-#ifdef USE_BTIH_WITH_TEST_FILENAME
-	if((hash_id & RHASH_BTIH) != 0) {
+
+	if((hash_id & RHASH_BTIH) && set_filename) {
 		unsigned long long total_size = msg_size;
 		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
 	}
-#endif
 
 	for(left = msg_size; left > 0; left -= size) {
 		size = (left > chunk_size ? chunk_size : left);
@@ -505,11 +505,12 @@ static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size,
  * @param chunk_size the size of the chunk in bytes
  * @param count the number of chunks in the message
  * @param hash the expected hash value
+ * @param set_filename need to set a filename for BTIH hash
  */
-static void assert_hash_long_msg(unsigned hash_id, const char* msg_chunk, size_t chunk_size, size_t msg_size, const char* hash, const char* msg_name)
+static void assert_hash_long_msg(unsigned hash_id, const char* msg_chunk, size_t chunk_size, size_t msg_size, const char* hash, const char* msg_name, int set_filename)
 {
 	char* result;
-	result = repeat_hash(hash_id, msg_chunk, chunk_size, msg_size);
+	result = repeat_hash(hash_id, msg_chunk, chunk_size, msg_size, set_filename);
 	if(strcmp(result, hash) != 0) {
 		const char* hash_name = rhash_get_name(hash_id); /* the hash function name */
 		if(msg_name) log_message("failed: %s(%s) = %s, expected %s\n", hash_name, msg_name, result, hash);
@@ -523,11 +524,12 @@ static void assert_hash_long_msg(unsigned hash_id, const char* msg_chunk, size_t
  *
  * @param hash_id id of the hash algorithm to use
  * @param msg the message to hash
+ * @param set_filename need to set a filename for BTIH hash
  */
-static char* hash_message(unsigned hash_id, const char* msg)
+static char* hash_message(unsigned hash_id, const char* msg, int set_filename)
 {
 	size_t msg_size = strlen(msg);
-	return repeat_hash(hash_id, msg, msg_size, msg_size);
+	return repeat_hash(hash_id, msg, msg_size, msg_size, set_filename);
 }
 
 /**
@@ -537,11 +539,12 @@ static char* hash_message(unsigned hash_id, const char* msg)
  * @param hash_id id of the algorithm to test
  * @param message the message to hash
  * @param expected_hash the expected hash value
+ * @param set_filename need to set a filename for BTIH hash
  */
-static void assert_hash(unsigned hash_id, const char* msg, const char* expected_hash)
+static void assert_hash(unsigned hash_id, const char* msg, const char* expected_hash, int set_filename)
 {
 	size_t msg_size = strlen(msg);
-	assert_hash_long_msg(hash_id, msg, msg_size, msg_size, expected_hash, NULL);
+	assert_hash_long_msg(hash_id, msg, msg_size, msg_size, expected_hash, NULL, set_filename);
 }
 
 /**
@@ -552,15 +555,16 @@ static void assert_hash(unsigned hash_id, const char* msg, const char* expected_
  * @param ch the character the message is filled with
  * @param msg_size the size of message in bytes
  * @param expected_hash the expected hash value
+ * @param set_filename need to set a filename for BTIH hash
  */
-static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const char* hash)
+static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const char* hash, int set_filename)
 {
 	char ALIGN_ATTR(16) msg_chunk[8192]; /* 8 KiB */
 	char msg_name[20];
 	memset(msg_chunk, ch, 8192);
 	if(ch >= 32) sprintf(msg_name, "\"%c\"x%d", ch, (int)msg_size);
 	else sprintf(msg_name, "\"\\%o\"x%d", (unsigned)(unsigned char)ch, (int)msg_size);
-	assert_hash_long_msg(hash_id, msg_chunk, 8192, msg_size, hash, msg_name);
+	assert_hash_long_msg(hash_id, msg_chunk, 8192, msg_size, hash, msg_name, set_filename);
 }
 
 /*=========================================================================*
@@ -572,11 +576,12 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
  *
  * @param hash_id id of the algorithm to test
  * @param ptr pointer to array of pairs <message,expected-hash>
+ * @param set_filename need to set a filename for BTIH hash
  */
-static void test_known_strings_pairs(unsigned hash_id, const char** ptr)
+static void test_known_strings_pairs(unsigned hash_id, const char** ptr, int set_filename)
 {
 	for(; ptr[0] && ptr[1]; ptr += 2) {
-		assert_hash(hash_id, ptr[0], ptr[1]);
+		assert_hash(hash_id, ptr[0], ptr[1], set_filename);
 	}
 }
 
@@ -590,7 +595,8 @@ static void test_known_strings(unsigned hash_id)
 	int i;
 	for(i = 0; known_strings[i].tests != 0; i++) {
 		if(hash_id == known_strings[i].hash_id) {
-			test_known_strings_pairs(hash_id, known_strings[i].tests);
+			int set_filename = (known_strings[i].tests == btih_with_filename_tests);
+			test_known_strings_pairs(hash_id, known_strings[i].tests, set_filename);
 			break;
 		}
 	}
@@ -603,8 +609,8 @@ static void test_all_known_strings(void)
 {
 	int i;
 	for(i = 0; known_strings[i].tests != 0; i++) {
-		assert(i < (int)(sizeof(known_strings) / sizeof(known_strings_t)));
-		test_known_strings_pairs(known_strings[i].hash_id, known_strings[i].tests);
+		int set_filename = (known_strings[i].tests == btih_with_filename_tests);
+		test_known_strings_pairs(known_strings[i].hash_id, known_strings[i].tests, set_filename);
 	}
 }
 
@@ -644,38 +650,38 @@ static void test_long_strings(void)
 		{ RHASH_SHA256, "CDC76E5C9914FB9281A1C7E284D73E67F1809A48A497200E046D39CCC7112CD0" }, /* from NESSIE test vectors */
 		{ RHASH_SHA384, "9D0E1809716474CB086E834E310A4A1CED149E9C00F248527972CEC5704C2A5B07B8B3DC38ECC4EBAE97DDD87F3D8985" }, /* from NESSIE test vectors */
 		{ RHASH_SHA512, "E718483D0CE769644E2E42C7BC15B4638E1F98B13B2044285632A803AFA973EBDE0FF244877EA60A4CB0432CE577C31BEB009C5C2C49AA2E4EADB217AD8CC09B" }, /* from NESSIE test vectors */
-		{ RHASH_SHA3_224, "19F9167BE2A04C43ABD0ED554788101B9C339031ACC8E1468531303F" }, /* verified by refence implementation */
-		{ RHASH_SHA3_256, "FADAE6B49F129BBB812BE8407B7B2894F34AECF6DBD1F9B0F0C7E9853098FC96" }, /* verified by refence implementation */
-		{ RHASH_SHA3_384, "0C8324E1EBC182822C5E2A086CAC07C2FE00E3BCE61D01BA8AD6B71780E2DEC5FB89E5AE90CB593E57BC6258FDD94E17" }, /* verified by refence implementation */
-		{ RHASH_SHA3_512, "5CF53F2E556BE5A624425EDE23D0E8B2C7814B4BA0E4E09CBBF3C2FAC7056F61E048FC341262875EBC58A5183FEA651447124370C1EBF4D6C89BC9A7731063BB" }, /* verified by refence implementation */
+		{ RHASH_SHA3_224, "19F9167BE2A04C43ABD0ED554788101B9C339031ACC8E1468531303F" }, /* verified by reference implementation */
+		{ RHASH_SHA3_256, "FADAE6B49F129BBB812BE8407B7B2894F34AECF6DBD1F9B0F0C7E9853098FC96" }, /* verified by reference implementation */
+		{ RHASH_SHA3_384, "0C8324E1EBC182822C5E2A086CAC07C2FE00E3BCE61D01BA8AD6B71780E2DEC5FB89E5AE90CB593E57BC6258FDD94E17" }, /* verified by reference implementation */
+		{ RHASH_SHA3_512, "5CF53F2E556BE5A624425EDE23D0E8B2C7814B4BA0E4E09CBBF3C2FAC7056F61E048FC341262875EBC58A5183FEA651447124370C1EBF4D6C89BC9A7731063BB" }, /* verified by reference implementation */
 		{ RHASH_EDONR256, "56F4B8DC0A41C8EA0A6A42C949883CD5DC25DF8CF4E43AD474FD4492A7A07966" }, /* verified by eBASH SUPERCOP implementation */
 		{ RHASH_EDONR512, "B4A5A255D67869C990FE79B5FCBDA69958794B8003F01FD11E90FEFEC35F22BD84FFA2E248E8B3C1ACD9B7EFAC5BC66616E234A6E938D3526DEE26BD0DE9C562" }, /* verified by eBASH SUPERCOP implementation */
-#ifdef USE_BTIH_WITH_TEST_FILENAME
-		{ RHASH_BTIH, "90AE73EE72A12B5A3A39DCA4C5E24BE1F39B6A1B" }, /* BTIH with filename="test.txt", verified using uTorrent */
-#else
-		{ RHASH_BTIH, "30CF71DEFC48D497D4C6DCA8FAB203C1E253A53F" }, /* BTIH calculated without a filename, can't be verified by torrent tools */
-#endif
+		{ RHASH_BTIH, "90AE73EE72A12B5A3A39DCA4C5E24BE1F39B6A1B" } /* BTIH with filename="test.txt", verified using uTorrent */
 	};
 
-	/* test all algorithms on 1,000,000 charaters of 'a' */
+	/* test all algorithms on 1,000,000 characters of 'a' */
 	for(count = 0; count < (sizeof(tests) / sizeof(id_to_hash_t)); count++) {
-		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash);
+		int set_filename = (tests[count].hash_id == RHASH_BTIH);
+		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash, set_filename);
 	}
 
-	/* now we verify some specific cases */
-	assert_rep_hash(RHASH_GOST, 0xFF, 64, "13416C4EC74A63C3EC90CB1748FD462C7572C6C6B41844E48CC1184D1E916098");
-	assert_rep_hash(RHASH_GOST_CRYPTOPRO, 0xFF, 64, "58504D26B3677E756BA3F4A9FD2F14B3BA5457066A4AA1D700659B90DCDDD3C6");
+	/* BTIH calculated without a filename. The hash value can't be verified by torrent tools */
+	assert_rep_hash(RHASH_BTIH, 'a', 1000000, "24742F9AE1BD416CF0A6916F2849FE7ABFAC405E", 0);
+
+	/* now we verify some specific cases, which caused problems in many libraries */
+	assert_rep_hash(RHASH_GOST, 0xFF, 64, "13416C4EC74A63C3EC90CB1748FD462C7572C6C6B41844E48CC1184D1E916098", 0);
+	assert_rep_hash(RHASH_GOST_CRYPTOPRO, 0xFF, 64, "58504D26B3677E756BA3F4A9FD2F14B3BA5457066A4AA1D700659B90DCDDD3C6", 0);
 
 	/* these messages verified by eMule LinkCreator (which uses eMule variant of ED2K hash) */
-	assert_rep_hash(RHASH_ED2K, 0, 9728000, "FC21D9AF828F92A8DF64BEAC3357425D");
-	assert_rep_hash(RHASH_ED2K, 0, 9728000 - 1, "AC44B93FC9AFF773AB0005C911F8396F");
-	assert_rep_hash(RHASH_ED2K, 0, 9728000 + 1, "06329E9DBA1373512C06386FE29E3C65"); /* msg with: 9728000 < size <= 9732096 */
-	assert_rep_hash(RHASH_AICH, 0, 9728000, "5D3N4HQHIUMQ7IU7A5QLPLI6RHSWOR7B");
-	assert_rep_hash(RHASH_AICH, 0, 9728000 - 1, "L6SPMD2CM6PRZBGRQ6UFC4HJFFOATRA4");
-	assert_rep_hash(RHASH_AICH, 0, 9728000 + 1, "HL3TFXORIUEPXUWFPY3JLR7SMKGTO4IH");
+	assert_rep_hash(RHASH_ED2K, 0, 9728000, "FC21D9AF828F92A8DF64BEAC3357425D", 0);
+	assert_rep_hash(RHASH_ED2K, 0, 9728000 - 1, "AC44B93FC9AFF773AB0005C911F8396F", 0);
+	assert_rep_hash(RHASH_ED2K, 0, 9728000 + 1, "06329E9DBA1373512C06386FE29E3C65", 0); /* msg with: 9728000 < size <= 9732096 */
+	assert_rep_hash(RHASH_AICH, 0, 9728000, "5D3N4HQHIUMQ7IU7A5QLPLI6RHSWOR7B", 0);
+	assert_rep_hash(RHASH_AICH, 0, 9728000 - 1, "L6SPMD2CM6PRZBGRQ6UFC4HJFFOATRA4", 0);
+	assert_rep_hash(RHASH_AICH, 0, 9728000 + 1, "HL3TFXORIUEPXUWFPY3JLR7SMKGTO4IH", 0);
 #if 0
-	assert_rep_hash(RHASH_ED2K, 0, 9728000 * 5, "3B613901DABA54F6C0671793E28A1205");
-	assert_rep_hash(RHASH_AICH, 0, 9728000 * 5, "EZCO3XF2RJ4FERRDEXGOSSRGL5NA5BBM");
+	assert_rep_hash(RHASH_ED2K, 0, 9728000 * 5, "3B613901DABA54F6C0671793E28A1205", 0);
+	assert_rep_hash(RHASH_AICH, 0, 9728000 * 5, "EZCO3XF2RJ4FERRDEXGOSSRGL5NA5BBM", 0);
 #endif
 }
 
@@ -743,10 +749,10 @@ static void test_alignment(void)
 
 			if(start == 0) {
 				/* save original hash value */
-				strcpy(expected_hash, hash_message(hash_id, message + start));
+				strcpy(expected_hash, hash_message(hash_id, message + start, 0));
 			} else {
 				/* verify obtained hash value */
-				assert_hash(hash_id, message + start, expected_hash);
+				assert_hash(hash_id, message + start, expected_hash, 0);
 			}
 		}
 	}
@@ -821,7 +827,7 @@ static void test_magnet(void)
 
 	assert_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y", ctx, RHASH_TTH, RHPR_FILESIZE | TEST_PATH);
 	assert_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661", ctx, RHASH_MD5, RHPR_FILESIZE | RHPR_UPPERCASE);
-	assert_magnet("xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:btih:7vai5hicjnmkk6vbge7p6faal74lfror",
+	assert_magnet("xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:btih:qj6nrgcg7qjs4lth4kocpbggkrb3wtob",
 		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
 
 	/* verify length calculation for all hashes */
@@ -929,7 +935,7 @@ wchar_t *char2wchar(char* str)
  * The program entry point under Windows CE
  *
  * @param argc number of arguments including program name
- * @param argv program argumants including its name
+ * @param argv program arguments including its name
  */
 int _tmain(int argc, _TCHAR* argv[])
 {
