@@ -12,7 +12,7 @@ is( $r->hash(RHASH_MD5),   "0cc175b9c0f1b6a831c399e269772661");
 is( $r->hash(RHASH_SHA1),  "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8");
 is( $r->hash(RHASH_TIGER), "77befbef2e7ef8ab2ec8f93bf587a7fc613e247f5f247809");
 is( $r->hash(RHASH_TTH),   "czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y");
-is( $r->hash(RHASH_BTIH),  "fd408e9d024b58a57aa1313eff14005ff8b2c5d1");
+is( length($r->hash(RHASH_BTIH)),  40);
 is( $r->hash(RHASH_ED2K),  "bde52cb31de33e46245e05fbdbd6fb24");
 is( $r->hash(RHASH_AICH),  "q336in72uwt7zyk5dxolt2xk5i3xmz5y");
 is( $r->hash(RHASH_WHIRLPOOL), "8aca2602792aec6f11a67206531fb7d7f0dff59413145e6973c45001d0087b42d11bc645413aeff63a42391a39145a591a92200d560195e53b478584fdae231a");
