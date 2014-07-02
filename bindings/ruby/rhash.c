@@ -37,12 +37,15 @@ static VALUE rh_update(VALUE self, VALUE msg) {
 	Data_Get_Struct(self, struct rhash_context, ctx);
 
 	if (TYPE(msg) != T_STRING) {
-		msg = rb_obj_as_string(msg); // convert to string
+		msg = rb_obj_as_string(msg); /* convert to string */
 	}
 
 	rhash_update(ctx, RSTRING_PTR(msg), RSTRING_LEN(msg));
 	return self;
 }
+
+/* declaring non-static method to fix a warning on an unused function */
+VALUE rh_update_file(VALUE self, VALUE file);
 
 /**
  * call-seq:
@@ -50,7 +53,7 @@ static VALUE rh_update(VALUE self, VALUE msg) {
  * 
  * Updates this <code>RHash</code> with data from given file.
  */
-static VALUE rh_update_file(VALUE self, VALUE file) {
+VALUE rh_update_file(VALUE self, VALUE file) {
 	// this function is actually implemented in pure Ruby below
 	// this allows us to handle files in platform-independent way
 	return self;
