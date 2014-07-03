@@ -70,6 +70,7 @@ lib-static: $(LIBRHASH)
 
 install: all install-binary install-data install-symlinks
 install-shared: $(SHARED_TRG) install-shared-binary install-data install-symlinks
+install-data: install-man install-conf
 uninstall: uninstall-binary uninstall-data uninstall-symlinks
 
 # creating archives
@@ -87,23 +88,27 @@ win-dist: zip
 zip : $(ARCHIVE_ZIP)
 dgz:  check $(ARCHIVE_DEB_GZ)
 
-install-binary:
+mkdir-bin:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+
+install-binary: mkdir-bin
 	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)
 
 # install dynamically linked binary
-install-shared-binary:
-	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+install-shared-binary: mkdir-bin
 	$(INSTALL_PROGRAM) $(SHARED_TRG) $(DESTDIR)$(BINDIR)/rhash
 
-install-data:
-	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)/etc
+install-man:
+	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) dist/rhash.1 $(DESTDIR)$(MANDIR)/man1/rhash.1
-	sed -e 's/\x0D//g' dist/rhashrc.sample > rhashrc && $(INSTALL_DATA) rhashrc $(DESTDIR)/etc/rhashrc
-	rm -f rhashrc
 
-# dependencies should be properly set, otherwise 'make -j<n>' can run install targets in parallel
-install-symlinks:
+install-conf:
+	$(INSTALL) -d $(DESTDIR)/etc
+	sed -e 's/\x0D//g' dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)/etc/rhashrc
+	rm -f rc.tmp
+
+# dependencies should be properly set, otherwise 'make -j<n>' can fail
+install-symlinks: mkdir-bin install-man
 	for f in $(SYMLINKS); do ln -fs rhash $(DESTDIR)$(BINDIR)/$$f; done
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
