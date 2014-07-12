@@ -18,15 +18,15 @@
 #include "hash_update.h"
 
 /* first define some internal functions, implemented later in this file */
-static int add_new_crc_entries(const char* filepath, file_set *crc_entries);
-static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path);
-static int fix_sfv_header(const char* crc_filepath);
+static int add_new_crc_entries(file_t* file, file_set *crc_entries);
+static int file_set_load_from_crc_file(file_set *set, file_t* file);
+static int fix_sfv_header(file_t* file);
 
 /**
  * Update given crc file, by adding to it hashes of files from the same
  * directory, but which the crc file doesn't contain yet.
  *
- * @param hash_file_path the path to the crc file
+ * @param file the file containing hash sums
  * @return 0 on success, -1 on fail
  */
 int update_hash_file(file_t* file)
@@ -40,7 +40,7 @@ int update_hash_file(file_t* file)
 	}
 
 	crc_entries = file_set_new();
-	res = file_set_load_from_crc_file(crc_entries, file->path);
+	res = file_set_load_from_crc_file(crc_entries, file);
 
 	if(opt.flags & OPT_SPEED) rsh_timer_start(&timer);
 	rhash_data.total_size = 0;
@@ -52,7 +52,7 @@ int update_hash_file(file_t* file)
 		file_set_sort(crc_entries);
 
 		/* update crc file with sums of files not present in the crc_entries */
-		res = add_new_crc_entries(file->path, crc_entries);
+		res = add_new_crc_entries(file, crc_entries);
 	}
 	file_set_free(crc_entries);
 
@@ -68,17 +68,17 @@ int update_hash_file(file_t* file)
  * Load a set of files from given crc file.
  *
  * @param set the file set to store loaded files
- * @param hash_file_path the crc file to load
+ * @param file the file containing hash sums to load
  * @return 0 on success, -1 on fail with error code in errno
  */
-static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path)
+static int file_set_load_from_crc_file(file_set *set, file_t* file)
 {
 	FILE *fd;
 	int line_num;
 	char buf[2048];
 	hash_check hc;
 
-	if( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
+	if( !(fd = rsh_fopen_bin(file->path, "rb") )) {
 		/* if file not exist, it will be created */
 		return (errno == ENOENT ? 0 : -1);
 	}
@@ -91,7 +91,7 @@ static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path
 		if(*line == 0) continue; /* skip empty lines */
 
 		if(is_binary_string(line)) {
-			log_error(_("skipping binary file %s\n"), hash_file_path);
+			log_error(_("skipping binary file %s\n"), file->path);
 			fclose(fd);
 			return -1;
 		}
@@ -113,43 +113,43 @@ static int file_set_load_from_crc_file(file_set *set, const char* hash_file_path
  * A specified directory path will be prepended to the path of added files,
  * if it is not a current directory.
  *
- * @param hash_file_path the hash file to add the sums to
+ * @param file the hash file to add the hash sums to
  * @param dir_path the directory path to prepend
  * @param files_to_add the set of files to hash and add
  * @return 0 on success, -1 on error
  */
-static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set *files_to_add)
+static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add)
 {
-	struct rsh_stat_struct st;
 	FILE* fd;
 	unsigned i;
 	int ch;
 
 	/* SFV banner will be printed only in SFV mode and only for empty crc files */
 	int print_banner = (opt.fmt == FMT_SFV);
-	st.st_size = 0;
-	if(rsh_stat(hash_file_path, &st) == 0) {
-		if(print_banner && st.st_size > 0) print_banner = 0;
+
+	file->size = 0;
+	if(rsh_file_stat(file) == 0) {
+		if(print_banner && file->size > 0) print_banner = 0;
 	}
 
-	/* open hash_file_path for writing */
-	if( !(fd = fopen(hash_file_path, "r+") )) {
-		log_file_error(hash_file_path);
+	/* open the hash file for writing */
+	if( !(fd = fopen(file->path, "r+") )) {
+		log_file_error(file->path);
 		return -1;
 	}
 	rhash_data.upd_fd = fd;
 
-	if(st.st_size > 0) {
+	if(file->size > 0) {
 		/* read the last character of the file to check if it is EOL */
 		if(fseek(fd, -1, SEEK_END) != 0) {
-			log_file_error(hash_file_path);
+			log_file_error(file->path);
 			return -1;
 		}
 		ch = fgetc(fd);
 
 		/* somehow writing doesn't work without seeking */
 		if(fseek(fd, 0, SEEK_END) != 0) {
-			log_file_error(hash_file_path);
+			log_file_error(file->path);
 			return -1;
 		}
 
@@ -181,7 +181,7 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 				print_banner = 0;
 			}
 		}
-		rsh_file_stat2(&file, 0);
+		rsh_file_stat(&file);
 
 		/* print hash sums to the crc file */
 		calculate_and_print_sums(fd, &file, print_path);
@@ -194,7 +194,7 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 		}
 	}
 	fclose(fd);
-	log_msg(_("Updated: %s\n"), hash_file_path);
+	log_msg(_("Updated: %s\n"), file->path);
 	return 0;
 }
 
@@ -218,8 +218,6 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 
 	while((de = readdir(dp)) != NULL) {
 		char *path;
-		int res;
-		file_t file;
 		unsigned is_regular;
 
 		/* skip "." and ".." directories */
@@ -228,21 +226,17 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 					continue;
 		}
 
-		/* retrieve stat info of the given file */
+		/* check if the file is a regular one */
 		path = make_path(dir_path, de->d_name);
-
-		rsh_file_init(&file, path, 1);
-		res = rsh_file_stat(&file);
-		is_regular = FILE_ISREG(&file);
-		rsh_file_cleanup(&file);
+		is_regular = is_regular_file(path);
 		free(path);
 
-		/* skip unaccessible files and directories
+		/* skip non-regular files (directories, device files, e.t.c.),
 		 * as well as files not accepted by current file filter
 		 * and files already present in the crc_entries file set */
-		if(res < 0 || !is_regular ||
-				!file_mask_match(opt.files_accept, de->d_name) ||
-				file_set_exist(crc_entries, de->d_name)) {
+		if(!is_regular || !file_mask_match(opt.files_accept, de->d_name) ||
+			file_set_exist(crc_entries, de->d_name))
+		{
 			continue;
 		}
 
@@ -261,17 +255,17 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
  * with a semicolon before other lines. So an SFV-formated hash-file
  * will remain correct.
  *
- * @param hash_file_path the hash-file to add sums into
+ * @param file the hash-file to add sums into
  * @param crc_entries file-set of files to omit from adding
  * @return 0 on success, -1 on error
  */
-static int add_new_crc_entries(const char* hash_file_path, file_set *crc_entries)
+static int add_new_crc_entries(file_t* file, file_set *crc_entries)
 {
 	file_set* files_to_add;
 	char* dir_path;
 	int res = 0;
 
-	dir_path = get_dirname(hash_file_path);
+	dir_path = get_dirname(file->path);
 	files_to_add = file_set_new();
 
 	/* load into files_to_add files from directory not present in the crc_entries */
@@ -282,11 +276,11 @@ static int add_new_crc_entries(const char* hash_file_path, file_set *crc_entries
 		file_set_sort_by_path(files_to_add);
 
 		/* calculate and write crc sums to the file */
-		res = add_sums_to_file(hash_file_path, dir_path, files_to_add);
+		res = add_sums_to_file(file, dir_path, files_to_add);
 
 		if(res == 0 && opt.fmt == FMT_SFV && !rhash_data.interrupted) {
 			/* move SFV header from the end of updated file to its head */
-			res = fix_sfv_header(hash_file_path);
+			res = fix_sfv_header(file);
 		}
 	}
 
@@ -298,8 +292,10 @@ static int add_new_crc_entries(const char* hash_file_path, file_set *crc_entries
 /**
  * Move all SFV header lines (i.e. all lines starting with a semicolon)
  * from the end of updated file to its head.
+ *
+ * @param file the hash file requiring fixing of its SFV header
  */
-static int fix_sfv_header(const char* hash_file_path)
+static int fix_sfv_header(file_t* file)
 {
 	FILE* in;
 	FILE* out;
@@ -308,15 +304,15 @@ static int fix_sfv_header(const char* hash_file_path)
 	char* tmp_file;
 	int err = 0;
 
-	if( !(in = fopen(hash_file_path, "r") )) {
-		log_file_error(hash_file_path);
+	if( !(in = fopen(file->path, "r") )) {
+		log_file_error(file->path);
 		return -1;
 	}
 
 	/* open another file for writing */
-	len = strlen(hash_file_path);
+	len = strlen(file->path);
 	tmp_file = (char*)rsh_malloc(len+8);
-	memcpy(tmp_file, hash_file_path, len);
+	memcpy(tmp_file, file->path, len);
 	strcpy(tmp_file+len, ".new");
 
 	/* open the temporary file */
@@ -343,7 +339,7 @@ static int fix_sfv_header(const char* hash_file_path)
 		}
 	}
 	if(ferror(in)) {
-		log_file_error(hash_file_path);
+		log_file_error(file->path);
 		err = 1;
 	}
 	if(ferror(out)) {
@@ -354,15 +350,15 @@ static int fix_sfv_header(const char* hash_file_path)
 	fclose(in);
 	fclose(out);
 
-	/* overwrite crc file with a new one */
+	/* overwrite the hash file with a new one */
 	if( !err ) {
 #ifdef _WIN32
-		/* under win32 crc_file must be removed before overwriting it */
-		unlink(hash_file_path);
+		/* under win32 the hash file must be removed before overwriting it */
+		unlink(file->path);
 #endif
-		if(rename(tmp_file, hash_file_path) < 0) {
+		if(rename(tmp_file, file->path) < 0) {
 			log_error(_("can't move %s to %s: %s\n"),
-				tmp_file, hash_file_path, strerror(errno));
+				tmp_file, file->path, strerror(errno));
 			err = 1;
 		}
 	}

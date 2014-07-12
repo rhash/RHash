@@ -312,7 +312,6 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 void save_torrent_to(const char* path, rhash_context* rctx)
 {
 	FILE* fd;
-	struct rsh_stat_struct stat_buf;
 	size_t text_len;
 	char *str;
 
@@ -320,7 +319,7 @@ void save_torrent_to(const char* path, rhash_context* rctx)
 	text_len = rhash_transmit(RMSG_BT_GET_TEXT, rctx, RHASH_STR2UPTR(&str), 0);
 	assert(text_len != RHASH_ERROR);
 
-	if(rsh_stat(path, &stat_buf) >= 0) {
+	if(if_file_exists(path)) {
 		/* make backup copy of the existing torrent file */
 		char *bak_path = str_append(path, ".bak");
 		unlink(bak_path);

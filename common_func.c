@@ -498,7 +498,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	if (!errno) errno = EINVAL;
 	return -1;
 #else
-	struct rsh_stat_struct st;
+	struct stat st;
 	int res = 0;
 	file->mode &= FILE_OPT_DONT_FREE_PATH;
 
@@ -512,7 +512,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 			file->mode |= FILE_IFLNK;
 		}
 
-		res = rsh_stat(file->path, &st);
+		res = stat(file->path, &st);
 	} while(0);
 
 	file->size  = st.st_size;
@@ -538,6 +538,30 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 int rsh_file_stat(file_t* file)
 {
 	return rsh_file_stat2(file, 0);
+}
+
+int is_regular_file(const char* path)
+{
+	int is_regular = 0;
+	file_t file;
+
+	rsh_file_init(&file, path, 1);
+	if(rsh_file_stat(&file) >= 0) {
+		is_regular = FILE_ISREG(&file);
+	}
+	rsh_file_cleanup(&file);
+	return is_regular;
+}
+
+int if_file_exists(const char* path)
+{
+	int exists;
+	file_t file;
+
+	rsh_file_init(&file, path, 1);
+	exists = (rsh_file_stat(&file) >= 0);
+	rsh_file_cleanup(&file);
+	return exists;
 }
 
 /*=========================================================================

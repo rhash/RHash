@@ -110,10 +110,13 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
 
 void print_time(FILE *out, time_t time);
 void print_time64(FILE *out, uint64_t time);
+
 void rsh_file_init(file_t* file, const char* path, int reuse_path);
 void rsh_file_cleanup(file_t* file);
 int rsh_file_stat(file_t* file);
 int rsh_file_stat2(file_t* file, int use_lstat);
+int is_regular_file(const char* path);
+int if_file_exists(const char* path);
 
 #ifdef _WIN32
 # define get_file_tpath(file) ((file)->wpath)
