@@ -166,6 +166,7 @@ static int add_sums_to_file(const char* hash_file_path, char* dir_path, file_set
 		file_t file;
 		char *print_path = file_set_get(files_to_add, i)->filepath;
 		file.wpath = 0;
+		file.mode = 0;
 
 		if(dir_path[0] != '.' || dir_path[1] != 0) {
 			/* prepend the file path by directory path */
@@ -210,7 +211,6 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 {
 	DIR *dp;
 	struct dirent *de;
-	struct rsh_stat_struct st;
 
 	/* read directory */
 	dp = opendir(dir_path);
@@ -219,6 +219,8 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 	while((de = readdir(dp)) != NULL) {
 		char *path;
 		int res;
+		file_t file;
+		unsigned is_regular;
 
 		/* skip "." and ".." directories */
 		if(de->d_name[0] == '.' && (de->d_name[1] == 0 ||
@@ -228,13 +230,17 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 
 		/* retrieve stat info of the given file */
 		path = make_path(dir_path, de->d_name);
-		res = rsh_stat(path, &st);
+
+		rsh_file_init(&file, path, 1);
+		res = rsh_file_stat(&file);
+		is_regular = FILE_ISREG(&file);
+		rsh_file_cleanup(&file);
 		free(path);
 
 		/* skip unaccessible files and directories
 		 * as well as files not accepted by current file filter
 		 * and files already present in the crc_entries file set */
-		if(res < 0 || S_ISDIR(st.st_mode) ||
+		if(res < 0 || !is_regular ||
 				!file_mask_match(opt.files_accept, de->d_name) ||
 				file_set_exist(crc_entries, de->d_name)) {
 			continue;

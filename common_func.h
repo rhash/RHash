@@ -95,6 +95,8 @@ typedef struct file_t
 #define FILE_IFREG   0x04
 #define FILE_IFROOT  0x10
 #define FILE_IFSTDIN 0x20
+#define FILE_OPT_DONT_FREE_PATH  0x40
+
 #define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
 #define FILE_ISLNK(file) ((file)->mode & FILE_IFLNK)
 #define FILE_ISREG(file) ((file)->mode & FILE_IFREG)
@@ -108,6 +110,7 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
 
 void print_time(FILE *out, time_t time);
 void print_time64(FILE *out, uint64_t time);
+void rsh_file_init(file_t* file, const char* path, int reuse_path);
 void rsh_file_cleanup(file_t* file);
 int rsh_file_stat(file_t* file);
 int rsh_file_stat2(file_t* file, int use_lstat);

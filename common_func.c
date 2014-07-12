@@ -407,9 +407,24 @@ unsigned rhash_get_ticks(void)
  * File functions
  *=========================================================================*/
 
+void rsh_file_init(file_t* file, const char* path, int reuse_path)
+{
+	memset(file, 0, sizeof(*file));
+	if (reuse_path)
+	{
+		file->path = (char*)path;
+		file->mode = FILE_OPT_DONT_FREE_PATH;
+	} else {
+		file->path = rsh_strdup(path);
+	}
+}
+
 void rsh_file_cleanup(file_t* file)
 {
-	free(file->path);
+	if ((file->mode & FILE_OPT_DONT_FREE_PATH) == 0)
+	{
+		free(file->path);
+	}
 	file->path = NULL;
 
 #ifdef _WIN32
@@ -436,7 +451,8 @@ int rsh_file_statw(file_t* file)
 	if(GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
-		file->mode = (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : FILE_IFREG);
+		file->mode &= FILE_OPT_DONT_FREE_PATH;
+		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : FILE_IFREG);
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
@@ -484,7 +500,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 #else
 	struct rsh_stat_struct st;
 	int res = 0;
-	file->mode  = 0;
+	file->mode &= FILE_OPT_DONT_FREE_PATH;
 
 	do {
 		if(use_lstat) {

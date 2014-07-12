@@ -85,6 +85,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 					int failed;
 					if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName)) continue;
 
+					memset(&file, 0, sizeof(file));
 					file.wpath = make_pathw(parent, index + 1, d.cFileName);
 					if (!file.wpath) continue;
 
@@ -120,23 +121,23 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 		}
 		else
 		{
-			file_t file;
 			int failed;
-			file.wpath = path;
+			file_t file;
+			memset(&file, 0, sizeof(file));
 
 			/* if filepath is a dash string "-" */
 			if ((path[0] == L'-' && path[1] == L'\0'))
 			{
-				file.mtime = file.size = 0;
 				file.mode = FILE_IFSTDIN;
 				file.path = rsh_strdup("(stdin)");
 			} else {
-				file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
+				file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
 				if (failed) {
 					log_error(_("Can't convert the path to local encoding: %s\n"), file.path);
 					free(file.path);
 					continue;
 				}
+				file.wpath = path;
 				if (rsh_file_statw(&file) < 0) {
 					log_file_error(file.path);
 					free(file.path);
@@ -155,9 +156,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 	for(i = 0; i < count; i++)
 	{
 		file_t file;
-		file.path = rsh_strdup(paths[i]);
-		file.wpath = 0;
-		file.mtime = file.size = 0;
+		rsh_file_init(&file, paths[i], 0);
 
 		if (IS_DASH_STR(file.path))
 		{
@@ -165,7 +164,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 		}
 		else if (rsh_file_stat2(&file, USE_LSTAT) < 0) {
 			log_file_error(file.path);
-			free(file.path);
+			rsh_file_cleanup(&file);
 			continue;
 		}
 
@@ -383,7 +382,7 @@ int find_file(file_t* start_dir, file_search_data* data)
 
 		if((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
-			file.path = rsh_strdup(dir_path);
+			rsh_file_init(&file, dir_path, 1);
 			rsh_file_stat2(&file, USE_LSTAT);
 
 			/* check if we should skip the directory */
@@ -392,6 +391,7 @@ int find_file(file_t* start_dir, file_search_data* data)
 				continue;
 			}
 		}
+		rsh_file_cleanup(&file);
 
 		/* step into directory */
 		dp = opendir(dir_path);
@@ -406,6 +406,7 @@ int find_file(file_t* start_dir, file_search_data* data)
 			/* skip the "." and ".." directories */
 			if(IS_CURRENT_OR_PARENT_DIR(de->d_name)) continue;
 
+			file.mode = 0;
 			file.path = make_path(dir_path, de->d_name);
 			if(!file.path) continue;
 
@@ -447,6 +448,6 @@ int find_file(file_t* start_dir, file_search_data* data)
 		free(it[level--].dir_path);
 	}
 	free(it);
-	rsh_file_cleanup(&file);
+	assert(file.path == 0);
 	return 0;
 }
