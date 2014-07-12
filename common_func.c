@@ -20,6 +20,10 @@
 #include "win_utils.h"
 #include "parse_cmdline.h"
 
+/*=========================================================================
+ * String functions
+ *=========================================================================*/
+
 /**
  * Print a 0-terminated string representation of a 64-bit number to
  * a string buffer.
@@ -212,18 +216,9 @@ size_t strlen_utf8_c(const char *str)
 	return length;
 }
 
-/**
-* Exit the program, with restoring console state.
-*
-* @param code the program exit code
-*/
-void rhash_exit(int code)
-{
-	IF_WINDOWS(restore_console());
-	exit(code);
-}
-
-/* FILE FUNCTIONS */
+/*=========================================================================
+ * Path functions
+ *=========================================================================*/
 
 /**
  * Return filename without path.
@@ -319,6 +314,10 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
 	return (*a == *b);
 }
 
+/*=========================================================================
+ * Time printing functions
+ *=========================================================================*/
+
 /**
  * Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
  *
@@ -330,7 +329,7 @@ void print_time(FILE *out, time_t time)
 	struct tm *t = localtime(&time);
 	static struct tm zero_tm;
 	if(t == NULL) {
-		/* if strange day, then print `00:00.00 1900-01-00' */
+		/* if a strange day, then print `00:00.00 1900-01-00' */
 		t = &zero_tm;
 		t->tm_hour = t->tm_min = t->tm_sec =
 		t->tm_year = t->tm_mon = t->tm_mday = 0;
@@ -345,7 +344,9 @@ void print_time64(FILE *out, uint64_t time)
 }
 
 
-/* TIMER FUNCTIONS */
+/*=========================================================================
+ * Timer functions
+ *=========================================================================*/
 
 /**
  * Return real-value representing number of seconds
@@ -400,6 +401,24 @@ unsigned rhash_get_ticks(void)
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 #endif
+}
+
+/*=========================================================================
+ * File functions
+ *=========================================================================*/
+
+void rsh_file_cleanup(file_t* file)
+{
+	free(file->path);
+	file->path = NULL;
+
+#ifdef _WIN32
+	free(file->wpath);
+	file->wpath = NULL;
+#endif /* _WIN32 */
+
+	file->mtime = file->size = 0;
+	file->mode = 0;
 }
 
 #ifdef _WIN32
@@ -495,7 +514,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 }
 
 /**
- * Fill file information in the file_t structure.
+ * Read the file information like its type, size and modification date.
  *
  * @param file the file information
  * @return 0 on success, -1 on error
@@ -505,21 +524,24 @@ int rsh_file_stat(file_t* file)
 	return rsh_file_stat2(file, 0);
 }
 
-void rsh_file_cleanup(file_t* file)
+/*=========================================================================
+ * Custom program exit function
+ *=========================================================================*/
+
+/**
+* Exit the program, with restoring console state.
+*
+* @param code the program exit code
+*/
+void rhash_exit(int code)
 {
-	free(file->path);
-	file->path = NULL;
-
-#ifdef _WIN32
-	free(file->wpath);
-	file->wpath = NULL;
-#endif /* _WIN32 */
-
-	file->mtime = file->size = 0;
-	file->mode = 0;
+	IF_WINDOWS(restore_console());
+	exit(code);
 }
 
-/* program exit and error reporting functions */
+/*=========================================================================
+ * Error reporting functions
+ *=========================================================================*/
 
 static void report_error_default(const char* srcfile, int srcline,
 	const char* format, ...);
@@ -544,7 +566,9 @@ static void report_error_default(const char* srcfile, int srcline, const char* f
 	va_end(ap);
 }
 
-/* MEMORY FUNCTIONS */
+/*=========================================================================
+ * Memory functions
+ *=========================================================================*/
 
 /**
  * Allocates a buffer via malloc with reporting memory error to stderr.
@@ -653,7 +677,9 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 	return res;
 }
 
-/* vector functions */
+/*=========================================================================
+ * Containers
+ *=========================================================================*/
 
 /**
  * Allocate an empty vector.
@@ -768,7 +794,9 @@ void rsh_blocks_vector_destroy(blocks_vector_t* bvector)
 	rsh_vector_destroy(&bvector->blocks);
 }
 
-/* STRING BUFFER FUNCTIONS */
+/*=========================================================================
+ * String buffer functions
+ *=========================================================================*/
 
 /**
  * Allocate an empty string buffer.
