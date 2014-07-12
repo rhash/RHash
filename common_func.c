@@ -344,13 +344,53 @@ void print_time64(FILE *out, uint64_t time)
 	print_time(out, (time_t)time);
 }
 
+
+/* TIMER FUNCTIONS */
+
 /**
- * Return ticks in milliseconds for time intervals measurement.
- * This function should be not precise but the fastest one
- * to retrieve internal clock value.
+ * Return real-value representing number of seconds
+ * stored in the given timeval structure.
+ * The function is used with timers, when printing time statistics.
  *
- * @return ticks count in milliseconds
+ * @param delta time delta to be converted
+ * @return number of seconds
  */
+static double rsh_fsec(timedelta_t* timer)
+{
+#ifdef _WIN32
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+	return (double)*timer / freq.QuadPart;
+#else
+	return ((double)timer->tv_usec / 1000000.0) + timer->tv_sec;
+#endif
+}
+
+#ifdef _WIN32
+#include <windows.h>
+#define get_timedelta(delta) QueryPerformanceCounter((LARGE_INTEGER*)delta)
+#else
+#define get_timedelta(delta) gettimeofday(delta, NULL)
+#endif
+
+void rsh_timer_start(timedelta_t* timer)
+{
+	get_timedelta(timer);
+}
+
+double rsh_timer_stop(timedelta_t* timer)
+{
+	timedelta_t end;
+	get_timedelta(&end);
+#ifdef _WIN32
+	*timer = end - *timer;
+#else
+	timer->tv_sec  = end.tv_sec  - timer->tv_sec - (end.tv_usec >= timer->tv_usec ? 0 : 1);
+	timer->tv_usec = end.tv_usec + (end.tv_usec >= timer->tv_usec ? 0 : 1000000 ) - timer->tv_usec;
+#endif
+	return rsh_fsec(timer);
+}
+
 unsigned rhash_get_ticks(void)
 {
 #ifdef _WIN32

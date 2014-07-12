@@ -302,6 +302,22 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	return res;
 }
 
+void set_benchmark_cpu_affinity(void)
+{
+	DWORD_PTR dwProcessMask, dwSysMask, dwDesired;
+
+	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
+	if( GetProcessAffinityMask(GetCurrentProcess(), &dwProcessMask, &dwSysMask) ) {
+		dwDesired = dwSysMask & (dwProcessMask & ~1); /* remove the first processor */
+		dwDesired = (dwDesired ? dwDesired : dwSysMask & ~1);
+		if(dwDesired != 0) {
+			SetProcessAffinityMask(GetCurrentProcess(), dwDesired);
+		}
+	}
+}
+
 /* functions to setup/restore console */
 
 /**

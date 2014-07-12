@@ -139,7 +139,41 @@ int rsh_file_statw(file_t* file);
 
 typedef struct rsh_stat_struct rsh_stat_buf;
 
+/* time data and functions */
+
+/* portable timer definition */
+#ifdef _WIN32
+typedef unsigned long long timedelta_t;
+#else
+#include <sys/time.h> /* for timeval */
+typedef struct timeval timedelta_t;
+#endif
+
+/**
+ * Start a timer.
+ *
+ * @param timer timer to start
+ */
+void rsh_timer_start(timedelta_t* timer);
+
+/**
+ * Stop given timer.
+ *
+ * @param timer the timer to stop
+ * @return number of seconds timed
+ */
+double rsh_timer_stop(timedelta_t* timer);
+
+/**
+ * Return ticks in milliseconds for time intervals measurement.
+ * This function should be not precise but the fastest one
+ * to retrieve internal clock value.
+ *
+ * @return ticks count in milliseconds
+ */
 unsigned rhash_get_ticks(void);
+
+
 void  rhash_exit(int code);
 
 

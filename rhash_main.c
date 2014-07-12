@@ -15,7 +15,6 @@
 #include <assert.h>
 
 #include "librhash/rhash.h"
-#include "librhash/rhash_timing.h"
 #include "win_utils.h"
 #include "find_file.h"
 #include "calc_sums.h"
@@ -213,11 +212,11 @@ int main(int argc, char *argv[])
 
 	/* in benchmark mode just run benchmark and exit */
 	if(opt.mode & MODE_BENCHMARK) {
-		unsigned flags = (opt.flags & OPT_BENCH_RAW ? RHASH_BENCHMARK_CPB | RHASH_BENCHMARK_RAW : RHASH_BENCHMARK_CPB);
+		unsigned flags = (opt.flags & OPT_BENCH_RAW ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
 		if((opt.flags & OPT_BENCH_RAW) == 0) {
 			fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, VERSION);
 		}
-		rhash_run_benchmark(opt.sum_flags, flags, rhash_data.out);
+		run_benchmark(opt.sum_flags, flags);
 		rsh_exit(0);
 	}
 
@@ -272,7 +271,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* measure total processing time */
-	rhash_timer_start(&timer);
+	rsh_timer_start(&timer);
 	rhash_data.processed = 0;
 
 	/* process files */
@@ -295,7 +294,7 @@ int main(int argc, char *argv[])
 			!(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
 			rhash_data.processed > 1)
 		{
-			double time = rhash_timer_stop(&timer);
+			double time = rsh_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);
 		}
 	} else {

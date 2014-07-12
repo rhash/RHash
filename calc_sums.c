@@ -12,7 +12,6 @@
 #include <assert.h>
 
 #include "librhash/rhash.h"
-#include "librhash/rhash_timing.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "hash_print.h"
@@ -385,7 +384,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 
 	/* initialize percents output */
 	init_percents(&info);
-	rhash_timer_start(&timer);
+	rsh_timer_start(&timer);
 
 	if(info.sums_flags) {
 		/* calculate sums */
@@ -400,7 +399,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 		}
 	}
 
-	info.time = rhash_timer_stop(&timer);
+	info.time = rsh_timer_stop(&timer);
 	finish_percents(&info, res);
 
 	if(opt.flags & OPT_EMBED_CRC) {
@@ -457,13 +456,13 @@ static int verify_sums(struct file_info *info)
 
 	/* initialize percents output */
 	init_percents(info);
-	rhash_timer_start(&timer);
+	rsh_timer_start(&timer);
 
 	if(calc_sums(info) < 0) {
 		finish_percents(info, -1);
 		return -1;
 	}
-	info->time = rhash_timer_stop(&timer);
+	info->time = rsh_timer_stop(&timer);
 
 	if(rhash_data.interrupted) {
 		report_interrupted();
@@ -554,7 +553,7 @@ int check_hash_file(file_t* file, int chdir)
 	ralign = str_set(buf, '-', (pos < 80 ? 80 - (int)pos : 2));
 	fprintf(rhash_data.out, _("\n--( Verifying %s )%s\n"), hash_file_path, ralign);
 	fflush(rhash_data.out);
-	rhash_timer_start(&timer);
+	rsh_timer_start(&timer);
 
 	/* mark the directory part of the path, by setting the pos index */
 	if(chdir) {
@@ -641,7 +640,7 @@ int check_hash_file(file_t* file, int chdir)
 		}
 		free(path_without_ext);
 	}
-	time = rhash_timer_stop(&timer);
+	time = rsh_timer_stop(&timer);
 
 	fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
 	print_check_stats();
@@ -704,5 +703,124 @@ void print_sfv_banner(FILE* out)
 			PROGRAM_NAME, VERSION, (1900+t->tm_year), t->tm_mon+1,
 			t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
 		fprintf(out, _("; Written by Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n;\n"));
+	}
+}
+
+/* Benchmark functions */
+
+/**
+ * Hash a repeated message chunk by specified hash function.
+ *
+ * @param hash_id hash function identifier
+ * @param message a message chunk to hash
+ * @param msg_size message chunk size
+ * @param count number of chunks
+ * @param out computed hash
+ * @return 1 on success, 0 on error
+ */
+static int benchmark_hash_in_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
+{
+	int i;
+	struct rhash_context *context = rhash_init(hash_id);
+	if(!context) return 0;
+
+	/* process the repeated message buffer */
+	for(i = 0; i < count; i++) rhash_update(context, message, msg_size);
+	rhash_final(context, out);
+	rhash_free(context);
+	return 1;
+}
+
+#if defined(_MSC_VER)
+#define ALIGN_DATA(n) __declspec(align(n))
+#elif defined(__GNUC__)
+#define ALIGN_DATA(n) __attribute__((aligned (n)))
+#else
+#define ALIGN_DATA(n) /* do nothing */
+#endif
+
+void run_benchmark(unsigned hash_id, unsigned flags)
+{
+	unsigned char ALIGN_DATA(16) message[8192]; /* 8 KiB */
+	timedelta_t timer;
+	int i, j;
+	size_t sz_mb, msg_size;
+	double time, total_time = 0;
+	const int rounds = 4;
+	const char* hash_name;
+	unsigned char out[130];
+#ifdef HAVE_TSC
+	double cpb = 0;
+#endif /* HAVE_TSC */
+
+#ifdef _WIN32
+	set_benchmark_cpu_affinity(); /* set CPU affinity to improve test results */
+#endif
+
+	/* set message size for fast and slow hash functions */
+	msg_size = 1073741824 / 2;
+	if(hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
+		msg_size /= 8;
+	} else if(hash_id & (RHASH_GOST | RHASH_GOST_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
+		msg_size /= 2;
+	}
+	sz_mb = msg_size / (1 << 20); /* size in MiB */
+	hash_name = rhash_get_name(hash_id);
+	if(!hash_name) hash_name = ""; /* benchmarking several hashes*/
+
+	for(i = 0; i < (int)sizeof(message); i++) message[i] = i & 0xff;
+
+	for(j = 0; j < rounds; j++) {
+		rsh_timer_start(&timer);
+		benchmark_hash_in_loop(hash_id, message, sizeof(message), (int)(msg_size / sizeof(message)), out);
+
+		time = rsh_timer_stop(&timer);
+		total_time += time;
+
+		if((flags & BENCHMARK_RAW) == 0) {
+			fprintf(rhash_data.out, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
+			fflush(rhash_data.out);
+		}
+	}
+
+#if defined(HAVE_TSC)
+	/* measure the CPU "clocks per byte" speed */
+	if(flags & BENCHMARK_CPB) {
+		unsigned int c1 = -1, c2 = -1;
+		unsigned volatile long long cy0, cy1, cy2;
+		int msg_size = 128 * 1024;
+
+		/* make 200 tries */
+		for(i = 0; i < 200; i++) {
+			cy0 = read_tsc();
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			cy1 = read_tsc();
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			cy2 = read_tsc();
+
+			cy2 -= cy1;
+			cy1 -= cy0;
+			c1 = (unsigned int)(c1 > cy1 ? cy1 : c1);
+			c2 = (unsigned int)(c2 > cy2 ? cy2 : c2);
+		}
+		cpb = ((c2 - c1) + 1) / (double)msg_size;
+		/*printf("%8.2f", ((c2 - c1) + 1) / (double)msg_size);*/
+	}
+#endif /* HAVE_TSC */
+
+	if(flags & BENCHMARK_RAW) {
+		/* output result in a "raw" machine-readable format */
+		fprintf(rhash_data.out, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
+#if defined(HAVE_TSC)
+		if(flags & BENCHMARK_CPB) fprintf(rhash_data.out, "\t%.2f", cpb);
+#endif /* HAVE_TSC */
+		fprintf(rhash_data.out, "\n");
+	} else {
+		fprintf(rhash_data.out, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
+#if defined(HAVE_TSC)
+		if(flags & BENCHMARK_CPB) fprintf(rhash_data.out, ", CPB=%.2f", cpb);
+#endif /* HAVE_TSC */
+		fprintf(rhash_data.out, "\n");
 	}
 }

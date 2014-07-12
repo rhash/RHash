@@ -44,6 +44,21 @@ int rename_file_by_embeding_crc32(struct file_info *info);
 void print_sfv_banner(FILE* out);
 int print_sfv_header_line(FILE* out, file_t* file, const char* printpath);
 
+/* Benchmarking */
+
+/** Benchmarking flag: measure the CPU "clocks per byte" speed */
+#define BENCHMARK_CPB 1
+/** Benchmarking flag: print benchmark result in tab-delimited format */
+#define BENCHMARK_RAW 2
+
+/**
+ * Benchmark a hash algorithm.
+ *
+ * @param hash_id hash algorithm identifier
+ * @param flags benchmark flags, can contain BENCHMARK_CPB, BENCHMARK_RAW
+ */
+void run_benchmark(unsigned hash_id, unsigned flags);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "librhash/rhash_timing.h"
 #include "win_utils.h"
 #include "parse_cmdline.h"
 #include "output.h"
@@ -43,7 +42,7 @@ int update_hash_file(file_t* file)
 	crc_entries = file_set_new();
 	res = file_set_load_from_crc_file(crc_entries, file->path);
 
-	if(opt.flags & OPT_SPEED) rhash_timer_start(&timer);
+	if(opt.flags & OPT_SPEED) rsh_timer_start(&timer);
 	rhash_data.total_size = 0;
 	rhash_data.processed  = 0;
 
@@ -58,7 +57,7 @@ int update_hash_file(file_t* file)
 	file_set_free(crc_entries);
 
 	if(opt.flags & OPT_SPEED && rhash_data.processed > 0) {
-		double time = rhash_timer_stop(&timer);
+		double time = rsh_timer_stop(&timer);
 		print_time_stats(time, rhash_data.total_size, 1);
 	}
 

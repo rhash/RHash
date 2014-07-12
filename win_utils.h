@@ -28,7 +28,12 @@ int can_open_exclusive(const char* path);
 void set_errno_from_last_file_error(void);
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
 
+/**
+ * Set process priority and affinity to use any CPU but the first one,
+ * this improves benchmark results on a multi-core systems.
+ */
 void set_benchmark_cpu_affinity(void);
+
 void setup_console(void);
 void restore_console(void);
 
