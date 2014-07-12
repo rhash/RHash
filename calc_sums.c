@@ -722,10 +722,12 @@ static int benchmark_hash_in_loop(unsigned hash_id, const unsigned char* message
 {
 	int i;
 	struct rhash_context *context = rhash_init(hash_id);
-	if(!context) return 0;
+	if (!context) return 0;
 
 	/* process the repeated message buffer */
-	for(i = 0; i < count; i++) rhash_update(context, message, msg_size);
+	for (i = 0; i < count && !rhash_data.interrupted; i++) {
+		rhash_update(context, message, msg_size);
+	}
 	rhash_final(context, out);
 	rhash_free(context);
 	return 1;
@@ -759,25 +761,25 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 
 	/* set message size for fast and slow hash functions */
 	msg_size = 1073741824 / 2;
-	if(hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
+	if (hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
 		msg_size /= 8;
-	} else if(hash_id & (RHASH_GOST | RHASH_GOST_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
+	} else if (hash_id & (RHASH_GOST | RHASH_GOST_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
 		msg_size /= 2;
 	}
 	sz_mb = msg_size / (1 << 20); /* size in MiB */
 	hash_name = rhash_get_name(hash_id);
-	if(!hash_name) hash_name = ""; /* benchmarking several hashes*/
+	if (!hash_name) hash_name = ""; /* benchmarking several hashes*/
 
-	for(i = 0; i < (int)sizeof(message); i++) message[i] = i & 0xff;
+	for (i = 0; i < (int)sizeof(message); i++) message[i] = i & 0xff;
 
-	for(j = 0; j < rounds; j++) {
+	for (j = 0; j < rounds && !rhash_data.interrupted; j++) {
 		rsh_timer_start(&timer);
 		benchmark_hash_in_loop(hash_id, message, sizeof(message), (int)(msg_size / sizeof(message)), out);
 
 		time = rsh_timer_stop(&timer);
 		total_time += time;
 
-		if((flags & BENCHMARK_RAW) == 0) {
+		if ((flags & BENCHMARK_RAW) == 0 && !rhash_data.interrupted) {
 			fprintf(rhash_data.out, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
 			fflush(rhash_data.out);
 		}
@@ -785,13 +787,13 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 
 #if defined(HAVE_TSC)
 	/* measure the CPU "clocks per byte" speed */
-	if(flags & BENCHMARK_CPB) {
+	if ((flags & BENCHMARK_CPB) != 0 && !rhash_data.interrupted) {
 		unsigned int c1 = -1, c2 = -1;
 		unsigned volatile long long cy0, cy1, cy2;
 		int msg_size = 128 * 1024;
 
 		/* make 200 tries */
-		for(i = 0; i < 200; i++) {
+		for (i = 0; i < 200; i++) {
 			cy0 = read_tsc();
 			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
 			cy1 = read_tsc();
@@ -809,17 +811,23 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 	}
 #endif /* HAVE_TSC */
 
-	if(flags & BENCHMARK_RAW) {
+	if (rhash_data.interrupted) {
+		report_interrupted();
+		return;
+	}
+	
+
+	if (flags & BENCHMARK_RAW) {
 		/* output result in a "raw" machine-readable format */
 		fprintf(rhash_data.out, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(rhash_data.out, "\t%.2f", cpb);
+		if (flags & BENCHMARK_CPB) fprintf(rhash_data.out, "\t%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(rhash_data.out, "\n");
 	} else {
 		fprintf(rhash_data.out, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if(flags & BENCHMARK_CPB) fprintf(rhash_data.out, ", CPB=%.2f", cpb);
+		if (flags & BENCHMARK_CPB) fprintf(rhash_data.out, ", CPB=%.2f", cpb);
 #endif /* HAVE_TSC */
 		fprintf(rhash_data.out, "\n");
 	}

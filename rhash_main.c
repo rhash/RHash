@@ -217,7 +217,8 @@ int main(int argc, char *argv[])
 			fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, VERSION);
 		}
 		run_benchmark(opt.sum_flags, flags);
-		rsh_exit(0);
+		exit_code = (rhash_data.interrupted ? 3 : 0);
+		rsh_exit(exit_code);
 	}
 
 	if(opt.n_files == 0) {
