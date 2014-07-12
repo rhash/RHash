@@ -718,7 +718,7 @@ void print_sfv_banner(FILE* out)
  * @param out computed hash
  * @return 1 on success, 0 on error
  */
-static int benchmark_hash_in_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
+static int benchmark_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
 {
 	int i;
 	struct rhash_context *context = rhash_init(hash_id);
@@ -740,6 +740,25 @@ static int benchmark_hash_in_loop(unsigned hash_id, const unsigned char* message
 #else
 #define ALIGN_DATA(n) /* do nothing */
 #endif
+
+/* define read_tsc() if possible */
+#if defined(__i386__) || defined(_M_IX86) || \
+	defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
+
+#if defined( _MSC_VER ) /* if MS VC */
+# include <intrin.h>
+# pragma intrinsic( __rdtsc )
+# define read_tsc() __rdtsc()
+# define HAVE_TSC
+#elif defined( __GNUC__ ) /* if GCC */
+static uint64_t read_tsc(void) {
+	unsigned long lo, hi;
+	__asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
+	return (((uint64_t)hi) << 32) + lo;
+}
+# define HAVE_TSC
+#endif /* _MSC_VER, __GNUC__ */
+#endif /* x86/amd64 arch */
 
 void run_benchmark(unsigned hash_id, unsigned flags)
 {
@@ -774,7 +793,7 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 
 	for (j = 0; j < rounds && !rhash_data.interrupted; j++) {
 		rsh_timer_start(&timer);
-		benchmark_hash_in_loop(hash_id, message, sizeof(message), (int)(msg_size / sizeof(message)), out);
+		benchmark_loop(hash_id, message, sizeof(message), (int)(msg_size / sizeof(message)), out);
 
 		time = rsh_timer_stop(&timer);
 		total_time += time;
@@ -795,10 +814,10 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 		/* make 200 tries */
 		for (i = 0; i < 200; i++) {
 			cy0 = read_tsc();
-			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
 			cy1 = read_tsc();
-			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
-			hash_in_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
 			cy2 = read_tsc();
 
 			cy2 -= cy1;
@@ -807,7 +826,6 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 			c2 = (unsigned int)(c2 > cy2 ? cy2 : c2);
 		}
 		cpb = ((c2 - c1) + 1) / (double)msg_size;
-		/*printf("%8.2f", ((c2 - c1) + 1) / (double)msg_size);*/
 	}
 #endif /* HAVE_TSC */
 
@@ -815,19 +833,22 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 		report_interrupted();
 		return;
 	}
-	
 
 	if (flags & BENCHMARK_RAW) {
 		/* output result in a "raw" machine-readable format */
 		fprintf(rhash_data.out, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if (flags & BENCHMARK_CPB) fprintf(rhash_data.out, "\t%.2f", cpb);
+		if (flags & BENCHMARK_CPB) {
+			fprintf(rhash_data.out, "\t%.2f", cpb);
+		}
 #endif /* HAVE_TSC */
 		fprintf(rhash_data.out, "\n");
 	} else {
 		fprintf(rhash_data.out, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
-		if (flags & BENCHMARK_CPB) fprintf(rhash_data.out, ", CPB=%.2f", cpb);
+		if (flags & BENCHMARK_CPB) {
+			fprintf(rhash_data.out, ", CPB=%.2f", cpb);
+		}
 #endif /* HAVE_TSC */
 		fprintf(rhash_data.out, "\n");
 	}
