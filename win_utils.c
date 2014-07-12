@@ -150,26 +150,6 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
 }
 
 /**
- * stat() a file with encoding support.
- *
- * @param path the file path
- * @param buffer pointer to the buffer to store file properties to
- * @return 0 on success, -1 on error
- */
-int win_stat(const char* path, struct rsh_stat_struct *buffer)
-{
-	int i, res = -1;
-	for(i = 0; i < 2; i++) {
-		wchar_t* wpath = c2w(path, i);
-		if(wpath == NULL) continue;
-		res = clib_wstat(wpath, buffer);
-		free(wpath);
-		if(res == 0 || errno != ENOENT) break;
-	}
-	return res;
-}
-
-/**
  * Check if given file can be opened with exclusive write access.
  *
  * @param path path to the file

@@ -128,23 +128,6 @@ int rsh_file_statw(file_t* file);
 #endif
 
 
-/* rhash stat function */
-#if (__MSVCRT_VERSION__ >= 0x0601) || (_MSC_VER >= 1400)
-# define rsh_stat_struct __stat64
-# define rsh_stat(path, st) win_stat(path, st)
-# define clib_wstat(path, st) _wstat64(path, st)
-#elif defined(_WIN32) && (defined(__MSVCRT__) || defined(_MSC_VER))
-# define rsh_stat_struct _stati64
-# define rsh_stat(path, st) win_stat(path, st)
-# define clib_wstat(path, st) _wstati64(path, st)
-#else
-# define rsh_stat_struct stat
-# define rsh_stat(path, st) stat(path, st)
-/* # define clib_wstat(path, st) _wstat32(path, st) */
-#endif
-
-typedef struct rsh_stat_struct rsh_stat_buf;
-
 /* time data and functions */
 
 /* portable timer definition */

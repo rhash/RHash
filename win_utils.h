@@ -23,7 +23,6 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
 
 #define fopen(path, mode) win_fopen_ex(path, mode, 0)
 #define win_fopen_bin(path, mode) win_fopen_ex(path, mode, 1)
-int win_stat(const char* path, struct rsh_stat_struct *buffer);
 int can_open_exclusive(const char* path);
 void set_errno_from_last_file_error(void);
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
