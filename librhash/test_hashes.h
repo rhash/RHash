@@ -78,18 +78,6 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __LP64__
 	" __LP64__"
 #endif
-#ifdef __x86_64
-	" __x86_64"
-#endif
-#ifdef __x86_64__
-	" __x86_64__"
-#endif
-#ifdef _M_AMD64
-	" _M_AMD64"
-#endif
-#ifdef _M_X64
-	" _M_X64"
-#endif
 #ifdef CPU_X64
 	" CPU_X64"
 #endif
