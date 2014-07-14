@@ -319,17 +319,19 @@ static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_st
 	}
 
 	if (size >= 0) {
-		for(; size > 0; size -= 8192) {
-			int res = php_stream_read(stream, data, (size < 8192 ? size : 8192));
-			if (res < 0) return FAILURE;
-			rhash_update(context, data, res);
+		while(size > 0 && !php_stream_eof(stream)) {
+			int length = php_stream_read(stream, data, (size < 8192 ? size : 8192));
+			if (!length) return FAILURE;
+			size -= length;
+			rhash_update(context, data, length);
 		}
 	} else {
-		int res;
-		while((res = php_stream_read(stream, data, 8192)) > 0) {
-			rhash_update(context, data, res);
+		int length;
+		while (!php_stream_eof(stream)) {
+			int length = php_stream_read(stream, data, 8192);
+			if (!length) return FAILURE;
+			rhash_update(context, data, length);
 		}
-		if (res < 0) return FAILURE;
 	}
 	return SUCCESS;
 }
