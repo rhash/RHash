@@ -293,6 +293,7 @@ PHP_FUNCTION(rhash_msg) {
 		RETURN_NULL();
 	}
 	if (!hash_id) hash_id = RHASH_ALL_HASHES;
+
 	if (!(context = rhash_init(hash_id))) {
 		RETURN_NULL();
 	}
@@ -304,24 +305,23 @@ PHP_FUNCTION(rhash_msg) {
 	RETURN_STRINGL(buffer, length, 1);
 }
 
-/* {{{ _php_rhash_stream(RHash this_class, context, stream, start, size)
-   Calculates hash functions for a seekable stream, returns true on success, false on error */
-static void _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_stream *stream, long start, long size)
+/* Calculate hash for a php stream. Returns SUCCESS or FAILURE. */
+static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_stream *stream, long start, long size)
 {
 	char data[8192];
 	if (context == NULL) {
 		rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
-		if ((context = obj->rhash) == NULL) RETURN_FALSE;
+		if ((context = obj->rhash) == NULL) return FAILURE;
 	}
 
 	if (start >= 0) {
-		if(php_stream_seek(stream, start, SEEK_SET) < 0) RETURN_FALSE;
+		if(php_stream_seek(stream, start, SEEK_SET) < 0) return FAILURE;
 	}
 
 	if (size >= 0) {
 		for(; size > 0; size -= 8192) {
 			int res = php_stream_read(stream, data, (size < 8192 ? size : 8192));
-			if (res < 0) RETURN_FALSE;
+			if (res < 0) return FAILURE;
 			rhash_update(context, data, res);
 		}
 	} else {
@@ -329,26 +329,27 @@ static void _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_s
 		while((res = php_stream_read(stream, data, 8192)) > 0) {
 			rhash_update(context, data, res);
 		}
-		if (res < 0) RETURN_FALSE;
+		if (res < 0) return FAILURE;
 	}
-	RETURN_TRUE;
+	return SUCCESS;
 }
 /* }}} */
 
-/* {{{ _php_rhash_file(RHash this_class, context, path, start, size)
-   Calculates hash functions for a file */
-static void _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* path, long start, long size)
+/* Calculate hash of the given file or its part. Returns SUCCESS or FAILURE. */
+static int _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* path, long start, long size)
 {
+	int res;
 	php_stream *stream = php_stream_open_wrapper(path, "rb", 0, 0);
-	if (stream == NULL) RETURN_FALSE;
-	/* note: _php_rhash_stream sets return_value to BOOL */
-	_php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, stream, start, size);
+	if (stream == NULL) return FAILURE;
+
+	res = _php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, stream, start, size);
 	php_stream_close(stream);
+	return res;
 }
 /* }}} */
 
 /* {{{ proto string rhash_msg(int hash_id, string path)
-   Computes and returns message digest for a file */
+   Computes and returns message digest for a file. Returns NULL on failure. */
 PHP_FUNCTION(rhash_file) {
 	long hash_id = 0;
 	char *path;
@@ -356,24 +357,29 @@ PHP_FUNCTION(rhash_file) {
 	rhash context = NULL;
 	char buffer[130];
 	int buffer_length;
+	int res;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
-		RETURN_FALSE;
+		RETURN_NULL();
 	}
 	if (!hash_id || !(context = rhash_init(hash_id))) {
-		RETURN_FALSE;
+		RETURN_NULL()
 	}
-	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
+	res = _php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
 	rhash_final(context, 0);
 	buffer_length = rhash_print(buffer, context, hash_id, 0);
 	rhash_free(context);
-	if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value)) return;
+
+	/* return NULL on failure */
+	if (res != SUCCESS) {
+		RETURN_NULL();
+	}
 	RETURN_STRINGL(buffer, buffer_length, 1);
 }
 /* }}} */
 
 /* {{{ proto string rhash_magnet(int hash_id, string path)
-   Computes and returns magnet link for a file */
+   Computes and returns magnet link for a file. Returns NULL on failure. */
 PHP_FUNCTION(rhash_magnet) {
 	long hash_id = 0;
 	char *path;
@@ -381,6 +387,7 @@ PHP_FUNCTION(rhash_magnet) {
 	rhash context = NULL;
 	char* buffer;
 	size_t buffer_size;
+	int res;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
 		RETURN_NULL();
@@ -388,15 +395,15 @@ PHP_FUNCTION(rhash_magnet) {
 	if (!hash_id || !(context = rhash_init(hash_id))) {
 		RETURN_NULL();
 	}
-	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
-	if (Z_TYPE_P(return_value) == IS_BOOL && !Z_BVAL_P(return_value)) return;
+	res = _php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
+	if (res != SUCCESS) RETURN_NULL();
 	rhash_final(context, 0);
 
 	buffer_size = rhash_print_magnet(0, path, context, hash_id, RHPR_FILESIZE);
 	buffer = (char*)emalloc(buffer_size);
 	if (!buffer) {
 		rhash_free(context);
-		RETURN_FALSE;
+		RETURN_NULL();
 	}
 
 	rhash_print_magnet(buffer, path, context, hash_id, RHPR_FILESIZE);
@@ -489,6 +496,7 @@ PHP_METHOD(RHash, update)
 PHP_METHOD(RHash, update_stream)
 {
 	zval *handle;
+	int res;
 	long start = -1, size = -1;
 	php_stream *stream;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|ll", &handle, &start, &size) == FAILURE) {
@@ -496,7 +504,8 @@ PHP_METHOD(RHash, update_stream)
 	}
 	php_stream_from_zval_no_verify(stream, &handle);
 	if (stream == NULL) RETURN_FALSE;
-	_php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, stream, start, size);
+	res = _php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, stream, start, size);
+	RETURN_BOOL(res == SUCCESS);
 }
 /* }}} */
 
@@ -507,10 +516,11 @@ PHP_METHOD(RHash, update_file)
 	char *path;
 	int len;
 	long start = -1, size = -1;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|ll", &path, &len, &start, &size) == FAILURE) {
-		RETURN_FALSE;
+	int res = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|ll", &path, &len, &start, &size);
+	if (res == SUCCESS) {
+		res = _php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, path, start, size);
 	}
-	_php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, path, start, size);
+	RETURN_BOOL(res == SUCCESS);
 }
 /* }}} */
 
