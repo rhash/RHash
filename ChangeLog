@@ -1,3 +1,6 @@
+Wed Jul 16 2014 Aleksey
+	* changed the `-p' format names of sha* families, see manpage
+
 Sun Jul 13 2014 Aleksey
 	* Ctrl-C now interrupts benchmarking
 

@@ -446,18 +446,33 @@ void init_hash_info_table(void)
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
 
-	for(index = 0, bit = 1; bit <= fullmask; index++, bit = bit << 1, info++) {
+	for (index = 0, bit = 1; bit <= fullmask; index++, bit = bit << 1, info++) {
 		const char *p;
 		char *e, *d;
 
 		info->short_char = ((bit & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
 
-		info->name = (bit & RHASH_ALL_HASHES ? rhash_get_name(bit) : "ED2K_LINK");
+		info->name = (bit & RHASH_ALL_HASHES ? rhash_get_name(bit) : "ED2K-LINK");
+		assert(strlen(info->name) < 15);
+		p = info->name;
 		d = info->short_name;
 		e = info->short_name + 15; /* buffer overflow protection */
-		assert(strlen(info->name) < (size_t)(e-d));
-		for(p = info->name; *p && d < e; p++) if(*p != '-' || p[1] >= '9') *(d++) = (*p | 0x20);
+
+		if (memcmp(info->name, "SHA", 3) == 0) {
+			strcpy(d, p);
+			for (; *d && d < e; d++) {
+				if ('A' <= *d && *d <= 'Z') {
+					*d |= 0x20;
+				}
+			}
+		} else {
+			for (; *p && d < e; p++) {
+				if (*p != '-' || p[1] >= '9') {
+					*(d++) = (*p | 0x20);
+				}
+			}
+		}
 		*d = 0;
 	}
 }

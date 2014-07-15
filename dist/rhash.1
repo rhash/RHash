@@ -248,10 +248,12 @@ RIPEMD-160 hash.
 TTH sum.
 .IP "%w or %W"
 Whirlpool hash.
-.IP "%{md4}, %{sha224}, %{sha256}, %{sha384}, %{sha512}, %{tiger}, %{btih}, %{gost\-cryptopro}, %{has160}, %{snefru128}, %{snefru256}, %{edon\-r256}, %{edon\-r512}"
+.IP "%{md4}, %{sha-224}, %{sha-256}, %{sha-384}, %{sha-512}, %{sha3-224},\
+ %{sha3-256}, %{sha3-384}, %{sha3-512} %{tiger}, %{btih}, %{gost\-cryptopro},\
+ %{has160}, %{snefru128}, %{snefru256}, %{edon\-r256}, %{edon\-r512}"
 Print specified hash sum. Actually the %{<hash sum>} directive can print any
 supported hash sum. If a hash sum name starts with a capital letter then the
-hash is printed in uppercase, e.g. %{TTH}, %{Sha512}.
+hash is printed in uppercase, e.g. %{TTH}, %{Sha-512}.
 .IP "%x<hash>, %b<hash>, %B<hash>, %@<hash>"
 Use one of these prefixes to output a hash sum in hexadecimal, base32,
 base64 or raw (binary) format respectively, e.g. %b{md4}, %BH or %xT.
