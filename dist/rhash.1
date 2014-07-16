@@ -268,12 +268,14 @@ The config file consists of lines formated as
 variable = value
 .RE
 
-where the 
-.I variable can be a text part of any command line option, like
-.I magnet, 
-.I printf, 
+where the
+.I variable
+can be a name of any command line option, like
+.I magnet,
+.I printf,
 .I percents, etc.
-Simple boolean values can be set using `1', `on' or `yes'.
+A boolean variable can be set to true by a value `on', `yes' or `true',
+any other value sets the variable to false.
 
 Empty lines and lines starting with `#' or `;' are ignored.
 

@@ -564,7 +564,7 @@ static int read_config(void)
 			rsh_vector_add_ptr(opt.mem, (value = rsh_strdup(value)));;
 		} else {
 			/* possible boolean values for a config file variable */
-			static const char* strings[] = {"1", "on", "yes", 0};
+			static const char* strings[] = { "on", "yes", "true", 0 };
 			const char** cmp;
 			for(cmp = strings; *cmp && strcmp(value, *cmp); cmp++);
 			if(*cmp == 0) continue;

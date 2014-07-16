@@ -1,5 +1,6 @@
 Wed Jul 16 2014 Aleksey
 	* changed the `-p' format names of sha* families, see manpage
+	* set a boolean in config to true by a string `true', `on' or `yes'
 
 Sun Jul 13 2014 Aleksey
 	* Ctrl-C now interrupts benchmarking
