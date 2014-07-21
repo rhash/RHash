@@ -30,6 +30,7 @@ SYMLINKS = sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash ed2
 SPECFILE = dist/rhash.spec
 LIN_DIST_FILES = Makefile ChangeLog INSTALL COPYING README \
   $(SPECFILE) $(SPECFILE).in $(SOURCES) $(HEADERS) tests/test_rhash.sh \
+  tests/test1K.data tests/test512K.data \
   dist/rhash.1 dist/rhash.1.win.sed dist/rhash.1.html
 WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
 WIN_SRC_FILES  = win32/dirent.h win32/stdint.h win32/unistd.h win32/platform-dependent.h \
