@@ -1,3 +1,6 @@
+Mon Jul 21 2014 Tsukasa Oi
+	* fixed test_rhash.sh script failing on the en_US.UTF-8 locale
+
 Wed Jul 16 2014 Aleksey
 	* changed the `-p' format names of sha* families, see manpage
 	* set a boolean in config to true by a string `true', `on' or `yes'
