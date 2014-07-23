@@ -2,6 +2,12 @@
 #ifndef RHASH_TIMING_H
 #define RHASH_TIMING_H
 
+/****************************************************************************
+* Warning: all functions in this file are deprecated and will be removed
+* from the library in the future. They are still exported for backward
+* compatibility.
+****************************************************************************/
+
 #ifdef __cplusplus
 extern "C" {
 #endif

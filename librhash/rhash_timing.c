@@ -33,11 +33,9 @@
 # define read_tsc() __rdtsc()
 # define HAVE_TSC
 #elif defined( __GNUC__ ) /* if GCC */
-/*static inline volatile uint64_t read_tsc(void) {*/
 static uint64_t read_tsc(void) {
 	unsigned long lo, hi;
 	__asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
-	/*__asm volatile("cpuid; rdtsc" : "=a" (lo), "=d" (hi) : "ebx", "ecx"); */
 	return (((uint64_t)hi) << 32) + lo;
 }
 # define HAVE_TSC
@@ -59,6 +57,8 @@ static uint64_t read_tsc(void) {
  * stored in the given timeval structure.
  * The function is used with timers, when printing time statistics.
  *
+ * @deprecated This function shall be removed soon.
+ *
  * @param delta time delta to be converted
  * @return number of seconds
  */
@@ -76,6 +76,9 @@ static double fsec(timedelta_t* timer)
 /**
  * Start a timer.
  *
+ * @deprecated This function shall be removed soon, since
+ * it is not related to the hashing library main functionality.
+ *
  * @param timer timer to start
  */
 void rhash_timer_start(timedelta_t* timer)
@@ -85,6 +88,9 @@ void rhash_timer_start(timedelta_t* timer)
 
 /**
  * Stop given timer.
+ *
+ * @deprecated This function shall be removed soon, since
+ * it is not related to the hashing library main functionality.
  *
  * @param timer the timer to stop
  * @return number of seconds timed
@@ -106,6 +112,8 @@ double rhash_timer_stop(timedelta_t* timer)
 /**
  * Set process priority and affinity to use all cpu's but the first one.
  * This improves benchmark results on a multi-cpu systems.
+ *
+ * @deprecated This function shall be removed soon.
  */
 static void benchmark_cpu_init(void)
 {
@@ -124,10 +132,10 @@ static void benchmark_cpu_init(void)
 }
 #endif
 
-/* #define BENCHMARK_HASH_SIMULTANEOUSLY - should support in future */
-
 /**
  * Hash a repeated message chunk by specified hash function.
+ *
+ * @deprecated This function shall be removed soon.
  *
  * @param hash_id hash function identifier
  * @param message a message chunk to hash
@@ -151,6 +159,9 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
 
 /**
  * Benchmark a hash algorithm.
+ *
+ * @deprecated This function shall be removed soon, since
+ * it is not related to the hashing library main functionality.
  *
  * @param hash_id hash algorithm identifier
  * @param flags benchmark flags, can be RHASH_BENCHMARK_QUIET and RHASH_BENCHMARK_CPB
@@ -184,13 +195,6 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	sz_mb = msg_size / (1 << 20); /* size in MiB */
 	hash_name = rhash_get_name(hash_id);
 	if (!hash_name) hash_name = ""; /* benchmarking several hashes*/
-
-	/*fprintf(output, " benchmark:");
-	for (i = 1; i & RHASH_ALL_HASHES; i <<= 1) {
-		if (i & opt.sum_flags) printf(" %s", rhash_get_name(i));
-	}
-	fprintf(output, "\n");
-	fflush(output);*/
 
 	for (i = 0; i < (int)sizeof(message); i++) message[i] = i & 0xff;
 
@@ -229,7 +233,6 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 			c2 = (unsigned int)(c2 > cy2 ? cy2 : c2);
 		}
 		cpb = ((c2 - c1) + 1) / (double)msg_size;
-		/*printf("%8.2f", ((c2 - c1) + 1) / (double)msg_size);*/
 	}
 #endif /* HAVE_TSC */
 
