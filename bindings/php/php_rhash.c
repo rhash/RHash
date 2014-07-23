@@ -315,11 +315,11 @@ static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_st
 	}
 
 	if (start >= 0) {
-		if(php_stream_seek(stream, start, SEEK_SET) < 0) return FAILURE;
+		if (php_stream_seek(stream, start, SEEK_SET) < 0) return FAILURE;
 	}
 
 	if (size >= 0) {
-		while(size > 0 && !php_stream_eof(stream)) {
+		while (size > 0 && !php_stream_eof(stream)) {
 			int length = php_stream_read(stream, data, (size < 8192 ? size : 8192));
 			if (!length) return FAILURE;
 			size -= length;
