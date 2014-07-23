@@ -155,7 +155,7 @@ static void rhash_sha512_process_block(uint64_t hash[8], uint64_t block[16])
 	ROUND_1_16(C, D, E, F, G, H, A, B, 14);
 	ROUND_1_16(B, C, D, E, F, G, H, A, 15);
 
-	for(i = 16, k = &rhash_k512[16]; i < 80; i += 16, k += 16) {
+	for (i = 16, k = &rhash_k512[16]; i < 80; i += 16, k += 16) {
 		ROUND_17_80(A, B, C, D, E, F, G, H,  0);
 		ROUND_17_80(H, A, B, C, D, E, F, G,  1);
 		ROUND_17_80(G, H, A, B, C, D, E, F,  2);
@@ -192,19 +192,19 @@ void rhash_sha512_update(sha512_ctx *ctx, const unsigned char *msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = sha512_block_size - index;
 		memcpy((char*)ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_sha512_process_block(ctx->hash, ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= sha512_block_size) {
+	while (size >= sha512_block_size) {
 		uint64_t* aligned_message_block;
-		if(IS_ALIGNED_64(msg)) {
+		if (IS_ALIGNED_64(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (uint64_t*)msg;
@@ -217,7 +217,7 @@ void rhash_sha512_update(sha512_ctx *ctx, const unsigned char *msg, size_t size)
 		msg  += sha512_block_size;
 		size -= sha512_block_size;
 	}
-	if(size) {
+	if (size) {
 		memcpy(ctx->message, msg, size); /* save leftovers */
 	}
 }
@@ -240,16 +240,16 @@ void rhash_sha512_final(sha512_ctx *ctx, unsigned char* result)
 	ctx->message[index++] ^= le2me_64( I64(0x80) << shift );
 
 	/* if no room left in the message to store 128-bit message length */
-	if(index >= 15) {
-		if(index == 15) ctx->message[index] = 0;
+	if (index >= 15) {
+		if (index == 15) ctx->message[index] = 0;
 		rhash_sha512_process_block(ctx->hash, ctx->message);
 		index = 0;
 	}
-	while(index < 15) {
+	while (index < 15) {
 		ctx->message[index++] = 0;
 	}
 	ctx->message[15] = be2me_64(ctx->length << 3);
 	rhash_sha512_process_block(ctx->hash, ctx->message);
 
-	if(result) be64_copy(result, 0, ctx->hash, ctx->digest_length);
+	if (result) be64_copy(result, 0, ctx->hash, ctx->digest_length);
 }

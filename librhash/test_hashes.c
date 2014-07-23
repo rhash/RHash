@@ -455,7 +455,7 @@ static void log_message(char* format, ...)
 	va_start(vl, format);
 	vsprintf(str, format, vl);
 	g_msg = (char*)realloc(g_msg, (g_msg ? strlen(g_msg) : 0) + strlen(str) + 3);
-	if(add_nl) strcat(g_msg, "\r\n");
+	if (add_nl) strcat(g_msg, "\r\n");
 	strcat(g_msg, str);
 #endif
 	va_end(vl);
@@ -480,12 +480,12 @@ static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size,
 
 	ctx = rhash_init(hash_id);
 
-	if((hash_id & RHASH_BTIH) && set_filename) {
+	if ((hash_id & RHASH_BTIH) && set_filename) {
 		unsigned long long total_size = msg_size;
 		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
 	}
 
-	for(left = msg_size; left > 0; left -= size) {
+	for (left = msg_size; left > 0; left -= size) {
 		size = (left > chunk_size ? chunk_size : left);
 		rhash_update(ctx, (const unsigned char*)chunk, size);
 	}
@@ -511,9 +511,9 @@ static void assert_hash_long_msg(unsigned hash_id, const char* msg_chunk, size_t
 {
 	char* result;
 	result = repeat_hash(hash_id, msg_chunk, chunk_size, msg_size, set_filename);
-	if(strcmp(result, hash) != 0) {
+	if (strcmp(result, hash) != 0) {
 		const char* hash_name = rhash_get_name(hash_id); /* the hash function name */
-		if(msg_name) log_message("failed: %s(%s) = %s, expected %s\n", hash_name, msg_name, result, hash);
+		if (msg_name) log_message("failed: %s(%s) = %s, expected %s\n", hash_name, msg_name, result, hash);
 		else log_message("failed: %s(\"%s\") = %s, expected %s\n", hash_name, msg_chunk, result, hash);
 		g_errors++;
 	}
@@ -562,7 +562,7 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
 	char ALIGN_ATTR(16) msg_chunk[8192]; /* 8 KiB */
 	char msg_name[20];
 	memset(msg_chunk, ch, 8192);
-	if(ch >= 32) sprintf(msg_name, "\"%c\"x%d", ch, (int)msg_size);
+	if (ch >= 32) sprintf(msg_name, "\"%c\"x%d", ch, (int)msg_size);
 	else sprintf(msg_name, "\"\\%o\"x%d", (unsigned)(unsigned char)ch, (int)msg_size);
 	assert_hash_long_msg(hash_id, msg_chunk, 8192, msg_size, hash, msg_name, set_filename);
 }
@@ -580,7 +580,7 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
  */
 static void test_known_strings_pairs(unsigned hash_id, const char** ptr, int set_filename)
 {
-	for(; ptr[0] && ptr[1]; ptr += 2) {
+	for (; ptr[0] && ptr[1]; ptr += 2) {
 		assert_hash(hash_id, ptr[0], ptr[1], set_filename);
 	}
 }
@@ -593,8 +593,8 @@ static void test_known_strings_pairs(unsigned hash_id, const char** ptr, int set
 static void test_known_strings(unsigned hash_id)
 {
 	int i;
-	for(i = 0; known_strings[i].tests != 0; i++) {
-		if(hash_id == known_strings[i].hash_id) {
+	for (i = 0; known_strings[i].tests != 0; i++) {
+		if (hash_id == known_strings[i].hash_id) {
 			int set_filename = (known_strings[i].tests == btih_with_filename_tests);
 			test_known_strings_pairs(hash_id, known_strings[i].tests, set_filename);
 			break;
@@ -608,7 +608,7 @@ static void test_known_strings(unsigned hash_id)
 static void test_all_known_strings(void)
 {
 	int i;
-	for(i = 0; known_strings[i].tests != 0; i++) {
+	for (i = 0; known_strings[i].tests != 0; i++) {
 		int set_filename = (known_strings[i].tests == btih_with_filename_tests);
 		test_known_strings_pairs(known_strings[i].hash_id, known_strings[i].tests, set_filename);
 	}
@@ -660,7 +660,7 @@ static void test_long_strings(void)
 	};
 
 	/* test all algorithms on 1,000,000 characters of 'a' */
-	for(count = 0; count < (sizeof(tests) / sizeof(id_to_hash_t)); count++) {
+	for (count = 0; count < (sizeof(tests) / sizeof(id_to_hash_t)); count++) {
 		int set_filename = (tests[count].hash_id == RHASH_BTIH);
 		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash, set_filename);
 	}
@@ -700,14 +700,14 @@ static void test_results_consistency(void)
 	char res2[70];
 	unsigned i, hash_id;
 
-	for(i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
+	for (i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
 		digest_size = rhash_get_digest_size(hash_id);
 		assert(digest_size < 70);
 
 		ctx = rhash_init(hash_id);
 
 #ifdef USE_BTIH_WITH_TEST_FILENAME
-		if((hash_id & RHASH_BTIH) != 0) {
+		if ((hash_id & RHASH_BTIH) != 0) {
 			unsigned long long total_size = msg_size;
 			rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
 		}
@@ -718,7 +718,7 @@ static void test_results_consistency(void)
 		rhash_print(res2, ctx, hash_id, RHPR_RAW);
 		rhash_free(ctx);
 
-		if(memcmp(res1, res2, digest_size) != 0) {
+		if (memcmp(res1, res2, digest_size) != 0) {
 			log_message("failed: inconsistent %s(\"%s\") hash results\n", rhash_get_name(hash_id), msg);
 		}
 	}
@@ -732,22 +732,22 @@ static void test_alignment(void)
 	int i, start, hash_id, alignment_size;
 
 	/* loop by sums */
-	for(i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
+	for (i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
 		char expected_hash[130];
 		assert(rhash_get_digest_size(hash_id) < (int)sizeof(expected_hash));
 
 		alignment_size = (hash_id & (RHASH_TTH | RHASH_TIGER | RHASH_WHIRLPOOL | RHASH_SHA512) ? 8 : 4);
 
 		/* start message with different alignment */
-		for(start = 0; start < alignment_size; start++) {
+		for (start = 0; start < alignment_size; start++) {
 			char message[30];
 			int j, msg_length = 11 + alignment_size;
 
 			/* fill the buffer fifth shifted letter sequence */
-			for(j = 0; j < msg_length; j++) message[start + j] = 'a' + j;
+			for (j = 0; j < msg_length; j++) message[start + j] = 'a' + j;
 			message[start + j] = 0;
 
-			if(start == 0) {
+			if (start == 0) {
 				/* save original hash value */
 				strcpy(expected_hash, hash_message(hash_id, message + start, 0));
 			} else {
@@ -765,7 +765,7 @@ static void test_alignment(void)
 static void test_endianness(void)
 {
 	unsigned tmp = 1;
-	if(*(char*)&tmp == IS_BIG_ENDIAN) {
+	if (*(char*)&tmp == IS_BIG_ENDIAN) {
 		log_message("error: wrong endianness detected at compile time\n");
 		g_errors++;
 	}
@@ -799,15 +799,15 @@ static void assert_magnet(const char* expected,
 	flags &= ~TEST_PATH;
 	size = rhash_print_magnet(out, path, ctx, mask, flags);
 
-	if(expected && strcmp(expected, out) != 0) {
+	if (expected && strcmp(expected, out) != 0) {
 		log_message("error: \"%s\" != \"%s\"\n", expected, out);
 		g_errors++;
 	} else {
 		size_t size2 = strlen(out) + 1;
-		if(size != size2) {
+		if (size != size2) {
 			log_message("error: rhash_print_magnet returns wrong length %d != %d for \"%s\"\n", (int)size, (int)size2, out);
 			g_errors++;
-		} else if(size != (size2 = rhash_print_magnet(NULL, path, ctx, mask, flags))) {
+		} else if (size != (size2 = rhash_print_magnet(NULL, path, ctx, mask, flags))) {
 			log_message("error: rhash_print_magnet(NULL, ...) returns wrong length %d != %d for \"%s\"\n", (int)size2, (int)size, out);
 			g_errors++;
 		}
@@ -831,7 +831,7 @@ static void test_magnet(void)
 		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
 
 	/* verify length calculation for all hashes */
-	for(bit = 1; bit < RHASH_ALL_HASHES; bit <<= 1) {
+	for (bit = 1; bit < RHASH_ALL_HASHES; bit <<= 1) {
 		assert_magnet(NULL, ctx, bit, RHPR_FILESIZE | RHPR_NO_MAGNET);
 	}
 
@@ -850,12 +850,12 @@ static unsigned find_hash(const char* name)
 	unsigned hash_id;
 	int i;
 
-	if(strlen(name) > (sizeof(buf) - 1)) return 0;
-	for(i = 0; name[i]; i++) buf[i] = toupper(name[i]);
+	if (strlen(name) > (sizeof(buf) - 1)) return 0;
+	for (i = 0; name[i]; i++) buf[i] = toupper(name[i]);
 	buf[i] = 0;
 
-	for(hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
-		if(strcmp(buf, rhash_get_name(hash_id)) == 0) return hash_id;
+	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
+		if (strcmp(buf, rhash_get_name(hash_id)) == 0) return hash_id;
 	}
 	return 0;
 }
@@ -880,17 +880,17 @@ int main(int argc, char *argv[])
 #endif
 
 	test_generic_assumptions();
-	if(argc > 1) {
-		if(strcmp(argv[1], "--speed") == 0) {
+	if (argc > 1) {
+		if (strcmp(argv[1], "--speed") == 0) {
 			unsigned hash_id = (argc > 2 ? find_hash(argv[2]) : RHASH_SHA1);
-			if(hash_id == 0) {
+			if (hash_id == 0) {
 				fprintf(stderr, "error: unknown hash_id: %s\n", argv[2]);
 				return 1;
 			}
 			test_known_strings(hash_id);
 
 			rhash_run_benchmark(hash_id, 0, stdout);
-		} else if(strcmp(argv[1], "--flags") == 0) {
+		} else if (strcmp(argv[1], "--flags") == 0) {
 			printf("%s", compiler_flags);
 		} else {
 			printf("Options: [--speed [HASH_NAME]| --flags]\n");
@@ -901,11 +901,11 @@ int main(int argc, char *argv[])
 		test_alignment();
 		test_results_consistency();
 		test_magnet();
-		if(g_errors == 0) printf("All sums are working properly!\n");
+		if (g_errors == 0) printf("All sums are working properly!\n");
 		fflush(stdout);
 	}
 
-	if(g_errors > 0) printf("%s", compiler_flags);
+	if (g_errors > 0) printf("%s", compiler_flags);
 
 	return (g_errors == 0 ? 0 : 1);
 }

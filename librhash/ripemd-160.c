@@ -273,19 +273,19 @@ void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		unsigned left = ripemd160_block_size - index;
 		le32_copy((char*)ctx->message, index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_ripemd160_process_block(ctx->hash, (unsigned*)ctx->message);
 		msg += left;
 		size -= left;
 	}
-	while(size >= ripemd160_block_size) {
+	while (size >= ripemd160_block_size) {
 		unsigned* aligned_message_block;
-		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
+		if (IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
 			/* the most common case is processing of an already aligned message
 			on little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
@@ -298,7 +298,7 @@ void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t
 		msg += ripemd160_block_size;
 		size -= ripemd160_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		le32_copy(ctx->message, 0, msg, size);
 	}
@@ -322,15 +322,15 @@ void rhash_ripemd160_final(ripemd160_ctx *ctx, unsigned char result[20])
 	ctx->message[index++] ^= 0x80 << shift;
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			ctx->message[index++] = 0;
 		}
 		rhash_ripemd160_process_block(ctx->hash, ctx->message);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		ctx->message[index++] = 0;
 	}
 	ctx->message[14] = (unsigned)(ctx->length << 3);

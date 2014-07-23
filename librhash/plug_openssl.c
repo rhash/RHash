@@ -150,11 +150,11 @@ static int load_openssl_runtime(void)
 	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
 	void* handle = dlopen("libcrypto.so", RTLD_NOW);
-	if(!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW); /* hotfix */
-	if(!handle) handle = dlopen("libcrypto.so.0.9.8", RTLD_NOW);
+	if (!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW); /* hotfix */
+	if (!handle) handle = dlopen("libcrypto.so.0.9.8", RTLD_NOW);
 #endif
 
-	if(handle == NULL) return 0; /* could not load OpenSSL */
+	if (handle == NULL) return 0; /* could not load OpenSSL */
 
 	LOAD_ADDR(0, MD4)
 	LOAD_ADDR(1, MD5);
@@ -183,22 +183,22 @@ int rhash_plug_openssl(void)
 
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
 
-	if( (rhash_openssl_hash_mask & RHASH_OPENSSL_SUPPORTED_HASHES) == 0) {
+	if ( (rhash_openssl_hash_mask & RHASH_OPENSSL_SUPPORTED_HASHES) == 0) {
 		return 1; /* do not load OpenSSL */
 	}
 
 #ifdef OPENSSL_RUNTIME
-	if(!load_openssl_runtime()) return 0;
+	if (!load_openssl_runtime()) return 0;
 #endif
 
 	memcpy(rhash_openssl_hash_info, rhash_info_table, sizeof(rhash_openssl_hash_info));
 
 	/* replace internal rhash methods with the OpenSSL ones */
-	for(i = 0; i < (int)(sizeof(rhash_openssl_methods) / sizeof(rhash_hash_info)); i++)
+	for (i = 0; i < (int)(sizeof(rhash_openssl_methods) / sizeof(rhash_hash_info)); i++)
 	{
 		rhash_hash_info *method = &rhash_openssl_methods[i];
-		if((rhash_openssl_hash_mask & method->info->hash_id) == 0) continue;
-		if(!method->init) continue;
+		if ((rhash_openssl_hash_mask & method->info->hash_id) == 0) continue;
+		if (!method->init) continue;
 		bit_index = rhash_ctz(method->info->hash_id);
 		assert(method->info->hash_id == rhash_openssl_hash_info[bit_index].info->hash_id);
 		memcpy(&rhash_openssl_hash_info[bit_index], method, sizeof(rhash_hash_info));

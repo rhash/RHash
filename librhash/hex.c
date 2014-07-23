@@ -46,7 +46,7 @@ char* rhash_print_hex_byte(char *dest, const unsigned char byte, int upper_case)
  */
 void rhash_byte_to_hex(char *dest, const unsigned char *src, unsigned len, int upper_case)
 {
-	while(len-- > 0) {
+	while (len-- > 0) {
 		dest = rhash_print_hex_byte(dest, *src++, upper_case);
 	}
 	*dest = '\0';
@@ -66,18 +66,18 @@ void rhash_byte_to_base32(char* dest, const unsigned char* src, unsigned len, in
 	unsigned shift = 0;
 	unsigned char word;
 	const unsigned char* e = src + len;
-	while(src < e) {
-		if(shift > 3) {
+	while (src < e) {
+		if (shift > 3) {
 			word = (*src & (0xFF >> shift));
 			shift = (shift + 5) % 8;
 			word <<= shift;
-			if(src + 1 < e)
+			if (src + 1 < e)
 				word |= *(src + 1) >> (8 - shift);
 			++src;
 		} else {
 			shift = (shift + 5) % 8;
 			word = ( *src >> ( (8 - shift) & 7 ) ) & 0x1F;
-			if(shift == 0) src++;
+			if (shift == 0) src++;
 		}
 		*dest++ = ( word < 26 ? word + a : word + '2' - 26 );
 	}
@@ -98,24 +98,24 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 	unsigned shift = 0;
 	unsigned char word;
 	const unsigned char* e = src + len;
-	while(src < e) {
-		if(shift > 2) {
+	while (src < e) {
+		if (shift > 2) {
 			word = (*src & (0xFF >> shift));
 			shift = (shift + 6) % 8;
 			word <<= shift;
-			if(src + 1 < e)
+			if (src + 1 < e)
 				word |= *(src + 1) >> (8 - shift);
 			++src;
 		} else {
 			shift = (shift + 6) % 8;
 			word = ( *src >> ( (8 - shift) & 7 ) ) & 0x3F;
-			if(shift == 0) src++;
+			if (shift == 0) src++;
 		}
 		*dest++ = ( word < 52 ? (word < 26 ? word + 'A' : word - 26 + 'a') : tail[word - 52]);
 	}
-	if(shift > 0) {
+	if (shift > 0) {
 		*dest++ = '=';
-		if(shift == 4) *dest++ = '=';
+		if (shift == 4) *dest++ = '=';
 	}
 	*dest = '\0';
 }
@@ -134,14 +134,14 @@ void rhash_byte_to_base64(char* dest, const unsigned char* src, unsigned len)
 int rhash_urlencode(char *dst, const char *name)
 {
 	const char *start;
-	if(!dst) {
+	if (!dst) {
 		int len;
-		for(len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
+		for (len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
 		return len;
 	}
 	/* encode URL as specified by RFC 1738 */
-	for(start = dst; *name; name++) {
-		if( IS_GOOD_URL_CHAR(*name) ) {
+	for (start = dst; *name; name++) {
+		if ( IS_GOOD_URL_CHAR(*name) ) {
 			*dst++ = *name;
 		} else {
 			*dst++ = '%';
@@ -166,19 +166,19 @@ int rhash_sprintI64(char *dst, uint64_t number)
 	char buf[24], *p;
 	size_t length;
 
-	if(dst == NULL) {
+	if (dst == NULL) {
 		/* just calculate the length of the number */
-		if(number == 0) return 1;
-		for(length = 0; number != 0; number /= 10) length++;
+		if (number == 0) return 1;
+		for (length = 0; number != 0; number /= 10) length++;
 		return (int)length;
 	}
 
 	p = buf + 23;
 	*p = '\0'; /* last symbol should be '\0' */
-	if(number == 0) {
+	if (number == 0) {
 		*(--p) = '0';
 	} else {
-		for(; p >= buf && number != 0; number /= 10) {
+		for (; p >= buf && number != 0; number /= 10) {
 			*(--p) = '0' + (char)(number % 10);
 		}
 	}

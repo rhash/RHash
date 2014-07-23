@@ -72,7 +72,7 @@ static void rhash_has160_process_block(unsigned* hash, const unsigned* block)
 	unsigned X[32];
 	{
 		unsigned j;
-		for(j = 0; j < 16; j++) {
+		for (j = 0; j < 16; j++) {
 			X[j] = le2me_32(block[j]);
 		}
 
@@ -210,19 +210,19 @@ void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		unsigned left = has160_block_size - index;
 		memcpy((char*)ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_has160_process_block(ctx->hash, ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= has160_block_size) {
+	while (size >= has160_block_size) {
 		unsigned* aligned_message_block;
-		if(IS_ALIGNED_32(msg)) {
+		if (IS_ALIGNED_32(msg)) {
 			/* the most common case is processing a 32-bit aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
@@ -235,7 +235,7 @@ void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size)
 		msg  += has160_block_size;
 		size -= has160_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		memcpy(ctx->message, msg, size);
 	}
@@ -262,15 +262,15 @@ void rhash_has160_final(has160_ctx *ctx, unsigned char* result)
 #endif
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			ctx->message[index++] = 0;
 		}
 		rhash_has160_process_block(ctx->hash, ctx->message);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		ctx->message[index++] = 0;
 	}
 	ctx->message[14] = le2me_32( (unsigned)(ctx->length << 3)  );

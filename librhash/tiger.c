@@ -128,8 +128,8 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
 
 	/* passes and key shedules */
 #ifndef CPU_X64
-	for(i = 0; i < 3; i++) {
-		if(i != 0) key_schedule;
+	for (i = 0; i < 3; i++) {
+		if (i != 0) key_schedule;
 		pass(a, b, c, (i == 0 ? 5 : i == 1 ? 7 : 9));
 		tmp = a;
 		a = c;
@@ -164,9 +164,9 @@ void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = tiger_block_size - index;
-		if(size < left) {
+		if (size < left) {
 			memcpy(ctx->message + index, msg, size);
 			return;
 		} else {
@@ -176,8 +176,8 @@ void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
 			size -= left;
 		}
 	}
-	while(size >= tiger_block_size) {
-		if(IS_ALIGNED_64(msg)) {
+	while (size >= tiger_block_size) {
+		if (IS_ALIGNED_64(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			rhash_tiger_process_block(ctx->hash, (uint64_t*)msg);
@@ -189,7 +189,7 @@ void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
 		msg += tiger_block_size;
 		size -= tiger_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		memcpy(ctx->message, msg, size);
 	}
@@ -212,15 +212,15 @@ void rhash_tiger_final(tiger_ctx *ctx, unsigned char result[24])
 	ctx->message[index++] = (ctx->tiger2 ? 0x80 : 0x01);
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 56) {
+	if (index > 56) {
 		/* then fill the rest with zeros and process it */
-		while(index < 64) {
+		while (index < 64) {
 			ctx->message[index++] = 0;
 		}
 		rhash_tiger_process_block(ctx->hash, msg64);
 		index = 0;
 	}
-	while(index < 56) {
+	while (index < 56) {
 		ctx->message[index++] = 0;
 	}
 	msg64[7] = le2me_64(ctx->length << 3);

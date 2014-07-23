@@ -138,19 +138,19 @@ void rhash_md4_update(md4_ctx *ctx, const unsigned char* msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		unsigned left = md4_block_size - index;
 		le32_copy((char*)ctx->message, index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_md4_process_block(ctx->hash, ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= md4_block_size) {
+	while (size >= md4_block_size) {
 		unsigned* aligned_message_block;
-		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
+		if (IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg)) {
 			/* the most common case is processing a 32-bit aligned message
 			on a little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
@@ -163,7 +163,7 @@ void rhash_md4_update(md4_ctx *ctx, const unsigned char* msg, size_t size)
 		msg  += md4_block_size;
 		size -= md4_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		le32_copy(ctx->message, 0, msg, size);
 	}
@@ -187,20 +187,20 @@ void rhash_md4_final(md4_ctx *ctx, unsigned char result[16])
 	ctx->message[index++] ^= 0x80 << shift;
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			ctx->message[index++] = 0;
 		}
 		rhash_md4_process_block(ctx->hash, ctx->message);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		ctx->message[index++] = 0;
 	}
 	ctx->message[14] = (unsigned)(ctx->length << 3);
 	ctx->message[15] = (unsigned)(ctx->length >> 29);
 	rhash_md4_process_block(ctx->hash, ctx->message);
 
-	if(result) le32_copy(result, 0, &ctx->hash, 16);
+	if (result) le32_copy(result, 0, &ctx->hash, 16);
 }

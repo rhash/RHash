@@ -91,7 +91,7 @@ static void keccak_theta(uint64_t *A)
 	unsigned int x;
 	uint64_t C[5], D[5];
 
-	for(x = 0; x < 5; x++) {
+	for (x = 0; x < 5; x++) {
 		C[x] = A[x] ^ A[x + 5] ^ A[x + 10] ^ A[x + 15] ^ A[x + 20];
 	}
 	D[0] = ROTL64(C[1], 1) ^ C[4];
@@ -100,7 +100,7 @@ static void keccak_theta(uint64_t *A)
 	D[3] = ROTL64(C[4], 1) ^ C[2];
 	D[4] = ROTL64(C[0], 1) ^ C[3];
 
-	for(x = 0; x < 5; x++) {
+	for (x = 0; x < 5; x++) {
 		A[x]      ^= D[x];
 		A[x + 5]  ^= D[x];
 		A[x + 10] ^= D[x];
@@ -145,7 +145,7 @@ static void keccak_pi(uint64_t *A)
 static void keccak_chi(uint64_t *A)
 {
 	int i;
-	for(i = 0; i < 25; i += 5) {
+	for (i = 0; i < 25; i += 5) {
 		uint64_t A0 = A[0 + i], A1 = A[1 + i];
 		A[0 + i] ^= ~A1 & A[2 + i];
 		A[1 + i] ^= ~A[2 + i] & A[3 + i];
@@ -158,7 +158,7 @@ static void keccak_chi(uint64_t *A)
 static void rhash_sha3_permutation(uint64_t *state)
 {
 	int round;
-	for(round = 0; round < NumberOfRounds; round++)
+	for (round = 0; round < NumberOfRounds; round++)
 	{
 		keccak_theta(state);
 
@@ -216,23 +216,23 @@ static void rhash_sha3_process_block(uint64_t hash[25], const uint64_t *block, s
 	hash[ 7] ^= le2me_64(block[ 7]);
 	hash[ 8] ^= le2me_64(block[ 8]);
 	/* if not sha3-512 */
-	if(block_size > 72) {
+	if (block_size > 72) {
 		hash[ 9] ^= le2me_64(block[ 9]);
 		hash[10] ^= le2me_64(block[10]);
 		hash[11] ^= le2me_64(block[11]);
 		hash[12] ^= le2me_64(block[12]);
 		/* if not sha3-384 */
-		if(block_size > 104) {
+		if (block_size > 104) {
 			hash[13] ^= le2me_64(block[13]);
 			hash[14] ^= le2me_64(block[14]);
 			hash[15] ^= le2me_64(block[15]);
 			hash[16] ^= le2me_64(block[16]);
 			/* if not sha3-256 */
-			if(block_size > 136) {
+			if (block_size > 136) {
 				hash[17] ^= le2me_64(block[17]);
 #ifdef FULL_SHA3_FAMILY_SUPPORT
 				/* if not sha3-224 */
-				if(block_size > 144) {
+				if (block_size > 144) {
 					hash[18] ^= le2me_64(block[18]);
 					hash[19] ^= le2me_64(block[19]);
 					hash[20] ^= le2me_64(block[20]);
@@ -268,19 +268,19 @@ void rhash_sha3_update(sha3_ctx *ctx, const unsigned char *msg, size_t size)
 	ctx->rest = (unsigned)((ctx->rest + size) % block_size);
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = block_size - index;
 		memcpy((char*)ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_sha3_process_block(ctx->hash, ctx->message, block_size);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= block_size) {
+	while (size >= block_size) {
 		uint64_t* aligned_message_block;
-		if(IS_ALIGNED_64(msg)) {
+		if (IS_ALIGNED_64(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (uint64_t*)msg;
@@ -293,7 +293,7 @@ void rhash_sha3_update(sha3_ctx *ctx, const unsigned char *msg, size_t size)
 		msg  += block_size;
 		size -= block_size;
 	}
-	if(size) {
+	if (size) {
 		memcpy(ctx->message, msg, size); /* save leftovers */
 	}
 }
@@ -322,5 +322,5 @@ void rhash_sha3_final(sha3_ctx *ctx, unsigned char* result)
 	}
 
 	assert(block_size > digest_length);
-	if(result) me64_to_le_str(result, ctx->hash, digest_length);
+	if (result) me64_to_le_str(result, ctx->hash, digest_length);
 }

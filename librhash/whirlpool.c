@@ -81,13 +81,13 @@ static void rhash_whirlpool_process_block(uint64_t *hash, uint64_t* p_block)
 	};
 
 	/* map the message buffer to a block */
-	for(i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++) {
 		/* store K^0 and xor it with intermediate hash state */
 		state1[i] = hash[i] = be2me_64(p_block[i]) ^ (K1[i] = hash[i]);
 	}
 
 	/* iterate over algorithm rounds */
-	for(i = 0; i < number_of_rounds; i++)
+	for (i = 0; i < number_of_rounds; i++)
 	{
 		/* compute K^i from K^{i-1} */
 		K2[0] = WHIRLPOOL_OP(K1, 0) ^ rc[i];
@@ -157,19 +157,19 @@ void rhash_whirlpool_update(whirlpool_ctx *ctx, const unsigned char* msg, size_t
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		left = whirlpool_block_size - index;
 		memcpy(ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_whirlpool_process_block(ctx->hash, (uint64_t*)ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= whirlpool_block_size) {
+	while (size >= whirlpool_block_size) {
 		uint64_t* aligned_message_block;
-		if(IS_ALIGNED_64(msg)) {
+		if (IS_ALIGNED_64(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (uint64_t*)msg;
@@ -182,7 +182,7 @@ void rhash_whirlpool_update(whirlpool_ctx *ctx, const unsigned char* msg, size_t
 		msg += whirlpool_block_size;
 		size -= whirlpool_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		memcpy(ctx->message, msg, size);
 	}
@@ -203,16 +203,16 @@ void rhash_whirlpool_final(whirlpool_ctx *ctx, unsigned char* result)
 	ctx->message[index++] = 0x80;
 
 	/* if no room left in the message to store 256-bit message length */
-	if(index > 32) {
+	if (index > 32) {
 		/* then pad the rest with zeros and process it */
-		while(index < 64) {
+		while (index < 64) {
 			ctx->message[index++] = 0;
 		}
 		rhash_whirlpool_process_block(ctx->hash, msg64);
 		index = 0;
 	}
 	/* due to optimization actually only 64-bit of message length are stored */
-	while(index < 56) {
+	while (index < 56) {
 		ctx->message[index++] = 0;
 	}
 	msg64[7] = be2me_64(ctx->length << 3);

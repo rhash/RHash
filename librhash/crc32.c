@@ -31,10 +31,10 @@ void rhash_crc32_init_table(void)
 	int i, j;
 
 	poly = 0xEDB88320;
-	for(i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) {
 		crc = i;
-		for(j = 8; j > 0; j--) {
-			if(crc & 1) crc = (crc >> 1) ^ poly;
+		for (j = 8; j > 0; j--) {
+			if (crc & 1) crc = (crc >> 1) ^ poly;
 			else crc >>= 1;
 		}
 		rhash_crc32_table[i] = crc;
@@ -105,11 +105,11 @@ unsigned rhash_get_crc32(unsigned crcinit, const unsigned char *msg, size_t size
 	const unsigned char *e;
 
 	/* process not aligned message head */
-	for(; (3 & (msg - (unsigned char*)0)) && size > 0; msg++, size--)
+	for (; (3 & (msg - (unsigned char*)0)) && size > 0; msg++, size--)
 		crc = rhash_crc32_table[(crc ^ *msg) & 0xFF] ^ (crc >> 8);
 
 	/* fast CRC32 calculation of a DWORD-aligned message */
-	for(e = msg + (size & ~15); msg < e; msg += 16) {
+	for (e = msg + (size & ~15); msg < e; msg += 16) {
 		crc ^= le2me_32( ((const unsigned *)msg)[0] );
 		crc = rhash_crc32_table[crc & 0xFF] ^ (crc >> 8);
 		crc = rhash_crc32_table[crc & 0xFF] ^ (crc >> 8);
@@ -136,7 +136,7 @@ unsigned rhash_get_crc32(unsigned crcinit, const unsigned char *msg, size_t size
 	}
 
 	/* process not aligned message tail */
-	for(e = msg + (size & 15); msg < e; msg++) {
+	for (e = msg + (size & 15); msg < e; msg++) {
 		crc = rhash_crc32_table[(crc ^ *msg) & 0xFF] ^ (crc >> 8);
 	}
 

@@ -303,7 +303,7 @@ void rhash_edonr384_init(struct edonr_ctx *ctx)
  */
 static void rhash_edonr256_process_block(unsigned hash[16], const unsigned *block, size_t count)
 {
-	while(1) {
+	while (1) {
 		uint32_t t0,  t1,  t2,  t3,  t4,  t5,  t6,  t7;
 		uint32_t t8,  t9, t10, t11, t12, t13, t14, t15;
 		uint32_t t16, t17,t18, t19, t20, t21, t22, t23;
@@ -342,7 +342,7 @@ static void rhash_edonr256_process_block(unsigned hash[16], const unsigned *bloc
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]);
 
-		if(!--count) return;
+		if (!--count) return;
 		block += edonr256_block_size / sizeof(unsigned);
 	};
 }
@@ -355,7 +355,7 @@ static void rhash_edonr256_process_block(unsigned hash[16], const unsigned *bloc
  */
 static void rhash_edonr512_process_block(uint64_t hash[16], const uint64_t *block, size_t count)
 {
-	while(1) {
+	while (1) {
 		uint64_t t0,  t1,  t2,  t3,  t4,  t5,  t6,  t7;
 		uint64_t t8,  t9, t10, t11, t12, t13, t14, t15;
 		uint64_t t16, t17,t18, t19, t20, t21, t22, t23;
@@ -394,7 +394,7 @@ static void rhash_edonr512_process_block(uint64_t hash[16], const uint64_t *bloc
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]);
 
-		if(!--count) return;
+		if (!--count) return;
 		block += edonr256_block_size / sizeof(uint64_t);
 	};
 }
@@ -413,10 +413,10 @@ void rhash_edonr256_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = edonr256_block_size - index;
 		le32_copy((char*)ctx->u.data256.message, index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_edonr256_process_block(ctx->u.data256.hash, ctx->u.data256.message, 1);
@@ -424,11 +424,11 @@ void rhash_edonr256_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 		size -= left;
 	}
 
-	if(size >= edonr256_block_size) {
+	if (size >= edonr256_block_size) {
 #if defined(CPU_IA32) || defined(CPU_X64)
-		if(1)
+		if (1)
 #else
-		if(IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg))
+		if (IS_LITTLE_ENDIAN && IS_ALIGNED_32(msg))
 #endif
 		{
 			/* the most common case is processing a 32-bit aligned message
@@ -443,11 +443,11 @@ void rhash_edonr256_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 				rhash_edonr256_process_block(ctx->u.data256.hash, ctx->u.data256.message, 1);
 				msg  += edonr256_block_size;
 				size -= edonr256_block_size;
-			} while(size >= edonr256_block_size);
+			} while (size >= edonr256_block_size);
 		}
 	}
 
-	if(size) {
+	if (size) {
 		le32_copy(ctx->u.data256.message, 0, msg, size); /* save leftovers */
 	}
 }
@@ -470,15 +470,15 @@ void rhash_edonr256_final(edonr_ctx *ctx, unsigned char* result)
 	ctx->u.data256.message[index++] ^= 0x80 << shift;
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			ctx->u.data256.message[index++] = 0;
 		}
 		rhash_edonr256_process_block(ctx->u.data256.hash, ctx->u.data256.message, 1);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		ctx->u.data256.message[index++] = 0;
 	}
 	/* store message length in bits */
@@ -486,7 +486,7 @@ void rhash_edonr256_final(edonr_ctx *ctx, unsigned char* result)
 	ctx->u.data256.message[15] = (unsigned)(ctx->length >> 29);
 	rhash_edonr256_process_block(ctx->u.data256.hash, ctx->u.data256.message, 1);
 
-	if(result) {
+	if (result) {
 		/* copy last bytes of intermidiate hash */
 		int off = (ctx->digest_length <= 256 ? 64 : 128) - ctx->digest_length;
 		le32_copy(result, 0, ((char*)ctx->u.data256.hash) + off, ctx->digest_length);
@@ -507,21 +507,21 @@ void rhash_edonr512_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = edonr512_block_size - index;
 		le64_copy((char*)ctx->u.data512.message, index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_edonr512_process_block(ctx->u.data512.hash, ctx->u.data512.message, 1);
 		msg  += left;
 		size -= left;
 	}
-	if(size >= edonr512_block_size) {
+	if (size >= edonr512_block_size) {
 #if defined(CPU_IA32) || defined(CPU_X64)
-		if(1)
+		if (1)
 #else
-		if(IS_LITTLE_ENDIAN && IS_ALIGNED_64(msg))
+		if (IS_LITTLE_ENDIAN && IS_ALIGNED_64(msg))
 #endif
 		{
 			/* the most common case is processing a 64-bit aligned message
@@ -536,11 +536,11 @@ void rhash_edonr512_update(edonr_ctx *ctx, const unsigned char *msg, size_t size
 				rhash_edonr512_process_block(ctx->u.data512.hash, ctx->u.data512.message, 1);
 				msg  += edonr512_block_size;
 				size -= edonr512_block_size;
-			} while(size >= edonr512_block_size);
+			} while (size >= edonr512_block_size);
 		}
 	}
 
-	if(size) {
+	if (size) {
 		le64_copy(ctx->u.data512.message, 0, msg, size); /* save leftovers */
 	}
 }
@@ -563,18 +563,18 @@ void rhash_edonr512_final(edonr_ctx *ctx, unsigned char* result)
 	ctx->u.data512.message[index++] ^= I64(0x80) << shift;
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index == 16) {
+	if (index == 16) {
 		rhash_edonr512_process_block(ctx->u.data512.hash, ctx->u.data512.message, 1);
 		index = 0;
 	}
-	while(index < 15) {
+	while (index < 15) {
 		ctx->u.data512.message[index++] = 0;
 	}
 	/* store message length in bits */
 	ctx->u.data512.message[15] = ctx->length << 3;
 	rhash_edonr512_process_block(ctx->u.data512.hash, ctx->u.data512.message, 1);
 
-	if(result) {
+	if (result) {
 		/* copy last bytes of intermidiate hash */
 		int off = edonr512_block_size - ctx->digest_length;
 		le64_copy(result, 0, ((char*)ctx->u.data512.hash) + off, ctx->digest_length);

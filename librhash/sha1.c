@@ -51,13 +51,13 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 	uint32_t      A, B, C, D, E;     /* Word buffers */
 
 	/* initialize the first 16 words in the array W */
-	for(t = 0; t < 16; t++) {
+	for (t = 0; t < 16; t++) {
 		/* note: it is much faster to apply be2me here, then using be32_copy */
 		W[t] = be2me_32(block[t]);
 	}
 
 	/* initialize the rest */
-	for(t = 16; t < 80; t++) {
+	for (t = 16; t < 80; t++) {
 		W[t] = ROTL32(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
 	}
 
@@ -67,7 +67,7 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 	D = hash[3];
 	E = hash[4];
 
-	for(t = 0; t < 20; t++) {
+	for (t = 0; t < 20; t++) {
 		/* the following is faster than ((B & C) | ((~B) & D)) */
 		temp =  ROTL32(A, 5) + (((C ^ D) & B) ^ D)
 			+ E + W[t] + 0x5A827999;
@@ -78,7 +78,7 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 		A = temp;
 	}
 
-	for(t = 20; t < 40; t++) {
+	for (t = 20; t < 40; t++) {
 		temp = ROTL32(A, 5) + (B ^ C ^ D) + E + W[t] + 0x6ED9EBA1;
 		E = D;
 		D = C;
@@ -87,7 +87,7 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 		A = temp;
 	}
 
-	for(t = 40; t < 60; t++) {
+	for (t = 40; t < 60; t++) {
 		temp = ROTL32(A, 5) + ((B & C) | (B & D) | (C & D))
 			+ E + W[t] + 0x8F1BBCDC;
 		E = D;
@@ -97,7 +97,7 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 		A = temp;
 	}
 
-	for(t = 60; t < 80; t++) {
+	for (t = 60; t < 80; t++) {
 		temp = ROTL32(A, 5) + (B ^ C ^ D) + E + W[t] + 0xCA62C1D6;
 		E = D;
 		D = C;
@@ -127,19 +127,19 @@ void rhash_sha1_update(sha1_ctx *ctx, const unsigned char* msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		unsigned left = sha1_block_size - index;
 		memcpy(ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_sha1_process_block(ctx->hash, (unsigned*)ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= sha1_block_size) {
+	while (size >= sha1_block_size) {
 		unsigned* aligned_message_block;
-		if(IS_ALIGNED_32(msg)) {
+		if (IS_ALIGNED_32(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
@@ -152,7 +152,7 @@ void rhash_sha1_update(sha1_ctx *ctx, const unsigned char* msg, size_t size)
 		msg  += sha1_block_size;
 		size -= sha1_block_size;
 	}
-	if(size) {
+	if (size) {
 		/* save leftovers */
 		memcpy(ctx->message, msg, size);
 	}
@@ -171,26 +171,26 @@ void rhash_sha1_final(sha1_ctx *ctx, unsigned char* result)
 
 	/* pad message and run for last block */
 	ctx->message[index++] = 0x80;
-	while((index & 3) != 0) {
+	while ((index & 3) != 0) {
 		ctx->message[index++] = 0;
 	}
 	index >>= 2;
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			msg32[index++] = 0;
 		}
 		rhash_sha1_process_block(ctx->hash, msg32);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		msg32[index++] = 0;
 	}
 	msg32[14] = be2me_32( (unsigned)(ctx->length >> 29) );
 	msg32[15] = be2me_32( (unsigned)(ctx->length << 3) );
 	rhash_sha1_process_block(ctx->hash, msg32);
 
-	if(result) be32_copy(result, 0, &ctx->hash, sha1_hash_size);
+	if (result) be32_copy(result, 0, &ctx->hash, sha1_hash_size);
 }

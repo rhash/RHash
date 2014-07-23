@@ -137,7 +137,7 @@ static void rhash_sha256_process_block(unsigned hash[8], unsigned block[16])
 	ROUND_1_16(C, D, E, F, G, H, A, B, 14);
 	ROUND_1_16(B, C, D, E, F, G, H, A, 15);
 
-	for(i = 16, k = &rhash_k256[16]; i < 64; i += 16, k += 16) {
+	for (i = 16, k = &rhash_k256[16]; i < 64; i += 16, k += 16) {
 		ROUND_17_64(A, B, C, D, E, F, G, H,  0);
 		ROUND_17_64(H, A, B, C, D, E, F, G,  1);
 		ROUND_17_64(G, H, A, B, C, D, E, F,  2);
@@ -174,19 +174,19 @@ void rhash_sha256_update(sha256_ctx *ctx, const unsigned char *msg, size_t size)
 	ctx->length += size;
 
 	/* fill partial block */
-	if(index) {
+	if (index) {
 		size_t left = sha256_block_size - index;
 		memcpy((char*)ctx->message + index, msg, (size < left ? size : left));
-		if(size < left) return;
+		if (size < left) return;
 
 		/* process partial block */
 		rhash_sha256_process_block(ctx->hash, (unsigned*)ctx->message);
 		msg  += left;
 		size -= left;
 	}
-	while(size >= sha256_block_size) {
+	while (size >= sha256_block_size) {
 		unsigned* aligned_message_block;
-		if(IS_ALIGNED_32(msg)) {
+		if (IS_ALIGNED_32(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
 			aligned_message_block = (unsigned*)msg;
@@ -199,7 +199,7 @@ void rhash_sha256_update(sha256_ctx *ctx, const unsigned char *msg, size_t size)
 		msg  += sha256_block_size;
 		size -= sha256_block_size;
 	}
-	if(size) {
+	if (size) {
 		memcpy(ctx->message, msg, size); /* save leftovers */
 	}
 }
@@ -222,20 +222,20 @@ void rhash_sha256_final(sha256_ctx *ctx, unsigned char* result)
 	ctx->message[index++] ^= le2me_32(0x80 << shift);
 
 	/* if no room left in the message to store 64-bit message length */
-	if(index > 14) {
+	if (index > 14) {
 		/* then fill the rest with zeros and process it */
-		while(index < 16) {
+		while (index < 16) {
 			ctx->message[index++] = 0;
 		}
 		rhash_sha256_process_block(ctx->hash, ctx->message);
 		index = 0;
 	}
-	while(index < 14) {
+	while (index < 14) {
 		ctx->message[index++] = 0;
 	}
 	ctx->message[14] = be2me_32( (unsigned)(ctx->length >> 29) );
 	ctx->message[15] = be2me_32( (unsigned)(ctx->length << 3) );
 	rhash_sha256_process_block(ctx->hash, ctx->message);
 
-	if(result) be32_copy(result, 0, ctx->hash, ctx->digest_length);
+	if (result) be32_copy(result, 0, ctx->hash, ctx->digest_length);
 }

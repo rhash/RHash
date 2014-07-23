@@ -63,9 +63,9 @@ void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
 	* the messages which sizes are multiple of 9728000
 	* and then processes obtained hash by external md4 */
 
-	while( size >= blockleft )
+	while ( size >= blockleft )
 	{
-		if(size == blockleft && ctx->not_emule) break;
+		if (size == blockleft && ctx->not_emule) break;
 
 		/* if internal ed2k chunk is full, then finalize it */
 		rhash_md4_update(&ctx->md4_context_inner, msg, blockleft);
@@ -79,7 +79,7 @@ void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
 		rhash_md4_init(&ctx->md4_context_inner);
 	}
 
-	if(size) {
+	if (size) {
 		/* hash leftovers */
 		rhash_md4_update(&ctx->md4_context_inner, msg, size);
 	}
@@ -94,13 +94,13 @@ void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
 void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16])
 {
 	/* check if hashed message size is greater or equal to ED2K_CHUNK_SIZE */
-	if( ctx->md4_context.length ) {
+	if ( ctx->md4_context.length ) {
 
 		/* note: weird eMule algorithm always processes the inner
 		 * md4 context, no matter if it contains data or is empty */
 
 		/* if any data are left in the md4_context_inner */
-		if( (size_t)ctx->md4_context_inner.length > 0 || !ctx->not_emule)
+		if ( (size_t)ctx->md4_context_inner.length > 0 || !ctx->not_emule)
 		{
 			/* emule algorithm processes aditional block, even if it's empty */
 			unsigned char md4_digest_inner[16];
@@ -113,6 +113,6 @@ void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16])
 		memcpy(&ctx->md4_context_inner.hash, &ctx->md4_context.hash, md4_hash_size);
 	} else {
 		/* return just the message MD4 hash */
-		if(result) rhash_md4_final(&ctx->md4_context_inner, result);
+		if (result) rhash_md4_final(&ctx->md4_context_inner, result);
 	}
 }

@@ -115,14 +115,14 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	assert(index <= ctx->allocated);
 
 	/* check if there is enough space allocated */
-	if(index >= ctx->allocated) {
+	if (index >= ctx->allocated) {
 		/* resize the table by allocating some extra space */
 		size_t new_size = (ctx->allocated == 0 ? 64 : ctx->allocated * 2);
 		assert(index == ctx->allocated);
 
 		/* re-allocate the chunk table to contain new_size void*-pointers */
 		ctx->chunk_table = (void**)realloc(ctx->chunk_table, new_size * sizeof(void*));
-		if(ctx->chunk_table == 0) {
+		if (ctx->chunk_table == 0) {
 			ctx->error = 1;
 			return;
 		}
@@ -136,7 +136,7 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	assert(ctx->chunk_table[index] == 0);
 
 	ctx->chunk_table[index] = malloc(sizeof(hash_pairs_group_t));
-	if(ctx->chunk_table[index] == 0) ctx->error = 1;
+	if (ctx->chunk_table[index] == 0) ctx->error = 1;
 }
 
 /**
@@ -150,10 +150,10 @@ void rhash_aich_cleanup(aich_ctx* ctx)
 	size_t i;
 	size_t table_size = (ctx->chunks_number + CT_GROUP_SIZE - 1) / CT_GROUP_SIZE;
 
-	if(ctx->chunk_table != 0) {
+	if (ctx->chunk_table != 0) {
 		assert(table_size <= ctx->allocated);
 		assert(table_size == ctx->allocated || ctx->chunk_table[table_size] == 0);
-		for(i = 0;  i < table_size; i++) free(ctx->chunk_table[i]);
+		for (i = 0;  i < table_size; i++) free(ctx->chunk_table[i]);
 		free(ctx->chunk_table);
 		ctx->chunk_table = 0;
 	}
@@ -185,7 +185,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 	unsigned blocks_stack[56];
 	unsigned char sha1_stack[56][sha1_hash_size];
 
-	if(ctx->error) return;
+	if (ctx->error) return;
 	assert(ctx->index <= ED2K_CHUNK_SIZE);
 	assert(type == AICH_HASH_FULL_TREE ? ctx->chunk_table != 0 : ctx->block_hashes != 0);
 
@@ -193,12 +193,12 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 	blocks_stack[0] = blocks = (unsigned)(type == AICH_HASH_FULL_TREE ?
 		ctx->chunks_number : (ctx->index + FULL_BLOCK_SIZE - 1) / FULL_BLOCK_SIZE);
 
-	while(1) {
+	while (1) {
 		unsigned char sha1_message[sha1_hash_size];
 		unsigned char* leaf_hash;
 
 		/* go into the left branches until a leaf block is reached */
-		while(blocks > 1) {
+		while (blocks > 1) {
 			/* step down into the left branch */
 			blocks = (blocks + ((unsigned)path & 0x1)) / 2;
 			level++;
@@ -210,7 +210,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 		/* read a leaf hash */
 		leaf_hash = &(ctx->block_hashes[index][0]);
 
-		if(type == AICH_HASH_FULL_TREE) {
+		if (type == AICH_HASH_FULL_TREE) {
 			is_left_branch = (unsigned)path & 0x1;
 
 			leaf_hash = GET_HASH_PAIR(ctx, index)[is_left_branch];
@@ -218,7 +218,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 		index++;
 
 		/* climb up the tree until a left branch is reached */
-		for(; level > 0 && (path & 0x01) == 0; path >>= 1) {
+		for (; level > 0 && (path & 0x01) == 0; path >>= 1) {
 			SHA1_INIT(ctx);
 			SHA1_UPDATE(ctx, sha1_stack[level], sha1_hash_size);
 			SHA1_UPDATE(ctx, leaf_hash, sha1_hash_size);
@@ -228,7 +228,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
 		}
 		memcpy((level > 0 ? sha1_stack[level] : result), leaf_hash, 20);
 
-		if(level == 0) break;
+		if (level == 0) break;
 
 		/* jump at the current level from left to right branch */
 		path &= ~0x1; /* mark branch as right */
@@ -259,12 +259,12 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
 	assert(ctx->index <= ED2K_CHUNK_SIZE);
 
 	/* if there is unprocessed data left in the current 180K block. */
-	if((type & AICH_PROCESS_FLUSH_BLOCK) != 0)
+	if ((type & AICH_PROCESS_FLUSH_BLOCK) != 0)
 	{
 		/* ensure that the block_hashes array is allocated to save the result */
-		if(ctx->block_hashes == NULL) {
+		if (ctx->block_hashes == NULL) {
 			ctx->block_hashes = (unsigned char (*)[sha1_hash_size])malloc(BLOCKS_PER_CHUNK * sha1_hash_size);
-			if(ctx->block_hashes == NULL) {
+			if (ctx->block_hashes == NULL) {
 				ctx->error = 1;
 				return;
 			}
@@ -276,13 +276,13 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
 	}
 
 	/* check, if it's time to calculate the tree hash for the current ed2k chunk */
-	if(ctx->index >= ED2K_CHUNK_SIZE || (type & AICH_PROCESS_FINAL_BLOCK)) {
+	if (ctx->index >= ED2K_CHUNK_SIZE || (type & AICH_PROCESS_FINAL_BLOCK)) {
 		unsigned char (*pair)[sha1_hash_size];
 
 		/* ensure, that we have the space to store tree hash */
-		if(CT_INDEX(ctx->chunks_number) == 0) {
+		if (CT_INDEX(ctx->chunks_number) == 0) {
 			rhash_aich_chunk_table_extend(ctx, (unsigned)ctx->chunks_number);
-			if(ctx->error) return;
+			if (ctx->error) return;
 		}
 		assert(ctx->chunk_table  != 0);
 		assert(ctx->block_hashes != 0);
@@ -291,13 +291,13 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
 		pair = GET_HASH_PAIR(ctx, ctx->chunks_number);
 
 		/* small optimization: skip a left-branch-hash for the last chunk */
-		if(!(type & AICH_PROCESS_FINAL_BLOCK) || ctx->chunks_number == 0) {
+		if (!(type & AICH_PROCESS_FINAL_BLOCK) || ctx->chunks_number == 0) {
 			/* calculate a tree hash to be used in left branch */
 			rhash_aich_hash_tree(ctx, pair[1], AICH_HASH_LEFT_BRANCH);
 		}
 
 		/* small optimization: skip right-branch-hash for the very first chunk */
-		if(ctx->chunks_number > 0) {
+		if (ctx->chunks_number > 0) {
 			/* calculate a tree hash to be used in right branch */
 			rhash_aich_hash_tree(ctx, pair[0], AICH_HASH_RIGHT_BRANCH);
 		}
@@ -317,15 +317,15 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
  */
 void rhash_aich_update(aich_ctx *ctx, const unsigned char* msg, size_t size)
 {
-	if(ctx->error) return;
+	if (ctx->error) return;
 
-	while(size > 0) {
+	while (size > 0) {
 		unsigned left_in_chunk = ED2K_CHUNK_SIZE - ctx->index;
 		unsigned block_left = (left_in_chunk <= LAST_BLOCK_SIZE ? left_in_chunk :
 			FULL_BLOCK_SIZE - ctx->index % FULL_BLOCK_SIZE);
 		assert(block_left > 0);
 
-		if(size >= block_left) {
+		if (size >= block_left) {
 			SHA1_UPDATE(ctx, msg, block_left);
 			msg  += block_left;
 			size -= block_left;
@@ -356,7 +356,7 @@ void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
 		((uint64_t)ctx->chunks_number * ED2K_CHUNK_SIZE) + ctx->index;
 	unsigned char* const hash = (unsigned char*)ctx->sha1_context.hash;
 
-	if(ctx->chunks_number == 0 && ctx->block_hashes == NULL) {
+	if (ctx->chunks_number == 0 && ctx->block_hashes == NULL) {
 		assert(ctx->index < FULL_BLOCK_SIZE);
 #ifdef USE_OPENSSL
 		SHA1_FINAL(ctx, hash); /* return just sha1 hash */
@@ -366,23 +366,23 @@ void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
 		rhash_u32_mem_swap(ctx->sha1_context.hash, 5);
 #endif
 #endif
-		if(result) memcpy(result, hash, sha1_hash_size);
+		if (result) memcpy(result, hash, sha1_hash_size);
 		return;
 	}
 
 	/* if there is unprocessed data left in the last 180K block */
-	if((ctx->index % FULL_BLOCK_SIZE) > 0) {
+	if ((ctx->index % FULL_BLOCK_SIZE) > 0) {
 		/* then process the last block */
 		rhash_aich_process_block(ctx, ctx->block_hashes != NULL ?
 			AICH_PROCESS_FINAL_BLOCK | AICH_PROCESS_FLUSH_BLOCK : AICH_PROCESS_FLUSH_BLOCK);
 	}
 
 	/* if processed message was shorter than a ed2k chunk */
-	if(ctx->chunks_number == 0) {
+	if (ctx->chunks_number == 0) {
 		/* then return the aich hash for the first chunk */
 		rhash_aich_hash_tree(ctx, hash, AICH_HASH_LEFT_BRANCH);
 	} else {
-		if(ctx->index > 0) {
+		if (ctx->index > 0) {
 			/* process the last block of the message */
 			rhash_aich_process_block(ctx, AICH_PROCESS_FINAL_BLOCK);
 		}
@@ -394,5 +394,5 @@ void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
 
 	rhash_aich_cleanup(ctx);
 	ctx->sha1_context.length = total_size; /* store total message size  */
-	if(result) memcpy(result, hash, sha1_hash_size);
+	if (result) memcpy(result, hash, sha1_hash_size);
 }
