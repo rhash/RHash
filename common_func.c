@@ -272,6 +272,11 @@ char* make_path(const char* dir_path, const char* filename)
 	/* remove leading path separators from filename */
 	while(IS_PATH_SEPARATOR(*filename)) filename++;
 
+	if (dir_path[0] == '.' && dir_path[1] == 0) {
+		/* do not extend filename for dir_path="." */
+		return rsh_strdup(filename);
+	}
+
 	/* copy directory path */
 	len = strlen(dir_path);
 	buf = (char*)rsh_malloc(len + strlen(filename) + 2);
