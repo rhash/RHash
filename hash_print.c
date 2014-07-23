@@ -67,33 +67,33 @@ static print_item* new_print_item(unsigned flags, unsigned hash_id, const char *
 static char parse_escaped_char(const char **pformat)
 {
 	const char* start = *pformat;
-	switch( *((*pformat)++) ) {
+	switch ( *((*pformat)++) ) {
 		case 't': return '\t';
 		case 'r': return '\r';
 		case 'n': return '\n';
 		case '\\': return '\\';
 		case 'x':
 			/* \xNN byte with hexadecimal value NN (1 to 2 digits) */
-			if( IS_HEX(**pformat) ) {
+			if ( IS_HEX(**pformat) ) {
 				int ch;
 				ch = (**pformat <= '9' ? **pformat & 15 : (**pformat + 9) & 15);
 				(*pformat) ++;
-				if(IS_HEX(**pformat)) {
+				if (IS_HEX(**pformat)) {
 					/* read the second digit */
 					ch = 16 * ch + (**pformat <= '9' ? **pformat & 15 : (**pformat + 9) & 15);
 					(*pformat)++;
 				}
-				if(ch) return ch;
+				if (ch) return ch;
 			}
 			break;
 		default:
 			(*pformat)--;
 			/* \NNN - character with octal value NNN (1 to 3 digits) */
-			if('0' < **pformat && **pformat <= '7') {
+			if ('0' < **pformat && **pformat <= '7') {
 				int ch = *((*pformat)++) - '0';
-				if('0' <= **pformat && **pformat <= '7') {
+				if ('0' <= **pformat && **pformat <= '7') {
 					ch = ch * 8 + *((*pformat)++) - '0';
-					if('0' <= **pformat && **pformat <= '7')
+					if ('0' <= **pformat && **pformat <= '7')
 						ch = ch * 8 + *((*pformat)++) - '0';
 				}
 				return (char)ch;
@@ -117,44 +117,44 @@ print_item* parse_print_string(const char* format, unsigned *sum_mask)
 	tail = &list;
 	*sum_mask = 0;
 
-	for(;;) {
-		while(*format && *format != '%' && *format != '\\')
+	for (;;) {
+		while (*format && *format != '%' && *format != '\\')
 			*(p++) = *(format++);
 
-		if(*format == '\\') {
-			if(*(++format) == '0') {
+		if (*format == '\\') {
+			if (*(++format) == '0') {
 				item = new_print_item(PRINT_ZERO, 0, NULL);
 				format++;
 			} else {
 				*p++ = parse_escaped_char(&format);
 				continue;
 			}
-		} else if(*format == '%') {
-			if( *(++format) == '%' ) {
+		} else if (*format == '%') {
+			if ( *(++format) == '%' ) {
 				*(p++) = *format++;
 				continue;
 			} else {
 				item = parse_percent_item(&format);
-				if(!item) {
+				if (!item) {
 					*(p++) = '%';
 					continue;
 				}
-				if(item->hash_id)
+				if (item->hash_id)
 					*sum_mask |= item->hash_id;
 			}
 		}
-		if(p > buf || (!*format && list == NULL && item == NULL)) {
+		if (p > buf || (!*format && list == NULL && item == NULL)) {
 			*p = '\0';
 			*tail = new_print_item(PRINT_STR, 0, buf);
 			tail = &(*tail)->next;
 			p = buf;
 		}
-		if(item) {
+		if (item) {
 			*tail = item;
 			tail = &item->next;
 			item = NULL;
 		}
-		if(!*format)
+		if (!*format)
 			break;
 	};
 	free(buf);
@@ -175,20 +175,20 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned *fla
 	print_hash_info *info = hash_info_table;
 	unsigned bit;
 
-	if(length > (sizeof(buf)-1)) return 0;
-	for(i = 0; i < length; i++) buf[i] = tolower(name[i]);
+	if (length > (sizeof(buf)-1)) return 0;
+	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
 
 	/* check for old '%{urlname}' directive for compatibility */
-	if(length == 7 && memcmp(buf, "urlname", 7) == 0) {
+	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
 		*flags = PRINT_URLNAME;
 		return 0;
-	} else if(length == 5 && memcmp(buf, "mtime", 5) == 0) {
+	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
 	}
 
-	for(bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
-		if(memcmp(buf, info->short_name, length) == 0 &&
+	for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
+		if (memcmp(buf, info->short_name, length) == 0 &&
 			info->short_name[length] == 0) return bit;
 	}
 	return 0;
@@ -221,35 +221,35 @@ print_item* parse_percent_item(const char** str)
 		PRINT_URLNAME, PRINT_SIZE
 	};
 	/* detect pad with zero flag */
-	if(*format == '0') {
+	if (*format == '0') {
 		pad_with_zero_bit = PRINT_FLAG_PAD_WITH_ZERO;
 		format++;
 	}
 
 	/* parse b,x and u flags */
-	if(*format == 'x') {
+	if (*format == 'x') {
 		modifier_flags |= PRINT_FLAG_HEX;
 		format++;
-	} else if(*format == 'b') {
+	} else if (*format == 'b') {
 		modifier_flags |= PRINT_FLAG_BASE32;
 		format++;
-	} else if(*format == 'B') {
+	} else if (*format == 'B') {
 		modifier_flags |= PRINT_FLAG_BASE64;
 		format++;
-	} else if(*format == '@') {
+	} else if (*format == '@') {
 		modifier_flags |= PRINT_FLAG_RAW;
 		format++;
 	}
-	for(; isdigit((unsigned char)*format); format++) width = 10 * width + (*format - '0');
+	for (; isdigit((unsigned char)*format); format++) width = 10 * width + (*format - '0');
 
-	if(*format == '{') {
+	if (*format == '{') {
 		/* parse %{printf-entity} substring */
 		const char* p = ++format;
-		for(; isalnum((unsigned char)*p) || (*p == '-'); p++);
-		if(*p == '}') {
+		for (; isalnum((unsigned char)*p) || (*p == '-'); p++);
+		if (*p == '}') {
 			hash_id = printf_name_to_id(format, (int)(p - (format)), &modifier_flags);
 			format--;
-			if(hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_MTIME) {
+			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_MTIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -258,18 +258,18 @@ print_item* parse_percent_item(const char** str)
 		} else --format;
 	}
 
-	if(!id_found) {
+	if (!id_found) {
 		const char upper = *format & ~0x20;
-		if( *format == '\0' ) return NULL;
-		if( (p = strchr(short_hash, upper)) ) {
+		if ( *format == '\0' ) return NULL;
+		if ( (p = strchr(short_hash, upper)) ) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
 			hash_id = hash_ids[p - short_hash];
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
-		} else if( (p = strchr(short_other, *format)) ) {
+		} else if ( (p = strchr(short_other, *format)) ) {
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
 			modifier_flags = other_flags[p - short_other];
 
-			if(modifier_flags == PRINT_ED2K_LINK) {
+			if (modifier_flags == PRINT_ED2K_LINK) {
 				modifier_flags |= (*p & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				hash_id = RHASH_ED2K | RHASH_AICH;
 			}
@@ -313,7 +313,7 @@ static void fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
 	*dst++ = '|';
 	rhash_print(dst, info->rctx, RHASH_ED2K, upper_case);
 	dst += 32;
-	if((info->sums_flags & RHASH_AICH) != 0) {
+	if ((info->sums_flags & RHASH_AICH) != 0) {
 		strcpy(dst, "|h=");
 		rhash_print(dst += 3, info->rctx, RHASH_AICH, RHPR_BASE32 | upper_case);
 		dst += 32;
@@ -336,7 +336,7 @@ static void fprintI64(FILE* out, uint64_t filesize, int width, int zero_pad)
 	char *buf = (char*)rsh_malloc(width > 40 ? width + 1 : 41);
 	int len = int_len(filesize);
 	sprintI64(buf, filesize, width);
-	if(len < width && zero_pad) {
+	if (len < width && zero_pad) {
 		memset(buf, '0', width-len);
 	}
 	fprintf(out, "%s", buf);
@@ -356,31 +356,31 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 	char *url = NULL, *ed2k_url = NULL;
 	char buffer[130];
 
-	for(; list; list = list->next) {
+	for (; list; list = list->next) {
 		int print_type = list->flags & ~(PRINT_FLAGS_ALL);
 		size_t len;
 
 		/* output a hash function digest */
-		if(list->hash_id && print_type != PRINT_ED2K_LINK) {
+		if (list->hash_id && print_type != PRINT_ED2K_LINK) {
 			unsigned hash_id = list->hash_id;
 			int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0)
 				| (list->flags & PRINT_FLAG_RAW ? RHPR_RAW : 0)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
 				| (list->flags & PRINT_FLAG_BASE64 ? RHPR_BASE64 : 0)
 				| (list->flags & PRINT_FLAG_HEX ? RHPR_HEX : 0);
-			if((hash_id == RHASH_GOST || hash_id == RHASH_GOST_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
+			if ((hash_id == RHASH_GOST || hash_id == RHASH_GOST_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
 				print_flags |= RHPR_REVERSE;
 
 			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
 			assert(len < sizeof(buffer));
 
 			/* output the hash, exit on fail */
-			if(fwrite(buffer, 1, len, out) != len) break;
+			if (fwrite(buffer, 1, len, out) != len) break;
 			continue;
 		}
 
 		/* output other special items: filepath, URL-encoded filename etc. */
-		switch(print_type) {
+		switch (print_type) {
 			case PRINT_STR:
 				fprintf(out, "%s", list->data);
 				break;
@@ -394,7 +394,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 				fprintf(out, "%s", basename);
 				break;
 			case PRINT_URLNAME: /* URL-encoded filename */
-				if(!url) {
+				if (!url) {
 					tmp = get_basename(file_info_get_utf8_print_path(info));
 					url = (char*)rsh_malloc(urlencode(NULL, tmp) + 1);
 					urlencode(url, tmp);
@@ -423,7 +423,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
  */
 void free_print_list(print_item* list)
 {
-	while(list) {
+	while (list) {
 		print_item* next = list->next;
 		free((char*)list->data);
 		free(list);
@@ -492,7 +492,7 @@ void init_printf_format(strbuf_t* out)
 	char up_flag;
 	unsigned force_base32_mask = 0;
 
-	if(!opt.fmt) {
+	if (!opt.fmt) {
 		/* print SFV header for CRC32 or if no hash sums options specified */
 		opt.fmt = (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags ? FMT_SFV : FMT_SIMPLE);
 	}
@@ -502,22 +502,22 @@ void init_printf_format(strbuf_t* out)
 
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
-	if(opt.sum_flags & OPT_ED2K_LINK) {
+	if (opt.sum_flags & OPT_ED2K_LINK) {
 		rsh_str_append_n(out, "%l", 2);
 		out->str[1] &= up_flag;
 		return;
 	}
 
-	if(opt.sum_flags == 0) return;
+	if (opt.sum_flags == 0) return;
 
-	if(opt.fmt == FMT_BSD) {
+	if (opt.fmt == FMT_BSD) {
 		fmt = "\003(%p) = \001\\n";
-	} else if(opt.fmt == FMT_MAGNET) {
+	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=%{urlname}");
 		fmt = "&xt=urn:\002:\001";
 		force_base32_mask = (RHASH_SHA1 | RHASH_BTIH);
 		tail = "\\n";
-	} else if(opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
+	} else if (opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
 		fmt = "\001  %p\\n";
 	} else {
 		rsh_str_append_n(out, "%p", 2);
@@ -526,28 +526,28 @@ void init_printf_format(strbuf_t* out)
 	}
 
 	/* loop by hashes */
-	for(bit = 1 << index; bit <= opt.sum_flags; bit = bit << 1, index++) {
+	for (bit = 1 << index; bit <= opt.sum_flags; bit = bit << 1, index++) {
 		const char *p;
 		print_hash_info *info;
 
-		if((bit & opt.sum_flags) == 0) continue;
+		if ((bit & opt.sum_flags) == 0) continue;
 		p = fmt;
 		info = &hash_info_table[index];
 
 		/* ensure the output buffer have enough space */
 		rsh_str_ensure_size(out, out->len + 256);
 
-		for(;;) {
+		for (;;) {
 			int i;
-			while(*p >= 0x20) out->str[out->len++] = *(p++);
-			if(*p == 0) break;
-			switch((int)*(p++)) {
+			while (*p >= 0x20) out->str[out->len++] = *(p++);
+			if (*p == 0) break;
+			switch ((int)*(p++)) {
 				case 1:
 					out->str[out->len++] = '%';
-					if( (bit & force_base32_mask) != 0 ) {
+					if ( (bit & force_base32_mask) != 0 ) {
 						out->str[out->len++] = 'b';
 					}
-					if(info->short_char) out->str[out->len++] = info->short_char & up_flag;
+					if (info->short_char) out->str[out->len++] = info->short_char & up_flag;
 					else {
 						char *letter;
 						out->str[out->len++] = '{';
@@ -563,12 +563,12 @@ void init_printf_format(strbuf_t* out)
 				case 3:
 					rsh_str_append(out, info->name);
 					i = (int)strlen(info->name);
-					for(i = (i < 5 ? 6 - i : 1); i > 0; i--) out->str[out->len++] = ' ';
+					for (i = (i < 5 ? 6 - i : 1); i > 0; i--) out->str[out->len++] = ' ';
 					break;
 			}
 		}
 	}
-	if(tail) {
+	if (tail) {
 		rsh_str_append(out, tail);
 	}
 	out->str[out->len] = '\0';

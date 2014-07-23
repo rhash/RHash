@@ -137,36 +137,36 @@ static void print_verbose_error(struct file_info *info)
 
 	fprintf(rhash_data.out, _("ERROR"));
 
-	if(HC_WRONG_FILESIZE & info->hc.flags) {
+	if (HC_WRONG_FILESIZE & info->hc.flags) {
 		sprintI64(actual, info->rctx->msg_size, 0);
 		sprintI64(expected, info->hc.file_size, 0);
 		fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected);
 	}
 
-	if(HC_WRONG_EMBCRC32 & info->hc.flags) {
+	if (HC_WRONG_EMBCRC32 & info->hc.flags) {
 		rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 		fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected);
 	}
 
-	if(HC_WRONG_HASHES & info->hc.flags) {
+	if (HC_WRONG_HASHES & info->hc.flags) {
 		int i;
 		unsigned reported = 0;
-		for(i = 0; i < info->hc.hashes_num; i++) {
+		for (i = 0; i < info->hc.hashes_num; i++) {
 			hash_value *hv = &info->hc.hashes[i];
 			char *expected_hash = info->hc.data + hv->offset;
 			unsigned hid = hv->hash_id;
 			int pflags;
-			if((info->hc.wrong_hashes & (1 << i)) == 0) continue;
+			if ((info->hc.wrong_hashes & (1 << i)) == 0) continue;
 
 			assert(hid != 0);
 
 			/* if can't detect precise hash */
-			if((hid & (hid - 1)) != 0) {
+			if ((hid & (hid - 1)) != 0) {
 				/* guess the hash id */
-				if(hid & opt.sum_flags) hid &= opt.sum_flags;
-				if(hid & ~info->hc.found_hash_ids) hid &= ~info->hc.found_hash_ids;
-				if(hid & ~reported) hid &= ~reported; /* avoiding repeating */
-				if(hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
+				if (hid & opt.sum_flags) hid &= opt.sum_flags;
+				if (hid & ~info->hc.found_hash_ids) hid &= ~info->hc.found_hash_ids;
+				if (hid & ~reported) hid &= ~reported; /* avoiding repeating */
+				if (hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
 				hid &= -(int)hid; /* take the lowest bit */
 			}
 			assert(hid != 0 && (hid & (hid - 1)) == 0); /* single bit only */
@@ -194,14 +194,14 @@ static void print_verbose_error(struct file_info *info)
  */
 static void print_check_result(struct file_info *info, int print_name, int print_result)
 {
-	if(print_name) {
+	if (print_name) {
 		fprintf(rhash_data.out, "%-51s ", info->print_path);
 	}
-	if(print_result) {
-		if(info->error == -1) {
+	if (print_result) {
+		if (info->error == -1) {
 			/* print error to stdout */
 			fprintf(rhash_data.out, "%s\n", strerror(errno));
-		} else if(!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
+		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			/* TRANSLATORS: use at least 3 characters to overwrite "99%" */
 			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") :
 				/* TRANSLATORS: ERR is short for 'error' */
@@ -222,10 +222,10 @@ static void print_check_result(struct file_info *info, int print_name, int print
  */
 static void print_results_on_check(struct file_info *info, int init)
 {
-	if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+	if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 		int print_name = (opt.flags & (OPT_PERCENTS | OPT_SKIP_OK) ? !init : init);
 
-		if(!init && (opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags)) {
+		if (!init && (opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags)) {
 			return; /* skip OK message */
 		}
 
@@ -291,7 +291,7 @@ static void dots_finish_percents(struct file_info *info, int process_res)
 	char buf[80];
 	info->error = process_res;
 
-	if((percents.points % 74) != 0) {
+	if ((percents.points % 74) != 0) {
 		log_msg("%s 100%%\n", str_set(buf, ' ', 74 - (percents.points%74) ));
 	}
 	print_results_on_check(info, 0);
@@ -307,9 +307,9 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 {
 	const int pt_size = 1024*1024; /* 1MiB */
 	offset -= info->msg_offset; /* get real file offset */
-	if( (offset % pt_size) != 0 ) return;
+	if ( (offset % pt_size) != 0 ) return;
 
-	if(percents.points == 0) {
+	if (percents.points == 0) {
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			fprintf(rhash_data.log, _("\nChecking %s\n"), info->print_path);
 		} else {
@@ -319,8 +319,8 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 	}
 	putc('.', rhash_data.log);
 
-	if(((++percents.points) % 74) == 0) {
-		if(info->size > 0) {
+	if (((++percents.points) % 74) == 0) {
+		if (info->size > 0) {
 			int perc = (int)( offset * 100.0 / (uint64_t)info->size + 0.5 );
 			fprintf(rhash_data.log, "  %2u%%\n", perc);
 			fflush(rhash_data.log);
@@ -358,10 +358,10 @@ static int p_init_percents(struct file_info *info)
 	fprintf(rhash_data.log, "%-51s ", info->print_path);
 
 #ifdef WIN32_USE_CURSOR
-	if(percents.use_cursor) {
+	if (percents.use_cursor) {
 		/* store cursor coordinates */
 		percents.hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if(percents.hOut == INVALID_HANDLE_VALUE ||
+		if (percents.hOut == INVALID_HANDLE_VALUE ||
 			!GetConsoleScreenBufferInfo(percents.hOut, &csbInfo)) {
 				percents.hOut = NULL;
 				return 0;
@@ -393,22 +393,22 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 
 #ifdef WIN32_USE_CURSOR
 	COORD dwCursorPosition;
-	if(percents.use_cursor && percents.hOut == NULL) return;
+	if (percents.use_cursor && percents.hOut == NULL) return;
 #endif
 
-	if(info->size > 0) {
+	if (info->size > 0) {
 		offset -= info->msg_offset;
 		/* use only two digits to display percents: 0%-99% */
 		perc = (int)( offset * 99.9 / (uint64_t)info->size );
-		if(percents.points == perc) return;
+		if (percents.points == perc) return;
 	}
 
 	/* update percents no more than 20 times per second */
 	ticks = rhash_get_ticks(); /* clock ticks count in milliseconds */
-	if((unsigned)(ticks - percents.ticks) < 50) return;
+	if ((unsigned)(ticks - percents.ticks) < 50) return;
 
 	/* output percents or rotated bar */
-	if(info->size > 0) {
+	if (info->size > 0) {
 		fprintf(rhash_data.log, "%u%%", perc);
 		percents.points = perc;
 	} else {
@@ -416,7 +416,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 	}
 
 #ifdef WIN32_USE_CURSOR
-	if(percents.use_cursor) {
+	if (percents.use_cursor) {
 		fflush(rhash_data.log);
 
 		/* rewind the cursor position */
@@ -444,19 +444,19 @@ static void p_finish_percents(struct file_info *info, int process_res)
 	int need_check_result;
 
 #ifdef WIN32_USE_CURSOR
-	if(percents.use_cursor && percents.hOut == NULL) return;
+	if (percents.use_cursor && percents.hOut == NULL) return;
 #endif
 
 	need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
 		!((opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags));
 	info->error = process_res;
 
-	if(percents.same_output && need_check_result) {
+	if (percents.same_output && need_check_result) {
 		print_check_result(info, 0, 1);
 	} else {
 		fprintf(rhash_data.log, "100%%\n");
 		fflush(rhash_data.log);
-		if(need_check_result) print_check_result(info, 1, 1);
+		if (need_check_result) print_check_result(info, 1, 1);
 	}
 }
 
@@ -473,12 +473,12 @@ struct percents_output_info_t p_perc = {
 
 static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path)
 {
-	if(stream_path) {
+	if (stream_path) {
 #ifdef _WIN32
-		if( !(*p_stream = _wfsopen(stream_path, L"w", _SH_DENYNO)) ) {
+		if ( !(*p_stream = _wfsopen(stream_path, L"w", _SH_DENYNO)) ) {
 			log_file_error(w2c((wchar_t*)stream_path));
 #else
-		if( !(*p_stream = fopen(stream_path, "w")) ) {
+		if ( !(*p_stream = fopen(stream_path, "w")) ) {
 			log_file_error(stream_path);
 #endif
 			rsh_exit(2);
@@ -497,10 +497,10 @@ void setup_output(void)
 	setup_log_stream(&rhash_data.log, opt.log);
 	setup_log_stream(&rhash_data.out, opt.output);
 
-	if(opt.flags & OPT_PERCENTS) {
+	if (opt.flags & OPT_PERCENTS) {
 		/* NB: we don't use _fileno() cause it is not in ISO C90, and so
 		 * is incompatible with the GCC -ansi option */
-		if(rhash_data.log == stderr && isatty(2)) {
+		if (rhash_data.log == stderr && isatty(2)) {
 			/* use one-line percents by default on console */
 			percents_output  = &p_perc;
 		} else {
@@ -519,7 +519,7 @@ void setup_output(void)
  */
 void print_check_stats(void)
 {
-	if(rhash_data.processed == rhash_data.ok) {
+	if (rhash_data.processed == rhash_data.ok) {
 		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
 		fprintf(rhash_data.out, _("Everything OK\n"));
 	} else {

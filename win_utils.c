@@ -26,7 +26,7 @@ static wchar_t* cstr_to_wchar(const char* str, int codepage)
 {
 	wchar_t* buf;
 	int size = MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, str, -1, NULL, 0);
-	if(size == 0) return NULL; /* conversion failed */
+	if (size == 0) return NULL; /* conversion failed */
 
 	buf = (wchar_t*)rsh_malloc(size * sizeof(wchar_t));
 	MultiByteToWideChar(codepage, 0, str, -1, buf, size);
@@ -72,20 +72,20 @@ char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
 	int size;
 	char *buf;
 	BOOL bUsedDefChar, *lpUsedDefaultChar;
-	if(codepage == -1) {
+	if (codepage == -1) {
 		codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_OEM) ? CP_OEMCP : CP_ACP);
 	}
 	/* note: lpUsedDefaultChar must be NULL for CP_UTF8, otrherwise WideCharToMultiByte() will fail */
 	lpUsedDefaultChar = (failed && codepage != CP_UTF8 ? &bUsedDefChar : NULL);
 
 	size = WideCharToMultiByte(codepage, 0, wstr, -1, 0, 0, 0, 0);
-	if(size == 0) {
+	if (size == 0) {
 		if (failed) *failed = 1;
 		return NULL; /* conversion failed */
 	}
 	buf = (char*)rsh_malloc(size);
 	WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, lpUsedDefaultChar);
-	if(failed) *failed = (lpUsedDefaultChar && *lpUsedDefaultChar);
+	if (failed) *failed = (lpUsedDefaultChar && *lpUsedDefaultChar);
 	return buf;
 }
 
@@ -114,9 +114,9 @@ char* win_to_utf8(const char* str)
 	wchar_t* buf;
 
 	assert((opt.flags & (OPT_UTF8 | OPT_OEM | OPT_ANSI)) != 0);
-	if(opt.flags & OPT_UTF8) return rsh_strdup(str);
+	if (opt.flags & OPT_UTF8) return rsh_strdup(str);
 
-	if((buf = c2w(str, 0)) == NULL) return NULL;
+	if ((buf = c2w(str, 0)) == NULL) return NULL;
 	res = wchar_to_cstr(buf, CP_UTF8, NULL);
 	free(buf);
 	return res;
@@ -138,12 +138,12 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
 	assert(wmode != NULL);
 
 	/* try two code pages */
-	for(i = 0; i < 2; i++) {
+	for (i = 0; i < 2; i++) {
 		wchar_t* wpath = c2w(path, i);
-		if(wpath == NULL) continue;
+		if (wpath == NULL) continue;
 		fd = _wfsopen(wpath, wmode, (exclusive ? _SH_DENYWR : _SH_DENYNO));
 		free(wpath);
-		if(fd || errno != ENOENT) break;
+		if (fd || errno != ENOENT) break;
 	}
 	free(wmode);
 	return fd;
@@ -158,12 +158,12 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
 int can_open_exclusive(const char* path)
 {
 	int i, res = 0;
-	for(i = 0; i < 2 && res == 0; i++) {
+	for (i = 0; i < 2 && res == 0; i++) {
 		int fd;
 		wchar_t* wpath = c2w(path, i);
-		if(wpath == NULL) continue;
+		if (wpath == NULL) continue;
 		fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYWR, 0);
-		if(fd >= 0) {
+		if (fd >= 0) {
 			res = 1;
 			_close(fd);
 		}
@@ -259,19 +259,19 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	wchar_t* res;
 	size_t len;
 
-	if(dir_path == 0) dir_len = 0;
+	if (dir_path == 0) dir_len = 0;
 	else {
 		/* remove leading path separators from filename */
-		while(IS_PATH_SEPARATOR_W(*filename)) filename++;
+		while (IS_PATH_SEPARATOR_W(*filename)) filename++;
 
-		if(dir_len == (size_t)-1) dir_len = wcslen(dir_path);
+		if (dir_len == (size_t)-1) dir_len = wcslen(dir_path);
 	}
 	len = wcslen(filename);
 
 	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
-	if(dir_len > 0) {
+	if (dir_len > 0) {
 		memcpy(res, dir_path, dir_len * sizeof(wchar_t));
-		if(res[dir_len - 1] != (wchar_t)SYS_PATH_SEPARATOR) {
+		if (res[dir_len - 1] != (wchar_t)SYS_PATH_SEPARATOR) {
 			/* append path separator to the directory */
 			res[dir_len++] = (wchar_t)SYS_PATH_SEPARATOR;
 		}
@@ -289,10 +289,10 @@ void set_benchmark_cpu_affinity(void)
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
-	if( GetProcessAffinityMask(GetCurrentProcess(), &dwProcessMask, &dwSysMask) ) {
+	if ( GetProcessAffinityMask(GetCurrentProcess(), &dwProcessMask, &dwSysMask) ) {
 		dwDesired = dwSysMask & (dwProcessMask & ~1); /* remove the first processor */
 		dwDesired = (dwDesired ? dwDesired : dwSysMask & ~1);
-		if(dwDesired != 0) {
+		if (dwDesired != 0) {
 			SetProcessAffinityMask(GetCurrentProcess(), dwDesired);
 		}
 	}
@@ -313,7 +313,7 @@ void setup_console(void)
 	rhash_data.saved_console_codepage = -1;
 	/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
 	/* cause _fileno() is undefined,  when compiling as strict ansi C. */
-	if(cp > 0 && IsValidCodePage(cp) && (isatty(1) || isatty(2)))
+	if (cp > 0 && IsValidCodePage(cp) && (isatty(1) || isatty(2)))
 	{
 		rhash_data.saved_console_codepage = GetConsoleOutputCP();
 		SetConsoleOutputCP(cp);
@@ -322,9 +322,9 @@ void setup_console(void)
 		rsh_exit = rhash_exit;
 	}
 
-	if((opt.flags & OPT_PERCENTS) != 0 && isatty(2)) {
+	if ((opt.flags & OPT_PERCENTS) != 0 && isatty(2)) {
 		hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if(hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci)) {
+		if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci)) {
 			/* store current cursor size and visibility flag */
 			rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
@@ -343,12 +343,12 @@ void restore_console(void)
 	HANDLE hOut;
 	CONSOLE_CURSOR_INFO cci;
 
-	if(rhash_data.saved_console_codepage > 0) {
+	if (rhash_data.saved_console_codepage > 0) {
 		SetConsoleOutputCP(rhash_data.saved_console_codepage);
 	}
 
 	hOut = GetStdHandle(STD_ERROR_HANDLE);
-	if(hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
+	if (hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
 		/* restore cursor size and visibility */
 		cci.dwSize = rhash_data.saved_cursor_size;
 		cci.bVisible = 1;
@@ -382,12 +382,12 @@ WIN_DIR* win_opendir(const char* dir_path)
 	/* append '\*' to the dir_path */
 	size_t len = strlen(dir_path);
 	char *path = (char*)malloc(len + 3);
-	if(!path) return NULL; /* failed, malloc also set errno = ENOMEM */
+	if (!path) return NULL; /* failed, malloc also set errno = ENOMEM */
 	strcpy(path, dir_path);
 	strcpy(path + len, "\\*");
 
 	d = (WIN_DIR*)malloc(sizeof(WIN_DIR));
-	if(!d) {
+	if (!d) {
 		free(path);
 		return NULL;
 	}
@@ -398,16 +398,16 @@ WIN_DIR* win_opendir(const char* dir_path)
 		FindFirstFileW(wpath, &d->findFileData) : INVALID_HANDLE_VALUE);
 	free(wpath);
 
-	if(d->hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ACCESS_DENIED) {
+	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ACCESS_DENIED) {
 		wpath = c2w(path, 1); /* try to use secondary codepage */
-		if(wpath) {
+		if (wpath) {
 			d->hFind = FindFirstFileW(wpath, &d->findFileData);
 			free(wpath);
 		}
 	}
 	free(path);
 
-	if(d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
+	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
 		free(d);
 		errno = EACCES;
 		return NULL;
@@ -438,7 +438,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 
 	d->hFind = FindFirstFileW(wpath, &d->findFileData);
 	free(wpath);
-	if(d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
+	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
 		free(d);
 		errno = EACCES;
 		return NULL;
@@ -457,7 +457,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
  */
 void win_closedir(WIN_DIR* d)
 {
-	if(d->hFind != INVALID_HANDLE_VALUE) {
+	if (d->hFind != INVALID_HANDLE_VALUE) {
 		FindClose(d->hFind);
 	}
 	free(d->dir.d_name);
@@ -475,15 +475,15 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 	char* filename;
 	int failed;
 
-	if(d->state == -1) return NULL;
-	if(d->dir.d_name != NULL) {
+	if (d->state == -1) return NULL;
+	if (d->dir.d_name != NULL) {
 		free(d->dir.d_name);
 		d->dir.d_name = NULL;
 	}
 
-	for(;;) {
-		if(d->state > 0) {
-			if( !FindNextFileW(d->hFind, &d->findFileData) ) {
+	for (;;) {
+		if (d->state > 0) {
+			if ( !FindNextFileW(d->hFind, &d->findFileData) ) {
 				/* the directory listing has ended */
 				d->state = -1;
 				return NULL;
@@ -491,7 +491,7 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 		}
 		d->state++;
 
-		if(d->findFileData.cFileName[0] == L'.' &&
+		if (d->findFileData.cFileName[0] == L'.' &&
 			(d->findFileData.cFileName[1] == 0 ||
 			(d->findFileData.cFileName[1] == L'.' &&
 			d->findFileData.cFileName[2] == 0))) {
@@ -501,14 +501,14 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 
 		d->dir.d_name = filename = wchar_to_cstr(d->findFileData.cFileName, WIN_DEFAULT_ENCODING, &failed);
 
-		if(filename && !failed) {
+		if (filename && !failed) {
 			d->dir.d_wname = d->findFileData.cFileName;
 			d->dir.d_isdir = (0 != (d->findFileData.dwFileAttributes &
 				FILE_ATTRIBUTE_DIRECTORY));
 			return &d->dir;
 		}
 		/* quietly skip an invalid filename and repeat the search */
-		if(filename) {
+		if (filename) {
 			free(filename);
 			d->dir.d_name = NULL;
 		}

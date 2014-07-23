@@ -211,9 +211,9 @@ int main(int argc, char *argv[])
 	rhash_library_init();
 
 	/* in benchmark mode just run benchmark and exit */
-	if(opt.mode & MODE_BENCHMARK) {
+	if (opt.mode & MODE_BENCHMARK) {
 		unsigned flags = (opt.flags & OPT_BENCH_RAW ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
-		if((opt.flags & OPT_BENCH_RAW) == 0) {
+		if ((opt.flags & OPT_BENCH_RAW) == 0) {
 			fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, VERSION);
 		}
 		run_benchmark(opt.sum_flags, flags);
@@ -221,8 +221,8 @@ int main(int argc, char *argv[])
 		rsh_exit(exit_code);
 	}
 
-	if(opt.n_files == 0) {
-		if(argc > 1) {
+	if (opt.n_files == 0) {
+		if (argc > 1) {
 			log_warning(_("no files/directories were specified at command line\n"));
 		}
 
@@ -236,21 +236,21 @@ int main(int argc, char *argv[])
 	/* setup printf formating string */
 	rhash_data.printf_str = opt.printf_str;
 
-	if(opt.template_file) {
-		if(!load_printf_template()) rsh_exit(2);
-	} else if(!rhash_data.printf_str && !(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED))) {
+	if (opt.template_file) {
+		if (!load_printf_template()) rsh_exit(2);
+	} else if (!rhash_data.printf_str && !(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED))) {
 		/* initialize printf output format according to '--<hashname>' options */
 		init_printf_format( (rhash_data.template_text = rsh_str_new()) );
 		rhash_data.printf_str = rhash_data.template_text->str;
 
-		if(opt.flags & OPT_VERBOSE) {
+		if (opt.flags & OPT_VERBOSE) {
 			char* str = rsh_strdup(rhash_data.printf_str);
 			log_msg(_("Format string is: %s\n"), str_trim(str));
 			free(str);
 		}
 	}
 
-	if(rhash_data.printf_str) {
+	if (rhash_data.printf_str) {
 		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
 	}
 
@@ -258,12 +258,12 @@ int main(int argc, char *argv[])
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->call_back = find_file_callback;
 
-	if((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
+	if ((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
 		print_sfv_banner(rhash_data.out);
 	}
 
 	/* preprocess files */
-	if(sfv || opt.bt_batch_file) {
+	if (sfv || opt.bt_batch_file) {
 		/* note: errors are not reported on preprocessing */
 		opt.search_data->call_back_data = 1;
 		scan_files(opt.search_data);
@@ -280,18 +280,18 @@ int main(int argc, char *argv[])
 	opt.search_data->call_back_data = 0;
 	scan_files(opt.search_data);
 
-	if((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
+	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		print_check_stats();
 	}
 
-	if(!rhash_data.interrupted)
+	if (!rhash_data.interrupted)
 	{
-		if(opt.bt_batch_file && rhash_data.rctx) {
+		if (opt.bt_batch_file && rhash_data.rctx) {
 			rhash_final(rhash_data.rctx, 0);
 			save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
 		}
 
-		if((opt.flags & OPT_SPEED) &&
+		if ((opt.flags & OPT_SPEED) &&
 			!(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
 			rhash_data.processed > 1)
 		{
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		/* check if interruption was not reported yet */
-		if(rhash_data.interrupted == 1) report_interrupted();
+		if (rhash_data.interrupted == 1) report_interrupted();
 	}
 
 	exit_code = (rhash_data.error_flag ? 1 :

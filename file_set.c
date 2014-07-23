@@ -23,7 +23,7 @@
 static unsigned file_set_make_hash(const char* string)
 {
 	unsigned hash;
-	if(rhash_msg(RHASH_CRC32, string, strlen(string), (unsigned char*)&hash) < 0)
+	if (rhash_msg(RHASH_CRC32, string, strlen(string), (unsigned char*)&hash) < 0)
 		return 0;
 	return hash;
 }
@@ -36,11 +36,11 @@ static unsigned file_set_make_hash(const char* string)
  */
 static int file_set_item_set_filepath(file_set_item* item, const char* filepath)
 {
-	if(item->search_filepath != item->filepath)
+	if (item->search_filepath != item->filepath)
 		free(item->search_filepath);
 	free(item->filepath);
 	item->filepath = rsh_strdup(filepath);
-	if(!item->filepath) return 0;
+	if (!item->filepath) return 0;
 
 	/* apply str_tolower if CASE_INSENSITIVE */
 	/* Note: strcasecmp() is not used instead of search_filepath due to portability issue */
@@ -61,8 +61,8 @@ static file_set_item* file_set_item_new(const char* filepath)
 	file_set_item *item = (file_set_item*)rsh_malloc(sizeof(file_set_item));
 	memset(item, 0, sizeof(file_set_item));
 
-	if(filepath) {
-		if(!file_set_item_set_filepath(item, filepath)) {
+	if (filepath) {
+		if (!file_set_item_set_filepath(item, filepath)) {
 			free(item);
 			return NULL;
 		}
@@ -77,7 +77,7 @@ static file_set_item* file_set_item_new(const char* filepath)
  */
 void file_set_item_free(file_set_item *item)
 {
-	if(item->search_filepath != item->filepath) {
+	if (item->search_filepath != item->filepath) {
 		free(item->search_filepath);
 	}
 	free(item->filepath);
@@ -95,7 +95,7 @@ static int crc_pp_rec_compare(const void *pp_rec1, const void *pp_rec2)
 {
 	const file_set_item *rec1 = *(file_set_item *const *)pp_rec1;
 	const file_set_item *rec2 = *(file_set_item *const *)pp_rec2;
-	if(rec1->hash != rec2->hash) return (rec1->hash < rec2->hash ? -1 : 1);
+	if (rec1->hash != rec2->hash) return (rec1->hash < rec2->hash ? -1 : 1);
 	return strcmp(rec1->search_filepath, rec2->search_filepath);
 }
 
@@ -119,7 +119,7 @@ static int path_compare(const void *rec1, const void *rec2)
  */
 void file_set_sort(file_set *set)
 {
-	if(set->array) qsort(set->array, set->size, sizeof(file_set_item*), crc_pp_rec_compare);
+	if (set->array) qsort(set->array, set->size, sizeof(file_set_item*), crc_pp_rec_compare);
 }
 
 /**
@@ -141,7 +141,7 @@ void file_set_sort_by_path(file_set *set)
 void file_set_add_name(file_set *set, const char* filepath)
 {
 	file_set_item* item = file_set_item_new(filepath);
-	if(item) file_set_add(set, item);
+	if (item) file_set_add(set, item);
 }
 
 /**
@@ -158,7 +158,7 @@ int file_set_exist(file_set *set, const char* filepath)
 	unsigned hash;
 	char* search_filepath;
 
-	if(!set->size) return 0; /* not found */
+	if (!set->size) return 0; /* not found */
 	assert(set->array != NULL);
 
 	/* apply str_tolower if case shall be ignored */
@@ -169,25 +169,25 @@ int file_set_exist(file_set *set, const char* filepath)
 	hash = file_set_make_hash(search_filepath);
 
 	/* fast binary search */
-	for(a = -1, b = (int)set->size; (a + 1) < b;) {
+	for (a = -1, b = (int)set->size; (a + 1) < b;) {
 		file_set_item *item;
 
 		c = (a + b) / 2;
 		assert(0 <= c && c < (int)set->size);
 
 		item = (file_set_item*)set->array[c];
-		if(hash != item->hash) {
+		if (hash != item->hash) {
 			cmp = (hash < item->hash ? -1 : 1);
 		} else {
 			cmp = strcmp(search_filepath, item->search_filepath);
-			if(cmp == 0) {
+			if (cmp == 0) {
 				res = 1; /* file path has been found */
 				break;
 			}
 		}
-		if(cmp < 0) b = c;
+		if (cmp < 0) b = c;
 		else a = c;
 	}
-	if(search_filepath != filepath) free(search_filepath);
+	if (search_filepath != filepath) free(search_filepath);
 	return res;
 }

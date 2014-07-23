@@ -35,18 +35,18 @@ int update_hash_file(file_t* file)
 	timedelta_t timer;
 	int res;
 
-	if(opt.flags & OPT_VERBOSE) {
+	if (opt.flags & OPT_VERBOSE) {
 		log_msg(_("Updating: %s\n"), file->path);
 	}
 
 	crc_entries = file_set_new();
 	res = file_set_load_from_crc_file(crc_entries, file);
 
-	if(opt.flags & OPT_SPEED) rsh_timer_start(&timer);
+	if (opt.flags & OPT_SPEED) rsh_timer_start(&timer);
 	rhash_data.total_size = 0;
 	rhash_data.processed  = 0;
 
-	if(res == 0) {
+	if (res == 0) {
 		/* add the crc file itself to the set of excluded from re-calculation files */
 		file_set_add_name(crc_entries, get_basename(file->path));
 		file_set_sort(crc_entries);
@@ -56,7 +56,7 @@ int update_hash_file(file_t* file)
 	}
 	file_set_free(crc_entries);
 
-	if(opt.flags & OPT_SPEED && rhash_data.processed > 0) {
+	if (opt.flags & OPT_SPEED && rhash_data.processed > 0) {
 		double time = rsh_timer_stop(&timer);
 		print_time_stats(time, rhash_data.total_size, 1);
 	}
@@ -78,30 +78,30 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 	char buf[2048];
 	hash_check hc;
 
-	if( !(fd = rsh_fopen_bin(file->path, "rb") )) {
+	if ( !(fd = rsh_fopen_bin(file->path, "rb") )) {
 		/* if file not exist, it will be created */
 		return (errno == ENOENT ? 0 : -1);
 	}
-	for(line_num = 0; fgets(buf, 2048, fd); line_num++) {
+	for (line_num = 0; fgets(buf, 2048, fd); line_num++) {
 		char* line = buf;
 
 		/* skip unicode BOM */
-		if(line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
+		if (line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
 
-		if(*line == 0) continue; /* skip empty lines */
+		if (*line == 0) continue; /* skip empty lines */
 
-		if(is_binary_string(line)) {
+		if (is_binary_string(line)) {
 			log_error(_("skipping binary file %s\n"), file->path);
 			fclose(fd);
 			return -1;
 		}
 
-		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
+		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		/* parse a hash file line */
-		if(hash_check_parse_line(line, &hc, !feof(fd))) {
+		if (hash_check_parse_line(line, &hc, !feof(fd))) {
 			/* store file info to the file set */
-			if(hc.file_path) file_set_add_name(set, hc.file_path);
+			if (hc.file_path) file_set_add_name(set, hc.file_path);
 		}
 	}
 	fclose(fd);
@@ -128,55 +128,55 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	int print_banner = (opt.fmt == FMT_SFV);
 
 	file->size = 0;
-	if(rsh_file_stat(file) == 0) {
-		if(print_banner && file->size > 0) print_banner = 0;
+	if (rsh_file_stat(file) == 0) {
+		if (print_banner && file->size > 0) print_banner = 0;
 	}
 
 	/* open the hash file for writing */
-	if( !(fd = fopen(file->path, "r+") )) {
+	if ( !(fd = fopen(file->path, "r+") )) {
 		log_file_error(file->path);
 		return -1;
 	}
 	rhash_data.upd_fd = fd;
 
-	if(file->size > 0) {
+	if (file->size > 0) {
 		/* read the last character of the file to check if it is EOL */
-		if(fseek(fd, -1, SEEK_END) != 0) {
+		if (fseek(fd, -1, SEEK_END) != 0) {
 			log_file_error(file->path);
 			return -1;
 		}
 		ch = fgetc(fd);
 
 		/* somehow writing doesn't work without seeking */
-		if(fseek(fd, 0, SEEK_END) != 0) {
+		if (fseek(fd, 0, SEEK_END) != 0) {
 			log_file_error(file->path);
 			return -1;
 		}
 
 		/* write EOL if it wasn't present */
-		if(ch != '\n' && ch != '\r') {
+		if (ch != '\n' && ch != '\r') {
 			/* fputc('\n', fd); */
 			fprintf(fd, "\n");
 		}
 	}
 
 	/* append hash sums to the updated crc file */
-	for(i = 0; i < files_to_add->size; i++, rhash_data.processed++)
+	for (i = 0; i < files_to_add->size; i++, rhash_data.processed++)
 	{
 		file_t file;
 		char *print_path = file_set_get(files_to_add, i)->filepath;
 		file.wpath = 0;
 		file.mode = 0;
 
-		if(dir_path[0] != '.' || dir_path[1] != 0) {
+		if (dir_path[0] != '.' || dir_path[1] != 0) {
 			/* prepend the file path by directory path */
 			file.path = make_path(dir_path, print_path);
 		} else {
 			file.path = rsh_strdup(print_path);
 		}
 
-		if(opt.fmt == FMT_SFV) {
-			if(print_banner) {
+		if (opt.fmt == FMT_SFV) {
+			if (print_banner) {
 				print_sfv_banner(fd);
 				print_banner = 0;
 			}
@@ -188,7 +188,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 
 		rsh_file_cleanup(&file);
 
-		if(rhash_data.interrupted) {
+		if (rhash_data.interrupted) {
 			fclose(fd);
 			return 0;
 		}
@@ -214,14 +214,14 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 
 	/* read directory */
 	dp = opendir(dir_path);
-	if(!dp) return -1;
+	if (!dp) return -1;
 
-	while((de = readdir(dp)) != NULL) {
+	while ((de = readdir(dp)) != NULL) {
 		char *path;
 		unsigned is_regular;
 
 		/* skip "." and ".." directories */
-		if(de->d_name[0] == '.' && (de->d_name[1] == 0 ||
+		if (de->d_name[0] == '.' && (de->d_name[1] == 0 ||
 				(de->d_name[1] == '.' && de->d_name[2] == 0))) {
 					continue;
 		}
@@ -234,7 +234,7 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 		/* skip non-regular files (directories, device files, e.t.c.),
 		 * as well as files not accepted by current file filter
 		 * and files already present in the crc_entries file set */
-		if(!is_regular || !file_mask_match(opt.files_accept, de->d_name) ||
+		if (!is_regular || !file_mask_match(opt.files_accept, de->d_name) ||
 			file_set_exist(crc_entries, de->d_name))
 		{
 			continue;
@@ -271,14 +271,14 @@ static int add_new_crc_entries(file_t* file, file_set *crc_entries)
 	/* load into files_to_add files from directory not present in the crc_entries */
 	load_filtered_dir(dir_path, crc_entries, files_to_add);
 
-	if(files_to_add->size > 0) {
+	if (files_to_add->size > 0) {
 		/* sort files by path */
 		file_set_sort_by_path(files_to_add);
 
 		/* calculate and write crc sums to the file */
 		res = add_sums_to_file(file, dir_path, files_to_add);
 
-		if(res == 0 && opt.fmt == FMT_SFV && !rhash_data.interrupted) {
+		if (res == 0 && opt.fmt == FMT_SFV && !rhash_data.interrupted) {
 			/* move SFV header from the end of updated file to its head */
 			res = fix_sfv_header(file);
 		}
@@ -304,7 +304,7 @@ static int fix_sfv_header(file_t* file)
 	char* tmp_file;
 	int err = 0;
 
-	if( !(in = fopen(file->path, "r") )) {
+	if ( !(in = fopen(file->path, "r") )) {
 		log_file_error(file->path);
 		return -1;
 	}
@@ -316,7 +316,7 @@ static int fix_sfv_header(file_t* file)
 	strcpy(tmp_file+len, ".new");
 
 	/* open the temporary file */
-	if( !(out = fopen(tmp_file, "w") )) {
+	if ( !(out = fopen(tmp_file, "w") )) {
 		log_file_error(tmp_file);
 		free(tmp_file);
 		fclose(in);
@@ -324,25 +324,25 @@ static int fix_sfv_header(file_t* file)
 	}
 
 	/* The first, output all commented lines to the file header */
-	while(fgets(line, 2048, in)) {
-		if(*line == ';') {
-			if(fputs(line, out) < 0) break;
+	while (fgets(line, 2048, in)) {
+		if (*line == ';') {
+			if (fputs(line, out) < 0) break;
 		}
 	}
-	if(!ferror(out) && !ferror(in)) {
+	if (!ferror(out) && !ferror(in)) {
 		fseek(in, 0, SEEK_SET);
 		/* The second, output non-commented lines */
-		while(fgets(line, 2048, in)) {
-			if(*line != ';') {
-				if(fputs(line, out) < 0) break;
+		while (fgets(line, 2048, in)) {
+			if (*line != ';') {
+				if (fputs(line, out) < 0) break;
 			}
 		}
 	}
-	if(ferror(in)) {
+	if (ferror(in)) {
 		log_file_error(file->path);
 		err = 1;
 	}
-	if(ferror(out)) {
+	if (ferror(out)) {
 		log_file_error(tmp_file);
 		err = 1;
 	}
@@ -351,12 +351,12 @@ static int fix_sfv_header(file_t* file)
 	fclose(out);
 
 	/* overwrite the hash file with a new one */
-	if( !err ) {
+	if ( !err ) {
 #ifdef _WIN32
 		/* under win32 the hash file must be removed before overwriting it */
 		unlink(file->path);
 #endif
-		if(rename(tmp_file, file->path) < 0) {
+		if (rename(tmp_file, file->path) < 0) {
 			log_error(_("can't move %s to %s: %s\n"),
 				tmp_file, file->path, strerror(errno));
 			err = 1;

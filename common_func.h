@@ -223,19 +223,19 @@ void rsh_blocks_vector_destroy(blocks_vector_t* vect);
 #define rsh_blocks_vector_get_ptr(bvector, index, blocksize, item_size) \
 	(&((unsigned char*)((bvector)->blocks.array[(index) / (blocksize)]))[(item_size) * ((index) % (blocksize))])
 #define rsh_blocks_vector_add(bvector, item, blocksize, item_size) { \
-	if(((bvector)->size % (blocksize)) == 0) \
+	if (((bvector)->size % (blocksize)) == 0) \
 	rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc((item_size) * (blocksize))); \
 	memcpy(rsh_blocks_vector_get_ptr((bvector), (bvector)->size, (blocksize), (item_size)), (item), (item_size)); \
 	(bvector)->size++; \
 }
 #define rsh_blocks_vector_add_ptr(bvector, ptr, blocksize) { \
-	if(((bvector)->size % (blocksize)) == 0) \
+	if (((bvector)->size % (blocksize)) == 0) \
 	rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc(sizeof(void*) * (blocksize))); \
 	((void***)(bvector)->blocks.array)[(bvector)->size / (blocksize)][(bvector)->size % (blocksize)] = (void*)ptr; \
 	(bvector)->size++; \
 }
 #define rsh_blocks_vector_add_empty(bvector, blocksize, item_size) { \
-	if( (((bvector)->size++) % (blocksize)) == 0) \
+	if ( (((bvector)->size++) % (blocksize)) == 0) \
 	rsh_vector_add_ptr(&((bvector)->blocks), rsh_malloc((item_size) * (blocksize))); \
 }
 
@@ -254,9 +254,9 @@ void rsh_str_append_n(strbuf_t *str, const char* text, size_t len);
 void rsh_str_append(strbuf_t *str, const char* text);
 
 #define rsh_str_ensure_length(str, len) \
-	if((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);
+	if ((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);
 #define rsh_wstr_ensure_length(str, len) \
-	if((size_t)((len) + sizeof(wchar_t)) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + sizeof(wchar_t));
+	if ((size_t)((len) + sizeof(wchar_t)) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + sizeof(wchar_t));
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -34,17 +34,17 @@ static void init_btih_data(struct file_info *info)
 		RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
 	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(PROGRAM_NAME "/" VERSION), 0);
 
-	if(opt.flags & OPT_BT_PRIVATE) {
+	if (opt.flags & OPT_BT_PRIVATE) {
 		rhash_transmit(RMSG_BT_SET_OPTIONS, info->rctx, RHASH_BT_OPT_PRIVATE, 0);
 	}
 
-	if(opt.bt_announce) {
+	if (opt.bt_announce) {
 		rhash_transmit(RMSG_BT_SET_ANNOUNCE, info->rctx, RHASH_STR2UPTR(opt.bt_announce), 0);
 	}
 
-	if(opt.bt_piece_length) {
+	if (opt.bt_piece_length) {
 		rhash_transmit(RMSG_BT_SET_PIECE_LENGTH, info->rctx, RHASH_STR2UPTR(opt.bt_piece_length), 0);
-	} else if(opt.bt_batch_file && rhash_data.batch_size) {
+	} else if (opt.bt_batch_file && rhash_data.batch_size) {
 		rhash_transmit(RMSG_BT_SET_BATCH_SIZE, info->rctx, RHASH_STR2UPTR(&rhash_data.batch_size), 0);
 	}
 }
@@ -56,14 +56,14 @@ static void init_btih_data(struct file_info *info)
  */
 static void re_init_rhash_context(struct file_info *info)
 {
-	if(rhash_data.rctx != 0) {
-		if(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+	if (rhash_data.rctx != 0) {
+		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			/* a set of hash sums can change from file to file */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
 		} else {
 			info->rctx = rhash_data.rctx;
-			if(!opt.bt_batch_file) {
+			if (!opt.bt_batch_file) {
 				rhash_reset(rhash_data.rctx);
 			} else {
 				/* add another file to the torrent batch */
@@ -74,12 +74,12 @@ static void re_init_rhash_context(struct file_info *info)
 		}
 	}
 
-	if(rhash_data.rctx == 0) {
+	if (rhash_data.rctx == 0) {
 		info->rctx = rhash_data.rctx = rhash_init(info->sums_flags);
 	}
 
 	/* re-initialize BitTorrent data */
-	if(info->sums_flags & RHASH_BTIH) {
+	if (info->sums_flags & RHASH_BTIH) {
 		init_btih_data(info);
 	}
 }
@@ -97,29 +97,29 @@ static int calc_sums(struct file_info *info)
 	int res;
 
 	assert(info->file);
-	if(info->file->mode & FILE_IFSTDIN) {
+	if (info->file->mode & FILE_IFSTDIN) {
 		info->print_path = "(stdin)";
 
 #ifdef _WIN32
 		/* using 0 instead of _fileno(stdin). _fileno() is undefined under 'gcc -ansi' */
-		if(setmode(0, _O_BINARY) < 0) {
+		if (setmode(0, _O_BINARY) < 0) {
 			return -1;
 		}
 #endif
 	} else {
-		if((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && FILE_ISDIR(info->file)) {
+		if ((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && FILE_ISDIR(info->file)) {
 			errno = EISDIR;
 			return -1;
 		}
 
 		info->size = info->file->size; /* total size, in bytes */
 
-		if(!info->sums_flags) return 0;
+		if (!info->sums_flags) return 0;
 
 		/* skip without reporting an error the files
 		 * opened exclusively by another process */
 		fd = rsh_fopen_bin(info->full_path, "rb");
-		if(!fd) {
+		if (!fd) {
 			return -1;
 		}
 	}
@@ -128,13 +128,13 @@ static int calc_sums(struct file_info *info)
 	/* save initial msg_size, for correct calculation of percents */
 	info->msg_offset = info->rctx->msg_size;
 
-	if(percents_output->update != 0) {
+	if (percents_output->update != 0) {
 		rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
 	}
 
 	/* read and hash file content */
-	if((res = rhash_file_update(info->rctx, fd)) != -1) {
-		if(!opt.bt_batch_file) {
+	if ((res = rhash_file_update(info->rctx, fd)) != -1) {
+		if (!opt.bt_batch_file) {
 			rhash_final(info->rctx, 0); /* finalize hashing */
 		}
 	}
@@ -142,7 +142,7 @@ static int calc_sums(struct file_info *info)
 	info->size = info->rctx->msg_size - info->msg_offset;
 	rhash_data.total_size += info->size;
 
-	if(fd != stdin) fclose(fd);
+	if (fd != stdin) fclose(fd);
 	return res;
 }
 
@@ -170,16 +170,16 @@ static void file_info_set_print_path(struct file_info* info, const char* print_p
 	char wrong_sep;
 
 	/* check if path separator was specified by command line options */
-	if(opt.path_separator) {
+	if (opt.path_separator) {
 		wrong_sep = (opt.path_separator == '/' ? '\\' : '/');
-		if((p = (char*)strchr(print_path, wrong_sep)) != NULL) {
+		if ((p = (char*)strchr(print_path, wrong_sep)) != NULL) {
 			info->allocated_ptr = rsh_strdup(print_path);
 			info->print_path = info->allocated_ptr;
 			p = info->allocated_ptr + (p - print_path);
 
 			/* replace wrong_sep in the print_path with separator defined by options */
-			for(; *p; p++) {
-				if(*p == wrong_sep) *p = opt.path_separator;
+			for (; *p; p++) {
+				if (*p == wrong_sep) *p = opt.path_separator;
 			}
 			return;
 		}
@@ -197,8 +197,8 @@ static void file_info_set_print_path(struct file_info* info, const char* print_p
  */
 const char* file_info_get_utf8_print_path(struct file_info* info)
 {
-	if(info->utf8_print_path == NULL) {
-		if(is_utf8()) return info->print_path;
+	if (info->utf8_print_path == NULL) {
+		if (is_utf8()) return info->print_path;
 		info->utf8_print_path = to_utf8(info->print_path);
 	}
 	return info->utf8_print_path;
@@ -218,11 +218,11 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32_be)
 	const char* e = filepath + strlen(filepath) - 10;
 
 	/* search for the sum enclosed in brackets */
-	for(; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
-		if((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
+	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
+		if ((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
 			const char *p = e + 8;
-			for(; p > e && IS_HEX(*p); p--);
-			if(p == e) {
+			for (; p > e && IS_HEX(*p); p--);
+			if (p == e) {
 				rhash_hex_to_byte(e + 1, (char unsigned*)crc32_be, 8);
 				return 1;
 			}
@@ -250,14 +250,14 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	assert((info->rctx->hash_id & RHASH_CRC32) != 0);
 
 	/* check if the filename contains a CRC32 hash sum */
-	if(find_embedded_crc32(info->print_path, &crc32_be)) {
+	if (find_embedded_crc32(info->print_path, &crc32_be)) {
 		unsigned char* c =
 			(unsigned char*)rhash_get_context_ptr(info->rctx, RHASH_CRC32);
 		unsigned actual_crc32 = ((unsigned)c[0] << 24) |
 			((unsigned)c[1] << 16) | ((unsigned)c[2] << 8) | (unsigned)c[3];
 
 		/* compare with calculated CRC32 */
-		if(crc32_be != actual_crc32) {
+		if (crc32_be != actual_crc32) {
 			char crc32_str[9];
 			rhash_print(crc32_str, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
@@ -266,8 +266,8 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	}
 
 	/* find file extension (as the place to insert the hash sum) */
-	for(; c >= info->full_path && !IS_PATH_SEPARATOR(*c); c--) {
-		if(*c == '.') {
+	for (; c >= info->full_path && !IS_PATH_SEPARATOR(*c); c--) {
+		if (*c == '.') {
 			p = c;
 			break;
 		}
@@ -277,14 +277,14 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	new_path = (char*)rsh_malloc(len + 12);
 	insertion_point = new_path + (p - info->full_path);
 	memcpy(new_path, info->full_path, p - info->full_path);
-	if(opt.embed_crc_delimiter && *opt.embed_crc_delimiter) *(insertion_point++) = *opt.embed_crc_delimiter;
+	if (opt.embed_crc_delimiter && *opt.embed_crc_delimiter) *(insertion_point++) = *opt.embed_crc_delimiter;
 	rhash_print(insertion_point+1, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 	insertion_point[0] = '[';
 	insertion_point[9] = ']'; /* ']' overrides '\0' inserted by rhash_print_sum() */
 	strcpy(insertion_point + 10, p); /* append file extension */
 
 	/* rename the file */
-	if(rename(info->full_path, new_path) < 0) {
+	if (rename(info->full_path, new_path) < 0) {
 		log_error(_("can't move %s to %s: %s\n"), info->full_path, new_path,
 			strerror(errno));
 		free(new_path);
@@ -292,7 +292,7 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	}
 
 	/* change file name in the file info structure */
-	if(info->print_path >= info->full_path && info->print_path < p) {
+	if (info->print_path >= info->full_path && info->print_path < p) {
 		file_info_set_print_path(info, new_path + len - strlen(info->print_path));
 	} else {
 		file_info_set_print_path(info, new_path);
@@ -319,7 +319,7 @@ void save_torrent_to(const char* path, rhash_context* rctx)
 	text_len = rhash_transmit(RMSG_BT_GET_TEXT, rctx, RHASH_STR2UPTR(&str), 0);
 	assert(text_len != RHASH_ERROR);
 
-	if(if_file_exists(path)) {
+	if (if_file_exists(path)) {
 		/* make backup copy of the existing torrent file */
 		char *bak_path = str_append(path, ".bak");
 		unlink(bak_path);
@@ -329,14 +329,14 @@ void save_torrent_to(const char* path, rhash_context* rctx)
 
 	/* write torrent file */
 	fd = rsh_fopen_bin(path, "wb");
-	if(fd && text_len == fwrite(str, 1, text_len, fd) &&
+	if (fd && text_len == fwrite(str, 1, text_len, fd) &&
 		!ferror(fd) && !fflush(fd))
 	{
 		log_msg(_("%s saved\n"), path);
 	} else {
 		log_file_error(path);
 	}
-	if(fd) fclose(fd);
+	if (fd) fclose(fd);
 }
 
 /**
@@ -374,10 +374,10 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 
 	info.sums_flags = opt.sum_flags;
 
-	if(file->mode & FILE_IFSTDIN) {
+	if (file->mode & FILE_IFSTDIN) {
 		print_path = "(stdin)";
 	} else {
-		if(file->mode & FILE_IFDIR) return 0; /* don't handle directories */
+		if (file->mode & FILE_IFDIR) return 0; /* don't handle directories */
 		info.size = file->size; /* total size, in bytes */
 	}
 
@@ -385,14 +385,14 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	init_percents(&info);
 	rsh_timer_start(&timer);
 
-	if(info.sums_flags) {
+	if (info.sums_flags) {
 		/* calculate sums */
-		if(calc_sums(&info) < 0) {
+		if (calc_sums(&info) < 0) {
 			/* print i/o error */
 			log_file_error(file->path);
 			res = -1;
 		}
-		if(rhash_data.interrupted) {
+		if (rhash_data.interrupted) {
 			report_interrupted();
 			return 0;
 		}
@@ -401,38 +401,38 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	info.time = rsh_timer_stop(&timer);
 	finish_percents(&info, res);
 
-	if(opt.flags & OPT_EMBED_CRC) {
+	if (opt.flags & OPT_EMBED_CRC) {
 		/* rename the file */
 		rename_file_by_embeding_crc32(&info);
 	}
 
-	if((opt.mode & MODE_TORRENT) && !opt.bt_batch_file) {
+	if ((opt.mode & MODE_TORRENT) && !opt.bt_batch_file) {
 		save_torrent(&info);
 	}
 
-	if((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
+	if ((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV) {
 		/* updating SFV file: print SFV header line */
 		print_sfv_header_line(rhash_data.upd_fd, file, 0);
-		if(opt.flags & OPT_VERBOSE) {
+		if (opt.flags & OPT_VERBOSE) {
 			print_sfv_header_line(rhash_data.log, file, 0);
 			fflush(rhash_data.log);
 		}
 		rsh_file_cleanup(file);
 	}
 
-	if(rhash_data.print_list && res >= 0) {
+	if (rhash_data.print_list && res >= 0) {
 		if (!opt.bt_batch_file) {
 			print_line(out, rhash_data.print_list, &info);
 			fflush(out);
 
 			/* print calculated line to stderr or log-file if verbose */
-			if((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
+			if ((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
 				print_line(rhash_data.log, rhash_data.print_list, &info);
 				fflush(rhash_data.log);
 			}
 		}
 
-		if((opt.flags & OPT_SPEED) && info.sums_flags) {
+		if ((opt.flags & OPT_SPEED) && info.sums_flags) {
 			print_file_time_stats(&info);
 		}
 	}
@@ -457,30 +457,30 @@ static int verify_sums(struct file_info *info)
 	init_percents(info);
 	rsh_timer_start(&timer);
 
-	if(calc_sums(info) < 0) {
+	if (calc_sums(info) < 0) {
 		finish_percents(info, -1);
 		return -1;
 	}
 	info->time = rsh_timer_stop(&timer);
 
-	if(rhash_data.interrupted) {
+	if (rhash_data.interrupted) {
 		report_interrupted();
 		return 0;
 	}
 
-	if((opt.flags & OPT_EMBED_CRC) && find_embedded_crc32(
+	if ((opt.flags & OPT_EMBED_CRC) && find_embedded_crc32(
 		info->print_path, &info->hc.embedded_crc32_be)) {
 			info->hc.flags |= HC_HAS_EMBCRC32;
 			assert(info->hc.hash_mask & RHASH_CRC32);
 	}
 
-	if(!hash_check_verify(&info->hc, info->rctx)) {
+	if (!hash_check_verify(&info->hc, info->rctx)) {
 		res = -2;
 	}
 
 	finish_percents(info, res);
 
-	if((opt.flags & OPT_SPEED) && info->sums_flags) {
+	if ((opt.flags & OPT_SPEED) && info->sums_flags) {
 		print_file_time_stats(info);
 	}
 	return res;
@@ -507,9 +507,9 @@ int check_hash_file(file_t* file, int chdir)
 	double time;
 
 	/* process --check-embedded option */
-	if(opt.mode & MODE_CHECK_EMBEDDED) {
+	if (opt.mode & MODE_CHECK_EMBEDDED) {
 		unsigned crc32_be;
-		if(find_embedded_crc32(hash_file_path, &crc32_be)) {
+		if (find_embedded_crc32(hash_file_path, &crc32_be)) {
 			/* initialize file_info structure */
 			memset(&info, 0, sizeof(info));
 			info.full_path = rsh_strdup(hash_file_path);
@@ -521,9 +521,9 @@ int check_hash_file(file_t* file, int chdir)
 
 			res = verify_sums(&info);
 			fflush(rhash_data.out);
-			if(!rhash_data.interrupted) {
-				if(res == 0) rhash_data.ok++;
-				else if(res == -1 && errno == ENOENT) rhash_data.miss++;
+			if (!rhash_data.interrupted) {
+				if (res == 0) rhash_data.ok++;
+				else if (res == -1 && errno == ENOENT) rhash_data.miss++;
 				rhash_data.processed++;
 			}
 
@@ -540,10 +540,10 @@ int check_hash_file(file_t* file, int chdir)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
-	if(file->mode & FILE_IFSTDIN) {
+	if (file->mode & FILE_IFSTDIN) {
 		fd = stdin;
 		hash_file_path = "<stdin>";
-	} else if( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
+	} else if ( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
 		log_file_error(hash_file_path);
 		return -1;
 	}
@@ -555,59 +555,59 @@ int check_hash_file(file_t* file, int chdir)
 	rsh_timer_start(&timer);
 
 	/* mark the directory part of the path, by setting the pos index */
-	if(chdir) {
+	if (chdir) {
 		pos = strlen(hash_file_path);
-		for(; pos > 0 && !IS_PATH_SEPARATOR(hash_file_path[pos]); pos--);
-		if(IS_PATH_SEPARATOR(hash_file_path[pos])) pos++;
+		for (; pos > 0 && !IS_PATH_SEPARATOR(hash_file_path[pos]); pos--);
+		if (IS_PATH_SEPARATOR(hash_file_path[pos])) pos++;
 	} else pos = 0;
 
 	/* read crc file line by line */
-	for(line_num = 0; fgets(buf, 2048, fd); line_num++)
+	for (line_num = 0; fgets(buf, 2048, fd); line_num++)
 	{
 		char* line = buf;
 		char* path_without_ext = NULL;
 
 		/* skip unicode BOM */
-		if(line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
+		if (line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
 
-		if(*line == 0) continue; /* skip empty lines */
+		if (*line == 0) continue; /* skip empty lines */
 
-		if(is_binary_string(line)) {
+		if (is_binary_string(line)) {
 			log_error(_("file is binary: %s\n"), hash_file_path);
-			if(fd != stdin) fclose(fd);
+			if (fd != stdin) fclose(fd);
 			return -1;
 		}
 
 		/* skip comments and empty lines */
-		if(IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
+		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
 
 		memset(&info, 0, sizeof(info));
 
-		if(!hash_check_parse_line(line, &info.hc, !feof(fd))) continue;
-		if(info.hc.hash_mask == 0) continue;
+		if (!hash_check_parse_line(line, &info.hc, !feof(fd))) continue;
+		if (info.hc.hash_mask == 0) continue;
 
 		info.print_path = info.hc.file_path;
 		info.sums_flags = info.hc.hash_mask;
 
 		/* see if crc file contains a hash sum without a filename */
-		if(info.print_path == NULL) {
+		if (info.print_path == NULL) {
 			char* point;
 			path_without_ext = rsh_strdup(hash_file_path);
 			point = strrchr(path_without_ext, '.');
 
-			if(point) {
+			if (point) {
 				*point = '\0';
 				file_info_set_print_path(&info, path_without_ext);
 			}
 		}
 
-		if(info.print_path != NULL) {
+		if (info.print_path != NULL) {
 			file_t file_to_check;
 			int is_absolute = IS_PATH_SEPARATOR(info.print_path[0]);
 			IF_WINDOWS(is_absolute = is_absolute || (info.print_path[0] && info.print_path[1] == ':'));
 
 			/* if filename shall be prepended by a directory path */
-			if(pos && !is_absolute) {
+			if (pos && !is_absolute) {
 				size_t len = strlen(info.print_path);
 				info.full_path = (char*)rsh_malloc(pos + len + 1);
 				memcpy(info.full_path, hash_file_path, pos);
@@ -627,14 +627,14 @@ int check_hash_file(file_t* file, int chdir)
 			rsh_file_cleanup(&file_to_check);
 			file_info_destroy(&info);
 
-			if(rhash_data.interrupted) {
+			if (rhash_data.interrupted) {
 				free(path_without_ext);
 				break;
 			}
 
 			/* update statistics */
-			if(res == 0) rhash_data.ok++;
-			else if(res == -1 && errno == ENOENT) rhash_data.miss++;
+			if (res == 0) rhash_data.ok++;
+			else if (res == -1 && errno == ENOENT) rhash_data.miss++;
 			rhash_data.processed++;
 		}
 		free(path_without_ext);
@@ -644,15 +644,15 @@ int check_hash_file(file_t* file, int chdir)
 	fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
 	print_check_stats();
 
-	if(rhash_data.processed != rhash_data.ok) rhash_data.error_flag = 1;
+	if (rhash_data.processed != rhash_data.ok) rhash_data.error_flag = 1;
 
-	if(opt.flags & OPT_SPEED && rhash_data.processed > 1) {
+	if (opt.flags & OPT_SPEED && rhash_data.processed > 1) {
 		print_time_stats(time, rhash_data.total_size, 1);
 	}
 
 	rhash_data.processed = 0;
 	res = ferror(fd); /* check that crc file has been read without errors */
-	if(fd != stdin) fclose(fd);
+	if (fd != stdin) fclose(fd);
 	return (res == 0 ? 0 : -1);
 }
 
@@ -672,13 +672,13 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 
 #ifdef _WIN32
 	/* skip file if it can't be opened with exclusive sharing rights */
-	if(!can_open_exclusive(file->path)) {
+	if (!can_open_exclusive(file->path)) {
 		return 0;
 	}
 #endif
 
-	if(!printpath) printpath = file->path;
-	if(printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
+	if (!printpath) printpath = file->path;
+	if (printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
 
 	sprintI64(buf, file->size, 12);
 	fprintf(out, "; %s  ", buf);
@@ -697,7 +697,7 @@ void print_sfv_banner(FILE* out)
 {
 	time_t cur_time = time(NULL);
 	struct tm *t = localtime(&cur_time);
-	if(t) {
+	if (t) {
 		fprintf(out, _("; Generated by %s v%s on %4u-%02u-%02u at %02u:%02u.%02u\n"),
 			PROGRAM_NAME, VERSION, (1900+t->tm_year), t->tm_mon+1,
 			t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);

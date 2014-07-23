@@ -38,15 +38,15 @@ void sprintI64(char *dst, uint64_t number, int min_width)
 	size_t len;
 	char *p = buf + 23; /* start filling from the buffer end */
 	*(p--) = 0; /* last symbol should be '\0' */
-	if(number == 0) {
+	if (number == 0) {
 		*(p--) = '0';
 	} else {
-		for(; p >= buf && number != 0; p--, number /= 10) {
+		for (; p >= buf && number != 0; p--, number /= 10) {
 			*p = '0' + (char)(number % 10);
 		}
 	}
 	len = buf + 22 - p;
-	if((size_t)min_width > len) {
+	if ((size_t)min_width > len) {
 		memset(dst, 0x20, min_width - len); /* fill by spaces */
 		dst += min_width - len;
 	}
@@ -62,7 +62,7 @@ void sprintI64(char *dst, uint64_t number, int min_width)
 int int_len(uint64_t num)
 {
 	int len;
-	for(len = 0; num; len++, num /= 10);
+	for (len = 0; num; len++, num /= 10);
 	return (len == 0 ? 1 : len); /* note: int_len(0) == 1 */
 }
 
@@ -99,14 +99,14 @@ static char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
 int urlencode(char *dst, const char *name)
 {
 	const char *start;
-	if(!dst) {
+	if (!dst) {
 		int len;
-		for(len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
+		for (len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
 		return len;
 	}
 	/* encode URL as specified by RFC 1738 */
-	for(start = dst; *name; name++) {
-		if( IS_GOOD_URL_CHAR(*name) ) {
+	for (start = dst; *name; name++) {
+		if ( IS_GOOD_URL_CHAR(*name) ) {
 			*dst++ = *name;
 		} else {
 			*dst++ = '%';
@@ -129,8 +129,8 @@ char* str_tolower(const char* str)
 {
 	char* buf = rsh_strdup(str);
 	char* p;
-	if(buf) {
-		for(p = buf; *p; p++) *p = tolower(*p);
+	if (buf) {
+		for (p = buf; *p; p++) *p = tolower(*p);
 	}
 	return buf;
 }
@@ -144,8 +144,8 @@ char* str_tolower(const char* str)
 char* str_trim(char* str)
 {
 	char* last = str + strlen(str) - 1;
-	while(isspace((unsigned char)*str)) str++;
-	while(isspace((unsigned char)*last) && last > str) *(last--) = 0;
+	while (isspace((unsigned char)*str)) str++;
+	while (isspace((unsigned char)*last) && last > str) *(last--) = 0;
 	return str;
 }
 
@@ -193,8 +193,8 @@ char* str_append(const char* orig, const char* append)
  */
 int is_binary_string(const char* str)
 {
-	for(; *str; str++) {
-		if(((unsigned char)*str) < 32 && ((1 << (unsigned char)*str) & ~0x2600)) {
+	for (; *str; str++) {
+		if (((unsigned char)*str) < 32 && ((1 << (unsigned char)*str) & ~0x2600)) {
 			return 1;
 		}
 	}
@@ -210,8 +210,8 @@ int is_binary_string(const char* str)
 size_t strlen_utf8_c(const char *str)
 {
 	size_t length = 0;
-	for(; *str; str++) {
-		if((*str & 0xc0) != 0x80) length++;
+	for (; *str; str++) {
+		if ((*str & 0xc0) != 0x80) length++;
 	}
 	return length;
 }
@@ -229,7 +229,7 @@ size_t strlen_utf8_c(const char *str)
 const char* get_basename(const char* path)
 {
 	const char *p = path + strlen(path) - 1;
-	for(; p >= path && !IS_PATH_SEPARATOR(*p); p--);
+	for (; p >= path && !IS_PATH_SEPARATOR(*p); p--);
 	return (p+1);
 }
 
@@ -244,8 +244,8 @@ char* get_dirname(const char* path)
 {
 	const char *p = path + strlen(path) - 1;
 	char *res;
-	for(; p > path && !IS_PATH_SEPARATOR(*p); p--);
-	if((p - path) > 1) {
+	for (; p > path && !IS_PATH_SEPARATOR(*p); p--);
+	if ((p - path) > 1) {
 		res = (char*)rsh_malloc(p-path+1);
 		memcpy(res, path, p-path);
 		res[p-path] = 0;
@@ -270,7 +270,7 @@ char* make_path(const char* dir_path, const char* filename)
 	assert(filename);
 
 	/* remove leading path separators from filename */
-	while(IS_PATH_SEPARATOR(*filename)) filename++;
+	while (IS_PATH_SEPARATOR(*filename)) filename++;
 
 	if (dir_path[0] == '.' && dir_path[1] == 0) {
 		/* do not extend filename for dir_path="." */
@@ -283,7 +283,7 @@ char* make_path(const char* dir_path, const char* filename)
 	strcpy(buf, dir_path);
 
 	/* separate directory from filename */
-	if(len > 0 && !IS_PATH_SEPARATOR(buf[len-1])) {
+	if (len > 0 && !IS_PATH_SEPARATOR(buf[len-1])) {
 		buf[len++] = SYS_PATH_SEPARATOR;
 	}
 
@@ -333,7 +333,7 @@ void print_time(FILE *out, time_t time)
 {
 	struct tm *t = localtime(&time);
 	static struct tm zero_tm;
-	if(t == NULL) {
+	if (t == NULL) {
 		/* if a strange day, then print `00:00.00 1900-01-00' */
 		t = &zero_tm;
 		t->tm_hour = t->tm_min = t->tm_sec =
@@ -453,7 +453,7 @@ int rsh_file_statw(file_t* file)
 	WIN32_FILE_ATTRIBUTE_DATA data;
 
 	/* read file attributes */
-	if(GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
+	if (GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode &= FILE_OPT_DONT_FREE_PATH;
@@ -484,14 +484,14 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	(void)use_lstat; /* ignore on windows */
 
 	file->mtime = 0;
-	if(file->wpath) {
+	if (file->wpath) {
 		free(file->wpath);
 		file->wpath = NULL;
 	}
 
-	for(i = 0; i < 2; i++) {
+	for (i = 0; i < 2; i++) {
 		file->wpath = c2w(file->path, i);
-		if(file->wpath == NULL) continue;
+		if (file->wpath == NULL) continue;
 
 		/* return on success */
 		if (rsh_file_statw(file) == 0) return 0;
@@ -508,24 +508,24 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 	file->mode &= FILE_OPT_DONT_FREE_PATH;
 
 	do {
-		if(use_lstat) {
+		if (use_lstat) {
 			/* check for symlink */
-			if(lstat(file->path, &st) < 0) return -1;
-			if(!S_ISLNK(st.st_mode)) break;
+			if (lstat(file->path, &st) < 0) return -1;
+			if (!S_ISLNK(st.st_mode)) break;
 
 			/* it's a symlink */
 			file->mode |= FILE_IFLNK;
 		}
 
 		res = stat(file->path, &st);
-	} while(0);
+	} while (0);
 
 	file->size  = st.st_size;
 	file->mtime = st.st_mtime;
 
-	if(S_ISDIR(st.st_mode)) {
+	if (S_ISDIR(st.st_mode)) {
 		file->mode |= FILE_IFDIR;
-	} else if(S_ISREG(st.st_mode)) {
+	} else if (S_ISREG(st.st_mode)) {
 		/* it's a regular file or a symlink pointing to a regular file */
 		file->mode |= FILE_IFREG;
 	}
@@ -551,7 +551,7 @@ int is_regular_file(const char* path)
 	file_t file;
 
 	rsh_file_init(&file, path, 1);
-	if(rsh_file_stat(&file) >= 0) {
+	if (rsh_file_stat(&file) >= 0) {
 		is_regular = FILE_ISREG(&file);
 	}
 	rsh_file_cleanup(&file);
@@ -626,7 +626,7 @@ static void report_error_default(const char* srcfile, int srcline, const char* f
 void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 {
 	void* res = malloc(size);
-	if(!res) {
+	if (!res) {
 		rsh_report_error(srcfile, srcline, "%s(%u) failed\n", "malloc", (unsigned)size);
 		rsh_exit(2);
 	}
@@ -645,7 +645,7 @@ void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline)
 {
 	void* res = calloc(num, size);
-	if(!res) {
+	if (!res) {
 		rsh_report_error(srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
 		rsh_exit(2);
 	}
@@ -667,10 +667,10 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 	char* res = strdup(str);
 #else
 	char* res = (char*)malloc(strlen(str)+1);
-	if(res) strcpy(res, str);
+	if (res) strcpy(res, str);
 #endif
 
-	if(!res) {
+	if (!res) {
 		rsh_report_error(srcfile, srcline, "strdup(\"%s\") failed\n", str);
 		rsh_exit(2);
 	}
@@ -692,10 +692,10 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 	wchar_t* res = wcsdup(str);
 #else
 	wchar_t* res = (wchar_t*)malloc((wcslen(str) + 1) * sizeof(wchar_t));
-	if(res) wcscpy(res, str);
+	if (res) wcscpy(res, str);
 #endif
 
-	if(!res) {
+	if (!res) {
 		rsh_report_error(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
 		rsh_exit(2);
 	}
@@ -715,7 +715,7 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 {
 	void* res = realloc(mem, size);
-	if(!res) {
+	if (!res) {
 		rsh_report_error(srcfile, srcline, "realloc(%p, %u) failed\n", mem, (unsigned)size);
 		rsh_exit(2);
 	}
@@ -760,10 +760,10 @@ struct vector_t* rsh_vector_new_simple(void)
  */
 void rsh_vector_destroy(vector_t* vect)
 {
-	if(!vect) return;
-	if(vect->destructor) {
+	if (!vect) return;
+	if (vect->destructor) {
 		unsigned i;
-		for(i=0; i<vect->size; i++) vect->destructor(vect->array[i]);
+		for (i=0; i<vect->size; i++) vect->destructor(vect->array[i]);
 	}
 	free(vect->array);
 	vect->size = vect->allocated = 0;
@@ -790,7 +790,7 @@ void rsh_vector_free(vector_t* vect)
 void rsh_vector_add_ptr(vector_t* vect, void* item)
 {
 	/* check if vect contains enough space for the next item */
-	if(vect->size >= vect->allocated) {
+	if (vect->size >= vect->allocated) {
 		size_t size = (vect->allocated==0 ? 128 : vect->allocated * 2);
 		vect->array = (void**)rsh_realloc(vect->array, size * sizeof(void*));
 		vect->allocated = size;
@@ -809,7 +809,7 @@ void rsh_vector_add_ptr(vector_t* vect, void* item)
 void rsh_vector_add_empty(struct vector_t* vect, size_t item_size)
 {
 	/* check if vect contains enough space for next item */
-	if(vect->size >= vect->allocated) {
+	if (vect->size >= vect->allocated) {
 		size_t size = (vect->allocated==0 ? 128 : vect->allocated * 2);
 		vect->array = (void**)rsh_realloc(vect->array, size * item_size);
 		vect->allocated = size;
@@ -862,7 +862,7 @@ strbuf_t* rsh_str_new(void)
  */
 void rsh_str_free(strbuf_t* ptr)
 {
-	if(ptr) {
+	if (ptr) {
 		free(ptr->str);
 		free(ptr);
 	}
@@ -877,8 +877,8 @@ void rsh_str_free(strbuf_t* ptr)
  */
 void rsh_str_ensure_size(strbuf_t *str, size_t new_size)
 {
-	if(new_size >= (size_t)str->allocated) {
-		if(new_size < 64) new_size = 64;
+	if (new_size >= (size_t)str->allocated) {
+		if (new_size < 64) new_size = 64;
 		str->str = (char*)rsh_realloc(str->str, new_size);
 		str->allocated = new_size;
 	}
