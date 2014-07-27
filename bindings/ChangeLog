@@ -1,3 +1,6 @@
+Fri Aug  1 2014 Aleksey
+	* update SHA3 test vectors to follow the changes of the spec
+
 Sun Jan 19 2014 Aleksey
 	* renamed perl module to the Crypt::Rhash
 

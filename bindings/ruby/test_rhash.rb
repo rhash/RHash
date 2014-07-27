@@ -31,10 +31,10 @@ class TestRHash < Test::Unit::TestCase
 	assert_equal("1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75", r.to_s(RHash::SHA512))
 	assert_equal("943aa9225a2cf154ec2e4dd81237720ba538ca8df2fd83c0b893c5d265f353a0", r.to_s(RHash::EDONR256))
 	assert_equal("b59ec44f7beef8a04ceed38a973d77c65e22e9458d5f67b497948da34986c093b5efc5483fbee55f2f740fcad31f18d80db44bb6b8843e7fd599188e7c07233b", r.to_s(RHash::EDONR512))
-	assert_equal("7cf87d912ee7088d30ec23f8e7100d9319bff090618b439d3fe91308", r.to_s(RHash::SHA3_224))
-	assert_equal("3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb", r.to_s(RHash::SHA3_256))
-	assert_equal("85e964c0843a7ee32e6b5889d50e130e6485cffc826a30167d1dc2b3a0cc79cba303501a1eeaba39915f13baab5abacf", r.to_s(RHash::SHA3_384))
-	assert_equal("9c46dbec5d03f74352cc4a4da354b4e9796887eeb66ac292617692e765dbe400352559b16229f97b27614b51dbfbbb14613f2c10350435a8feaf53f73ba01c7c", r.to_s(RHash::SHA3_512))
+	assert_equal("9e86ff69557ca95f405f081269685b38e3a819b309ee942f482b6a8b", r.to_s(RHash::SHA3_224))
+	assert_equal("80084bf2fba02475726feb2cab2d8215eab14bc6bdd8bfb2c8151257032ecd8b", r.to_s(RHash::SHA3_256))
+	assert_equal("1815f774f320491b48569efec794d249eeb59aae46d22bf77dafe25c5edc28d7ea44f93ee1234aa88f61c91912a4ccd9", r.to_s(RHash::SHA3_384))
+	assert_equal("697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a", r.to_s(RHash::SHA3_512))
 
 	assert_equal("d41d8cd98f00b204e9800998ecf8427e", r.reset().finish().to_s(RHash::MD5)) # MD5( "" )
     end

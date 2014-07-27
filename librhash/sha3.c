@@ -38,6 +38,7 @@ static uint64_t keccak_round_constants[NumberOfRounds] = {
 /* Initializing a sha3 context for given number of output bits */
 static void rhash_keccak_init(sha3_ctx *ctx, unsigned bits)
 {
+	/* NB: The Keccak capacity parameter = bits * 2 */
 	unsigned rate = 1600 - bits * 2;
 
 	memset(ctx, 0, sizeof(sha3_ctx));
@@ -313,6 +314,34 @@ void rhash_sha3_final(sha3_ctx *ctx, unsigned char* result)
 	{
 		/* clear the rest of the data queue */
 		memset((char*)ctx->message + ctx->rest, 0, block_size - ctx->rest);
+		((char*)ctx->message)[ctx->rest] |= 0x06;
+		((char*)ctx->message)[block_size - 1] |= 0x80;
+
+		/* process final block */
+		rhash_sha3_process_block(ctx->hash, ctx->message, block_size);
+		ctx->rest = SHA3_FINALIZED; /* mark context as finalized */
+	}
+
+	assert(block_size > digest_length);
+	if (result) me64_to_le_str(result, ctx->hash, digest_length);
+}
+
+#ifdef USE_KECCAK
+/**
+* Store calculated hash into the given array.
+*
+* @param ctx the algorithm context containing current hashing state
+* @param result calculated hash in binary form
+*/
+void rhash_keccak_final(sha3_ctx *ctx, unsigned char* result)
+{
+	size_t digest_length = 100 - ctx->block_size / 2;
+	const size_t block_size = ctx->block_size;
+
+	if (!(ctx->rest & SHA3_FINALIZED))
+	{
+		/* clear the rest of the data queue */
+		memset((char*)ctx->message + ctx->rest, 0, block_size - ctx->rest);
 		((char*)ctx->message)[ctx->rest] |= 0x01;
 		((char*)ctx->message)[block_size - 1] |= 0x80;
 
@@ -324,3 +353,4 @@ void rhash_sha3_final(sha3_ctx *ctx, unsigned char* result)
 	assert(block_size > digest_length);
 	if (result) me64_to_le_str(result, ctx->hash, digest_length);
 }
+#endif /* USE_KECCAK */
