@@ -10,12 +10,21 @@
 #include "librhash/rhash.h"
 #include "calc_sums.h"
 #include "parse_cmdline.h"
+#include "win_utils.h"
 #include "hash_print.h"
 
-/* table with information about hashes */
+/*=========================================================================
+* Formated output functions and structures
+*=========================================================================*/
+
+/**
+ * The table with information about hash functions.
+ */
 print_hash_info hash_info_table[32];
 
-/* print_item types */
+/**
+ * Possible types of a print_item.
+ */
 enum {
 	PRINT_ED2K_LINK = 0x100000,
 	PRINT_FLAG_UPPERCASE = 0x200000,
@@ -35,7 +44,7 @@ enum {
 	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
 };
 
-/* internal function used when parsing format string */
+/* parse a token following a percent sign '%' */
 static print_item* parse_percent_item(const char** str);
 
 /**
@@ -195,7 +204,7 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned *fla
 }
 
 /**
- * Parse a string followed by a percent sign in a printf-like format string.
+ * Parse a token followed by a percent sign in a printf-like format string.
  *
  * @return a print_item with parsed information
  */
@@ -220,13 +229,13 @@ print_item* parse_percent_item(const char** str)
 		PRINT_ED2K_LINK, PRINT_ED2K_LINK, PRINT_FILEPATH, PRINT_BASENAME,
 		PRINT_URLNAME, PRINT_SIZE
 	};
-	/* detect pad with zero flag */
+	/* detect the padding by zeros */
 	if (*format == '0') {
 		pad_with_zero_bit = PRINT_FLAG_PAD_WITH_ZERO;
 		format++;
 	}
 
-	/* parse b,x and u flags */
+	/* parse the 'b','B','x' and '@' flags */
 	if (*format == 'x') {
 		modifier_flags |= PRINT_FLAG_HEX;
 		format++;
@@ -242,8 +251,9 @@ print_item* parse_percent_item(const char** str)
 	}
 	for (; isdigit((unsigned char)*format); format++) width = 10 * width + (*format - '0');
 
+	/* if a complicated token enconuntered */
 	if (*format == '{') {
-		/* parse %{printf-entity} substring */
+		/* parse the token of the kind "%{some-token}" */
 		const char* p = ++format;
 		for (; isalnum((unsigned char)*p) || (*p == '-'); p++);
 		if (*p == '}') {
@@ -255,17 +265,23 @@ print_item* parse_percent_item(const char** str)
 				format = p;
 				id_found = 1;
 			}
-		} else --format;
+		} else {
+			format--;
+		}
 	}
 
+	/* if still not found a token denoting a hash function */
 	if (!id_found) {
 		const char upper = *format & ~0x20;
+		/* if the string terminated just after the '%' character */
 		if ( *format == '\0' ) return NULL;
+		/* look for a known token */
 		if ( (p = strchr(short_hash, upper)) ) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
 			hash_id = hash_ids[p - short_hash];
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
-		} else if ( (p = strchr(short_other, *format)) ) {
+		}
+		else if ( (p = strchr(short_other, *format)) ) {
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
 			modifier_flags = other_flags[p - short_other];
 
@@ -274,7 +290,7 @@ print_item* parse_percent_item(const char** str)
 				hash_id = RHASH_ED2K | RHASH_AICH;
 			}
 		} else {
-			return 0; /* no valid print id found */
+			return 0; /* no valid token found */
 		}
 	}
 	modifier_flags |= pad_with_zero_bit;
@@ -341,6 +357,37 @@ static void fprintI64(FILE* out, uint64_t filesize, int width, int zero_pad)
 	}
 	fprintf(out, "%s", buf);
 	free(buf);
+}
+
+/**
+* Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
+*
+* @param out the stream to print the time to
+* @param time the time to print
+*/
+static void print_time(FILE *out, time_t time)
+{
+	struct tm *t = localtime(&time);
+	static struct tm zero_tm;
+	if (t == NULL) {
+		/* if a strange day, then print `00:00.00 1900-01-00' */
+		t = &zero_tm;
+		t->tm_hour = t->tm_min = t->tm_sec =
+			t->tm_year = t->tm_mon = t->tm_mday = 0;
+	}
+	fprintf(out, "%02u:%02u.%02u %4u-%02u-%02u", t->tm_hour, t->tm_min,
+		t->tm_sec, (1900 + t->tm_year), t->tm_mon + 1, t->tm_mday);
+}
+
+/**
+* Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
+*
+* @param out the stream to print the time to
+* @param time the time to print
+*/
+static void print_time64(FILE *out, uint64_t time)
+{
+	print_time(out, (time_t)time);
 }
 
 /**
@@ -430,6 +477,10 @@ void free_print_list(print_item* list)
 		list = next;
 	}
 }
+
+/*=========================================================================
+* initialization of internal data
+*=========================================================================*/
 
 /**
  * Initialize information about hashes, stored in the
@@ -572,4 +623,57 @@ void init_printf_format(strbuf_t* out)
 		rsh_str_append(out, tail);
 	}
 	out->str[out->len] = '\0';
+}
+
+/*=========================================================================
+* SFV format output functions
+*=========================================================================*/
+
+/**
+* Format file information into SFV line and print it to the specified stream.
+*
+* @param out the stream to print the file information to
+* @param file the file info to print
+* @return 0 on success, -1 on fail with error code stored in errno
+*/
+int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
+{
+	char buf[24];
+
+	/* skip stdin stream */
+	if ((file->mode & FILE_IFSTDIN) != 0) return 0;
+
+#ifdef _WIN32
+	/* skip file if it can't be opened with exclusive sharing rights */
+	if (!can_open_exclusive(file->path)) {
+		return 0;
+	}
+#endif
+
+	if (!printpath) printpath = file->path;
+	if (printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;
+
+	sprintI64(buf, file->size, 12);
+	fprintf(out, "; %s  ", buf);
+	print_time64(out, file->mtime);
+	fprintf(out, " %s\n", printpath);
+	return 0;
+}
+
+/**
+* Print an SFV header banner. The banner consist of 3 comment lines,
+* with the program description and current time.
+*
+* @param out a stream to print to
+*/
+void print_sfv_banner(FILE* out)
+{
+	time_t cur_time = time(NULL);
+	struct tm *t = localtime(&cur_time);
+	if (t) {
+		fprintf(out, _("; Generated by %s v%s on %4u-%02u-%02u at %02u:%02u.%02u\n"),
+			PROGRAM_NAME, get_version_string(),
+			(1900 + t->tm_year), t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+		fprintf(out, _("; Written by Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n;\n"));
+	}
 }

@@ -15,6 +15,7 @@
 #include "file_set.h"
 #include "file_mask.h"
 #include "calc_sums.h"
+#include "hash_print.h"
 #include "hash_update.h"
 
 /* first define some internal functions, implemented later in this file */

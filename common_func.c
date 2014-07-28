@@ -337,36 +337,6 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
 }
 
 /*=========================================================================
- * Time printing functions
- *=========================================================================*/
-
-/**
- * Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
- *
- * @param out the stream to print time to
- * @param time the time to print
- */
-void print_time(FILE *out, time_t time)
-{
-	struct tm *t = localtime(&time);
-	static struct tm zero_tm;
-	if (t == NULL) {
-		/* if a strange day, then print `00:00.00 1900-01-00' */
-		t = &zero_tm;
-		t->tm_hour = t->tm_min = t->tm_sec =
-		t->tm_year = t->tm_mon = t->tm_mday = 0;
-	}
-	fprintf(out, "%02u:%02u.%02u %4u-%02u-%02u", t->tm_hour, t->tm_min,
-		t->tm_sec, (1900+t->tm_year), t->tm_mon+1, t->tm_mday);
-}
-
-void print_time64(FILE *out, uint64_t time)
-{
-	print_time(out, (time_t)time);
-}
-
-
-/*=========================================================================
  * Timer functions
  *=========================================================================*/
 

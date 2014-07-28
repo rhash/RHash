@@ -6,6 +6,9 @@
 extern "C" {
 #endif
 
+/**
+ * An element of a list specifying an output format.
+ */
 typedef struct print_item {
 	struct print_item *next;
 	unsigned flags;
@@ -14,6 +17,9 @@ typedef struct print_item {
 	const char *data;
 } print_item;
 
+/**
+ * Name and other info of a hash function
+ */
 typedef struct print_hash_info
 {
 	char short_name[16];
@@ -26,12 +32,18 @@ extern print_hash_info hash_info_table[];
 struct file_info;
 struct strbuf_t;
 
+/* initialization of static data */
+void init_hash_info_table(void);
+void init_printf_format(struct strbuf_t* out);
+
+/* formated output of hash sums and file information */
 print_item* parse_print_string(const char* format, unsigned *sum_mask);
 void print_line(FILE* out, print_item* list, struct file_info *info);
 void free_print_list(print_item* list);
 
-void init_hash_info_table(void);
-void init_printf_format(struct strbuf_t* out);
+/* SFV format functions */
+void print_sfv_banner(FILE* out);
+int print_sfv_header_line(FILE* out, file_t* file, const char* printpath);
 
 #ifdef __cplusplus
 } /* extern "C" */
