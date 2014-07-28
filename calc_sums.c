@@ -32,7 +32,7 @@ static void init_btih_data(struct file_info *info)
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
 	rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
 		RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
-	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(PROGRAM_NAME "/" VERSION), 0);
+	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(get_bt_program_name()), 0);
 
 	if (opt.flags & OPT_BT_PRIVATE) {
 		rhash_transmit(RMSG_BT_SET_OPTIONS, info->rctx, RHASH_BT_OPT_PRIVATE, 0);

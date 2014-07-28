@@ -18,14 +18,25 @@
 #include "hash_print.h"
 #include "output.h"
 #include "rhash_main.h"
-#include "version.h"
 #include "parse_cmdline.h"
-
-#define VERSION_STRING PROGRAM_NAME " v" VERSION "\n"
 
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
 struct options_t opt;      /* command line options */
+
+static const char* get_full_program_version(void)
+{
+	static char version_buffer[64];
+	sprintf(version_buffer, "%s v%s\n", PROGRAM_NAME, get_version_string());
+	assert(strlen(version_buffer) < sizeof(version_buffer));
+	return version_buffer;
+}
+
+static void print_version(void)
+{
+	fprintf(rhash_data.out, "%s", get_full_program_version());
+	rsh_exit(0);
+}
 
 static void print_help_line(const char* option, const char* text)
 {
@@ -42,7 +53,7 @@ static void print_help(void)
 	/* print program version and usage */
 	fprintf(rhash_data.out, _("%s\n"
 		"Usage: %s [OPTION...] [FILE | -]...\n"
-		"       %s --printf=<format string> [FILE | -]...\n\n"), VERSION_STRING, CMD_FILENAME, CMD_FILENAME);
+		"       %s --printf=<format string> [FILE | -]...\n\n"), get_full_program_version(), CMD_FILENAME, CMD_FILENAME);
 	fprintf(rhash_data.out, _("Options:\n"));
 
 	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
@@ -283,7 +294,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "torrent", &opt.mode, MODE_TORRENT },
 	{ F_VFNC,   0,   0, "list-hashes", list_hashes, 0 },
 	{ F_VFNC, 'h',   0, "help",   print_help, 0 },
-	{ F_PRNT, 'V',   0, "version", VERSION_STRING, 0 },
+	{ F_VFNC, 'V',   0, "version", print_version, 0 },
 
 	/* hash sums options */
 	{ F_UFLG, 'a',   0, "all",    &opt.sum_flags, RHASH_ALL_HASHES },

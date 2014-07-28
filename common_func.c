@@ -19,6 +19,7 @@
 
 #include "win_utils.h"
 #include "parse_cmdline.h"
+#include "version.h"
 
 /*=========================================================================
  * String functions
@@ -214,6 +215,22 @@ size_t strlen_utf8_c(const char *str)
 		if ((*str & 0xc0) != 0x80) length++;
 	}
 	return length;
+}
+
+/*=========================================================================
+* Program version information
+*=========================================================================*/
+
+const char* get_version_string(void)
+{
+	static const char* version_string = VERSION;
+	return version_string;
+}
+
+const char* get_bt_program_name(void)
+{
+	static const char* bt_program_name = PROGRAM_NAME "/" VERSION;
+	return bt_program_name;
 }
 
 /*=========================================================================

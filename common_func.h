@@ -76,6 +76,10 @@ typedef  char rsh_tchar;
 # define to_utf8(str) NULL
 #endif /* _WIN32 */
 
+/* version information */
+const char* get_version_string(void);
+const char* get_bt_program_name(void);
+
 
 /**
  * Portable file information.
