@@ -188,7 +188,7 @@ typedef unsigned long rhash_uptr_t;
 /** The value returned by rhash_transmit on error */
 #define RHASH_ERROR ((rhash_uptr_t)-1)
 /** Convert a pointer to rhash_uptr_t */
-#define RHASH_STR2UPTR(str) ((rhash_uptr_t)(str))
+#define RHASH_STR2UPTR(str) ((rhash_uptr_t)(char*)(str))
 /** Convert a rhash_uptr_t to a void* pointer */
 #define RHASH_UPTR2PVOID(u) ((void*)((char*)0 + (u)))
 

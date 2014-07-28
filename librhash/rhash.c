@@ -843,7 +843,7 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
 		bt_set_program_name(bt, (const char*)ldata);
 		break;
 	case RMSG_BT_GET_TEXT:
-		return RHASH_STR2UPTR(bt_get_text(bt, (char**)ldata));
+		return (rhash_uptr_t)bt_get_text(bt, (char**)ldata);
 	default:
 		return RHASH_ERROR; /* unknown message */
 	}
