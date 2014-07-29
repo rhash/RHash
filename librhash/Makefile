@@ -144,7 +144,7 @@ snefru.o: snefru.c byte_order.h ustd.h config.h snefru.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 test_hashes.o: test_hashes.c byte_order.h ustd.h config.h rhash_timing.h \
- rhash.h test_hashes.h
+ rhash_torrent.h rhash.h test_hashes.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
 tiger.o: tiger.c byte_order.h ustd.h config.h tiger.h

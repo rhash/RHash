@@ -37,7 +37,7 @@ struct file_info {
 void file_info_destroy(struct file_info*); /* free allocated memory */
 const char* file_info_get_utf8_print_path(struct file_info*);
 
-void save_torrent_to(const char* path, struct rhash_context* rctx);
+int save_torrent_to(const char* path, struct rhash_context* rctx);
 int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path);
 int check_hash_file(file_t* file, int chdir);
 int rename_file_by_embeding_crc32(struct file_info *info);

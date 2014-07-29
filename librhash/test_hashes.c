@@ -23,6 +23,7 @@
 
 #include "byte_order.h"
 #include "rhash_timing.h"
+#include "rhash_torrent.h"
 
 #ifdef USE_RHASH_DLL
 # define RHASH_API __declspec(dllimport)
@@ -481,8 +482,7 @@ static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size,
 	ctx = rhash_init(hash_id);
 
 	if ((hash_id & RHASH_BTIH) && set_filename) {
-		unsigned long long total_size = msg_size;
-		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
+		rhash_torrent_add_file(ctx, "test.txt", (unsigned long long)msg_size);
 	}
 
 	for (left = msg_size; left > 0; left -= size) {
@@ -706,10 +706,9 @@ static void test_results_consistency(void)
 
 		ctx = rhash_init(hash_id);
 
-#ifdef USE_BTIH_WITH_TEST_FILENAME
+#ifndef USE_BTIH_WITH_TEST_FILENAME
 		if ((hash_id & RHASH_BTIH) != 0) {
-			unsigned long long total_size = msg_size;
-			rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR("test.txt"), (rhash_uptr_t)&total_size);
+			rhash_torrent_add_file(ctx, "test.txt", (unsigned long long)msg_size);
 		}
 #endif
 
@@ -873,8 +872,6 @@ static unsigned find_hash(const char* name)
  */
 int main(int argc, char *argv[])
 {
-	/* rhash_transmit(RMSG_SET_OPENSSL_MASK, 0, RHASH_ALL_HASHES, 0); */
-
 #ifndef USE_RHASH_DLL
 	rhash_library_init();
 #endif

@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include "librhash/rhash.h"
+#include "librhash/rhash_torrent.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "hash_print.h"
@@ -29,22 +30,23 @@
 static void init_btih_data(struct file_info *info)
 {
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
-	rhash_transmit(RMSG_BT_ADD_FILE, info->rctx,
-		RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
-	rhash_transmit(RMSG_BT_SET_PROGRAM_NAME, info->rctx, RHASH_STR2UPTR(get_bt_program_name()), 0);
+
+	rhash_torrent_add_file(info->rctx, file_info_get_utf8_print_path(info), info->size);
+	rhash_torrent_set_program_name(info->rctx, get_bt_program_name());
 
 	if (opt.flags & OPT_BT_PRIVATE) {
-		rhash_transmit(RMSG_BT_SET_OPTIONS, info->rctx, RHASH_BT_OPT_PRIVATE, 0);
+		rhash_torrent_set_options(info->rctx, RHASH_BT_OPT_PRIVATE);
 	}
 
 	if (opt.bt_announce) {
-		rhash_transmit(RMSG_BT_SET_ANNOUNCE, info->rctx, RHASH_STR2UPTR(opt.bt_announce), 0);
+		rhash_torrent_add_announce(info->rctx, opt.bt_announce);
 	}
 
 	if (opt.bt_piece_length) {
-		rhash_transmit(RMSG_BT_SET_PIECE_LENGTH, info->rctx, RHASH_STR2UPTR(opt.bt_piece_length), 0);
-	} else if (opt.bt_batch_file && rhash_data.batch_size) {
-		rhash_transmit(RMSG_BT_SET_BATCH_SIZE, info->rctx, RHASH_STR2UPTR(&rhash_data.batch_size), 0);
+		rhash_torrent_set_piece_length(info->rctx, opt.bt_piece_length);
+	}
+	else if (opt.bt_batch_file && rhash_data.batch_size) {
+		rhash_torrent_set_batch_size(info->rctx, rhash_data.batch_size);
 	}
 }
 
@@ -62,23 +64,24 @@ static void re_init_rhash_context(struct file_info *info)
 			rhash_data.rctx = 0;
 		} else {
 			info->rctx = rhash_data.rctx;
-			if (!opt.bt_batch_file) {
-				rhash_reset(rhash_data.rctx);
-			} else {
+
+			if (opt.bt_batch_file) {
 				/* add another file to the torrent batch */
-				rhash_transmit(RMSG_BT_ADD_FILE, rhash_data.rctx,
-					RHASH_STR2UPTR((char*)file_info_get_utf8_print_path(info)), (rhash_uptr_t)&info->size);
+				rhash_torrent_add_file(info->rctx, file_info_get_utf8_print_path(info), info->size);
 				return;
+			} else {
+				rhash_reset(rhash_data.rctx);
 			}
 		}
 	}
 
 	if (rhash_data.rctx == 0) {
-		info->rctx = rhash_data.rctx = rhash_init(info->sums_flags);
+		rhash_data.rctx = rhash_init(info->sums_flags);
+		info->rctx = rhash_data.rctx;
 	}
 
-	/* re-initialize BitTorrent data */
 	if (info->sums_flags & RHASH_BTIH) {
+		/* re-initialize BitTorrent data */
 		init_btih_data(info);
 	}
 }
@@ -307,16 +310,19 @@ int rename_file_by_embeding_crc32(struct file_info *info)
  *
  * @param path the path to save torrent file to
  * @param rctx the context containing torrent data
+ * @return 0 on success, -1 on fail with error code in errno
  */
-void save_torrent_to(const char* path, rhash_context* rctx)
+int save_torrent_to(const char* path, rhash_context* rctx)
 {
 	FILE* fd;
-	size_t text_len;
-	char *str;
+	int res = 0;
 
-	/* get torrent file content */
-	text_len = rhash_transmit(RMSG_BT_GET_TEXT, rctx, RHASH_STR2UPTR(&str), 0);
-	assert(text_len != RHASH_ERROR);
+	const rhash_str* text = rhash_torrent_generate_content(rctx);
+	if (!text) {
+		errno = ENOMEM;
+		log_file_error(path);
+		return -1;
+	}
 
 	if (if_file_exists(path)) {
 		/* make backup copy of the existing torrent file */
@@ -326,16 +332,18 @@ void save_torrent_to(const char* path, rhash_context* rctx)
 		free(bak_path);
 	}
 
-	/* write torrent file */
+	/* write the torrent file */
 	fd = rsh_fopen_bin(path, "wb");
-	if (fd && text_len == fwrite(str, 1, text_len, fd) &&
+	if (fd && text->length == fwrite(text->str, 1, text->length, fd) &&
 		!ferror(fd) && !fflush(fd))
 	{
 		log_msg(_("%s saved\n"), path);
 	} else {
 		log_file_error(path);
+		res = -1;
 	}
 	if (fd) fclose(fd);
+	return res;
 }
 
 /**
