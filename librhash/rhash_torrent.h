@@ -13,7 +13,9 @@ extern "C" {
 
 typedef struct rhash_context* rhash;
 
-/* a binary string with length */
+/**
+ * Binary string with length
+ */
 typedef struct rhash_str
 {
 	char* str;
