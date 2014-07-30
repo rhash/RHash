@@ -35,11 +35,14 @@ static void init_btih_data(struct file_info *info)
 	rhash_torrent_set_program_name(info->rctx, get_bt_program_name());
 
 	if (opt.flags & OPT_BT_PRIVATE) {
-		rhash_torrent_set_options(info->rctx, RHASH_BT_OPT_PRIVATE);
+		rhash_torrent_set_options(info->rctx, RHASH_TORRENT_OPT_PRIVATE);
 	}
 
 	if (opt.bt_announce) {
-		rhash_torrent_add_announce(info->rctx, opt.bt_announce);
+		size_t i;
+		for (i = 0; i < opt.bt_announce->size; i++) {
+			rhash_torrent_add_announce(info->rctx, (const char*)opt.bt_announce->array[i]);
+		}
 	}
 
 	if (opt.bt_piece_length) {

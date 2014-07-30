@@ -71,6 +71,7 @@ struct options_t
 	unsigned sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
+	unsigned openssl_mask;  /* bit-mask for enabled OpenSSL hash functions */
 	const char* config_file; /* config file path */
 	char* printf_str;        /* printf-like format */
 	char* template_file; /* printf-like template file path */
@@ -79,17 +80,16 @@ struct options_t
 	char* embed_crc_delimiter;
 	char  path_separator;
 	int   find_max_depth;
-	struct vector_t *files_accept; /* suffixes of files for which sums will be calculated */
+	struct vector_t *files_accept; /* suffixes of files to process */
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
-	unsigned openssl_mask;  /* mask which OpenSSL hashes to use */
+	struct vector_t * bt_announce; /* BitTorrent announce URL */
 	size_t bt_piece_length; /* BitTorrent piece length */
-	char*  bt_announce;     /* BitTorrent announce URL */
-	char*  bt_batch_file;   /* path to save batch torrent to */
+	char*  bt_batch_file;   /* path to save a batch torrent to */
 
 	char** argv;
 	int n_files; /* the number of files obtained from the command line */
 	struct file_search_data* search_data; /* files obtained from the command line */
-	struct vector_t *mem; /* heap variables that should be freed */
+	struct vector_t *mem; /* allocated memory blocks that must be freed on exit */
 };
 extern struct options_t opt;
 

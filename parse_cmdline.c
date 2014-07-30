@@ -134,6 +134,22 @@ static void crc_accept(options_t *o, char* accept_string, unsigned type)
 }
 
 /**
+* Process --bt_announce option.
+*
+* @param o pointer to the options structure
+* @param announce_url the url to parse
+* @param type non-zero for the crc_accept option
+*/
+static void bt_announce(options_t *o, char* announce_url, unsigned unused)
+{
+	(void)unused;
+	/* skip empty string */
+	if (!announce_url || !announce_url[0]) return;
+	if (!o->bt_announce) o->bt_announce = rsh_vector_new_simple();
+	rsh_vector_add_ptr(o->bt_announce, rsh_strdup(announce_url));
+}
+
+/**
  * Process an --openssl option.
  *
  * @param o pointer to the options structure to update
@@ -277,7 +293,8 @@ enum option_type_t
 	F_TOUT = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 4, /* just call a function */
 	F_PFNC = 5 | F_NEED_PARAM, /* process option parameter by calling a handler */
-	F_PRNT = 6, /* print a constant C-string and exit */
+	F_UFNC = 6 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
+	F_PRNT = 7, /* print a constant C-string and exit */
 };
 
 #define is_param_required(option_type) ((option_type) & F_NEED_PARAM)
@@ -359,7 +376,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_PFNC,   0,   0, "maxdepth", set_max_depth, 0 },
 	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
 	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
-	{ F_CSTR,   0,   0, "bt-announce", &opt.bt_announce, 0 },
+	{ F_UFNC,   0,   0, "bt-announce", bt_announce, 0 },
 	{ F_CSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
 	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
@@ -426,6 +443,10 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		if (option_type == F_TOUT) {
 			/* leave the value in UTF-16 */
 			value = (char*)rsh_wcsdup((wchar_t*)option->parameter);
+		}
+		else if (option_type == F_UFNC) {
+			/* convert from UTF-16 to UTF-8 */
+			value = wchar_to_cstr((wchar_t*)option->parameter, CP_UTF8, NULL);
 		} else {
 			/* convert from UTF-16 */
 			value = w2c((wchar_t*)option->parameter);
@@ -448,6 +469,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
 		break;
 	case F_PFNC:
+	case F_UFNC:
 		/* call option parameter handler */
 		( ( void(*)(options_t *, char*, unsigned) )o->ptr )(opts, value, o->param);
 		break;
@@ -800,8 +822,9 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		}
 	}
 
-	/* copy formating options from config if not specified at command line */
+	/* if no formating options were specified at the command line */
 	if (!opt.printf_str && !opt.template_file && !opt.sum_flags && !opt.fmt) {
+		/* copy the format from config */
 		opt.printf_str = conf_opt.printf_str;
 		opt.template_file = conf_opt.template_file;
 	}
@@ -814,8 +837,19 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 	if (!opt.mode)  opt.mode = conf_opt.mode;
 	opt.flags |= conf_opt.flags; /* copy all non-sum options */
 
-	if (opt.files_accept == 0)  opt.files_accept = conf_opt.files_accept;
-	if (opt.crc_accept == 0)    opt.crc_accept = conf_opt.crc_accept;
+	if (opt.files_accept == 0)  {
+		opt.files_accept = conf_opt.files_accept;
+		conf_opt.files_accept = 0;
+	}
+	if (opt.crc_accept == 0) {
+		opt.crc_accept = conf_opt.crc_accept;
+		conf_opt.crc_accept = 0;
+	}
+	if (opt.bt_announce == 0) {
+		opt.bt_announce = conf_opt.bt_announce;
+		conf_opt.bt_announce = 0;
+	}
+
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = conf_opt.embed_crc_delimiter;
 	if (!opt.path_separator) opt.path_separator = conf_opt.path_separator;
 	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
@@ -896,6 +930,7 @@ void options_destroy(struct options_t* o)
 {
 	file_mask_free(o->files_accept);
 	file_mask_free(o->crc_accept);
+	rsh_vector_free(o->bt_announce);
 	rsh_vector_free(o->mem);
 	destroy_file_search_data(o->search_data);
 }
