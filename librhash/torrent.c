@@ -91,14 +91,15 @@ void bt_cleanup(torrent_ctx *ctx)
 {
 	assert(ctx != NULL);
 
-	/* destroy arrays of hash blocks and file paths */
+	/* destroy arrays */
 	bt_vector_clean(&ctx->hash_blocks);
 	bt_vector_clean(&ctx->files);
+	bt_vector_clean(&ctx->announce);
 
 	free(ctx->program_name);
-	free(ctx->announce);
-	ctx->announce = ctx->program_name = 0;
 	free(ctx->content.str);
+	ctx->program_name = 0;
+	ctx->content.str = 0;
 }
 
 static void bt_generate_torrent(torrent_ctx *ctx);
@@ -426,22 +427,39 @@ static void bt_generate_torrent(torrent_ctx *ctx)
 		ctx->piece_length = bt_default_piece_length(total_size);
 	}
 
-	/* write torrent header to the ctx->torrent string buffer */
 	if ((ctx->options & BT_OPT_INFOHASH_ONLY) == 0) {
+		/* write the torrent header */
 		bt_str_append(ctx, "d");
-		if (ctx->announce) {
-			bt_bencode_str(ctx, "8:announce", ctx->announce);
+		if (ctx->announce.array && ctx->announce.size > 0) {
+			bt_bencode_str(ctx, "8:announce", ctx->announce.array[0]);
+
+			/* if more than one announce url */
+			if (ctx->announce.size > 1) {
+				/* add the announce-list key-value pair */
+				size_t i;
+				bt_str_append(ctx, "13:announce-listll");
+
+				for (i = 0; i < ctx->announce.size; i++) {
+					if (i > 0) {
+						bt_str_append(ctx, "el");
+					}
+					bt_bencode_str(ctx, 0, ctx->announce.array[i]);
+				}
+				bt_str_append(ctx, "ee");
+			}
 		}
 
 		if (ctx->program_name) {
 			bt_bencode_str(ctx, "10:created by", ctx->program_name);
 		}
 		bt_bencode_int(ctx, "13:creation date", (uint64_t)time(NULL));
+
+		bt_str_append(ctx, "8:encoding5:UTF-8");
 	}
 
-	bt_str_append(ctx, "8:encoding5:UTF-8");
+	/* write the essential for BTIH part of the torrent file */
 
-	bt_str_append(ctx, "4:infod"); /* start info dictionary */
+	bt_str_append(ctx, "4:infod"); /* start the info dictionary */
 	info_start_pos = ctx->content.length - 1;
 
 	if (ctx->files.size > 1) {
@@ -545,17 +563,19 @@ void bt_set_piece_length(torrent_ctx *ctx, size_t piece_length)
 }
 
 /**
- * Set torrent announcement-URL for storing into torrent file.
+ * Add a tracker announce-URL to the torrent file.
  *
  * @param ctx the torrent algorithm context
- * @param announce_url the announcement-URL
+ * @param announce_url the announce URL of the tracker
  * @return non-zero on success, zero on error
  */
-int bt_set_announce(torrent_ctx *ctx, const char* announce_url)
+int bt_add_announce(torrent_ctx *ctx, const char* announce_url)
 {
-	free(ctx->announce);
-	ctx->announce = strdup(announce_url);
-	return (ctx->announce != NULL);
+	char* url_copy;
+	if (!announce_url || announce_url[0] == '\0') return 0;
+	url_copy = strdup(announce_url);
+	if (!url_copy) return 0;
+	return bt_vector_add_ptr(&ctx->announce, url_copy);
 }
 
 /**

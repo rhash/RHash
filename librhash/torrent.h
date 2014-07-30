@@ -41,8 +41,8 @@ typedef struct torrent_ctx
 	size_t piece_count;       /* the number of pieces processed */
 	torrent_vect hash_blocks; /* array of blocks storing SHA1 hashes */
 	torrent_vect files;       /* names of files in a torrent batch */
+	torrent_vect announce;    /* announce URLs */
 	char* program_name;       /* the name of the program */
-	char* announce;           /* announce URL */
 
 	torrent_str content;      /* the content of generated torrent file */
 	int error; /* non-zero if error occurred, zero otherwise */
@@ -62,7 +62,7 @@ size_t bt_get_text(torrent_ctx *ctx, char** pstr);
 
 void bt_set_options(torrent_ctx *ctx, unsigned options);
 int  bt_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize);
-int  bt_set_announce(torrent_ctx *ctx, const char* announce_url);
+int  bt_add_announce(torrent_ctx *ctx, const char* announce_url);
 int  bt_set_program_name(torrent_ctx *ctx, const char* name);
 void bt_set_piece_length(torrent_ctx *ctx, size_t piece_length);
 size_t bt_default_piece_length(uint64_t total_size);

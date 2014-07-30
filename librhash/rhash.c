@@ -830,7 +830,7 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
 		bt_set_options(bt, (unsigned)ldata);
 		break;
 	case RMSG_BT_SET_ANNOUNCE:
-		bt_set_announce(bt, (const char*)ldata);
+		bt_add_announce(bt, (const char*)ldata);
 		break;
 	case RMSG_BT_SET_PIECE_LENGTH:
 		bt_set_piece_length(bt, (size_t)ldata);

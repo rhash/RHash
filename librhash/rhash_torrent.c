@@ -42,7 +42,7 @@ RHASH_API void rhash_torrent_set_options(rhash ctx, unsigned options)
 RHASH_API int rhash_torrent_add_announce(rhash ctx, const char* announce_url)
 {
 	if (!BT_CTX(ctx)) return 0;
-	return bt_set_announce(BT_CTX(ctx), announce_url);
+	return bt_add_announce(BT_CTX(ctx), announce_url);
 }
 
 RHASH_API int rhash_torrent_set_program_name(rhash ctx, const char* name)
