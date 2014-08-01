@@ -97,6 +97,22 @@ librhash.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_
 librhash.rhash_print_magnet.restype = c_size_t
 librhash.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
 
+# conversion of a string to binary data with Python 2/3 compatibility
+if sys.version < '3':
+    def b(x):
+        return x
+    def msg_to_bytes(msg):
+        if isinstance(msg, str): return msg
+        return str(msg)
+else:
+    import codecs
+    def b(x):
+        return codecs.utf_8_encode(x)[0]
+    def msg_to_bytes(msg):
+        if isinstance(msg, bytes): return msg
+        if isinstance(msg, str): return b(msg)
+        return b(str(msg))
+
 # hash_id values
 CRC32 = 0x01
 MD4   = 0x02
@@ -156,8 +172,8 @@ class RHash(object):
         return self
 
     def update(self, message):
-        message = str(message)
-        librhash.rhash_update(self._ctx, message, len(message))
+        data = msg_to_bytes(message)
+        librhash.rhash_update(self._ctx, data, len(data))
         return self
 
     def __lshift__(self, message):
@@ -179,7 +195,10 @@ class RHash(object):
     def _print(self, hash_id, flags):
         buf = create_string_buffer(130)
         ln = librhash.rhash_print(buf, self._ctx, hash_id, flags)
-        return buf[0:ln]
+        if (flags & 3) == RHPR_RAW:
+            return buf[0:ln]
+        else:
+            return buf[0:ln].decode()
 
     def raw(self, hash_id = 0):
         return self._print(hash_id, RHPR_RAW)
@@ -203,10 +222,10 @@ class RHash(object):
         return self._print(hash_id, RHPR_BASE64 | RHPR_UPPERCASE)
 
     def magnet(self, filepath):
-        ln = librhash.rhash_print_magnet(None, filepath, self._ctx, ALL, RHPR_FILESIZE)
+        ln = librhash.rhash_print_magnet(None, b(filepath), self._ctx, ALL, RHPR_FILESIZE)
         buf = create_string_buffer(ln)
-        librhash.rhash_print_magnet(buf, filepath, self._ctx, ALL, RHPR_FILESIZE)
-        return buf[0:ln-1]
+        librhash.rhash_print_magnet(buf, b(filepath), self._ctx, ALL, RHPR_FILESIZE)
+        return buf[0:ln-1].decode('utf-8')
 
     def hash(self, hash_id = 0):
         return self._print(hash_id, 0)

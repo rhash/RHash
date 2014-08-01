@@ -70,7 +70,7 @@ class TestRHash(unittest.TestCase):
         self.assertEqual('5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6', r.hex(rhash.TTH))
         self.assertEqual('2qoyzwmpaczaj2mabgmoz6ccpy', r.base32(rhash.MD5))
         self.assertEqual('1B2M2Y8AsgTpgAmY7PhCfg==', r.base64(rhash.MD5))
-        self.assertEqual('\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09\x98\xec\xf8\x42\x7e', r.raw(rhash.MD5))
+        self.assertEqual(b'\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\x09\x98\xec\xf8\x42\x7e', r.raw(rhash.MD5))
 
     def test_magnet(self):
         r = rhash.RHash(rhash.MD5 | rhash.TTH)
@@ -80,7 +80,7 @@ class TestRHash(unittest.TestCase):
     def test_update_file(self):
         path = 'python_test_input_123.txt'
         f = open(path, 'wb')
-        f.write("\0\1\2\n")
+        f.write(b"\0\1\2\n")
         f.close()
 
         r = rhash.RHash(rhash.SHA1)

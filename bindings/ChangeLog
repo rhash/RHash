@@ -1,4 +1,5 @@
 Fri Aug  1 2014 Aleksey
+	* python 3 support
 	* update SHA3 test vectors to follow the changes of the spec
 
 Sun Jan 19 2014 Aleksey
