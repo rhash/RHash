@@ -32,9 +32,11 @@
 #include "test_hashes.h"
 
 /*=========================================================================*
- *                             Data for tests                              *
+ *                              Test vectors                               *
  *=========================================================================*/
-const char* crc32_tests[] = { /* verified with cksfv */
+
+ /* verified by cksfv */
+ const char* crc32_tests[] = {
 	"", "00000000",
 	"a", "E8B7BE43",
 	"abc", "352441C2",
@@ -58,7 +60,7 @@ const char* md4_tests[] = {
 	0
 };
 
-/* for short messages ed2k hash values are equal to md4 */
+/* for short messages ed2k test vectors coincide with md4 */
 #define ed2k_tests md4_tests
 
 /* test vectors from spec */
@@ -164,12 +166,12 @@ const char* ripemd_tests[] = {
 };
 
 /*
-* Two important test-cases (some sites calculate them incorrectly):
+* Two important test-cases (some libraries calculate them incorrectly):
 * GOST( <100000 characters of 'a'> ) = 5C00CCC2734CDD3332D3D4749576E3C1A7DBAF0E7EA74E9FA602413C90A129FA
 * GOST( <128 characters of 'U'> ) = 53A3A3ED25180CEF0C1D85A074273E551C25660A87062A52D926A9E8FE5733A4
 */
 
-/* test vectors from internet, verified by openssl and some other progs */
+/* test vectors from internet, verified by OpenSSL and some other programs */
 const char* gost_tests[] = {
 	"", "CE85B99CC46752FFFEE35CAB9A7B0278ABB4C2D2055CFF685AF4912C49490F8D",
 	"a", "D42C539E367C66E9C88A801F6649349C21871B4344C6A573F849FDCE62F314DD",
@@ -397,12 +399,18 @@ const char* btih_without_a_filename_tests[] = {
 	0
 };
 
-typedef struct known_strings_t {
+/** Set of test vectors for one hash function */
+struct test_vectors_t {
+	/** Hash function id */
 	unsigned hash_id;
+	/** Array of pairs (message, message_digest) */
 	const char** tests;
-} known_strings_t;
+};
 
-known_strings_t known_strings[] = {
+/**
+ * Array of test vectors for short messages
+ */
+struct test_vectors_t short_test_vectors[] = {
 	{ RHASH_CRC32, crc32_tests },
 	{ RHASH_MD4, md4_tests },
 	{ RHASH_MD5, md5_tests },
@@ -434,15 +442,23 @@ known_strings_t known_strings[] = {
 };
 
 /*=========================================================================*
- *                    Helper functions to hash messages                    *
+ *               Functions for calculating a message digest                *
  *=========================================================================*/
 
-static int g_errors = 0;  /* total number of errors occurred */
+/**
+ * The total number of errors
+ */
+static int g_errors = 0;
 
 #ifdef UNDER_CE /* if Windows CE */
-static char *g_msg = NULL; /* string buffer to store errors */
+/* string buffer to store error messages */
+static char *g_msg = NULL;
 #endif
 
+/**
+ * Print a formatted message to the message log.
+ * @param format the format of the message
+ */
 static void log_message(char* format, ...)
 {
 	va_list vl;
@@ -470,7 +486,7 @@ static void log_message(char* format, ...)
  * @param msg_chunk the message chunk as a null-terminated string
  * @param chunk_size the size of the chunk in bytes
  * @param count the number of chunks in the message
- * @param set_filename need to set a filename for BTIH hash
+ * @param set_filename boolean flag: set a filename for the BTIH hash
  */
 static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size, size_t msg_size, int set_filename)
 {
@@ -593,10 +609,10 @@ static void test_known_strings_pairs(unsigned hash_id, const char** ptr, int set
 static void test_known_strings(unsigned hash_id)
 {
 	int i;
-	for (i = 0; known_strings[i].tests != 0; i++) {
-		if (hash_id == known_strings[i].hash_id) {
-			int set_filename = (known_strings[i].tests == btih_with_filename_tests);
-			test_known_strings_pairs(hash_id, known_strings[i].tests, set_filename);
+	for (i = 0; short_test_vectors[i].tests != 0; i++) {
+		if (hash_id == short_test_vectors[i].hash_id) {
+			int set_filename = (short_test_vectors[i].tests == btih_with_filename_tests);
+			test_known_strings_pairs(hash_id, short_test_vectors[i].tests, set_filename);
 			break;
 		}
 	}
@@ -608,9 +624,9 @@ static void test_known_strings(unsigned hash_id)
 static void test_all_known_strings(void)
 {
 	int i;
-	for (i = 0; known_strings[i].tests != 0; i++) {
-		int set_filename = (known_strings[i].tests == btih_with_filename_tests);
-		test_known_strings_pairs(known_strings[i].hash_id, known_strings[i].tests, set_filename);
+	for (i = 0; short_test_vectors[i].tests != 0; i++) {
+		int set_filename = (short_test_vectors[i].tests == btih_with_filename_tests);
+		test_known_strings_pairs(short_test_vectors[i].hash_id, short_test_vectors[i].tests, set_filename);
 	}
 }
 
@@ -838,7 +854,7 @@ static void test_magnet(void)
 }
 
 /**
- * Find hash id by its name.
+ * Find a hash function id by its name.
  *
  * @param name hash algorithm name
  * @return algorithm id
@@ -859,12 +875,12 @@ static unsigned find_hash(const char* name)
 	return 0;
 }
 
-/* define program entry point */
+/* The program entry point */
 
 #ifndef UNDER_CE /* if not Windows CE */
 
 /**
- * The application entry point under Linux and Windows.
+ * The application entry point for Linux and Windows.
  *
  * @param argc number of arguments including the program name
  * @param argv program arguments including the program name
@@ -929,10 +945,10 @@ wchar_t *char2wchar(char* str)
 }
 
 /**
- * The program entry point under Windows CE
+ * The program entry point for Windows CE
  *
- * @param argc number of arguments including program name
- * @param argv program arguments including its name
+ * @param argc number of arguments including the program name
+ * @param argv program arguments including the program name
  */
 int _tmain(int argc, _TCHAR* argv[])
 {
