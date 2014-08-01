@@ -36,8 +36,9 @@ WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
 WIN_SRC_FILES  = win32/dirent.h win32/stdint.h win32/unistd.h win32/platform-dependent.h \
   win32/vc-2010/rhash.vcxproj
 LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
-  librhash/byte_order.c librhash/byte_order.h librhash/rhash_timing.c librhash/rhash_timing.h \
-  librhash/plug_openssl.c librhash/plug_openssl.h librhash/rhash.c librhash/rhash.h \
+  librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
+  librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
+  librhash/rhash_timing.c librhash/rhash_timing.h \
   librhash/aich.c librhash/aich.h librhash/crc32.c librhash/crc32.h \
   librhash/ed2k.c librhash/ed2k.h librhash/edonr.c librhash/edonr.h \
   librhash/gost.c librhash/gost.h librhash/has160.c librhash/has160.h \
