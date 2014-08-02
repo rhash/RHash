@@ -236,6 +236,7 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
 		 * as well as files not accepted by current file filter
 		 * and files already present in the crc_entries file set */
 		if (!is_regular || !file_mask_match(opt.files_accept, de->d_name) ||
+			(opt.files_exclude && file_mask_match(opt.files_exclude, de->d_name)) ||
 			file_set_exist(crc_entries, de->d_name))
 		{
 			continue;

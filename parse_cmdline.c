@@ -119,16 +119,23 @@ static void list_hashes(void)
 	rsh_exit(0);
 }
 
+enum file_suffix_type {
+	MASK_ACCEPT,
+	MASK_EXCLUDE,
+	MASK_CRC_ACCEPT
+};
+
 /**
- * Process --accept and --crc-accept options.
+ * Process --accept, --exclude and --crc-accept options.
  *
  * @param o pointer to the options structure to update
  * @param accept_string comma delimited string to parse
- * @param type non-zero for the crc_accept option
+ * @param type the type of the option
  */
-static void crc_accept(options_t *o, char* accept_string, unsigned type)
+static void add_file_suffix(options_t *o, char* accept_string, unsigned type)
 {
-	file_mask_array** ptr = (type ? &o->crc_accept : &o->files_accept);
+	file_mask_array** ptr = (type == MASK_ACCEPT ? &o->files_accept :
+		type == MASK_EXCLUDE ? &o->files_exclude : &o->crc_accept);
 	if (!*ptr) *ptr = file_mask_new();
 	file_mask_add_list(*ptr, accept_string);
 }
@@ -138,7 +145,7 @@ static void crc_accept(options_t *o, char* accept_string, unsigned type)
 *
 * @param o pointer to the options structure
 * @param announce_url the url to parse
-* @param type non-zero for the crc_accept option
+* @param unused a tottaly unused parameter
 */
 static void bt_announce(options_t *o, char* announce_url, unsigned unused)
 {
@@ -199,7 +206,7 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
  */
 static void accept_video(options_t *o)
 {
-	crc_accept(o, ".avi,.ogm,.mkv,.mp4,.mpeg,.mpg,.asf,.rm,.wmv,.vob", 0);
+	add_file_suffix(o, ".avi,.ogm,.mkv,.mp4,.mpeg,.mpg,.asf,.rm,.wmv,.vob", MASK_ACCEPT);
 }
 
 /**
@@ -369,8 +376,9 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_PFNC,   0,   0, "path-separator", set_path_separator, 0 },
 	{ F_TOUT, 'o',   0, "output", &opt.output, 0 },
 	{ F_TOUT, 'l',   0, "log",    &opt.log,    0 },
-	{ F_PFNC, 'q',   0, "accept", crc_accept, 0 },
-	{ F_PFNC, 't',   0, "crc-accept", crc_accept, 1 },
+	{ F_PFNC, 'q',   0, "accept", add_file_suffix, MASK_ACCEPT },
+	{ F_PFNC, 't',   0, "crc-accept", add_file_suffix, MASK_CRC_ACCEPT },
+	{ F_PFNC,   0,   0, "exclude", add_file_suffix, MASK_EXCLUDE },
 	{ F_VFNC,   0,   0, "video",  accept_video, 0 },
 	{ F_VFNC,   0,   0, "nya",  nya, 0 },
 	{ F_PFNC,   0,   0, "maxdepth", set_max_depth, 0 },
@@ -841,6 +849,10 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		opt.files_accept = conf_opt.files_accept;
 		conf_opt.files_accept = 0;
 	}
+	if (opt.files_exclude == 0)  {
+		opt.files_exclude = conf_opt.files_exclude;
+		conf_opt.files_exclude = 0;
+	}
 	if (opt.crc_accept == 0) {
 		opt.crc_accept = conf_opt.crc_accept;
 		conf_opt.crc_accept = 0;
@@ -929,6 +941,7 @@ static void set_default_sums_flags(const char* progName)
 void options_destroy(struct options_t* o)
 {
 	file_mask_free(o->files_accept);
+	file_mask_free(o->files_exclude);
 	file_mask_free(o->crc_accept);
 	rsh_vector_free(o->bt_announce);
 	rsh_vector_free(o->mem);

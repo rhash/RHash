@@ -129,9 +129,11 @@ default is white space. The <delimiter> can be a character or empty string.
 .IP "\-\-path\-separator=<separator>"
 Use specified path separator to display paths.
 .IP "\-q, \-\-accept=<list>"
-Set a comma\(hydelimited list of extensions of the files to calculate sums for.
+Set a comma\(hydelimited list of extensions of the files to process.
+.IP "\-\-exclude=<list>"
+Set a comma\(hydelimited list of extensions of the files to exclude from processing.
 .IP "\-t, \-\-crc\-accept=<list>"
-Comma\(hydelimited list of crc files extensions.
+Set a comma\(hydelimited list of extensions of the hash files to verify.
 .IP "\-\-maxdepth=<levels>"
 Descend at most <levels> (a non\(hynegative integer) levels of directories below 
 the command line arguments. `\-\-maxdepth 0' means only apply the tests and 

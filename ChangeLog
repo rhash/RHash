@@ -1,3 +1,6 @@
+Sat Aug  2 2014 Aleksey
+	* option --exclude for skipping some files during recursive scanning
+
 Fri Aug  1 2014 Aleksey
 	* update the SHA3 algorithm to follow the changes of the FIPS 202 draft
 

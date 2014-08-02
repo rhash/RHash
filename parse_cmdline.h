@@ -81,6 +81,7 @@ struct options_t
 	char  path_separator;
 	int   find_max_depth;
 	struct vector_t *files_accept; /* suffixes of files to process */
+	struct vector_t *files_exclude; /* suffixes of files to exclude from processing */
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
 	struct vector_t * bt_announce; /* BitTorrent announce URL */
 	size_t bt_piece_length; /* BitTorrent piece length */

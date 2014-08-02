@@ -64,7 +64,9 @@ static int find_file_callback(file_t* file, int preprocess)
 	}
 
 	if (preprocess) {
-		if (!file_mask_match(opt.files_accept, file->path) || must_skip_file(file)) {
+		if (!file_mask_match(opt.files_accept, file->path) ||
+			(opt.files_exclude && file_mask_match(opt.files_exclude, file->path)) ||
+			must_skip_file(file)) {
 			return 0;
 		}
 
@@ -77,10 +79,17 @@ static int find_file_callback(file_t* file, int preprocess)
 		int not_root = !(file->mode & FILE_IFROOT);
 
 		if (not_root) {
-			/* only check and update modes use the crc_accept mask */
-			file_mask_array* masks = (opt.mode & (MODE_CHECK | MODE_UPDATE) ?
-				opt.crc_accept : opt.files_accept);
-			if (!file_mask_match(masks, file->path)) return 0;
+			if ((opt.mode & (MODE_CHECK | MODE_UPDATE)) != 0) {
+				/* check and update modes use the crc_accept list */
+				if (!file_mask_match(opt.crc_accept, file->path)) {
+					return 0;
+				}
+			} else {
+				if (!file_mask_match(opt.files_accept, file->path) ||
+					(opt.files_exclude && file_mask_match(opt.files_exclude, file->path))) {
+					return 0;
+				}
+			}
 		}
 		if (must_skip_file(file)) return 0;
 
