@@ -11,7 +11,13 @@ extern "C" {
 # define RHASH_API
 #endif
 
+#ifndef LIBRHASH_RHASH_CTX_DEFINED
+#define LIBRHASH_RHASH_CTX_DEFINED
+/**
+ * Hashing context.
+ */
 typedef struct rhash_context* rhash;
+#endif /* LIBRHASH_RHASH_CTX_DEFINED */
 
 /**
  * Binary string with length
