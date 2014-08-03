@@ -1,3 +1,6 @@
+Mon Aug  4 2014 And Sch, Aleksey
+	* librhash: small optimization of Whirlpool
+
 Sat Aug  2 2014 Aleksey
 	* option --exclude for skipping some files during recursive scanning
 

@@ -10,8 +10,7 @@ extern "C" {
 int rhash_plug_openssl(void); /* load openssl algorithms */
 
 #define RHASH_OPENSSL_DEFAULT_HASHES (RHASH_MD5 | RHASH_SHA1 | \
-	RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 | \
-	RHASH_WHIRLPOOL)
+	RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512)
 
 extern unsigned rhash_openssl_hash_mask; /* mask of hash sums to use */
 
