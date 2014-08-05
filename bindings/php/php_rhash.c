@@ -326,7 +326,6 @@ static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_st
 			rhash_update(context, data, length);
 		}
 	} else {
-		int length;
 		while (!php_stream_eof(stream)) {
 			int length = php_stream_read(stream, data, 8192);
 			if (!length) return FAILURE;
