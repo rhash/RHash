@@ -102,6 +102,9 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 
 					/* quietly skip unconvertible file names */
 					if (!file.path || failed) {
+						if (failed) {
+							data->errors_count++;
+						}
 						free(file.path);
 						free(file.wpath);
 						continue;
@@ -119,6 +122,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 				set_errno_from_last_file_error();
 				log_file_error(cpath);
 				free(cpath);
+				data->errors_count++;
 			}
 		}
 		else
@@ -137,12 +141,14 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 				if (failed) {
 					log_error(_("Can't convert the path to local encoding: %s\n"), file.path);
 					free(file.path);
+					data->errors_count++;
 					continue;
 				}
 				file.wpath = path;
 				if (rsh_file_statw(&file) < 0) {
 					log_file_error(file.path);
 					free(file.path);
+					data->errors_count++;
 					continue;
 				}
 			}
@@ -167,6 +173,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 		else if (rsh_file_stat2(&file, USE_LSTAT) < 0) {
 			log_file_error(file.path);
 			rsh_file_cleanup(&file);
+			data->errors_count++;
 			continue;
 		}
 
@@ -384,11 +391,15 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 
 		if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
+			int res;
 			rsh_file_init(&file, dir_path, 1);
-			rsh_file_stat2(&file, USE_LSTAT);
+			res = rsh_file_stat2(&file, USE_LSTAT);
 
 			/* check if we should skip the directory */
-			if (!data->call_back(&file, data->call_back_data)) {
+			if (res < 0 || !data->call_back(&file, data->call_back_data)) {
+				if (res < 0 && (options & FIND_LOG_ERRORS)) {
+					data->errors_count++;
+				}
 				rsh_file_cleanup(&file);
 				continue;
 			}
@@ -437,6 +448,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			} else if (options & FIND_LOG_ERRORS) {
 				/* report error only if FIND_LOG_ERRORS option is set */
 				log_file_error(file.path);
+				data->errors_count++;
 			}
 			rsh_file_cleanup(&file);
 		}
