@@ -22,14 +22,18 @@ new_test() {
   sub_test=0;
 }
 
+print_failed() {
+    st=$( test "$1" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
+    echo "Failed$st"
+}
+
 # verify obtained value $1 against the expected value $2
 check() {
   sub_test=$((sub_test+1));
   if [ "$1" = "$2" ]; then 
     test "$3" = "." || echo "Ok"
   else 
-    tt=$( test "$3" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
-    echo "Failed$tt"
+    print_failed "$3"
     echo "obtained: \"$1\""
     echo "expected: \"$2\""
     return 1; # error
@@ -51,8 +55,7 @@ match_line() {
 match() {
   sub_test=$((sub_test+1));
   if echo "$1" | grep -vq "$2"; then
-    tt=$( test "$3" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
-    echo "Failed$tt"
+    print_failed "$3"
     echo "obtained: \"$1\""
     echo "regexp:  /$2/"
     return 1; # error
@@ -204,3 +207,13 @@ new_test "test creating torrent file: "
 TEST_RESULT=$( $rhash --btih --torrent --bt-private --bt-piece-length=512 --bt-announce=http://tracker.org/ 'test1K.data' 2>/dev/null )
 check "$TEST_RESULT" "29f7e9ef0f41954225990c513cac954058721dd2  test1K.data"
 rm test1K.data.torrent
+
+new_test "test exit code:             "
+rm -f none-existent.file
+test -f none-existent.file && print_failed .
+$rhash -H none-existent.file 2>/dev/null
+check "$?" "2" .
+$rhash -c none-existent.file 2>/dev/null
+check "$?" "2" .
+$rhash -H test1K.data >/dev/null
+check "$?" "0"
