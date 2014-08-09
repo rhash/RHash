@@ -37,6 +37,8 @@
 #define add_root_file(data, file) rsh_blocks_vector_add(&(data)->root_files, (file), RF_BLOCK_SIZE, sizeof(file_t))
 #define get_root_file(data, index) rsh_blocks_vector_get_item(&(data)->root_files, (index), RF_BLOCK_SIZE, file_t);
 
+static int dir_scan(file_t* start_dir, file_search_data* data);
+
 /* allocate and fill the file_search_data */
 file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int max_depth)
 {
@@ -209,7 +211,7 @@ void scan_files(file_search_data* data)
 			}
 
 			if (data->max_depth != 0) {
-				find_file(file, data);
+				dir_scan(file, data);
 			} else if ((data->options & FIND_LOG_ERRORS) != 0) {
 				errno = EISDIR;
 				log_file_error(file->path);
@@ -302,7 +304,7 @@ typedef struct dir_iterator
  * @param data the options specifying how to walk the directory tree
  * @return 0 on success, -1 on error
  */
-int find_file(file_t* start_dir, file_search_data* data)
+static int dir_scan(file_t* start_dir, file_search_data* data)
 {
 	dir_entry *dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
