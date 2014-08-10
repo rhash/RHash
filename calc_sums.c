@@ -427,7 +427,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 			print_sfv_header_line(rhash_data.log, file, 0);
 			fflush(rhash_data.log);
 		}
-		rsh_file_cleanup(file);
+		file_cleanup(file);
 	}
 
 	if (rhash_data.print_list && res >= 0) {
@@ -627,14 +627,14 @@ int check_hash_file(file_t* file, int chdir)
 			}
 			memset(&file_to_check, 0, sizeof(file_t));
 			file_to_check.path = info.full_path;
-			rsh_file_stat(&file_to_check);
+			file_stat(&file_to_check);
 			info.file = &file_to_check;
 
 			/* verify hash sums of the file */
 			res = verify_sums(&info);
 
 			fflush(rhash_data.out);
-			rsh_file_cleanup(&file_to_check);
+			file_cleanup(&file_to_check);
 			file_info_destroy(&info);
 
 			if (rhash_data.interrupted) {

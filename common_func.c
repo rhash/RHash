@@ -399,7 +399,7 @@ unsigned rhash_get_ticks(void)
  * File functions
  *=========================================================================*/
 
-void rsh_file_init(file_t* file, const char* path, int reuse_path)
+void file_init(file_t* file, const char* path, int reuse_path)
 {
 	memset(file, 0, sizeof(*file));
 	if (reuse_path)
@@ -411,7 +411,7 @@ void rsh_file_init(file_t* file, const char* path, int reuse_path)
 	}
 }
 
-void rsh_file_cleanup(file_t* file)
+void file_cleanup(file_t* file)
 {
 	if ((file->mode & FILE_OPT_DONT_FREE_PATH) == 0)
 	{
@@ -435,7 +435,7 @@ void rsh_file_cleanup(file_t* file)
  * @param file the file information
  * @return 0 on success, -1 on error
  */
-int rsh_file_statw(file_t* file)
+int file_statw(file_t* file)
 {
 	WIN32_FILE_ATTRIBUTE_DATA data;
 
@@ -464,7 +464,7 @@ int rsh_file_statw(file_t* file)
  * @param use_lstat nonzero if lstat() shall be used
  * @return 0 on success, -1 on error
  */
-int rsh_file_stat2(file_t* file, int use_lstat)
+int file_stat2(file_t* file, int use_lstat)
 {
 #ifdef _WIN32
 	int i;
@@ -481,7 +481,7 @@ int rsh_file_stat2(file_t* file, int use_lstat)
 		if (file->wpath == NULL) continue;
 
 		/* return on success */
-		if (rsh_file_statw(file) == 0) return 0;
+		if (file_statw(file) == 0) return 0;
 
 		free(file->wpath);
 		file->wpath = NULL;
@@ -527,9 +527,9 @@ int rsh_file_stat2(file_t* file, int use_lstat)
  * @param file the file information
  * @return 0 on success, -1 on error
  */
-int rsh_file_stat(file_t* file)
+int file_stat(file_t* file)
 {
-	return rsh_file_stat2(file, 0);
+	return file_stat2(file, 0);
 }
 
 int is_regular_file(const char* path)
@@ -537,11 +537,11 @@ int is_regular_file(const char* path)
 	int is_regular = 0;
 	file_t file;
 
-	rsh_file_init(&file, path, 1);
-	if (rsh_file_stat(&file) >= 0) {
+	file_init(&file, path, 1);
+	if (file_stat(&file) >= 0) {
 		is_regular = FILE_ISREG(&file);
 	}
-	rsh_file_cleanup(&file);
+	file_cleanup(&file);
 	return is_regular;
 }
 
@@ -550,9 +550,9 @@ int if_file_exists(const char* path)
 	int exists;
 	file_t file;
 
-	rsh_file_init(&file, path, 1);
-	exists = (rsh_file_stat(&file) >= 0);
-	rsh_file_cleanup(&file);
+	file_init(&file, path, 1);
+	exists = (file_stat(&file) >= 0);
+	file_cleanup(&file);
 	return exists;
 }
 

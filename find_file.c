@@ -97,7 +97,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 					/* convert file name */
 					file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
 					if (!failed) {
-						failed = (rsh_file_statw(&file) < 0);
+						failed = (file_statw(&file) < 0);
 					}
 
 					/* quietly skip unconvertible file names */
@@ -145,7 +145,7 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 					continue;
 				}
 				file.wpath = path;
-				if (rsh_file_statw(&file) < 0) {
+				if (file_statw(&file) < 0) {
 					log_file_error(file.path);
 					free(file.path);
 					data->errors_count++;
@@ -164,15 +164,15 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 	for (i = 0; i < count; i++)
 	{
 		file_t file;
-		rsh_file_init(&file, paths[i], 0);
+		file_init(&file, paths[i], 0);
 
 		if (IS_DASH_STR(file.path))
 		{
 			file.mode = FILE_IFSTDIN;
 		}
-		else if (rsh_file_stat2(&file, USE_LSTAT) < 0) {
+		else if (file_stat2(&file, USE_LSTAT) < 0) {
 			log_file_error(file.path);
-			rsh_file_cleanup(&file);
+			file_cleanup(&file);
 			data->errors_count++;
 			continue;
 		}
@@ -194,7 +194,7 @@ void destroy_file_search_data(file_search_data* data)
 	for (i = 0; i < data->root_files.size; i++)
 	{
 		file_t* file = get_root_file(data, i);
-		rsh_file_cleanup(file);
+		file_cleanup(file);
 	}
 	rsh_blocks_vector_destroy(&data->root_files);
 }
@@ -392,19 +392,19 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
 			int res;
-			rsh_file_init(&file, dir_path, 1);
-			res = rsh_file_stat2(&file, USE_LSTAT);
+			file_init(&file, dir_path, 1);
+			res = file_stat2(&file, USE_LSTAT);
 
 			/* check if we should skip the directory */
 			if (res < 0 || !data->call_back(&file, data->call_back_data)) {
 				if (res < 0 && (options & FIND_LOG_ERRORS)) {
 					data->errors_count++;
 				}
-				rsh_file_cleanup(&file);
+				file_cleanup(&file);
 				continue;
 			}
 		}
-		rsh_file_cleanup(&file);
+		file_cleanup(&file);
 
 		/* step into directory */
 		dp = opendir(dir_path);
@@ -423,7 +423,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			file.path = make_path(dir_path, de->d_name);
 			if (!file.path) continue;
 
-			res  = rsh_file_stat2(&file, USE_LSTAT);
+			res  = file_stat2(&file, USE_LSTAT);
 			if (res >= 0) {
 				/* process the file or directory */
 				if (FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
@@ -450,7 +450,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 				log_file_error(file.path);
 				data->errors_count++;
 			}
-			rsh_file_cleanup(&file);
+			file_cleanup(&file);
 		}
 		closedir(dp);
 	}

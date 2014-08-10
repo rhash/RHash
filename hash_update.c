@@ -129,7 +129,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	int print_banner = (opt.fmt == FMT_SFV);
 
 	file->size = 0;
-	if (rsh_file_stat(file) == 0) {
+	if (file_stat(file) == 0) {
 		if (print_banner && file->size > 0) print_banner = 0;
 	}
 
@@ -182,12 +182,12 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 				print_banner = 0;
 			}
 		}
-		rsh_file_stat(&file);
+		file_stat(&file);
 
 		/* print hash sums to the crc file */
 		calculate_and_print_sums(fd, &file, print_path);
 
-		rsh_file_cleanup(&file);
+		file_cleanup(&file);
 
 		if (rhash_data.interrupted) {
 			fclose(fd);

@@ -112,16 +112,16 @@ char* get_dirname(const char* path);
 char* make_path(const char* dir, const char* filename);
 int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
 
-void rsh_file_init(file_t* file, const char* path, int reuse_path);
-void rsh_file_cleanup(file_t* file);
-int rsh_file_stat(file_t* file);
-int rsh_file_stat2(file_t* file, int use_lstat);
+void file_init(file_t* file, const char* path, int reuse_path);
+void file_cleanup(file_t* file);
+int file_stat(file_t* file);
+int file_stat2(file_t* file, int use_lstat);
 int is_regular_file(const char* path);
 int if_file_exists(const char* path);
 
 #ifdef _WIN32
 # define get_file_tpath(file) ((file)->wpath)
-int rsh_file_statw(file_t* file);
+int file_statw(file_t* file);
 # define rsh_fopen_bin(path, mode) win_fopen_bin(path, mode)
 #else
 # define get_file_tpath(file) ((file)->path)
