@@ -188,7 +188,7 @@ static void rhash_sha3_permutation(uint64_t *state)
 		state[22] = ROTL64(state[22], 61);
 		state[23] = ROTL64(state[23], 56);
 		state[24] = ROTL64(state[24], 14);
-		
+
 		keccak_pi(state);
 		keccak_chi(state);
 
