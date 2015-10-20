@@ -56,7 +56,7 @@ unsigned rhash_ctz(unsigned x)
 	 * possible bit position that it is multiplied against.
 	 * See http://graphics.stanford.edu/~seander/bithacks.html
 	 * and http://chessprogramming.wikispaces.com/BitScan */
-	return (unsigned)bit_pos[((uint32_t)((v & -v) * 0x077CB531U)) >> 27];
+	return (unsigned)bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
 }
 #  endif /* _MSC_VER >= 1300... */
 #endif /* !(GCC >= 4.3) */
