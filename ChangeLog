@@ -1,3 +1,6 @@
+Tue Nov 17 2015 Alexey Dokuchaev, Kurt Jaeger
+	* Compilation fixes for FreeBSD
+
 Sat Aug  9 2014 Aleksey
 	* return non zero exit code if a file was not found
 

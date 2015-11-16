@@ -1,6 +1,6 @@
 # Makefile for LibRHash
-CC      = gcc
-AR      = ar
+CC      ?= gcc
+AR      ?= ar
 #NOTE: NDEBUG turns off asserts
 OPTFLAGS   = -O2 -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections
 OPTLDFLAGS =
@@ -24,7 +24,7 @@ LEGACY_LIB_HEADERS = rhash_timing.h
 SO_HEADERS = $(LIB_HEADERS) $(LEGACY_LIB_HEADERS)
 # installation directories and names
 DESTDIR =
-PREFIX  = /usr/local
+PREFIX  ?= /usr/local
 INCDIR  = $(PREFIX)/include
 LIBDIR  = $(PREFIX)/lib
 LIBRARY = librhash.a
