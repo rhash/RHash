@@ -106,7 +106,7 @@ install-man:
 
 install-conf:
 	$(INSTALL) -d $(DESTDIR)/etc
-	sed -e 's/\x0D//g' dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)/etc/rhashrc
+	tr -d \\r < dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)/etc/rhashrc
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
