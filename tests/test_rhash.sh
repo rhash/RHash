@@ -208,6 +208,15 @@ TEST_RESULT=$( $rhash --btih --torrent --bt-private --bt-piece-length=512 --bt-a
 check "$TEST_RESULT" "29f7e9ef0f41954225990c513cac954058721dd2  test1K.data"
 rm test1K.data.torrent
 
+new_test "test url encoded path:      "
+mkdir -p 'test_directory_with_"quotes"'
+touch 'test_directory_with_"quotes"/test_file_with_"quotes".out'
+TEST_RESULT=$( $rhash -p '%M,%p,%P\n' 'test_directory_with_"quotes"/test_file_with_"quotes".out' )
+TEST_EXPECTED='D41D8CD98F00B204E9800998ECF8427E,test_directory_with_"quotes"/test_file_with_"quotes".out,test_directory_with_%22quotes%22%2Ftest_file_with_%22quotes%22.out'
+check "$TEST_RESULT" "$TEST_EXPECTED"
+rm 'test_directory_with_"quotes"/test_file_with_"quotes".out'
+rmdir -p 'test_directory_with_"quotes"'
+
 new_test "test exit code:             "
 rm -f none-existent.file
 test -f none-existent.file && print_failed .

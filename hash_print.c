@@ -41,7 +41,8 @@ enum {
 	PRINT_BASENAME,
 	PRINT_URLNAME,
 	PRINT_SIZE,
-	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_MTIME, /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_URLPATH
 };
 
 /* parse a token following a percent sign '%' */
@@ -194,6 +195,9 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned *fla
 	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
+	} else if (length == 7 && memcmp(buf, "urlpath", 7) == 0) {
+		*flags = PRINT_URLPATH;
+		return 0;
 	}
 
 	for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
@@ -220,14 +224,14 @@ print_item* parse_percent_item(const char** str)
 	print_item* item = NULL;
 
 	static const char *short_hash = "CMHTGWRAE";
-	static const char *short_other = "Llpfus";
+	static const char *short_other = "LlpfusP";
 	static const unsigned hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
 		PRINT_ED2K_LINK, PRINT_ED2K_LINK, PRINT_FILEPATH, PRINT_BASENAME,
-		PRINT_URLNAME, PRINT_SIZE
+		PRINT_URLNAME, PRINT_SIZE, PRINT_URLPATH
 	};
 	/* detect the padding by zeros */
 	if (*format == '0') {
@@ -443,6 +447,14 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 			case PRINT_URLNAME: /* URL-encoded filename */
 				if (!url) {
 					tmp = get_basename(file_info_get_utf8_print_path(info));
+					url = (char*)rsh_malloc(urlencode(NULL, tmp) + 1);
+					urlencode(url, tmp);
+				}
+				fprintf(out, "%s", url);
+				break;
+			case PRINT_URLPATH: /* URL-encoded full path */
+				if (!url) {
+				        tmp = info->print_path;
 					url = (char*)rsh_malloc(urlencode(NULL, tmp) + 1);
 					urlencode(url, tmp);
 				}
