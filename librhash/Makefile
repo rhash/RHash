@@ -46,18 +46,18 @@ dist-clean: clean
 install-lib-static: $(LIBRARY) install-headers
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(LIBRARY) $(DESTDIR)$(LIBDIR)/
-	ln -s $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 install-lib-shared: $(SONAME)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_SHARED) $(SONAME) $(DESTDIR)$(LIBDIR)/
+	ln -s $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 uninstall-lib-static: uninstall-headers
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRARY)
-	rm -f $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 uninstall-lib-shared:
 	rm -f $(DESTDIR)$(LIBDIR)/$(SONAME)
+	rm -f $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 install-headers:
 	$(INSTALL) -d $(DESTDIR)$(INCDIR)
