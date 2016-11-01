@@ -17,7 +17,7 @@ extern "C" {
 # define atomic_compare_and_swap(ptr, oldval, newval) InterlockedCompareExchange(ptr, newval, oldval)
 #elif defined(__sun)
 # include <atomic.h>
-# define atomic_compare_and_swap(ptr, oldval, newval) atomic_cas_32(ptr, oldval, newval);
+# define atomic_compare_and_swap(ptr, oldval, newval) atomic_cas_32(ptr, oldval, newval)
 #else
 /* pray that it will work */
 # define atomic_compare_and_swap(ptr, oldval, newval) { if(*(ptr) == (oldval)) *(ptr) = (newval); }

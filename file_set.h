@@ -23,7 +23,7 @@ struct vector_t;
 typedef struct vector_t file_set;
 
 #define file_set_new() rsh_vector_new((void(*)(void*))file_set_item_free) /* allocate new file set */
-#define file_set_free(set) rsh_vector_free(set); /* free memory */
+#define file_set_free(set) rsh_vector_free(set) /* free memory */
 #define file_set_get(set, index) ((file_set_item*)((set)->array[index])) /* get i-th element */
 #define file_set_add(set, item) rsh_vector_add_ptr(set, item) /* add a file_set_item to file_set */
 

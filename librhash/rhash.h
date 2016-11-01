@@ -249,13 +249,13 @@ RHASH_API rhash_uptr_t rhash_transmit(
  * turns off loading of the OpenSSL dynamic library.
  * This call works if the LibRHash was compiled with OpenSSL support.
  */
-#define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0);
+#define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0)
 
 /**
  * Return current bit-mask of hash algorithms selected to be calculated
  * by OpenSSL library.
  */
-#define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0);
+#define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0)
 
 /** The bit mask of hash algorithms implemented by OpenSSL */
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
