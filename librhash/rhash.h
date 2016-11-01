@@ -183,7 +183,9 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 /* macros for message API */
 
 /** The type of an unsigned integer large enough to hold a pointer */
-#if defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
+#if defined(UINTPTR_MAX)
+typedef uintptr_t rhash_uptr_t;
+#elif defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
 	defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
 typedef unsigned long long rhash_uptr_t;
 #else
