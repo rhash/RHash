@@ -14,7 +14,7 @@
 #include "hash_print.h"
 
 /*=========================================================================
-* Formated output functions and structures
+* Formatted output functions and structures
 *=========================================================================*/
 
 /**
@@ -360,7 +360,7 @@ static void fprintI64(FILE* out, uint64_t filesize, int width, int zero_pad)
 }
 
 /**
-* Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
+* Print time formatted as hh:mm.ss YYYY-MM-DD to a file stream.
 *
 * @param out the stream to print the time to
 * @param time the time to print
@@ -380,7 +380,7 @@ static void print_time(FILE *out, time_t time)
 }
 
 /**
-* Print time formated as hh:mm.ss YYYY-MM-DD to a file stream.
+* Print time formatted as hh:mm.ss YYYY-MM-DD to a file stream.
 *
 * @param out the stream to print the time to
 * @param time the time to print
@@ -391,7 +391,7 @@ static void print_time64(FILE *out, uint64_t time)
 }
 
 /**
- * Print formated file information to given output stream.
+ * Print formatted file information to given output stream.
  *
  * @param out the stream to print information to
  * @param list the format according to which information shall be printed

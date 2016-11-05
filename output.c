@@ -33,9 +33,9 @@
 struct percents_output_info_t *percents_output = NULL;
 
 /**
- * Print a formated message to program log, and flush the log stream.
+ * Print a formatted message to program log, and flush the log stream.
  *
- * @param format print a formated message to the program log
+ * @param format print a formatted message to the program log
  * @param args
  */
 static void log_va_msg(const char* format, va_list args)
@@ -45,9 +45,9 @@ static void log_va_msg(const char* format, va_list args)
 }
 
 /**
- * Print a formated message to program log, and flush the log stream.
+ * Print a formatted message to program log, and flush the log stream.
  *
- * @param format print a formated message to the program log
+ * @param format print a formatted message to the program log
  */
 void log_msg(const char* format, ...)
 {
@@ -59,7 +59,7 @@ void log_msg(const char* format, ...)
 /**
  * Print an error to program log.
  *
- * @param format print a formated message to the program log
+ * @param format print a formatted message to the program log
  */
 void log_error(const char* format, ...)
 {

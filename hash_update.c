@@ -254,7 +254,7 @@ static int load_filtered_dir(const char* dir_path, file_set *crc_entries, file_s
  *
  * <p/>If SFV format was specified by a command line switch, the after adding
  * hash sums SFV header of the file is fixed by moving all lines starting
- * with a semicolon before other lines. So an SFV-formated hash-file
+ * with a semicolon before other lines. So an SFV-formatted hash-file
  * will remain correct.
  *
  * @param file the hash-file to add sums into

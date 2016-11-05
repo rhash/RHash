@@ -36,7 +36,7 @@ struct strbuf_t;
 void init_hash_info_table(void);
 void init_printf_format(struct strbuf_t* out);
 
-/* formated output of hash sums and file information */
+/* formatted output of hash sums and file information */
 print_item* parse_print_string(const char* format, unsigned *sum_mask);
 void print_line(FILE* out, print_item* list, struct file_info *info);
 void free_print_list(print_item* list);

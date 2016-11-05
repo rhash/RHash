@@ -512,7 +512,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 		hash_check_find_str(&hs, "h=\3|");
 	} else {
 		if (hash_check_find_str(&hs, "\1 ( $ ) = \3")) {
-			/* BSD-formated line has been processed */
+			/* BSD-formatted line has been processed */
 		} else if (hash_check_find_str(&hs, "$\6\2")) {
 			while (hash_check_find_str(&hs, "$\6\2"));
 			if (hashes->hashes_num > 1) reversed = 1;
