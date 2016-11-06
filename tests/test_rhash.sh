@@ -112,8 +112,8 @@ TEST_EXPECTED="(stdin) 1 E8B7BE43 5c334qy BTAXLOOA6G3KQMODTHRGS5ZGME hvfkN/qlp/z
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test special characters:    "
-TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0\x1\t\\ \x34\r\n' - )
-TEST_EXPECTED=$( printf '\63\1\277\\x0\1\t\\ 4\r\n' )
+TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0\x1\t\\ \x34\r' - )
+TEST_EXPECTED=$( printf '\63\1\277\\x0\1\t\\ 4\r' )
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test eDonkey link:          "
