@@ -50,6 +50,9 @@ install-lib-static: $(LIBRARY) install-headers
 install-lib-shared: $(SONAME)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_SHARED) $(SONAME) $(DESTDIR)$(LIBDIR)/
+
+install-so-link:
+	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	ln -s $(SONAME) $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 uninstall-lib-static: uninstall-headers
@@ -57,6 +60,8 @@ uninstall-lib-static: uninstall-headers
 
 uninstall-lib-shared:
 	rm -f $(DESTDIR)$(LIBDIR)/$(SONAME)
+
+uninstall-so-link:
 	rm -f $(DESTDIR)$(LIBDIR)/$(SOLINK)
 
 install-headers:
