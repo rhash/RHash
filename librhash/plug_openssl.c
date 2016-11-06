@@ -150,7 +150,9 @@ static int load_openssl_runtime(void)
 	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
 	void* handle = dlopen("libcrypto.so", RTLD_NOW);
-	if (!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW); /* hotfix */
+	if (!handle) handle = dlopen("libcrypto.so.1.1", RTLD_NOW);
+	if (!handle) handle = dlopen("libcrypto.so.1.0.2", RTLD_NOW);
+	if (!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW);
 	if (!handle) handle = dlopen("libcrypto.so.0.9.8", RTLD_NOW);
 #endif
 
