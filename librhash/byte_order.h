@@ -38,6 +38,8 @@ extern "C" {
 /* detect CPU endianness */
 #if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && \
 		__BYTE_ORDER == __LITTLE_ENDIAN) || \
+	(defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
+		__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
 	defined(CPU_IA32) || defined(CPU_X64) || \
 	defined(__ia64) || defined(__ia64__) || defined(__alpha__) || defined(_M_ALPHA) || \
 	defined(vax) || defined(MIPSEL) || defined(_ARM_) || defined(__arm__)
@@ -46,6 +48,8 @@ extern "C" {
 # define IS_LITTLE_ENDIAN 1
 #elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && \
 		__BYTE_ORDER == __BIG_ENDIAN) || \
+	(defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
+		__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
 	defined(__sparc) || defined(__sparc__) || defined(sparc) || \
 	defined(_ARCH_PPC) || defined(_ARCH_PPC64) || defined(_POWER) || \
 	defined(__POWERPC__) || defined(POWERPC) || defined(__powerpc) || \
