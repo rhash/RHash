@@ -89,7 +89,7 @@ copy-dist:
 gzip: distclean
 	rm -rf "$(COPYDIR)" $(ARCHIVE_GZIP)
 	$(MAKE) copy-dist
-	tar -czf $(ARCHIVE_GZIP) "$(COPYDIR)"
+	tar -czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 "$(COPYDIR)"
 	rm -rf "$(COPYDIR)"
 
 PERL_PKG_VER = $(shell [ -f perl/Rhash.pm ] && sed -ne "s/^our \+.VERSION *= *'\([0-9\.]*\)';/\1/p;" perl/Rhash.pm)
@@ -106,7 +106,7 @@ cpan:
 	cp ../librhash/*.[hc] $(PERL_PKG)/librhash/
 	cp perl/MANIFEST $(PERL_PKG)/
 	find $(PERL_PKG)/librhash/ -type f -printf "librhash/%f\n" | sort >> $(PERL_PKG)/MANIFEST
-	tar -czf $(PERL_PKG).tar.gz --owner=0:0 $(PERL_PKG)/
+	tar -czf $(PERL_PKG).tar.gz --owner=root:0 --group=root:0 $(PERL_PKG)/
 	rm -rf $(PERL_PKG)/
 
 distclean:

@@ -253,7 +253,7 @@ copy-dist: $(DIST_FILES) permissions
 
 gzip: check
 	+make copy-dist
-	tar czf $(ARCHIVE_GZIP) $(PROGNAME)-$(VERSION)/
+	tar czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 gzip-bindings:
@@ -262,17 +262,17 @@ gzip-bindings:
 gzip-full: check clean-bindings
 	+make copy-dist
 	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
-	tar czf $(ARCHIVE_FULL) $(PROGNAME)-$(VERSION)/
+	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 bzip: check
 	+make copy-dist
-	tar cjf $(ARCHIVE_BZIP) $(PROGNAME)-$(VERSION)/
+	tar cjf $(ARCHIVE_BZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 7z: check
 	+make copy-dist
-	tar cf - $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
+	tar cf - --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
 $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
