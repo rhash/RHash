@@ -21,7 +21,7 @@ our %EXPORT_TAGS = (
 Exporter::export_tags( );
 Exporter::export_ok_tags( qw(Functions Constants) );
 
-our $VERSION = '0.92';
+our $VERSION = '0.93';
 
 require XSLoader;
 XSLoader::load('Crypt::Rhash', $VERSION);
