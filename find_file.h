@@ -32,8 +32,8 @@ typedef struct file_search_data
 	int errors_count;
 } file_search_data;
 
-file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int max_depth);
-void destroy_file_search_data(file_search_data* data);
+file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_depth);
+void file_search_data_free(file_search_data* data);
 
 void scan_files(file_search_data* data);
 

@@ -945,7 +945,7 @@ void options_destroy(struct options_t* o)
 	file_mask_free(o->crc_accept);
 	rsh_vector_free(o->bt_announce);
 	rsh_vector_free(o->mem);
-	destroy_file_search_data(o->search_data);
+	file_search_data_free(o->search_data);
 }
 
 /**
@@ -1018,7 +1018,7 @@ void read_options(int argc, char *argv[])
 	rsh_blocks_vector_destroy(&cmd_line.options);
 
 	/* set the files and directories to be processed later */
-	opt.search_data = create_file_search_data(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
+	opt.search_data = file_search_data_new(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
 	opt.n_files = cmd_line.n_files;
 
 	free(cmd_line.files);

@@ -40,7 +40,7 @@
 static int dir_scan(file_t* start_dir, file_search_data* data);
 
 /* allocate and fill the file_search_data */
-file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int max_depth)
+file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_depth)
 {
 	size_t i;
 
@@ -187,16 +187,20 @@ file_search_data* create_file_search_data(rsh_tchar** paths, size_t count, int m
 /**
  * Free memory allocated by the file_search_data structure
  */
-void destroy_file_search_data(file_search_data* data)
+void file_search_data_free(file_search_data* data)
 {
-	size_t i;
-	/* clean the memory allocated by file_t elements */
-	for (i = 0; i < data->root_files.size; i++)
+	if (data)
 	{
-		file_t* file = get_root_file(data, i);
-		file_cleanup(file);
+		size_t i;
+		/* clean the memory allocated by file_t elements */
+		for (i = 0; i < data->root_files.size; i++)
+		{
+			file_t* file = get_root_file(data, i);
+			file_cleanup(file);
+		}
+		rsh_blocks_vector_destroy(&data->root_files);
+		free(data);
 	}
-	rsh_blocks_vector_destroy(&data->root_files);
 }
 
 void scan_files(file_search_data* data)
