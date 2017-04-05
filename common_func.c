@@ -507,16 +507,18 @@ int file_stat2(file_t* file, int use_lstat)
 		res = stat(file->path, &st);
 	} while (0);
 
-	file->size  = st.st_size;
-	file->mtime = st.st_mtime;
+	if (res == 0)
+	{
+		file->size  = st.st_size;
+		file->mtime = st.st_mtime;
 
-	if (S_ISDIR(st.st_mode)) {
-		file->mode |= FILE_IFDIR;
-	} else if (S_ISREG(st.st_mode)) {
-		/* it's a regular file or a symlink pointing to a regular file */
-		file->mode |= FILE_IFREG;
+		if (S_ISDIR(st.st_mode)) {
+			file->mode |= FILE_IFDIR;
+		} else if (S_ISREG(st.st_mode)) {
+			/* it's a regular file or a symlink pointing to a regular file */
+			file->mode |= FILE_IFREG;
+		}
 	}
-
 	return res;
 #endif /* _WIN32 */
 }
