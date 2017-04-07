@@ -180,6 +180,8 @@ void rhash_destroy(struct rhash_t* ptr)
 	free_print_list(ptr->print_list);
 	rsh_str_free(ptr->template_text);
 	if (ptr->rctx) rhash_free(ptr->rctx);
+	if (ptr->out) fclose(ptr->out);
+	if (ptr->log) fclose(ptr->log);
 	IF_WINDOWS(restore_console());
 }
 
