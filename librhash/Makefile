@@ -30,6 +30,9 @@ LIBDIR  = $(PREFIX)/lib
 LIBRARY = librhash.a
 SONAME  = librhash.so.0
 SOLINK  = librhash.so
+SONAME_DARWIN = librhash.0.dylib
+SOLINK_DARWIN = librhash.dylib
+LIB_SHARED_TARGET = $(SONAME)
 TEST_TARGET = test_hashes
 TEST_SHARED = test_shared
 # Set variables according to GNU coding standard
@@ -37,9 +40,18 @@ INSTALL = install
 INSTALL_DATA    = $(INSTALL) -m 644
 INSTALL_SHARED  = $(INSTALL) -m 644
 
+ifneq ($(OS),Windows_NT)
+	UNAME_S := $(shell uname -s)
+
+	ifeq ($(UNAME_S),Darwin)
+		CC = clang
+		LIB_SHARED_TARGET = $(SONAME_DARWIN)
+	endif
+endif
+
 all: $(LIBRARY)
 lib-static: $(LIBRARY)
-lib-shared: $(SONAME)
+lib-shared: $(LIB_SHARED_TARGET)
 libs-all: lib-static lib-shared
 dist-clean: clean
 
@@ -192,6 +204,10 @@ $(SONAME): $(SOURCES)
 	ln -s $(SONAME) $(SOLINK)
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
+$(SONAME_DARWIN): $(SOURCES)
+	$(CC) -fpic $(ALLCFLAGS) -dynamiclib $(SOURCES) $(LIBLDFLAGS) -Wl,-install_name,$(PREFIX)/lib/$@ -o $@
+	ln -s $(SONAME_DARWIN) $(SOLINK_DARWIN)
+
 $(LIBRARY): $(OBJECTS)
 	$(AR) cqs $@ $(OBJECTS)
 #	$(AR) cr $(LIBRARY) $(OBJECTS) && runlib $(LIBRARY)
@@ -211,4 +227,4 @@ test: test-static
 #	if [ -f $(DLLNAME) ]; then make test-dll; fi
 
 clean:
-	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) exports.sym $(DLLNAME) librhash.def
+	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) $(SONAME_DARWIN) $(SOLINK_DARWIN) exports.sym $(DLLNAME) librhash.def
