@@ -16,7 +16,6 @@
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
 
-MAKE = make
 JAVA = java
 JAVAC = javac
 JAVADOC = javadoc

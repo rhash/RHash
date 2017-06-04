@@ -124,25 +124,25 @@ uninstall-symlinks:
 	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f; done
 
 install-lib-static: $(LIBRHASH)
-	+make -C librhash install-lib-static
+	+$(MAKE) -C librhash install-lib-static
 
 install-lib-shared: $(SHAREDLIB)
-	+make -C librhash install-lib-shared
+	+$(MAKE) -C librhash install-lib-shared
 
 $(SHAREDLIB):
-	+make -C librhash lib-shared
+	+$(MAKE) -C librhash lib-shared
 
 $(LIBRHASH): $(LIBRHASH_FILES)
-	+make -C librhash lib-static
+	+$(MAKE) -C librhash lib-static
 
 test-static-lib: $(LIBRHASH)
-	+make -C librhash test-static
+	+$(MAKE) -C librhash test-static
 
 test-shared-lib: $(SHAREDLIB)
-	+make -C librhash test-shared
+	+$(MAKE) -C librhash test-shared
 
 test-libs: $(LIBRHASH) $(SHAREDLIB)
-	+make -C librhash test-static test-shared
+	+$(MAKE) -C librhash test-static test-shared
 
 test: test-static
 test-static: $(TARGET)
@@ -244,7 +244,7 @@ permissions:
 	chmod +x tests/test_rhash.sh
 
 clean-bindings:
-	+make -C bindings distclean
+	+$(MAKE) -C bindings distclean
 
 copy-dist: $(DIST_FILES) permissions
 	rm -rf $(PROGNAME)-$(VERSION)
@@ -252,26 +252,26 @@ copy-dist: $(DIST_FILES) permissions
 	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
 
 gzip: check
-	+make copy-dist
+	+$(MAKE) copy-dist
 	tar czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 gzip-bindings:
-	+make -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
+	+$(MAKE) -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
 
 gzip-full: check clean-bindings
-	+make copy-dist
-	+make -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
+	+$(MAKE) copy-dist
+	+$(MAKE) -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
 	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 bzip: check
-	+make copy-dist
+	+$(MAKE) copy-dist
 	tar cjf $(ARCHIVE_BZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
 	rm -rf $(PROGNAME)-$(VERSION)
 
 7z: check
-	+make copy-dist
+	+$(MAKE) copy-dist
 	tar cf - --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
 	rm -rf $(PROGNAME)-$(VERSION)
 
@@ -286,7 +286,7 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	rm -rf $(WIN_ZIP_DIR)
 
 $(ARCHIVE_DEB_GZ) : $(DIST_FILES)
-	+make $(ARCHIVE_GZIP)
+	+$(MAKE) $(ARCHIVE_GZIP)
 	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
 
 # rpm packaging
@@ -303,7 +303,7 @@ rpm: gzip
 distclean: clean
 
 clean:
-	+make -C librhash clean
+	+$(MAKE) -C librhash clean
 	rm -f *.o $(SHARED_TRG) $(TARGET)
 	rm -f po/*.gmo po/*.po~
 

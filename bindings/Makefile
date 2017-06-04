@@ -70,7 +70,7 @@ test-python:
 
 install-ruby:
 # clear MAKEFLAGS to overcome ruby1.8 mkmf concurrency bug
-	MAKEFLAGS= make -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
+	MAKEFLAGS= $(MAKE) -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
 
 install-perl:
 	$(MAKE) -C perl install DESTDIR=$(DESTDIR)
