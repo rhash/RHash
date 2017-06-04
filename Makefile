@@ -324,7 +324,7 @@ install-gmo: compile-gmo
 	for f in po/*.gmo; do \
 		l=`basename $$f .gmo`; \
 		$(INSTALL) -d $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES; \
-		$(INSTALL_DATA) -T $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+		$(INSTALL_DATA) $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
 .PHONY: all install uninstall lib-shared lib-static dist dist-full zip \
