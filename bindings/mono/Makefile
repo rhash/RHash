@@ -15,7 +15,6 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
-MAKE=make
 CS=gmcs
 MDOC=mdoc
 SOURCES=AssemblyInfo.cs Bindings.cs Hasher.cs HashType.cs
