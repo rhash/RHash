@@ -226,95 +226,95 @@ msgstr "Calcular la suma de hash TTH.\n"
 
 #: parse_cmdline.c:55
 msgid "Calculate BitTorrent InfoHash.\n"
-msgstr ""
+msgstr "Calcular el InfoHash BitTorrent.\n"
 
 #: parse_cmdline.c:56
 msgid "Calculate AICH hash.\n"
-msgstr ""
+msgstr "Calcular hash AICH\n."
 
 #: parse_cmdline.c:57
 msgid "Calculate eDonkey hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash de eDonkey.\n"
 
 #: parse_cmdline.c:58
 msgid "Calculate and print eDonkey link.\n"
-msgstr ""
+msgstr "Calcular y mostrar el enlace eDonkey.\n"
 
 #: parse_cmdline.c:59
 msgid "Calculate Tiger hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash de Tiger.\n"
 
 #: parse_cmdline.c:60
 msgid "Calculate GOST R 34.11-94 hash.\n"
-msgstr ""
+msgstr "Calcular el hash GOST R 34.11.94.\n"
 
 #: parse_cmdline.c:61
 msgid "CryptoPro version of the GOST R 34.11-94 hash.\n"
-msgstr ""
+msgstr "Versión CryptoPro del hash GOST R 34.11-94.\n"
 
 #: parse_cmdline.c:62
 msgid "Calculate RIPEMD-160 hash.\n"
-msgstr ""
+msgstr "Calcular hash RIPEDM-160.\n"
 
 #: parse_cmdline.c:63
 msgid "Calculate HAS-160 hash.\n"
-msgstr ""
+msgstr "Calcular hash HAS-160.n"
 
 #: parse_cmdline.c:64
 msgid "Calculate EDON-R 256/512 hash.\n"
-msgstr ""
+msgstr "Calcular hash EDON-R 256/512.\n"
 
 #: parse_cmdline.c:65
 msgid "Calculate SNEFRU-128/256 hash.\n"
-msgstr ""
+msgstr "Calcular hash SNEFRU-128/512.\N"
 
 #: parse_cmdline.c:66
 msgid "Calculate all supported hashes.\n"
-msgstr ""
+msgstr "Calcular todas los hashes respaldados.\n"
 
 #: parse_cmdline.c:67
 msgid "Check hash files specified by command line.\n"
-msgstr ""
+msgstr "Verificar los archivos de hash especificados en la línea de comando.\n"
 
 #: parse_cmdline.c:68
 msgid "Update hash files specified by command line.\n"
-msgstr ""
+msgstr "Actualizar los archivos de hash especificados en la línea de comando.\n"
 
 #: parse_cmdline.c:69
 msgid "Rename files by inserting crc32 sum into name.\n"
-msgstr ""
+msgstr "Renombrar los archivos insertando en el nombre la cifra total crc32.\n"
 
 #: parse_cmdline.c:70
 msgid "Verify files by crc32 sum embedded in their names.\n"
-msgstr ""
+msgstr "Verificar los archivos por la suma crc32 agregada en sus nombres.\n"
 
 #: parse_cmdline.c:71
 msgid "List the names of supported hashes, one per line.\n"
-msgstr ""
+msgstr "Alistar los nombres de hashes respaldados, uno por línea.\n"
 
 #: parse_cmdline.c:72
 msgid "Benchmark selected algorithm.\n"
-msgstr ""
+msgstr "Evaluar el algoritmo seleccionado.\n"
 
 #: parse_cmdline.c:73
 msgid "Be verbose.\n"
-msgstr ""
+msgstr "Sea minucioso.\n"
 
 #: parse_cmdline.c:74
 msgid "Process directories recursively.\n"
-msgstr ""
+msgstr "Procesar directorios repetidamente.\n"
 
 #: parse_cmdline.c:75
 msgid "Don't print OK messages for successfully verified files.\n"
-msgstr ""
+msgstr "No mostrar mensajes de archivos verificados exitosamente.\n"
 
 #: parse_cmdline.c:76
 msgid "Ignore case of filenames when updating hash files.\n"
-msgstr ""
+msgstr "Ignorar nombres de archivo cuando se actualizan los archivos hash.\n"
 
 #: parse_cmdline.c:77
 msgid "Show percents, while calculating or checking hashes.\n"
-msgstr ""
+msgstr "Mostrar porcentajes, mientras se calcula o verifica los hashes.\n"
 
 #: parse_cmdline.c:78
 msgid "Output per-file and total processing speed.\n"
@@ -330,27 +330,27 @@ msgstr ""
 
 #: parse_cmdline.c:81
 msgid "File to log errors and verbose information.\n"
-msgstr ""
+msgstr "Guardar a registro de errores. Sea minucioso con la información.\n"
 
 #: parse_cmdline.c:82
 msgid "Print hash sums, using SFV format (default).\n"
-msgstr ""
+msgstr "Mostrar sumas de hash, usando el formato (predeterminado) SFV.\n"
 
 #: parse_cmdline.c:83
 msgid "Print hash sums, using BSD-like format.\n"
-msgstr ""
+msgstr "Mostrar sumas de hash, usando un formato semejante al BSD.\n"
 
 #: parse_cmdline.c:84
 msgid "Print hash sums, using simple format.\n"
-msgstr ""
+msgstr "Mostrar sumas de hash, usando un formato simple.\n"
 
 #: parse_cmdline.c:85
-msgid "Print hash sums  as magnet links.\n"
-msgstr ""
+msgid "Print hash sums as magnet links.\n"
+msgstr "Mostrar sumas de hash como enlaces magnet.\n"
 
 #: parse_cmdline.c:86
 msgid "Create torrent files.\n"
-msgstr ""
+msgstr "Crear archivos torrent.\n"
 
 #: parse_cmdline.c:88
 msgid "Use Windows codepage for output (Windows only).\n"
@@ -358,7 +358,7 @@ msgstr "Usa el código de página de Windows para la salida (solo Windows).\n"
 
 #: parse_cmdline.c:90
 msgid "Load a printf-like template from the <file>\n"
-msgstr "Carga una platilla de tipo printf desde el <file>\n"
+msgstr "Carga una plaNtilla de tipo printf desde el <file>\n"
 
 #: parse_cmdline.c:92
 msgid ""
