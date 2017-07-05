@@ -254,11 +254,11 @@ void rhash_has160_final(has160_ctx *ctx, unsigned char* result)
 
 	/* pad message and run for last block */
 #ifdef CPU_LITTLE_ENDIAN
-	ctx->message[index]   &= ~(0xFFFFFFFF << shift);
-	ctx->message[index++] ^= 0x80 << shift;
+	ctx->message[index]   &= ~(0xFFFFFFFFu << shift);
+	ctx->message[index++] ^= 0x80u << shift;
 #else
-	ctx->message[index]   &= ~(0xFFFFFFFF >> shift);
-	ctx->message[index++] ^= 0x80000000 >> shift;
+	ctx->message[index]   &= ~(0xFFFFFFFFu >> shift);
+	ctx->message[index++] ^= 0x80000000u >> shift;
 #endif
 
 	/* if no room left in the message to store 64-bit message length */

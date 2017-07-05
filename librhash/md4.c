@@ -183,8 +183,8 @@ void rhash_md4_final(md4_ctx *ctx, unsigned char result[16])
 	/* pad message and run for last block */
 
 	/* append the byte 0x80 to the message */
-	ctx->message[index]   &= ~(0xFFFFFFFF << shift);
-	ctx->message[index++] ^= 0x80 << shift;
+	ctx->message[index]   &= ~(0xFFFFFFFFu << shift);
+	ctx->message[index++] ^= 0x80u << shift;
 
 	/* if no room left in the message to store 64-bit message length */
 	if (index > 14) {

@@ -466,8 +466,8 @@ void rhash_edonr256_final(edonr_ctx *ctx, unsigned char* result)
 	/* pad message and run for the last block */
 
 	/* append the byte 0x80 to the message */
-	ctx->u.data256.message[index]   &= ~(0xFFFFFFFF << shift);
-	ctx->u.data256.message[index++] ^= 0x80 << shift;
+	ctx->u.data256.message[index]   &= ~(0xFFFFFFFFu << shift);
+	ctx->u.data256.message[index++] ^= 0x80u << shift;
 
 	/* if no room left in the message to store 64-bit message length */
 	if (index > 14) {
