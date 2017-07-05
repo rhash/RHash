@@ -79,10 +79,12 @@ void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t le
 		const uint32_t* src = (const uint32_t*)from;
 		const uint32_t* end = (const uint32_t*)((const char*)src + length);
 		uint32_t* dst = (uint32_t*)((char*)to + index);
-		while (src < end) *(dst++) = bswap_32( *(src++) );
+		for (; src < end; dst++, src++)
+			*dst = bswap_32(*src);
 	} else {
 		const char* src = (const char*)from;
-		for (length += index; (size_t)index < length; index++) ((char*)to)[index ^ 3] = *(src++);
+		for (length += index; (size_t)index < length; index++)
+			((char*)to)[index ^ 3] = *(src++);
 	}
 }
 
