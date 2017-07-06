@@ -182,7 +182,10 @@ int bt_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
 
 	info->size = filesize;
 	memcpy(info->path, path, len + 1);
-	if (!bt_vector_add_ptr(&ctx->files, info)) return 0;
+	if (!bt_vector_add_ptr(&ctx->files, info)) {
+		free(info);
+		return 0;
+	}
 
 	/* recalculate piece length (but only if hashing not started yet) */
 	if (ctx->piece_count == 0 && ctx->index == 0) {
@@ -281,6 +284,7 @@ static void bt_str_append(torrent_ctx *ctx, const char* text)
 	size_t length = strlen(text);
 
 	if (!bt_str_ensure_length(ctx, ctx->content.length + length)) return;
+	assert(ctx->content.str != 0);
 	memcpy(ctx->content.str + ctx->content.length, text, length);
 	ctx->content.length += length;
 	ctx->content.str[ctx->content.length] = '\0';
@@ -575,7 +579,10 @@ int bt_add_announce(torrent_ctx *ctx, const char* announce_url)
 	if (!announce_url || announce_url[0] == '\0') return 0;
 	url_copy = strdup(announce_url);
 	if (!url_copy) return 0;
-	return bt_vector_add_ptr(&ctx->announce, url_copy);
+	if (bt_vector_add_ptr(&ctx->announce, url_copy))
+		return 1;
+	free(url_copy);
+	return 0;
 }
 
 /**

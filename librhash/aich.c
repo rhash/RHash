@@ -133,6 +133,7 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 
 	/* add new hash_pairs_group_t block to the table */
 	assert(index < ctx->allocated);
+	assert(ctx->chunk_table != 0);
 	assert(ctx->chunk_table[index] == 0);
 
 	ctx->chunk_table[index] = malloc(sizeof(hash_pairs_group_t));
