@@ -77,6 +77,17 @@ extern "C" {
 #define I64(x) x##LL
 #endif
 
+
+#ifndef __STRICT_ANSI__
+#define RHASH_INLINE inline
+#elif defined(__GNUC__)
+#define RHASH_INLINE __inline__
+#else
+#define RHASH_INLINE
+#endif
+
+#undef __GNUC__ /* for test */
+
 /* convert a hash flag to index */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
 # define rhash_ctz(x) __builtin_ctz(x)
@@ -92,7 +103,8 @@ void rhash_u32_mem_swap(unsigned *p, int length_in_u32);
 /* define bswap_32 */
 #if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__)
 /* for intel x86 CPU */
-static inline uint32_t bswap_32(uint32_t x) {
+static RHASH_INLINE uint32_t bswap_32(uint32_t x)
+{
 	__asm("bswap\t%0" : "=r" (x) : "0" (x));
 	return x;
 }
@@ -101,23 +113,22 @@ static inline uint32_t bswap_32(uint32_t x) {
 # define bswap_32(x) __builtin_bswap32(x)
 #elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
 # define bswap_32(x) _byteswap_ulong((unsigned long)x)
-#elif !defined(__STRICT_ANSI__)
+#else
 /* general bswap_32 definition */
-static inline uint32_t bswap_32(uint32_t x) {
-	x = ((x << 8) & 0xFF00FF00) | ((x >> 8) & 0x00FF00FF);
+static RHASH_INLINE uint32_t bswap_32(uint32_t x)
+{
+	x = ((x << 8) & 0xFF00FF00u) | ((x >> 8) & 0x00FF00FFu);
 	return (x >> 16) | (x << 16);
 }
-#else
-#define bswap_32(x) ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) | \
-	(((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 #endif /* bswap_32 */
 
 #if defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)
 # define bswap_64(x) __builtin_bswap64(x)
 #elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
 # define bswap_64(x) _byteswap_uint64((__int64)x)
-#elif !defined(__STRICT_ANSI__)
-static inline uint64_t bswap_64(uint64_t x) {
+#else
+static RHASH_INLINE uint64_t bswap_64(uint64_t x)
+{
 	union {
 		uint64_t ll;
 		uint32_t l[2];
@@ -127,8 +138,6 @@ static inline uint64_t bswap_64(uint64_t x) {
 	r.l[1] = bswap_32(w.l[0]);
 	return r.ll;
 }
-#else
-#error "bswap_64 unsupported"
 #endif
 
 #ifdef CPU_BIG_ENDIAN
