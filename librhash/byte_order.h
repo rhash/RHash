@@ -74,7 +74,7 @@ extern "C" {
 #if defined(_MSC_VER) || defined(__BORLANDC__)
 #define I64(x) x##ui64
 #else
-#define I64(x) x##LL
+#define I64(x) x##ULL
 #endif
 
 
