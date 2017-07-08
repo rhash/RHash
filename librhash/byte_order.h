@@ -86,8 +86,6 @@ extern "C" {
 #define RHASH_INLINE
 #endif
 
-#undef __GNUC__ /* for test */
-
 /* convert a hash flag to index */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
 # define rhash_ctz(x) __builtin_ctz(x)
