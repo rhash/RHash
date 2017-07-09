@@ -50,7 +50,7 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/tiger_sbox.c librhash/tth.c librhash/tth.h librhash/whirlpool.c \
   librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_hashes.c \
   librhash/test_hashes.h librhash/torrent.h librhash/torrent.c librhash/ustd.h \
-  librhash/util.c librhash/util.h librhash/config.h librhash/Makefile
+  librhash/util.h librhash/config.h librhash/Makefile
 I18N_FILES = po/de.po po/en_AU.po po/es.po po/gl.po po/it.po po/ru.po
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
 DESTDIR = 
