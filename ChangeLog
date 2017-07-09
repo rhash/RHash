@@ -587,7 +587,7 @@ Wed Apr 19 2006 Aleksey
 
 Mon Apr 10 2006 Aleksey
 	* === Version 0.8.3 ===
-	* cheking of files in standart md5sum/sha1sum format supported
+	* cheking of files in standard md5sum/sha1sum format supported
 	* default output format for md5/sha1/ed2k sums changed
 	* man page rewrited
 
