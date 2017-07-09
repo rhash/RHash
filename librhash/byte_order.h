@@ -102,33 +102,27 @@ void rhash_swap_copy_str_to_u64(void* to, int index, const void* from, size_t le
 void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length);
 void rhash_u32_mem_swap(unsigned *p, int length_in_u32);
 
-/* define bswap_32 */
-#if (defined(__GNUC__)  && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \
-    (defined(__clang__) && __has_builtin(__builtin_bswap32))
+/* bswap definitions */
+#if (defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \
+    (defined(__clang__) && __has_builtin(__builtin_bswap32) && __has_builtin(__builtin_bswap64))
 /* GCC >= 4.3 or clang */
 # define bswap_32(x) __builtin_bswap32(x)
+# define bswap_64(x) __builtin_bswap64(x)
 #elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
 # define bswap_32(x) _byteswap_ulong((unsigned long)x)
+# define bswap_64(x) _byteswap_uint64((__int64)x)
 #else
+/* fallback to generic bswap definition */
 static RHASH_INLINE uint32_t bswap_32(uint32_t x)
 {
-# if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__)
+# if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__) && !defined(RHASH_NO_ASM)
 	__asm("bswap\t%0" : "=r" (x) : "0" (x)); /* gcc x86 version */
 	return x;
 # else
-	/* general bswap_32 */
 	x = ((x << 8) & 0xFF00FF00u) | ((x >> 8) & 0x00FF00FFu);
 	return (x >> 16) | (x << 16);
 # endif
 }
-#endif /* bswap_32 definition */
-
-#if (defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \
-    (defined(__clang__) && __has_builtin(__builtin_bswap64))
-# define bswap_64(x) __builtin_bswap64(x)
-#elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
-# define bswap_64(x) _byteswap_uint64((__int64)x)
-#else
 static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 {
 	union {
@@ -140,7 +134,7 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 	r.l[1] = bswap_32(w.l[0]);
 	return r.ll;
 }
-#endif
+#endif /* bswap definitions */
 
 #ifdef CPU_BIG_ENDIAN
 # define be2me_32(x) (x)
