@@ -123,7 +123,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	}
 
 	/* align the size of the rhash context common part */
-	aligned_size = (offsetof(rhash_context_ext, vector[num]) + 7) & ~7;
+	aligned_size = ((offsetof(rhash_context_ext, vector) + sizeof(rhash_vector_item) * num) + 7) & ~7;
 	assert(aligned_size >= sizeof(rhash_context_ext));
 
 	/* allocate rhash context with enough memory to store contexts of all used hashes */
@@ -342,7 +342,7 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
  */
 RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data)
 {
-	((rhash_context_ext*)ctx)->callback = callback;
+	((rhash_context_ext*)ctx)->callback = (void*)callback;
 	((rhash_context_ext*)ctx)->callback_data = callback_data;
 }
 

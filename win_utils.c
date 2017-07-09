@@ -514,5 +514,6 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 		}
 	}
 }
-
+#else
+typedef int dummy_declaration_required_by_strict_iso_c;
 #endif /* _WIN32 */

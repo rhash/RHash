@@ -209,4 +209,6 @@ int rhash_plug_openssl(void)
 	rhash_info_table = rhash_openssl_hash_info;
 	return 1;
 }
+#else
+typedef int dummy_declaration_required_by_strict_iso_c;
 #endif /* defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME) */
