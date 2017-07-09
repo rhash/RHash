@@ -45,7 +45,7 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
 	ctx->cryptpro = 1;
 }
 
-#if defined(__GNUC__) && defined(CPU_IA32) && !defined(RHASH_NO_ASM)
+#if defined(__GNUC__) && defined(CPU_IA32) && !defined(__clang__) && !defined(RHASH_NO_ASM)
 # define USE_GCC_ASM_IA32
 #elif defined(__GNUC__) && defined(CPU_X64) && !defined(RHASH_NO_ASM)
 # define USE_GCC_ASM_X64
