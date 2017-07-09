@@ -168,7 +168,8 @@ char* compiler_flags = "Compile-time flags:"
 	" __BORLANDC__"
 #endif
 #if defined(__GNUC__) && defined(__VERSION__)
-	" GCC=" __VERSION__
+	" __VERSION__=" __VERSION__
+	" (__GNUC__=" EXPAND_TO_STRING(__GNUC__) ",__GNUC_MINOR__=" EXPAND_TO_STRING(__GNUC_MINOR__) ")"
 #endif
 #ifdef __INTEL_COMPILER
 	" __INTEL_COMPILER=" EXPAND_TO_STRING(__INTEL_COMPILER)
