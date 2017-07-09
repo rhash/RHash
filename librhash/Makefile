@@ -30,6 +30,9 @@ LIBDIR  = $(PREFIX)/lib
 LIBRARY = librhash.a
 SONAME  = librhash.so.0
 SOLINK  = librhash.so
+DYNAME  = librhash.0.dylib
+DYLINK  = librhash.dylib
+DLLNAME = librhash.dll
 TEST_TARGET = test_hashes
 TEST_SHARED = test_shared
 # Set variables according to GNU coding standard
@@ -41,6 +44,8 @@ all: $(LIBRARY)
 lib-static: $(LIBRARY)
 lib-shared: $(SONAME)
 libs-all: lib-static lib-shared
+dylib: $(DYNAME)
+dll: $(DLLNAME)
 dist-clean: clean
 
 install-lib-static: $(LIBRARY) install-headers
@@ -174,10 +179,7 @@ whirlpool.o: whirlpool.c byte_order.h ustd.h config.h whirlpool.h
 whirlpool_sbox.o: whirlpool_sbox.c byte_order.h ustd.h config.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
-# MINGW dll target
-DLLNAME = librhash.dll
-
-dll: $(DLLNAME)
+# MINGW: build a dll library
 $(DLLNAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(LIB_HEADERS) > exports.sym
 	$(CC) -DRHASH_EXPORTS $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,--output-def,librhash.def,-soname,$@ $(LIBLDFLAGS) -o $@
@@ -192,9 +194,12 @@ $(SONAME): $(SOURCES)
 	ln -s $(SONAME) $(SOLINK)
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
+$(DYNAME): $(SOURCES)
+	$(CC) -fpic $(ALLCFLAGS) -dynamiclib $(SOURCES) $(LIBLDFLAGS) -Wl,-install_name,$(LIBDIR)/$@ -o $@
+	ln -s $(DYNAME) $(DYLINK)
+
 $(LIBRARY): $(OBJECTS)
 	$(AR) cqs $@ $(OBJECTS)
-#	$(AR) cr $(LIBRARY) $(OBJECTS) && runlib $(LIBRARY)
 
 $(TEST_TARGET): $(LIBRARY) test_hashes.o
 	$(CC) $(ALLCFLAGS) test_hashes.o $(LIBRARY) $(LIBLDFLAGS) -o $@
@@ -208,7 +213,6 @@ test-static: $(TEST_TARGET)
 
 test: test-static
 	if [ -f $(SONAME) ]; then make test-shared; fi
-#	if [ -f $(DLLNAME) ]; then make test-dll; fi
 
 clean:
 	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) exports.sym $(DLLNAME) librhash.def
