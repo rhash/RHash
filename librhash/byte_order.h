@@ -90,8 +90,10 @@ extern "C" {
 #define RHASH_INLINE
 #endif
 
-/* count traling zero bits */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
+/* define rhash_ctz - count traling zero bits */
+#if (defined(__GNUC__) && __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) || \
+    (defined(__clang__) && __has_builtin(__builtin_ctz))
+/* GCC >= 3.4 or clang */
 # define rhash_ctz(x) __builtin_ctz(x)
 #else
 unsigned rhash_ctz(unsigned); /* define as function */
