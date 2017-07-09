@@ -59,6 +59,10 @@ extern "C" {
 # error "Can't detect CPU architechture"
 #endif
 
+#ifndef __has_builtin
+# define __has_builtin(x) 0
+#endif
+
 #define IS_ALIGNED_32(p) (0 == (3 & ((const char*)(p) - (const char*)0)))
 #define IS_ALIGNED_64(p) (0 == (7 & ((const char*)(p) - (const char*)0)))
 
@@ -86,8 +90,8 @@ extern "C" {
 #define RHASH_INLINE
 #endif
 
-/* convert a hash flag to index */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
+/* count traling zero bits */
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
 # define rhash_ctz(x) __builtin_ctz(x)
 #else
 unsigned rhash_ctz(unsigned); /* define as function */
@@ -99,28 +103,28 @@ void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length);
 void rhash_u32_mem_swap(unsigned *p, int length_in_u32);
 
 /* define bswap_32 */
-#if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__)
-/* for intel x86 CPU */
-static RHASH_INLINE uint32_t bswap_32(uint32_t x)
-{
-	__asm("bswap\t%0" : "=r" (x) : "0" (x));
-	return x;
-}
-#elif defined(__GNUC__)  && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)
-/* for GCC >= 4.3 */
+#if (defined(__GNUC__)  && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \
+    (defined(__clang__) && __has_builtin(__builtin_bswap32))
+/* GCC >= 4.3 or clang */
 # define bswap_32(x) __builtin_bswap32(x)
 #elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
 # define bswap_32(x) _byteswap_ulong((unsigned long)x)
 #else
-/* general bswap_32 definition */
 static RHASH_INLINE uint32_t bswap_32(uint32_t x)
 {
+# if defined(__GNUC__) && defined(CPU_IA32) && !defined(__i386__)
+	__asm("bswap\t%0" : "=r" (x) : "0" (x)); /* gcc x86 version */
+	return x;
+# else
+	/* general bswap_32 */
 	x = ((x << 8) & 0xFF00FF00u) | ((x >> 8) & 0x00FF00FFu);
 	return (x >> 16) | (x << 16);
+# endif
 }
-#endif /* bswap_32 */
+#endif /* bswap_32 definition */
 
-#if defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)
+#if (defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \
+    (defined(__clang__) && __has_builtin(__builtin_bswap64))
 # define bswap_64(x) __builtin_bswap64(x)
 #elif (_MSC_VER > 1300) && (defined(CPU_IA32) || defined(CPU_X64)) /* MS VC */
 # define bswap_64(x) _byteswap_uint64((__int64)x)
