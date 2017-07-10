@@ -1,3 +1,6 @@
+Mon Jul 10 2017 James Le Cuirot
+	* correct build/install command for freebsd
+
 Mon Jul 10 2017 Przemyslaw Pawelczyk
 	* compilation fixes for aarch64 and musl
 
