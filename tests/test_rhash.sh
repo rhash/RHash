@@ -14,12 +14,13 @@ fi
 #version="`$rhash -V|sed 's/^.* v//'`"
 HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;/[^3]-/s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
 
-test_num=1;
-sub_test=0;
+fail_cnt=0
+test_num=1
+sub_test=0
 new_test() {
   printf "%2u. %s" $test_num "$1"
-  test_num=$((test_num+1));
-  sub_test=0;
+  test_num=$((test_num+1))
+  sub_test=0
 }
 
 print_failed() {
@@ -29,16 +30,17 @@ print_failed() {
 
 # verify obtained value $1 against the expected value $2
 check() {
-  sub_test=$((sub_test+1));
+  sub_test=$((sub_test+1))
   if [ "$1" = "$2" ]; then 
     test "$3" = "." || echo "Ok"
   else 
     print_failed "$3"
     echo "obtained: \"$1\""
     echo "expected: \"$2\""
-    return 1; # error
+    fail_cnt=$((fail_cnt+1))
+    return 1;
   fi
-  return 0;
+  return 0
 }
 
 # match obtained value $1 against given grep-regexp $2
@@ -46,23 +48,25 @@ match_line() {
   if echo "$1" | grep -vq "$2"; then
     printf "obtained: \"%s\"\n" "$1"
     echo "regexp:  /$2/"
-    return 1;
+    fail_cnt=$((fail_cnt+1))
+    return 1
   fi
-  return 0;
+  return 0
 }
 
 # match obtained value $1 against given grep-regexp $2
 match() {
-  sub_test=$((sub_test+1));
+  sub_test=$((sub_test+1))
   if echo "$1" | grep -vq "$2"; then
     print_failed "$3"
     echo "obtained: \"$1\""
     echo "regexp:  /$2/"
-    return 1; # error
+    fail_cnt=$((fail_cnt+1))
+    return 1;
   else
     test "$3" = "." || echo "Ok"
   fi
-  return 0;
+  return 0
 }
 
 new_test "test with text string:      "
@@ -217,3 +221,10 @@ $rhash -c none-existent.file 2>/dev/null
 check "$?" "2" .
 $rhash -H test1K.data >/dev/null
 check "$?" "0"
+
+if [ $fail_cnt -gt 0 ]; then
+  echo "Failed $fail_cnt checks"
+  exit 1 # some tests failed
+fi
+
+exit 0 # success
