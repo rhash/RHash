@@ -1,8 +1,14 @@
+Mon Jul 10 2017 Przemyslaw Pawelczyk
+	* compilation fixes for aarch64 and musl
+
+Mon Jul 10 2017 Aleksey
+	* improve support of clang on macOS
+
 Sun Nov  6 2016 Aleksey
 	* === Version 1.3.4 ===
 
 Tue Nov 17 2015 Alexey Dokuchaev, Kurt Jaeger
-	* Compilation fixes for FreeBSD
+	* compilation fixes for FreeBSD
 
 Sat Aug  9 2014 Aleksey
 	* return non zero exit code if a file was not found
