@@ -221,7 +221,7 @@ Mon Mar 14 2011 Aleksey
 	* added printf modificator %{mtime} to print the last modified date of a file
 
 Thu Feb 17 2011 Aleksey
-	* Bugfix: verification of base2-like formated md5 hash sums
+	* Bugfix: verification of base2-like formatted md5 hash sums
 
 Fri Jan 14 2011 Aleksey
 	* === Version 1.2.2 ===
