@@ -1,7 +1,7 @@
 # Spanish translation for rhash
 # Copyright (c) 2011 Rosetta Contributors and Canonical Ltd 2011
 # This file is distributed under the same license as the rhash package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
+# VPablo <villumar@gmail.com>, 2011.
 #
 msgid ""
 msgstr ""
@@ -11,18 +11,18 @@ msgstr ""
 "PO-Revision-Date: 2012-11-22 08:47+0000\n"
 "Last-Translator: Darío Hereñú <magallania@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
-"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2012-12-30 18:56+0000\n"
-"X-Generator: Launchpad (build 16378)\n"
+"X-Launchpad-Export-Date: 2017-07-15 21:20+0000\n"
+"X-Generator: Launchpad (build 18419)\n"
+"Language: es\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:269
 #, c-format
 msgid "wrong embedded CRC32, should be %s\n"
-msgstr ""
+msgstr "CRC32 incrustado es incorrecto, debe ser %s\n"
 
 #: calc_sums.c:293 hash_update.c:358
 #, c-format
@@ -136,7 +136,7 @@ msgid ""
 "Checking %s\n"
 msgstr ""
 "\n"
-"Comprobando %s\n"
+"Verificando %s\n"
 
 #: output.c:311
 #, c-format
@@ -202,23 +202,23 @@ msgstr "Muestra esta ayuda.\n"
 
 #: parse_cmdline.c:49
 msgid "Calculate CRC32 hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash CRC32.\n"
 
 #: parse_cmdline.c:50
 msgid "Calculate MD4   hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash MD4.\n"
 
 #: parse_cmdline.c:51
 msgid "Calculate MD5   hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash MD5.\n"
 
 #: parse_cmdline.c:52
 msgid "Calculate SHA1  hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash SHA1.\n"
 
 #: parse_cmdline.c:53
 msgid "Calculate SHA2 hash sum.\n"
-msgstr ""
+msgstr "Calcular la suma hash SHA2.\n"
 
 #: parse_cmdline.c:54
 msgid "Calculate TTH sum.\n"
@@ -234,7 +234,7 @@ msgstr "Calcular hash AICH\n."
 
 #: parse_cmdline.c:57
 msgid "Calculate eDonkey hash sum.\n"
-msgstr "Calcular la suma hash de eDonkey.\n"
+msgstr "Calcular la suma hash eDonkey.\n"
 
 #: parse_cmdline.c:58
 msgid "Calculate and print eDonkey link.\n"
@@ -246,7 +246,7 @@ msgstr "Calcular la suma hash de Tiger.\n"
 
 #: parse_cmdline.c:60
 msgid "Calculate GOST R 34.11-94 hash.\n"
-msgstr "Calcular el hash GOST R 34.11.94.\n"
+msgstr "Calcular el hash GOST R 34.11-94.\n"
 
 #: parse_cmdline.c:61
 msgid "CryptoPro version of the GOST R 34.11-94 hash.\n"
@@ -358,7 +358,7 @@ msgstr "Usa el código de página de Windows para la salida (solo Windows).\n"
 
 #: parse_cmdline.c:90
 msgid "Load a printf-like template from the <file>\n"
-msgstr "Carga una plaNtilla de tipo printf desde el <file>\n"
+msgstr "Carga una plantilla de tipo printf desde el <file>\n"
 
 #: parse_cmdline.c:92
 msgid ""
@@ -450,7 +450,7 @@ msgstr "%s: el archivo de plantilla es demasiado grande\n"
 #: rhash_main.c:199
 #, c-format
 msgid "%s v%s benchmarking...\n"
-msgstr ""
+msgstr "%s v%s análisis comparativo...\n"
 
 #: rhash_main.c:207
 msgid "no files/directories were specified at command line\n"
