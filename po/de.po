@@ -1,7 +1,7 @@
 # German translation for rhash
 # Copyright (c) 2011 Rosetta Contributors and Canonical Ltd 2011
 # This file is distributed under the same license as the rhash package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
+# Matthias Loidolt <kedapperdrake@googlemail.com>, 2011.
 #
 msgid ""
 msgstr ""
@@ -11,12 +11,12 @@ msgstr ""
 "PO-Revision-Date: 2012-11-22 08:46+0000\n"
 "Last-Translator: Matthias Loidolt <kedapperdrake@googlemail.com>\n"
 "Language-Team: German <de@li.org>\n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Launchpad-Export-Date: 2012-12-30 18:56+0000\n"
 "X-Generator: Launchpad (build 16378)\n"
+"Language: de\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:269

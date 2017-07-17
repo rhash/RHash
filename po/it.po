@@ -1,23 +1,22 @@
 # Italian translation for rhash
 # Copyright (c) 2011 Rosetta Contributors and Canonical Ltd 2011
 # This file is distributed under the same license as the rhash package.
-#
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
 # Valter Mura <valtermura@gmail.com>, 2011.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2012-06-15 13:08+0700\n"
+"POT-Creation-Date: 2012-11-22 00:04+0700\n"
 "PO-Revision-Date: 2012-06-15 18:22+0000\n"
 "Last-Translator: Valter Mura <valtermura@gmail.com>\n"
 "Language-Team: Italian <ubuntu-l10n-it@lists.ubuntu.com>\n"
-"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2012-11-12 15:28+0000\n"
-"X-Generator: Launchpad (build 16251)\n"
+"X-Launchpad-Export-Date: 2017-07-15 21:12+0000\n"
+"X-Generator: Launchpad (build 18419)\n"
+"Language: it\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:269

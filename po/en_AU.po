@@ -1,7 +1,7 @@
 # English (Australia) translation for rhash
 # Copyright (c) 2011 Rosetta Contributors and Canonical Ltd 2011
 # This file is distributed under the same license as the rhash package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2011.
+# Joel Pickett <jlkpcktt@gmail.com>, 2011.
 #
 msgid ""
 msgstr ""
@@ -11,12 +11,12 @@ msgstr ""
 "PO-Revision-Date: 2011-09-25 08:15+0000\n"
 "Last-Translator: Joel Pickett <jlkpcktt@gmail.com>\n"
 "Language-Team: English (Australia) <en_AU@li.org>\n"
-"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Launchpad-Export-Date: 2011-09-25 19:36+0000\n"
 "X-Generator: Launchpad (build 14012)\n"
+"Language: en\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:269
