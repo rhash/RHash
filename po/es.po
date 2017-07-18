@@ -230,7 +230,7 @@ msgstr "Calcular el InfoHash BitTorrent.\n"
 
 #: parse_cmdline.c:56
 msgid "Calculate AICH hash.\n"
-msgstr "Calcular hash AICH\n."
+msgstr "Calcular hash AICH.\n"
 
 #: parse_cmdline.c:57
 msgid "Calculate eDonkey hash sum.\n"
@@ -258,7 +258,7 @@ msgstr "Calcular hash RIPEDM-160.\n"
 
 #: parse_cmdline.c:63
 msgid "Calculate HAS-160 hash.\n"
-msgstr "Calcular hash HAS-160.n"
+msgstr "Calcular hash HAS-160.\n"
 
 #: parse_cmdline.c:64
 msgid "Calculate EDON-R 256/512 hash.\n"
@@ -266,7 +266,7 @@ msgstr "Calcular hash EDON-R 256/512.\n"
 
 #: parse_cmdline.c:65
 msgid "Calculate SNEFRU-128/256 hash.\n"
-msgstr "Calcular hash SNEFRU-128/512.\N"
+msgstr "Calcular hash SNEFRU-128/512.\n"
 
 #: parse_cmdline.c:66
 msgid "Calculate all supported hashes.\n"
