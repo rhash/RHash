@@ -156,8 +156,8 @@ double rsh_timer_stop(timedelta_t* timer);
 
 /**
  * Return ticks in milliseconds for time intervals measurement.
- * This function should be not precise but the fastest one
- * to retrieve internal clock value.
+ * This function should be optimized for speed and retrieve
+ * internal clock value, if possible.
  *
  * @return ticks count in milliseconds
  */
