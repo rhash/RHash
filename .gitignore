@@ -1,6 +1,7 @@
 /dist/rhash.spec
 /dist/rhash.1.*
 /librhash/exports.sym
+po/*.gmo
 *.[ao]
 *.exe
 *.dll
