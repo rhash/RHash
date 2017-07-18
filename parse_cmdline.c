@@ -988,7 +988,6 @@ void read_options(int argc, char *argv[])
 {
 	struct parsed_cmd_line_t cmd_line;
 
-	memset(&opt, 0, sizeof(opt));
 	opt.mem = rsh_vector_new_simple();
 	opt.find_max_depth = -1;
 

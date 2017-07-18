@@ -211,6 +211,7 @@ int main(int argc, char *argv[])
 	i18n_initialize(); /* initialize locale and translation */
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
+	memset(&opt, 0, sizeof(opt));
 	rhash_data.out = stdout; /* set initial output streams */
 	rhash_data.log = stderr; /* can be altered by options later */
 
