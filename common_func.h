@@ -11,7 +11,8 @@
 #ifdef USE_GETTEXT
 # include <libintl.h>
 # define _(str) gettext(str)
-# ifdef _WIN32
+# ifdef LOCALEDIR
+# elif defined(_WIN32)
 #  define LOCALEDIR "./locale"
 # else /* _WIN32 */
 #  define LOCALEDIR "/usr/share/locale"
