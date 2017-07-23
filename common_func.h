@@ -11,6 +11,7 @@
 #ifdef USE_GETTEXT
 # include <libintl.h>
 # define _(str) gettext(str)
+# define TEXT_DOMAIN "rhash"
 # ifdef LOCALEDIR
 # elif defined(_WIN32)
 #  define LOCALEDIR "./locale"
