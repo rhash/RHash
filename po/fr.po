@@ -61,10 +61,10 @@ msgstr "; Généré par %s v%s le %4u-%02u-%02u à %02u:%02u.%02u\n"
 #: calc_sums.c:705
 #, c-format
 msgid ""
-"; Written by Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n"
+"; Written by Kravchenko Aleksey (Akademgorodok) - http://rhash.sf.net/\n"
 ";\n"
 msgstr ""
-"; Écrit par Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n"
+"; Écrit par Kravchenko Aleksey (Akademgorodok) - http://rhash.sf.net/\n"
 ";\n"
 
 #: hash_check.c:481

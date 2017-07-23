@@ -58,7 +58,7 @@ msgstr ""
 #: calc_sums.c:705
 #, c-format
 msgid ""
-"; Written by Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n"
+"; Written by Kravchenko Aleksey (Akademgorodok) - http://rhash.sf.net/\n"
 ";\n"
 msgstr ""
 

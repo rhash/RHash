@@ -61,10 +61,10 @@ msgstr "; Создано программой %s v%s %4u-%02u-%02u %02u:%02u.%02
 #: calc_sums.c:705
 #, c-format
 msgid ""
-"; Written by Aleksey (Akademgorodok) - http://rhash.sourceforge.net/\n"
+"; Written by Kravchenko Aleksey (Akademgorodok) - http://rhash.sf.net/\n"
 ";\n"
 msgstr ""
-"; Написано Алексеем (Академгородок) - http://rhash.sourceforge.net/\n"
+"; Написано Кравченко Алексеем (Академгородок) - http://rhash.sf.net/\n"
 ";\n"
 
 #: hash_check.c:481
