@@ -70,10 +70,10 @@ build-shared: $(SHARED_TRG)
 lib-shared: $(SHAREDLIB)
 lib-static: $(LIBRHASH)
 
-install: all install-binary install-data install-symlinks
-install-shared: $(SHARED_TRG) install-shared-binary install-data install-symlinks
+install: build-install-binary install-data install-symlinks
+install-shared: build-install-shared-binary install-data install-symlinks
 install-data: install-man install-conf
-uninstall: uninstall-binary uninstall-data uninstall-symlinks
+uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib
 
 # creating archives
 WIN_SUFFIX     = win32
@@ -87,18 +87,25 @@ WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
 dist: gzip gzip-bindings
 dist-full: gzip-full
 win-dist: zip
-zip : $(ARCHIVE_ZIP)
+zip:  $(ARCHIVE_ZIP)
 dgz:  check $(ARCHIVE_DEB_GZ)
+
+build-install-binary: $(TARGET)
+	+$(MAKE) install-binary
+
+build-install-shared-binary: $(SHARED_TRG)
+	+$(MAKE) install-shared-binary
 
 mkdir-bin:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
 
+# install binary without (re-)compilation
 install-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)
+	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)/$(PROGNAME)
 
-# install dynamically linked binary
+# install dynamically linked binary without (re-)compilation
 install-shared-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(SHARED_TRG) $(DESTDIR)$(BINDIR)/rhash
+	$(INSTALL_PROGRAM) $(SHARED_TRG) $(DESTDIR)$(BINDIR)/$(PROGNAME)
 
 install-man:
 	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
@@ -121,7 +128,10 @@ uninstall-data:
 	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
 
 uninstall-symlinks:
-	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f; done
+	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f $(DESTDIR)$(MANDIR)/man1/$$f.1; done
+
+uninstall-lib:
+	+$(MAKE) -C librhash uninstall-lib
 
 install-lib-static: $(LIBRHASH)
 	+$(MAKE) -C librhash install-lib-static
@@ -281,7 +291,6 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	mkdir $(WIN_ZIP_DIR)
 	cp $(TARGET).exe ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	cp dist/rhash.1.win.html $(WIN_ZIP_DIR)/rhash-doc.html
-#	-[ -f $(OUTDIR)libeay32.dll ] && cp $(OUTDIR)libeay32.dll $(WIN_ZIP_DIR)/
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
 
@@ -327,7 +336,11 @@ install-gmo: compile-gmo
 		$(INSTALL_DATA) $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
-.PHONY: all install uninstall lib-shared lib-static dist dist-full zip \
+.PHONY: all build-shared lib-shared lib-static dist win-dist dist-full mkdir-bin \
 	test test-static test-shared test-libs test-static-lib test-shared-lib \
-	check copy-dist gzip gzip-bindings gzip-full bzip 7z zip clean clean-bindings \
-	update-po compile-gmo install-gmo
+	install build-install-binary install-binary install-lib-static \
+	install-shared build-install-shared-binary install-shared-binary \
+	install-lib-shared install-data install-man install-symlinks install-conf \
+	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
+	check copy-dist permissions gzip gzip-bindings gzip-full bzip 7z zip dgz rpm \
+	update-po compile-gmo install-gmo cpp-doc clean distclean clean-bindings

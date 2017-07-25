@@ -44,6 +44,7 @@ all: $(LIBRARY)
 lib-static: $(LIBRARY)
 lib-shared: $(SONAME)
 libs-all: lib-static lib-shared
+uninstall-lib: uninstall-lib-shared uninstall-lib-static uninstall-so-link
 dylib: $(DYNAME)
 dll: $(DLLNAME)
 dist-clean: clean
