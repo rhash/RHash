@@ -12,6 +12,7 @@ extern "C" {
 
 /* encoding conversion functions */
 wchar_t* c2w(const char* str, int try_no);
+wchar_t* c2w_long_path(const char* str, int try_no);
 char* w2c(const wchar_t* wstr);
 char* win_to_utf8(const char* str);
 #define win_is_utf8() (opt.flags & OPT_UTF8)
@@ -26,6 +27,7 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
 int can_open_exclusive(const char* path);
 void set_errno_from_last_file_error(void);
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
+wchar_t* get_long_path_if_needed(const wchar_t* wpath);
 
 /**
  * Set process priority and affinity to use any CPU but the first one,

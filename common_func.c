@@ -438,9 +438,10 @@ void file_cleanup(file_t* file)
 int file_statw(file_t* file)
 {
 	WIN32_FILE_ATTRIBUTE_DATA data;
+	wchar_t* long_path = get_long_path_if_needed(file->wpath);
 
 	/* read file attributes */
-	if (GetFileAttributesExW(file->wpath, GetFileExInfoStandard, &data)) {
+	if (GetFileAttributesExW((long_path ? long_path : file->wpath), GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode &= FILE_OPT_DONT_FREE_PATH;
@@ -450,8 +451,10 @@ int file_statw(file_t* file)
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
 		/* convert to second and subtract the epoch difference */
 		file->mtime = u / 10000000 - 11644473600LL;
+		free(long_path);
 		return 0;
 	}
+	free(long_path);
 	set_errno_from_last_file_error();
 	return -1;
 }

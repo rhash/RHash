@@ -48,6 +48,25 @@ wchar_t* c2w(const char* str, int try_no)
 }
 
 /**
+ * Convert C-string path to a wide-string path, prepending a long path prefix
+ * if it is needed to access the file.
+ *
+ * @param str the C-string to convert
+ * @param try_no 0 for primary codepage, 1 for a secondary one
+ * @return converted wide string on success, NULL on error
+ */
+wchar_t* c2w_long_path(const char* str, int try_no)
+{
+	wchar_t* wstr = c2w(str, try_no);
+	wchar_t* long_path;
+	if (!wstr) return NULL;
+	long_path = get_long_path_if_needed(wstr);
+	if (!long_path) return wstr;
+	free(wstr);
+	return long_path;
+}
+
+/**
  * Convert a UTF8-encoded string to wide string.
  *
  * @param str the UTF8-encoded string to convert
@@ -113,13 +132,41 @@ char* win_to_utf8(const char* str)
 	char* res;
 	wchar_t* buf;
 
-	assert((opt.flags & (OPT_UTF8 | OPT_OEM | OPT_ANSI)) != 0);
+	assert((opt.flags & OPT_ENCODING) != 0);
 	if (opt.flags & OPT_UTF8) return rsh_strdup(str);
 
 	if ((buf = c2w(str, 0)) == NULL) return NULL;
 	res = wchar_to_cstr(buf, CP_UTF8, NULL);
 	free(buf);
 	return res;
+}
+
+#define UNC_PREFIX_SIZE 4
+
+/**
+ * Allocate a wide string containing long file path with UNC prefix,
+ * if it is needed to access the path, otherwize return NULL.
+ *
+ * @param wpath original file path, can be a relative one
+ * @return allocated long file path if it is needed to access
+ *         the path, NULL otherwize
+ */
+wchar_t* get_long_path_if_needed(const wchar_t* wpath)
+{
+	if (wcslen(wpath) > 200
+		&& (wpath[0] != L'\\' ||  wpath[1] != L'\\'
+		|| wpath[2] != L'?' ||  wpath[3] != L'\\'))
+	{
+		wchar_t* result;
+		DWORD size = GetFullPathNameW(wpath, 0, NULL, NULL);
+		if (!size) return NULL;
+		result = (wchar_t*)rsh_malloc((size + UNC_PREFIX_SIZE) * sizeof(wchar_t));
+		wcscpy(result, L"\\\\?\\");
+		size = GetFullPathNameW(wpath, size, result + UNC_PREFIX_SIZE, NULL);
+		if (size > 0) return result;
+		free(result);
+	}
+	return NULL;
 }
 
 /**
@@ -139,7 +186,7 @@ FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
 
 	/* try two code pages */
 	for (i = 0; i < 2; i++) {
-		wchar_t* wpath = c2w(path, i);
+		wchar_t* wpath = c2w_long_path(path, i);
 		if (wpath == NULL) continue;
 		fd = _wfsopen(wpath, wmode, (exclusive ? _SH_DENYWR : _SH_DENYNO));
 		free(wpath);
@@ -160,7 +207,7 @@ int can_open_exclusive(const char* path)
 	int i, res = 0;
 	for (i = 0; i < 2 && res == 0; i++) {
 		int fd;
-		wchar_t* wpath = c2w(path, i);
+		wchar_t* wpath = c2w_long_path(path, i);
 		if (wpath == NULL) continue;
 		fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYWR, 0);
 		if (fd >= 0) {
@@ -393,13 +440,13 @@ WIN_DIR* win_opendir(const char* dir_path)
 	}
 	memset(d, 0, sizeof(WIN_DIR));
 
-	wpath = c2w(path, 0);
+	wpath = c2w_long_path(path, 0);
 	d->hFind = (wpath != NULL ?
 		FindFirstFileW(wpath, &d->findFileData) : INVALID_HANDLE_VALUE);
 	free(wpath);
 
 	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ACCESS_DENIED) {
-		wpath = c2w(path, 1); /* try to use secondary codepage */
+		wpath = c2w_long_path(path, 1); /* try to use secondary codepage */
 		if (wpath) {
 			d->hFind = FindFirstFileW(wpath, &d->findFileData);
 			free(wpath);
