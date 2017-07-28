@@ -40,7 +40,7 @@ struct percents_output_info_t *percents_output = NULL;
  */
 static void log_va_msg(const char* format, va_list args)
 {
-	vfprintf(rhash_data.log, format, args);
+	rsh_vfprintf(rhash_data.log, format, args);
 	fflush(rhash_data.log);
 }
 
@@ -65,7 +65,7 @@ void log_error(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+	rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -78,7 +78,7 @@ void log_warning(const char* format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
-	fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+	rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
 	log_va_msg(format, ap);
 }
 
@@ -135,17 +135,17 @@ static void print_verbose_error(struct file_info *info)
 	char actual[130], expected[130];
 	assert(HC_FAILED(info->hc.flags));
 
-	fprintf(rhash_data.out, _("ERROR"));
+	rsh_fprintf(rhash_data.out, _("ERROR"));
 
 	if (HC_WRONG_FILESIZE & info->hc.flags) {
 		sprintI64(actual, info->rctx->msg_size, 0);
 		sprintI64(expected, info->hc.file_size, 0);
-		fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected);
+		rsh_fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected);
 	}
 
 	if (HC_WRONG_EMBCRC32 & info->hc.flags) {
 		rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-		fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected);
+		rsh_fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected);
 	}
 
 	if (HC_WRONG_HASHES & info->hc.flags) {
@@ -175,12 +175,12 @@ static void print_verbose_error(struct file_info *info)
 			pflags = (hv->length == (rhash_get_digest_size(hid) * 2) ?
 				(RHPR_HEX | RHPR_UPPERCASE) : (RHPR_BASE32 | RHPR_UPPERCASE));
 			rhash_print(actual, info->rctx, hid, pflags);
-			fprintf(rhash_data.out, _(", %s is %s should be %s"),
+			rsh_fprintf(rhash_data.out, _(", %s is %s should be %s"),
 				rhash_get_name(hid), actual, expected_hash);
 		}
 	}
 
-	fprintf(rhash_data.out, "\n");
+	rsh_fprintf(rhash_data.out, "\n");
 }
 
 
@@ -195,15 +195,15 @@ static void print_verbose_error(struct file_info *info)
 static void print_check_result(struct file_info *info, int print_name, int print_result)
 {
 	if (print_name) {
-		fprintf(rhash_data.out, "%-51s ", info->print_path);
+		rsh_fprintf(rhash_data.out, "%-51s ", info->print_path);
 	}
 	if (print_result) {
 		if (info->error == -1) {
 			/* print error to stdout */
-			fprintf(rhash_data.out, "%s\n", strerror(errno));
+			rsh_fprintf(rhash_data.out, "%s\n", strerror(errno));
 		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			/* TRANSLATORS: use at least 3 characters to overwrite "99%" */
-			fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") :
+			rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") :
 				/* TRANSLATORS: ERR is short for 'error' */
 				_("ERR\n")) );
 		} else {
@@ -311,9 +311,9 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 
 	if (percents.points == 0) {
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			fprintf(rhash_data.log, _("\nChecking %s\n"), info->print_path);
+			rsh_fprintf(rhash_data.log, _("\nChecking %s\n"), info->print_path);
 		} else {
-			fprintf(rhash_data.log, _("\nProcessing %s\n"), info->print_path);
+			rsh_fprintf(rhash_data.log, _("\nProcessing %s\n"), info->print_path);
 		}
 		fflush(rhash_data.log);
 	}
@@ -322,7 +322,7 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
 	if (((++percents.points) % 74) == 0) {
 		if (info->size > 0) {
 			int perc = (int)( offset * 100.0 / (uint64_t)info->size + 0.5 );
-			fprintf(rhash_data.log, "  %2u%%\n", perc);
+			rsh_fprintf(rhash_data.log, "  %2u%%\n", perc);
 			fflush(rhash_data.log);
 		} else {
 			putc('\n', rhash_data.log);
@@ -355,7 +355,7 @@ static int p_init_percents(struct file_info *info)
 	assert(rhash_data.log == stderr);
 
 	/* note: this output differs from print_check_result() by file handle */
-	fprintf(rhash_data.log, "%-51s ", info->print_path);
+	rsh_fprintf(rhash_data.log, "%-51s ", info->print_path);
 
 #ifdef WIN32_USE_CURSOR
 	if (percents.use_cursor) {
@@ -409,10 +409,10 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 
 	/* output percents or rotated bar */
 	if (info->size > 0) {
-		fprintf(rhash_data.log, "%u%%", perc);
+		rsh_fprintf(rhash_data.log, "%u%%", perc);
 		percents.points = perc;
 	} else {
-		fprintf(rhash_data.log, "%c", rot[(percents.points++) & 3]);
+		rsh_fprintf(rhash_data.log, "%c", rot[(percents.points++) & 3]);
 	}
 
 #ifdef WIN32_USE_CURSOR
@@ -426,7 +426,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 	} else
 #endif
 	{
-		fprintf(rhash_data.log, "\r%-51s ", info->print_path);
+		rsh_fprintf(rhash_data.log, "\r%-51s ", info->print_path);
 		fflush(rhash_data.log);
 	}
 	percents.ticks  = ticks;
@@ -454,7 +454,7 @@ static void p_finish_percents(struct file_info *info, int process_res)
 	if (percents.same_output && need_check_result) {
 		print_check_result(info, 0, 1);
 	} else {
-		fprintf(rhash_data.log, "100%%\n");
+		rsh_fprintf(rhash_data.log, "100%%\n");
 		fflush(rhash_data.log);
 		if (need_check_result) print_check_result(info, 1, 1);
 	}
@@ -521,9 +521,9 @@ void print_check_stats(void)
 {
 	if (rhash_data.processed == rhash_data.ok) {
 		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
-		fprintf(rhash_data.out, _("Everything OK\n"));
+		rsh_fprintf(rhash_data.out, _("Everything OK\n"));
 	} else {
-		fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"), rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
+		rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"), rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
 	}
 	fflush(rhash_data.out);
 }
@@ -543,9 +543,9 @@ void print_time_stats(double time, uint64_t size, int total)
 {
 	double speed = (time == 0 ? 0 : (double)(int64_t)size / 1048576.0 / time);
 	if (total) {
-		fprintf(rhash_data.log, _("Total %.3f sec, %4.2f MBps\n"), time, speed);
+		rsh_fprintf(rhash_data.log, _("Total %.3f sec, %4.2f MBps\n"), time, speed);
 	} else {
-		fprintf(rhash_data.log, _("Calculated in %.3f sec, %4.2f MBps\n"), time, speed);
+		rsh_fprintf(rhash_data.log, _("Calculated in %.3f sec, %4.2f MBps\n"), time, speed);
 	}
 	fflush(rhash_data.log);
 }

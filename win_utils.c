@@ -353,31 +353,46 @@ void set_benchmark_cpu_affinity(void)
  */
 void setup_console(void)
 {
-	HANDLE hOut;
-	CONSOLE_CURSOR_INFO cci;
+	/* the default encoding is UTF-8 */
+	if ((opt.flags & OPT_ENCODING) == 0)
+		opt.flags |= OPT_UTF8;
 
-	int cp = (opt.flags & OPT_UTF8 ? CP_UTF8 : opt.flags & OPT_ANSI ? GetACP() : GetOEMCP());
-	rhash_data.saved_console_codepage = -1;
-	/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
-	/* cause _fileno() is undefined,  when compiling as strict ansi C. */
-	if (cp > 0 && IsValidCodePage(cp) && (isatty(1) || isatty(2)))
+	if ((opt.flags & OPT_UTF8) != 0)
 	{
-		rhash_data.saved_console_codepage = GetConsoleOutputCP();
-		SetConsoleOutputCP(cp);
-		setlocale(LC_CTYPE, opt.flags & OPT_UTF8 ? "C" :
-			opt.flags & OPT_ANSI ? ".ACP" : ".OCP");
-		rsh_exit = rhash_exit;
+		/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
+		/* cause _fileno() is undefined,  when compiling as strict ansi C. */
+		if (isatty(1))
+		{
+			_setmode(1, _O_U8TEXT);
+			rhash_data.output_flags |= 1;
+		}
+		if (isatty(2))
+		{
+			_setmode(2, _O_U8TEXT);
+			rhash_data.output_flags |= 2;
+		}
+#ifdef USE_GETTEXT
+		bind_textdomain_codeset(TEXT_DOMAIN, "utf-8");
+#endif /* USE_GETTEXT */
+	}
+	else
+	{
+		setlocale(LC_CTYPE, opt.flags & OPT_OEM ? ".OCP" : ".ACP");
 	}
 
-	if ((opt.flags & OPT_PERCENTS) != 0 && isatty(2)) {
-		hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci)) {
+	if ((opt.flags & OPT_PERCENTS) != 0 && isatty(2))
+	{
+		CONSOLE_CURSOR_INFO cci;
+		HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
+		if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
+		{
 			/* store current cursor size and visibility flag */
 			rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
 			/* now hide cursor */
 			cci.bVisible = 0;
 			SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
+			rsh_exit = rhash_exit;
 		}
 	}
 }
@@ -387,19 +402,89 @@ void setup_console(void)
  */
 void restore_console(void)
 {
-	HANDLE hOut;
 	CONSOLE_CURSOR_INFO cci;
-
-	if (rhash_data.saved_console_codepage > 0) {
-		SetConsoleOutputCP(rhash_data.saved_console_codepage);
-	}
-
-	hOut = GetStdHandle(STD_ERROR_HANDLE);
+	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
 	if (hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
 		/* restore cursor size and visibility */
 		cci.dwSize = rhash_data.saved_cursor_size;
 		cci.bVisible = 1;
 		SetConsoleCursorInfo(hOut, &cci);
+	}
+}
+
+/**
+ * Print formatted data to the specified file descriptor,
+ * handling proper printing UTF-8 strings to Windows console.
+ *
+ * @param out file descriptor
+ * @param format data format string
+ * @param args list of arguments 
+ */
+int win_vfprintf(FILE* out, const char* format, va_list args)
+{
+	if ((out != stdout || !(rhash_data.output_flags & 1))
+		&& (out != stderr || !(rhash_data.output_flags & 2)))
+		return vfprintf(out, format, args);
+	{
+		/* because of using a static buffer, this function
+                 * can be used only from a single-thread program */
+		static char buffer[8192];
+		wchar_t *wstr = NULL;
+		int res = vsnprintf_s(buffer, 8192, _TRUNCATE, format, args);
+		if (res < 0)
+		{
+			errno = EINVAL;
+			return res;
+		}
+		wstr = cstr_to_wchar(buffer, CP_UTF8);
+		res = fwprintf(out, L"%s", wstr);
+		free(wstr);
+		return res;
+	}
+}
+
+/**
+ * Print formatted data to the specified file descriptor,
+ * handling proper printing UTF-8 strings to Windows console.
+ *
+ * @param out file descriptor
+ * @param format data format string
+ */
+int win_fprintf(FILE* out, const char* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	return win_vfprintf(out, format, args);
+}
+
+size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out)
+{
+	if ((out != stdout || !(rhash_data.output_flags & 1))
+		&& (out != stderr || !(rhash_data.output_flags & 2)))
+		return fwrite(ptr, size, count, out);
+	{
+		size_t i;
+		const char* buf = (const char*)ptr;
+		size *= count;
+		if (!size)
+			return 0;
+		for (i = 0; i < size && buf[i] > 0; i++);
+		if (i == size)
+		{
+			wchar_t* wstr = rsh_malloc(sizeof(wchar_t) * (size + 1));
+			for (i = 0; i < size; i++)
+				wstr[i] = (wchar_t)buf[i];
+			wstr[size] = 0;
+			fwprintf(out, L"%s", wstr);
+			free(wstr);
+			return size;
+		}
+		for (i = 0; (i + 8) <= size; i += 8)
+			fwprintf(out, L"%C%C%C%C%C%C%C%C", buf[i], buf[i + 1], buf[i + 2],
+				buf[i + 3], buf[i + 4], buf[i + 5], buf[i + 6], buf[i + 7]);
+		for (; i < size; i++)
+			fwprintf(out, L"%C", buf[i]);
+		return count;
 	}
 }
 

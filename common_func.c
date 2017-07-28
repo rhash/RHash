@@ -597,9 +597,9 @@ void (*rsh_report_error)(const char* srcfile, int srcline,
 static void report_error_default(const char* srcfile, int srcline, const char* format, ...)
 {
 	va_list ap;
-	fprintf(stderr, "RHash: error at %s:%u: ", srcfile, srcline);
+	rsh_fprintf(stderr, "RHash: error at %s:%u: ", srcfile, srcline);
 	va_start(ap, format);
-	vfprintf(stderr, format, ap); /* report the error to stderr */
+	rsh_vfprintf(stderr, format, ap); /* report the error to stderr */
 	va_end(ap);
 }
 

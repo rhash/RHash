@@ -34,13 +34,13 @@ static const char* get_full_program_version(void)
 
 static void print_version(void)
 {
-	fprintf(rhash_data.out, "%s", get_full_program_version());
+	rsh_fprintf(rhash_data.out, "%s", get_full_program_version());
 	rsh_exit(0);
 }
 
 static void print_help_line(const char* option, const char* text)
 {
-	fprintf(rhash_data.out, "%s%s", option, text);
+	rsh_fprintf(rhash_data.out, "%s%s", option, text);
 }
 
 /**
@@ -51,10 +51,10 @@ static void print_help(void)
 	assert(rhash_data.out != NULL);
 
 	/* print program version and usage */
-	fprintf(rhash_data.out, _("%s\n"
+	rsh_fprintf(rhash_data.out, _("%s\n"
 		"Usage: %s [OPTION...] [FILE | -]...\n"
 		"       %s --printf=<format string> [FILE | -]...\n\n"), get_full_program_version(), CMD_FILENAME, CMD_FILENAME);
-	fprintf(rhash_data.out, _("Options:\n"));
+	rsh_fprintf(rhash_data.out, _("Options:\n"));
 
 	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
 	print_help_line("  -h, --help    ", _("Print this help screen.\n"));
@@ -114,7 +114,7 @@ static void list_hashes(void)
 	int id;
 	for (id = 1; id < RHASH_ALL_HASHES; id <<= 1) {
 		const char* hash_name = rhash_get_name(id);
-		if (hash_name) fprintf(rhash_data.out, "%s\n", hash_name);
+		if (hash_name) rsh_fprintf(rhash_data.out, "%s\n", hash_name);
 	}
 	rsh_exit(0);
 }
@@ -214,8 +214,8 @@ static void accept_video(options_t *o)
  */
 static void nya(void)
 {
-	fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) %s\n  (_uu__)\n",
-		/* TRANSLATORS: Keep secret ;) */
+	rsh_fprintf(rhash_data.out, "  /\\__/\\\n (^ _ ^.) %s\n  (_uu__)\n",
+		/* TRANSLATORS: Keep it secret ;) */
 		_("Purrr..."));
 	rsh_exit(0);
 }
@@ -1000,12 +1000,6 @@ void read_options(int argc, char *argv[])
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
 	read_config();
-
-#ifdef _WIN32
-	/* set default encoding if no encoding options were specified, */
-	/* this should be done here, even if config file was not found. */
-	if ( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= OPT_UTF8;
-#endif
 
 	/* setup the program output */
 	IF_WINDOWS(setup_console());

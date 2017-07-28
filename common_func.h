@@ -125,9 +125,15 @@ int if_file_exists(const char* path);
 # define get_file_tpath(file) ((file)->wpath)
 int file_statw(file_t* file);
 # define rsh_fopen_bin(path, mode) win_fopen_bin(path, mode)
+# define rsh_fprintf win_fprintf
+# define rsh_vfprintf win_vfprintf
+# define rsh_fwrite win_fwrite
 #else
 # define get_file_tpath(file) ((file)->path)
 # define rsh_fopen_bin(path, mode) fopen(path, mode)
+# define rsh_fprintf fprintf
+# define rsh_vfprintf vfprintf
+# define rsh_fwrite fwrite
 #endif
 
 

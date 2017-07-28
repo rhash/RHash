@@ -560,7 +560,7 @@ int check_hash_file(file_t* file, int chdir)
 
 	pos = strlen(hash_file_path)+16;
 	ralign = str_set(buf, '-', (pos < 80 ? 80 - (int)pos : 2));
-	fprintf(rhash_data.out, _("\n--( Verifying %s )%s\n"), hash_file_path, ralign);
+	rsh_fprintf(rhash_data.out, _("\n--( Verifying %s )%s\n"), hash_file_path, ralign);
 	fflush(rhash_data.out);
 	rsh_timer_start(&timer);
 
@@ -651,7 +651,7 @@ int check_hash_file(file_t* file, int chdir)
 	}
 	time = rsh_timer_stop(&timer);
 
-	fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
+	rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
 	print_check_stats();
 
 	if (rhash_data.processed != rhash_data.ok) rhash_data.error_flag = 1;
@@ -761,7 +761,7 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 		total_time += time;
 
 		if ((flags & BENCHMARK_RAW) == 0 && !rhash_data.interrupted) {
-			fprintf(rhash_data.out, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
+			rsh_fprintf(rhash_data.out, "%s %u MiB calculated in %.3f sec, %.3f MBps\n", hash_name, (unsigned)sz_mb, time, (double)sz_mb / time);
 			fflush(rhash_data.out);
 		}
 	}
@@ -798,20 +798,20 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 
 	if (flags & BENCHMARK_RAW) {
 		/* output result in a "raw" machine-readable format */
-		fprintf(rhash_data.out, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
+		rsh_fprintf(rhash_data.out, "%s\t%u\t%.3f\t%.3f", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
 		if (flags & BENCHMARK_CPB) {
-			fprintf(rhash_data.out, "\t%.2f", cpb);
+			rsh_fprintf(rhash_data.out, "\t%.2f", cpb);
 		}
 #endif /* HAVE_TSC */
-		fprintf(rhash_data.out, "\n");
+		rsh_fprintf(rhash_data.out, "\n");
 	} else {
-		fprintf(rhash_data.out, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
+		rsh_fprintf(rhash_data.out, "%s %u MiB total in %.3f sec, %.3f MBps", hash_name, ((unsigned)sz_mb * rounds), total_time, (double)(sz_mb * rounds) / total_time);
 #if defined(HAVE_TSC)
 		if (flags & BENCHMARK_CPB) {
-			fprintf(rhash_data.out, ", CPB=%.2f", cpb);
+			rsh_fprintf(rhash_data.out, ", CPB=%.2f", cpb);
 		}
 #endif /* HAVE_TSC */
-		fprintf(rhash_data.out, "\n");
+		rsh_fprintf(rhash_data.out, "\n");
 	}
 }

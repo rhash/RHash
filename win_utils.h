@@ -5,6 +5,7 @@
 /* windows only definitions */
 #ifdef _WIN32
 #include "common_func.h"
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +38,9 @@ void set_benchmark_cpu_affinity(void);
 
 void setup_console(void);
 void restore_console(void);
+int win_fprintf(FILE*, const char* format, ...);
+int win_vfprintf(FILE*, const char* format, va_list args);
+size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out);
 
 /* readdir structures and functions */
 #define DIR WIN_DIR

@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
 	if (opt.mode & MODE_BENCHMARK) {
 		unsigned flags = (opt.flags & OPT_BENCH_RAW ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
 		if ((opt.flags & OPT_BENCH_RAW) == 0) {
-			fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
+			rsh_fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
 		}
 		run_benchmark(opt.sum_flags, flags);
 		exit_code = (rhash_data.interrupted ? 3 : 0);

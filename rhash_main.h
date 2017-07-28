@@ -16,8 +16,10 @@ struct rhash_t
 	FILE *out;
 	FILE *log;
 	FILE *upd_fd; /* descriptor of a crc file to update */
-	int  saved_console_codepage; /* saved codepage */
+#ifdef _WIN32
 	unsigned saved_cursor_size;
+	unsigned output_flags;
+#endif
 
 	char*  printf_str;
 	struct print_item *print_list;

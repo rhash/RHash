@@ -157,7 +157,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 		/* write EOL if it wasn't present */
 		if (ch != '\n' && ch != '\r') {
 			/* fputc('\n', fd); */
-			fprintf(fd, "\n");
+			rsh_fprintf(fd, "\n");
 		}
 	}
 
