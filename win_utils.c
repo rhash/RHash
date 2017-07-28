@@ -477,7 +477,7 @@ size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out)
 			wstr[size] = 0;
 			fwprintf(out, L"%s", wstr);
 			free(wstr);
-			return size;
+			return count;
 		}
 		for (i = 0; (i + 8) <= size; i += 8)
 			fwprintf(out, L"%C%C%C%C%C%C%C%C", buf[i], buf[i + 1], buf[i + 2],
