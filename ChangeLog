@@ -1,3 +1,6 @@
+Sun Jul 30 2017 Aleksey
+	* Bugfix: illegal instruction error on macOS
+
 Sat Jul 29 2017 Aleksey
 	* improve utf-8 support on Windows
 

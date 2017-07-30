@@ -197,7 +197,7 @@ typedef unsigned long rhash_uptr_t;
 /** Convert a pointer to rhash_uptr_t */
 #define RHASH_STR2UPTR(str) ((rhash_uptr_t)(char*)(str))
 /** Convert a rhash_uptr_t to a void* pointer */
-#define RHASH_UPTR2PVOID(u) ((void*)((char*)0 + (u)))
+#define RHASH_UPTR2PVOID(u) ((void*)((u) + 0))
 
 /* rhash API to set/get data via messages */
 RHASH_API rhash_uptr_t rhash_transmit(

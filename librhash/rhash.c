@@ -850,7 +850,7 @@ static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_
 	return 0;
 }
 
-#define PVOID2UPTR(p) ((rhash_uptr_t)((char*)p - 0))
+#define PVOID2UPTR(p) ((rhash_uptr_t)(((char*)(p)) + 0))
 
 /**
  * Process a rhash message.
