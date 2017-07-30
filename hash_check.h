@@ -40,7 +40,7 @@ typedef struct hash_check
 	uint64_t file_size; /* parsed file size, e.g. from magnet link */
 	unsigned hash_mask; /* the mask of hash ids to verify against */
 	unsigned flags; /* bit flags */
-	unsigned embedded_crc32_be;  /* CRC32 embedded into filename */
+	unsigned embedded_crc32;  /* CRC32 embedded into filename */
 	char *data; /* the buffer with the current hash file line */
 	unsigned found_hash_ids; /* bit mask for matched hash ids */
 	unsigned wrong_hashes;   /* bit mask for mismatched hashes */
@@ -53,6 +53,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx);
 
 void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);
 void rhash_hex_to_byte(const char* str, unsigned char* bin, int len);
+unsigned get_crc32(struct rhash_context* ctx);
 
 /* note: IS_HEX() is defined on ASCII-8 while isxdigit() only when isascii()==true */
 #define IS_HEX(c) ((c) <= '9' ? (c) >= '0' : (unsigned)(((c) - 'A') & ~0x20) <= ('F' - 'A' + 0U))

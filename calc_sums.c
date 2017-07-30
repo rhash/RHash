@@ -218,9 +218,10 @@ const char* file_info_get_utf8_print_path(struct file_info* info)
  * @param crc32 pointer to integer to receive parsed hash sum.
  * @return non zero if crc32 was found, zero otherwise.
  */
-static int find_embedded_crc32(const char* filepath, unsigned* crc32_be)
+static int find_embedded_crc32(const char* filepath, unsigned* crc32)
 {
 	const char* e = filepath + strlen(filepath) - 10;
+	unsigned char raw[4];
 
 	/* search for the sum enclosed in brackets */
 	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
@@ -228,7 +229,9 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32_be)
 			const char *p = e + 8;
 			for (; p > e && IS_HEX(*p); p--);
 			if (p == e) {
-				rhash_hex_to_byte(e + 1, (char unsigned*)crc32_be, 8);
+				rhash_hex_to_byte(e + 1, raw, 8);
+				*crc32 = ((unsigned)raw[0] << 24) | ((unsigned)raw[1] << 16) |
+					((unsigned)raw[2] << 8) | (unsigned)raw[3];
 				return 1;
 			}
 			e -= 9;
@@ -251,18 +254,13 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	const char* c = p - 1;
 	char* new_path;
 	char* insertion_point;
-	unsigned crc32_be;
+	unsigned crc32;
 	assert((info->rctx->hash_id & RHASH_CRC32) != 0);
 
-	/* check if the filename contains a CRC32 hash sum */
-	if (find_embedded_crc32(info->print_path, &crc32_be)) {
-		unsigned char* c =
-			(unsigned char*)rhash_get_context_ptr(info->rctx, RHASH_CRC32);
-		unsigned actual_crc32 = ((unsigned)c[0] << 24) |
-			((unsigned)c[1] << 16) | ((unsigned)c[2] << 8) | (unsigned)c[3];
-
+	/* check if the filename contains a CRC32 sum */
+	if (find_embedded_crc32(info->print_path, &crc32)) {
 		/* compare with calculated CRC32 */
-		if (crc32_be != actual_crc32) {
+		if (crc32 != get_crc32(info->rctx)) {
 			char crc32_str[9];
 			rhash_print(crc32_str, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
@@ -479,7 +477,7 @@ static int verify_sums(struct file_info *info)
 	}
 
 	if ((opt.flags & OPT_EMBED_CRC) && find_embedded_crc32(
-		info->print_path, &info->hc.embedded_crc32_be)) {
+		info->print_path, &info->hc.embedded_crc32)) {
 			info->hc.flags |= HC_HAS_EMBCRC32;
 			assert(info->hc.hash_mask & RHASH_CRC32);
 	}
@@ -518,8 +516,8 @@ int check_hash_file(file_t* file, int chdir)
 
 	/* process --check-embedded option */
 	if (opt.mode & MODE_CHECK_EMBEDDED) {
-		unsigned crc32_be;
-		if (find_embedded_crc32(hash_file_path, &crc32_be)) {
+		unsigned crc32;
+		if (find_embedded_crc32(hash_file_path, &crc32)) {
 			/* initialize file_info structure */
 			memset(&info, 0, sizeof(info));
 			info.full_path = rsh_strdup(hash_file_path);
@@ -527,7 +525,7 @@ int check_hash_file(file_t* file, int chdir)
 			file_info_set_print_path(&info, info.full_path);
 			info.sums_flags = info.hc.hash_mask = RHASH_CRC32;
 			info.hc.flags = HC_HAS_EMBCRC32;
-			info.hc.embedded_crc32_be = crc32_be;
+			info.hc.embedded_crc32 = crc32;
 
 			res = verify_sums(&info);
 			fflush(rhash_data.out);

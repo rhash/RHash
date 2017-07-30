@@ -603,7 +603,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
  * @param size the length of byte strings to much
  * @return 0 if strings are matched, 1 otherwise.
  */
-static int frhexcmp(const void* mem1, const void* mem2, size_t size)
+static int fr_hex_cmp(const void* mem1, const void* mem2, size_t size)
 {
 	const char *p1, *p2, *pe;
 	if (memcmp(mem1, mem2, size) == 0) return 0;
@@ -614,6 +614,21 @@ static int frhexcmp(const void* mem1, const void* mem2, size_t size)
 		if (p1[0] != p2[0] || p1[1] != p2[1]) return 1;
 	}
 	return 0;
+}
+
+/**
+ * Obtain CRC32 from rhash context. The function assumes that
+ * context contains CRC32 and makes no checks for this.
+ *
+ * @param rhash context
+ * @return crc32 hash sum
+ */
+unsigned get_crc32(struct rhash_context* ctx)
+{
+	unsigned char c[4];
+	rhash_print((char*)c, ctx, RHASH_CRC32, RHPR_RAW);
+	return ((unsigned)c[0] << 24) | ((unsigned)c[1] << 16) |
+			((unsigned)c[2] << 8) | (unsigned)c[3];
 }
 
 /**
@@ -634,24 +649,16 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 	int j;
 
 	/* verify file size, if present */
-	if ((hashes->flags & HC_HAS_FILESIZE) != 0 &&
-		hashes->file_size != ctx->msg_size) {
+	if ((hashes->flags & HC_HAS_FILESIZE) != 0 && hashes->file_size != ctx->msg_size)
 		hashes->flags |= HC_WRONG_FILESIZE;
-	}
 
 	/* verify embedded CRC32 hash sum, if present */
-	if ((hashes->flags & HC_HAS_EMBCRC32) != 0) {
-		unsigned char* c =
-			(unsigned char*)rhash_get_context_ptr(ctx, RHASH_CRC32);
-		unsigned crc32_be = ((unsigned)c[0] << 24) | ((unsigned)c[1] << 16) |
-			((unsigned)c[2] << 8) | (unsigned)c[3];
-		if (crc32_be != hashes->embedded_crc32_be) {
-			hashes->flags |= HC_WRONG_EMBCRC32;
-		}
-	}
+	if ((hashes->flags & HC_HAS_EMBCRC32) != 0 && get_crc32(ctx) != hashes->embedded_crc32)
+		hashes->flags |= HC_WRONG_EMBCRC32;
 
 	/* return if nothing else to verify */
-	if (hashes->hashes_num == 0) return !HC_FAILED(hashes->flags);
+	if (hashes->hashes_num == 0)
+		return !HC_FAILED(hashes->flags);
 
 	unverified_mask = (1 << hashes->hashes_num) - 1;
 
@@ -692,7 +699,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 			hash_orig = hashes->data + hv->offset;
 
 			if ((hid & (RHASH_GOST | RHASH_GOST_CRYPTOPRO)) != 0) {
-				if (frhexcmp(hash_orig, hash_str, hv->length) != 0) continue;
+				if (fr_hex_cmp(hash_orig, hash_str, hv->length) != 0) continue;
 			} else {
 				if (memcmp(hash_orig, hash_str, hv->length) != 0) continue;
 			}
