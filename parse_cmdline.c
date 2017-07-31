@@ -727,8 +727,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	end_arg = parg + argc;
 
 	/* loop by program arguments */
-	for (parg++; parg < end_arg; parg++)
-	{
+	for (parg++; parg < end_arg; parg++) {
 		/* if argument is not an option */
 		if ((*parg)[0] != RSH_T('-') || (*parg)[1] == 0 || b_opt_end) {
 			/* it's a file, note that '-' is interpreted as stdin */

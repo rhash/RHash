@@ -162,8 +162,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	}
 
 	/* append hash sums to the updated crc file */
-	for (i = 0; i < files_to_add->size; i++, rhash_data.processed++)
-	{
+	for (i = 0; i < files_to_add->size; i++, rhash_data.processed++) {
 		file_t file;
 		char *print_path = file_set_get(files_to_add, i)->filepath;
 		file.wpath = 0;

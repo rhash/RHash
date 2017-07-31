@@ -323,14 +323,11 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
 	if (a[0] == RSH_T('.') && IS_ANY_SLASH(a[1])) a += 2;
 	if (b[0] == RSH_T('.') && IS_ANY_SLASH(b[1])) b += 2;
 	
-	for (; *a; ++a, ++b)
-	{
-		if (*a != *b && (!IS_ANY_SLASH(*b) || !IS_ANY_SLASH(*a)))
-		{
+	for (; *a; ++a, ++b) {
+		if (*a != *b && (!IS_ANY_SLASH(*b) || !IS_ANY_SLASH(*a))) {
 			/* paths are different */
 			return 0;
 		}
-		
 	}
 	/* check if both paths terminated */
 	return (*a == *b);
@@ -402,8 +399,7 @@ unsigned rhash_get_ticks(void)
 void file_init(file_t* file, const char* path, int reuse_path)
 {
 	memset(file, 0, sizeof(*file));
-	if (reuse_path)
-	{
+	if (reuse_path) {
 		file->path = (char*)path;
 		file->mode = FILE_OPT_DONT_FREE_PATH;
 	} else {
@@ -414,9 +410,7 @@ void file_init(file_t* file, const char* path, int reuse_path)
 void file_cleanup(file_t* file)
 {
 	if ((file->mode & FILE_OPT_DONT_FREE_PATH) == 0)
-	{
 		free(file->path);
-	}
 	file->path = NULL;
 
 #ifdef _WIN32
@@ -510,8 +504,7 @@ int file_stat2(file_t* file, int use_lstat)
 		res = stat(file->path, &st);
 	} while (0);
 
-	if (res == 0)
-	{
+	if (res == 0) {
 		file->size  = st.st_size;
 		file->mtime = st.st_mtime;
 

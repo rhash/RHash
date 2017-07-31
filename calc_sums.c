@@ -570,8 +570,7 @@ int check_hash_file(file_t* file, int chdir)
 	} else pos = 0;
 
 	/* read crc file line by line */
-	for (line_num = 0; fgets(buf, 2048, fd); line_num++)
-	{
+	for (line_num = 0; fgets(buf, 2048, fd); line_num++) {
 		char* line = buf;
 		char* path_without_ext = NULL;
 

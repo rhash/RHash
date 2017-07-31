@@ -295,8 +295,7 @@ int main(int argc, char *argv[])
 		print_check_stats();
 	}
 
-	if (!rhash_data.interrupted)
-	{
+	if (!rhash_data.interrupted) {
 		if (opt.bt_batch_file && rhash_data.rctx) {
 			rhash_final(rhash_data.rctx, 0);
 			save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
