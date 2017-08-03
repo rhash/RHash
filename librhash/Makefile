@@ -189,11 +189,13 @@ test-dll: $(DLLNAME) test_hashes.o
 $(SONAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(SO_HEADERS) > exports.sym
 	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
+	rm -f $(SOLINK)
 	ln -s $(SONAME) $(SOLINK)
 # use 'nm -Cg --defined-only $@' to view exported symbols
 
 $(DYNAME): $(SOURCES)
 	$(CC) -fpic $(ALLCFLAGS) -dynamiclib $(SOURCES) $(LIBLDFLAGS) -Wl,-install_name,$(LIBDIR)/$@ -o $@
+	rm -f $(DYLINK)
 	ln -s $(DYNAME) $(DYLINK)
 
 $(LIBRARY): $(OBJECTS)
