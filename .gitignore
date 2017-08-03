@@ -2,9 +2,13 @@
 /dist/rhash.1.*
 /librhash/exports.sym
 po/*.gmo
+/rhash
+/rhash_shared
+/librhash/test_shared
 *.[ao]
 *.exe
 *.dll
 *.def
 *.so
+*.so.0
 *.log
