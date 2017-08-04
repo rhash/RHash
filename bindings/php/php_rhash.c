@@ -9,6 +9,7 @@
 #include "ext/standard/info.h"
 #include "php_streams.h"
 #include "php_rhash.h"
+#include "php_compatibility.h"
 
 #define PHP_RHASH_VERSION "1.2.9"
 
@@ -134,16 +135,8 @@ zend_function_entry rhash_methods[] = {
 };
 /* }}} */
 
-/* RHash class wrapper */
-typedef struct rhash_object {
-	zend_object std;
-	rhash rhash;
-} rhash_object;
-
 zend_class_entry *rhash_ce;
 zend_object_handlers rhash_object_handlers;
-static zend_object_value rhash_create_handler(zend_class_entry *type TSRMLS_DC);
-static void rhash_free_storage(void *object TSRMLS_DC);
 
 /* {{{ Module struct
 */
@@ -172,6 +165,73 @@ ZEND_GET_MODULE(rhash)
 #define REGISTER_RHASH_CONSTANT(c) REGISTER_LONG_CONSTANT(#c, c, CONST_CS | CONST_PERSISTENT)
 #define RHASH_ALL RHASH_ALL_HASHES
 
+
+#if PHP_MAJOR_VERSION < 7
+typedef struct _rhash_object {
+	zend_object     zobj;
+	rhash           rhash;
+} rhash_object;
+
+# define get_rhash_object(this_zval) ((rhash_object*)zend_object_store_get_object(this_zval TSRMLS_CC))
+# define get_rhash_object_from_zend_object(object) (rhash_object *)(object)
+#else
+typedef struct _rhash_object {
+	rhash           rhash;
+	zend_object     zobj;
+} rhash_object;
+
+static rhash_object * get_rhash_object(zval *this_zval)
+{
+	zend_object *zobj = Z_OBJ_P(this_zval);
+	return (rhash_object *)((char *)zobj - XtOffsetOf(rhash_object, zobj));
+}
+# define get_rhash_object_from_zend_object(object) (rhash_object *)((char *)object - XtOffsetOf(rhash_object, zobj));
+#endif
+
+static void rhash_free_object(zend_object *object TSRMLS_DC)
+{
+	rhash_object *obj = get_rhash_object_from_zend_object(object);
+	if (obj->rhash)
+		rhash_free(obj->rhash);
+
+	/* call Zend's free handler, which will free object properties */
+	zend_object_std_dtor(object TSRMLS_CC);
+#if PHP_MAJOR_VERSION < 7
+	efree(object);
+#endif
+}
+
+/* Allocate memory for new rhash_object */
+#if PHP_MAJOR_VERSION < 7
+static zend_object_value rhash_create_object(zend_class_entry *ce TSRMLS_DC)
+{
+	zend_object_value retval;
+
+	rhash_object *obj = (rhash_object *)emalloc(sizeof(rhash_object));
+	memset(obj, 0, sizeof(rhash_object));
+	zend_object_std_init(&obj->zobj, ce TSRMLS_CC);
+	obj->rhash = NULL;
+
+	/* call object_properties_init(), because extending classes may use properties. */
+	object_properties_init(&obj->zobj, ce);
+
+	retval.handle = zend_objects_store_put(obj,
+		(zend_objects_store_dtor_t) zend_objects_destroy_object,
+		(zend_objects_free_object_storage_t)rhash_free_object, NULL TSRMLS_CC);
+	retval.handlers = &rhash_object_handlers;
+	return retval;
+}
+#else
+static zend_object *rhash_create_object(zend_class_entry *ce TSRMLS_DC)
+{
+	rhash_object *obj = ecalloc(1, sizeof(*obj) + zend_object_properties_size(ce));
+	zend_object_std_init(&obj->zobj, ce TSRMLS_CC);
+
+	obj->zobj.handlers = &rhash_object_handlers;
+	return &obj->zobj;
+}
+#endif
+
 /* {{{ PHP_MINIT_FUNCTION(rhash) */
 PHP_MINIT_FUNCTION(rhash)
 {
@@ -181,10 +241,15 @@ PHP_MINIT_FUNCTION(rhash)
 	/* register RHash class, its methods and handlers */
 	INIT_CLASS_ENTRY(ce, "RHash", rhash_methods);
 	rhash_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	rhash_ce->create_object = rhash_create_handler;
+	rhash_ce->create_object = rhash_create_object;
+
 	memcpy(&rhash_object_handlers,
 		zend_get_std_object_handlers(), sizeof(zend_object_handlers));
 	rhash_object_handlers.clone_obj = NULL;
+#if PHP_MAJOR_VERSION >= 7
+	rhash_object_handlers.free_obj = rhash_free_object; /* This is the free handler */
+	rhash_object_handlers.offset   = XtOffsetOf(rhash_object, zobj);
+#endif
 
 	REGISTER_RHASH_CONSTANT(RHASH_CRC32);
 	REGISTER_RHASH_CONSTANT(RHASH_MD4);
@@ -246,7 +311,7 @@ PHP_FUNCTION(rhash_count) {
 /* {{{ proto int rhash_get_digest_size(int hash_id)
    Returns the size in bytes of message digest of the specified hash function */
 PHP_FUNCTION(rhash_get_digest_size) {
-	long hash_id;
+	zend_long hash_id;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &hash_id) == FAILURE) {
 		RETURN_FALSE;
@@ -258,7 +323,7 @@ PHP_FUNCTION(rhash_get_digest_size) {
 /* {{{ proto boolean rhash_is_base32(int hash_id)
    Returns true if default format of message digest is base32 and false if it's hexadecimal */
 PHP_FUNCTION(rhash_is_base32) {
-	long hash_id;
+	zend_long hash_id;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &hash_id) == FAILURE) {
 		RETURN_FALSE;
@@ -270,47 +335,46 @@ PHP_FUNCTION(rhash_is_base32) {
 /* {{{ proto string rhash_get_name(int hash_id)
    Returns the name of the specified hash function */
 PHP_FUNCTION(rhash_get_name) {
-	long hash_id;
+	zend_long hash_id;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &hash_id) == FAILURE) {
 		RETURN_FALSE;
 	}
-	RETURN_STRING(rhash_get_name((unsigned)hash_id), 1);
+	_RETURN_STRING(rhash_get_name((unsigned)hash_id));
 }
 /* }}} */
 
 /* {{{ proto string rhash_msg(int hash_id, string message)
    Returns message digest for the message string */
 PHP_FUNCTION(rhash_msg) {
-	long hash_id = 0;
+	zend_long hash_id;
 	char *s;
-	int s_len;
-	int length;
+	strsize_t s_len;
+	strsize_t length;
 	rhash context = NULL;
 	char buffer[130];
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &s, &s_len) == FAILURE) {
 		RETURN_NULL();
 	}
-	if (!hash_id) hash_id = RHASH_ALL_HASHES;
 
-	if (!(context = rhash_init(hash_id))) {
+	if (!(context = rhash_init((unsigned)hash_id))) {
 		RETURN_NULL();
 	}
 
 	rhash_update(context, s, s_len);
 	rhash_final(context, 0);
-	length = rhash_print(buffer, context, hash_id, 0);
+	length = rhash_print(buffer, context, (unsigned)hash_id, 0);
 	rhash_free(context);
-	RETURN_STRINGL(buffer, length, 1);
+	_RETURN_STRINGL(buffer, length);
 }
 
 /* Calculate hash for a php stream. Returns SUCCESS or FAILURE. */
-static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_stream *stream, long start, long size)
+static strsize_t _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_stream *stream, zend_long start, zend_long size)
 {
 	char data[8192];
 	if (context == NULL) {
-		rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+		rhash_object *obj = get_rhash_object(getThis());
 		if ((context = obj->rhash) == NULL) return FAILURE;
 	}
 
@@ -337,9 +401,9 @@ static int _php_rhash_stream(INTERNAL_FUNCTION_PARAMETERS, rhash context, php_st
 /* }}} */
 
 /* Calculate hash of the given file or its part. Returns SUCCESS or FAILURE. */
-static int _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* path, long start, long size)
+static strsize_t _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* path, zend_long start, zend_long size)
 {
-	int res;
+	strsize_t res;
 	php_stream *stream = php_stream_open_wrapper(path, "rb", 0, 0);
 	if (stream == NULL) return FAILURE;
 
@@ -349,18 +413,18 @@ static int _php_rhash_file(INTERNAL_FUNCTION_PARAMETERS, rhash context, char* pa
 }
 /* }}} */
 
-/* {{{ proto string rhash_msg(int hash_id, string path)
+/* {{{ proto string rhash_file(int hash_id, string path)
    Computes and returns message digest for a file. Returns NULL on failure. */
 PHP_FUNCTION(rhash_file) {
-	long hash_id = 0;
+	zend_long hash_id = 0;
 	char *path;
-	int path_len;
+	strsize_t path_len;
 	rhash context = NULL;
 	char buffer[130];
 	int buffer_length;
-	int res;
+	strsize_t res;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lp", &hash_id, &path, &path_len) == FAILURE) {
 		RETURN_NULL();
 	}
 	if (!hash_id || !(context = rhash_init(hash_id))) {
@@ -375,22 +439,22 @@ PHP_FUNCTION(rhash_file) {
 	if (res != SUCCESS) {
 		RETURN_NULL();
 	}
-	RETURN_STRINGL(buffer, buffer_length, 1);
+	_RETURN_STRINGL(buffer, buffer_length);
 }
 /* }}} */
 
 /* {{{ proto string rhash_magnet(int hash_id, string path)
    Computes and returns magnet link for a file. Returns NULL on failure. */
 PHP_FUNCTION(rhash_magnet) {
-	long hash_id = 0;
+	zend_long hash_id = 0;
 	char *path;
-	int path_len;
+	strsize_t path_len;
 	rhash context = NULL;
-	char* buffer;
+	zend_string* str;
 	size_t buffer_size;
-	int res;
+	strsize_t res;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &hash_id, &path, &path_len) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lp", &hash_id, &path, &path_len) == FAILURE) {
 		RETURN_NULL();
 	}
 	if (!hash_id || !(context = rhash_init(hash_id))) {
@@ -401,54 +465,19 @@ PHP_FUNCTION(rhash_magnet) {
 	rhash_final(context, 0);
 
 	buffer_size = rhash_print_magnet(0, path, context, hash_id, RHPR_FILESIZE);
-	buffer = (char*)emalloc(buffer_size);
-	if (!buffer) {
+
+	str = zend_string_alloc(buffer_size - 1, 0);
+	if (!str) {
 		rhash_free(context);
 		RETURN_NULL();
 	}
 
-	rhash_print_magnet(buffer, path, context, hash_id, RHPR_FILESIZE);
+	rhash_print_magnet(str->val, path, context, hash_id, RHPR_FILESIZE);
 	rhash_free(context);
-	RETURN_STRINGL(buffer, buffer_size - 1, 0);
+	RETURN_NEW_STR(str);
 }
 /* }}} */
 
-/* Free the memory allocated by rhash_object */
-static void rhash_free_storage(void *object TSRMLS_DC)
-{
-	rhash_object *obj = (rhash_object *)object;
-	rhash_free(obj->rhash);
-
-	zend_hash_destroy(obj->std.properties);
-	FREE_HASHTABLE(obj->std.properties);
-	efree(obj);
-}
-
-/* Allocate memory for new rhash_object */
-static zend_object_value rhash_create_handler(zend_class_entry *class_type TSRMLS_DC)
-{
-	zval *tmp;
-	zend_object_value retval;
-
-	rhash_object *obj = (rhash_object *)emalloc(sizeof(rhash_object));
-	memset(obj, 0, sizeof(rhash_object));
-	obj->std.ce = class_type;
-
-	ALLOC_HASHTABLE(obj->std.properties);
-	zend_hash_init(obj->std.properties, 0, NULL, ZVAL_PTR_DTOR, 0);
-#if PHP_VERSION_ID < 50399
-	zend_hash_copy(obj->std.properties, &class_type->default_properties,
-		(copy_ctor_func_t)zval_add_ref, (void *)&tmp, sizeof(zval *));
-#else
-	(void)tmp;
-	object_properties_init(&obj->std, class_type);
-#endif
-	retval.handle = zend_objects_store_put(obj, NULL,
-		rhash_free_storage, NULL TSRMLS_CC);
-	retval.handlers = &rhash_object_handlers;
-
-	return retval;
-}
 
 /* RHash class methods */
 
@@ -456,19 +485,20 @@ static zend_object_value rhash_create_handler(zend_class_entry *class_type TSRML
    Creates new RHash object */
 PHP_METHOD(RHash, __construct)
 {
-	long hash_id = 0;
+	zend_long hash_id = 0;
 	rhash context = NULL;
 	rhash_object *obj;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &hash_id) == FAILURE) {
 		RETURN_NULL();
 	}
-	if (!hash_id) hash_id = RHASH_ALL_HASHES;
+	if (!hash_id)
+		hash_id = RHASH_ALL_HASHES;
 	if (!(context = rhash_init(hash_id))) {
 		RETURN_NULL();
 	}
 	rhash_set_autofinal(context, 0);
-	obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	obj = get_rhash_object(getThis());
 	obj->rhash = context;
 }
 /* }}} */
@@ -478,9 +508,9 @@ PHP_METHOD(RHash, __construct)
 PHP_METHOD(RHash, update)
 {
 	char *s;
-	int s_len;
+	strsize_t s_len;
 	zval *object = getThis();
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(object TSRMLS_CC);
+	rhash_object *obj =  get_rhash_object(object);
 	
 	if (obj->rhash == NULL ||
 		zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &s, &s_len) == FAILURE) {
@@ -497,13 +527,17 @@ PHP_METHOD(RHash, update)
 PHP_METHOD(RHash, update_stream)
 {
 	zval *handle;
-	int res;
-	long start = -1, size = -1;
+	strsize_t res;
+	zend_long start = -1, size = -1;
 	php_stream *stream;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|ll", &handle, &start, &size) == FAILURE) {
 		RETURN_FALSE;
 	}
+#if PHP_MAJOR_VERSION < 7
 	php_stream_from_zval_no_verify(stream, &handle);
+#else
+	php_stream_from_zval_no_verify(stream, handle);
+#endif
 	if (stream == NULL) RETURN_FALSE;
 	res = _php_rhash_stream(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, stream, start, size);
 	RETURN_BOOL(res == SUCCESS);
@@ -515,9 +549,9 @@ PHP_METHOD(RHash, update_stream)
 PHP_METHOD(RHash, update_file)
 {
 	char *path;
-	int len;
-	long start = -1, size = -1;
-	int res = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|ll", &path, &len, &start, &size);
+	strsize_t len;
+	zend_long start = -1, size = -1;
+	strsize_t res = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "p|ll", &path, &len, &start, &size);
 	if (res == SUCCESS) {
 		res = _php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, 0, path, start, size);
 	}
@@ -530,7 +564,7 @@ PHP_METHOD(RHash, update_file)
 PHP_METHOD(RHash, final)
 {
 	zval *object = getThis();
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(object TSRMLS_CC);
+	rhash_object *obj = get_rhash_object(object);
 	if (obj->rhash == NULL) RETURN_FALSE;
 	rhash_final(obj->rhash, NULL);
 	Z_ADDREF(*object);
@@ -543,7 +577,7 @@ PHP_METHOD(RHash, final)
 PHP_METHOD(RHash, reset)
 {
 	zval *object = getThis();
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(object TSRMLS_CC);
+	rhash_object *obj = get_rhash_object(object);
 	if (obj->rhash == NULL) RETURN_FALSE;
 	rhash_reset(obj->rhash);
 	Z_ADDREF(*object);
@@ -555,7 +589,7 @@ PHP_METHOD(RHash, reset)
    Returns length in bytes of the hashed data */
 PHP_METHOD(RHash, hashed_length)
 {
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	rhash_object *obj = get_rhash_object(getThis());
 	if (obj->rhash == NULL) RETURN_FALSE;
 	RETURN_LONG((long)obj->rhash->msg_size);
 }
@@ -565,16 +599,16 @@ PHP_METHOD(RHash, hashed_length)
    Returns calculated hash in the specified format */
 static void _php_get_hash(INTERNAL_FUNCTION_PARAMETERS, int print_flags)
 {
-	long hash_id = 0;
+	zend_long hash_id = 0;
 	char buffer[130];
 	int length;
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	rhash_object *obj = get_rhash_object(getThis());
 	if (obj->rhash == NULL ||
 		zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &hash_id) == FAILURE) {
 		RETURN_FALSE;
 	}
 	length = rhash_print(buffer, obj->rhash, hash_id, print_flags);
-	RETURN_STRINGL(buffer, length, 1)
+	_RETURN_STRINGL(buffer, length)
 }
 /* }}} */
 
@@ -623,10 +657,10 @@ PHP_METHOD(RHash, base64)
 PHP_METHOD(RHash, magnet)
 {
 	char *s = 0;
-	int s_len;
+	strsize_t s_len;
 	size_t buf_size;
-	char *buffer;
-	rhash_object *obj = (rhash_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	zend_string *magnet_str;
+	rhash_object *obj = get_rhash_object(getThis());
 
 	if (obj->rhash == NULL ||
 		zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|s", &s, &s_len) == FAILURE) {
@@ -634,10 +668,10 @@ PHP_METHOD(RHash, magnet)
 	}
 
 	buf_size = rhash_print_magnet(0, s, obj->rhash, RHASH_ALL_HASHES, RHPR_FILESIZE);
-	buffer = (char*)emalloc(buf_size);
-	if (!buffer) RETURN_FALSE;
+	magnet_str = zend_string_alloc(buf_size - 1, 0);
+	if (!magnet_str) RETURN_FALSE;
 
-	rhash_print_magnet(buffer, s, obj->rhash, RHASH_ALL_HASHES, RHPR_FILESIZE);
-	RETURN_STRINGL(buffer, buf_size - 1, 0);
+	rhash_print_magnet(magnet_str->val, s, obj->rhash, RHASH_ALL_HASHES, RHPR_FILESIZE);
+	RETURN_NEW_STR(magnet_str);
 }
 /* }}} */

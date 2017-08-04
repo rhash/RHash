@@ -1,3 +1,6 @@
+Fri Aug  4 2017 Aleksey
+	* support LibRhash bindings to PHP7
+
 Sun Jul 30 2017 Aleksey
 	* Bugfix: illegal instruction error on macOS
 
