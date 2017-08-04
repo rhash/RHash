@@ -4,7 +4,6 @@ dnl
 
 PHP_ARG_WITH(rhash, for RHash support,
 [  --with-rhash[=DIR]        Include RHash support.])
-dnl                          DIR is the RHash install prefix [BUNDLED]], yes, no)
 
 if test "$PHP_RHASH" != "no"; then
   if test -r $PHP_RHASH/include/rhash.h; then
@@ -40,8 +39,6 @@ if test "$PHP_RHASH" != "no"; then
   AC_DEFINE(HAVE_RHASH, 1, [Whether you have RHash])
   PHP_ADD_INCLUDE($RHASH_INCLUDE_DIR)
   PHP_ADD_LIBRARY_WITH_PATH(rhash, $RHASH_LIB_DIR, RHASH_SHARED_LIBADD)
-#  PHP_ADD_LIBRARY_WITH_PATH(rhash, $RHASH_LIB_DIR/librhash.so, RHASH_SHARED_LIBADD)
   PHP_NEW_EXTENSION(rhash, php_rhash.c, $ext_shared)
   PHP_SUBST(RHASH_SHARED_LIBADD)
-  dnl  PHP_NEW_EXTENSION(rhash, php_rhash.c, $PHP_RHASH_CFLAGS)
 fi
