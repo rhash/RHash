@@ -12,12 +12,9 @@
 # include <libintl.h>
 # define _(str) gettext(str)
 # define TEXT_DOMAIN "rhash"
-# ifdef LOCALEDIR
-# elif defined(_WIN32)
-#  define LOCALEDIR "./locale"
-# else /* _WIN32 */
+# ifndef LOCALEDIR
 #  define LOCALEDIR "/usr/share/locale"
-# endif /* _WIN32 */
+# endif /* LOCALEDIR */
 #else
 # define _(str) (str)
 #endif /* USE_GETTEXT */

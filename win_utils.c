@@ -413,6 +413,79 @@ void restore_console(void)
 }
 
 /**
+ * Detect the program directory.
+ */
+void init_program_dir(void)
+{
+	wchar_t* program_path = NULL;
+	DWORD buf_size;
+	DWORD len;
+	for (buf_size = 2048;; buf_size += 2048)
+	{
+		program_path = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
+		len = GetModuleFileNameW(NULL, program_path, buf_size);
+		if (len && len < buf_size) break;
+		free(program_path);
+		if (!len || buf_size >= 32768) return;
+	}
+	/* remove trailng file name with the last separator */
+	for (; len > 0 && !IS_PATH_SEPARATOR_W(program_path[len]); len--);
+	for (; len > 0 && IS_PATH_SEPARATOR_W(program_path[len]); len--);
+	program_path[len + 1] = 0;
+	if (len == 0) {
+		free(program_path);
+		return;
+	}
+	rhash_data.program_dir = program_path;
+}
+
+#ifdef USE_GETTEXT
+/**
+ * Check that the path points to an existing directory.
+ *
+ * @param path the path to check
+ * @return 1 if the argument is a directory, 0 otherwise
+ */
+static int is_directory(const char* path)
+{
+	DWORD res = GetFileAttributesA(path);
+	return (res != INVALID_FILE_ATTRIBUTES &&
+		!!(res & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+/**
+ * Set the locale directory relative to ${PROGRAM_DIR}/LOCALEDIR.
+ */
+void setup_locale_dir(void)
+{
+	wchar_t* short_dir;
+	char *program_dir = NULL;
+	char *locale_dir;
+	DWORD buf_size;
+	DWORD res;
+	
+	if (!rhash_data.program_dir) return;
+	buf_size = GetShortPathNameW(rhash_data.program_dir, NULL, 0);
+	if (!buf_size) return;
+	
+	short_dir = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
+	res = GetShortPathNameW(rhash_data.program_dir, short_dir, buf_size);
+	if (res > 0 && res < buf_size)
+		program_dir = w2c(short_dir);
+	free(short_dir);
+	if (!program_dir) return;
+	
+	locale_dir = make_path(program_dir, "locale");
+	free(program_dir);
+	if (!locale_dir) return;
+	
+	if (is_directory(locale_dir))
+		bindtextdomain(TEXT_DOMAIN, locale_dir);
+	free(locale_dir);
+}
+#endif /* USE_GETTEXT */
+
+/**
  * Print formatted data to the specified file descriptor,
  * handling proper printing UTF-8 strings to Windows console.
  *

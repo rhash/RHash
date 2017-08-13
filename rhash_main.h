@@ -17,6 +17,7 @@ struct rhash_t
 	FILE *log;
 	FILE *upd_fd; /* descriptor of a crc file to update */
 #ifdef _WIN32
+	wchar_t* program_dir;
 	unsigned saved_cursor_size;
 	unsigned output_flags;
 #endif

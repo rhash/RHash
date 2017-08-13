@@ -182,7 +182,10 @@ void rhash_destroy(struct rhash_t* ptr)
 	if (ptr->rctx) rhash_free(ptr->rctx);
 	if (ptr->out) fclose(ptr->out);
 	if (ptr->log) fclose(ptr->log);
+#ifdef _WIN32
+	if (ptr->program_dir) free(ptr->program_dir);
 	IF_WINDOWS(restore_console());
+#endif
 }
 
 static void i18n_initialize(void)
@@ -191,6 +194,7 @@ static void i18n_initialize(void)
 
 #ifdef USE_GETTEXT
 	bindtextdomain(TEXT_DOMAIN, LOCALEDIR); /* set the text message domain */
+	IF_WINDOWS(setup_locale_dir());
 	textdomain(TEXT_DOMAIN);
 #endif /* USE_GETTEXT */
 }
@@ -208,14 +212,15 @@ int main(int argc, char *argv[])
 	int exit_code;
 	int sfv;
 
-	i18n_initialize(); /* initialize locale and translation */
-
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	memset(&opt, 0, sizeof(opt));
 	rhash_data.out = stdout; /* set initial output streams */
 	rhash_data.log = stderr; /* can be altered by options later */
 
+	IF_WINDOWS(init_program_dir());
 	init_hash_info_table();
+
+	i18n_initialize(); /* initialize locale and translation */
 
 	read_options(argc, argv); /* load config and parse command line options */
 	prev_sigint_handler = signal(SIGINT, ctrl_c_handler); /* install SIGINT handler */

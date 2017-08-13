@@ -38,6 +38,8 @@ void set_benchmark_cpu_affinity(void);
 
 void setup_console(void);
 void restore_console(void);
+void init_program_dir(void);
+void setup_locale_dir(void);
 int win_fprintf(FILE*, const char* format, ...);
 int win_vfprintf(FILE*, const char* format, va_list args);
 size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out);
