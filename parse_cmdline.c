@@ -525,11 +525,12 @@ static const char* find_conf_file(void)
 	if ( (dir1 = getenv("APPDATA")) ) {
 		dir1 = make_path(dir1, "RHash");
 		path = make_path(dir1, CONF_FILE_NAME);
-		rsh_vector_add_ptr(opt.mem, path);
 		free(dir1);
 		if (is_regular_file(path)) {
+			rsh_vector_add_ptr(opt.mem, path);
 			return (conf_opt.config_file = path);
 		}
+		free(path);
 	}
 
 	/* then check for %HOMEDRIVE%%HOMEPATH%\rhashrc */
@@ -537,11 +538,23 @@ static const char* find_conf_file(void)
 	if ( (dir1 = getenv("HOMEDRIVE")) && (path = getenv("HOMEPATH"))) {
 		dir1 = make_path(dir1, path);
 		path = make_path(dir1, CONF_FILE_NAME);
-		rsh_vector_add_ptr(opt.mem, path);
 		free(dir1);
 		if (is_regular_file(path)) {
+			rsh_vector_add_ptr(opt.mem, path);
 			return (conf_opt.config_file = path);
 		}
+		free(path);
+	}
+	
+	/* check for ${PROGRAM_DIR}\rhashrc */
+	if (rhash_data.program_dir && (dir1 = w2c(rhash_data.program_dir))) {
+		path = make_path(dir1, CONF_FILE_NAME);
+		free(dir1);
+		if (is_regular_file(path)) {
+			rsh_vector_add_ptr(opt.mem, path);
+			return (conf_opt.config_file = path);
+		}
+		free(path);
 	}
 #endif /* _WIN32 */
 
