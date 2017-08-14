@@ -1,4 +1,5 @@
 Mon Aug 14 2017 Aleksey
+	* === Version 1.3.5 ===
 	* look for locales directory at PROGRAM_DIRECTORY\locale on Windows
 	* look for config at PROGRAM_DIRECTORY\rhashrc on Windows
 
