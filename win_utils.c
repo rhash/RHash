@@ -503,11 +503,11 @@ int win_vfprintf(FILE* out, const char* format, va_list args)
                  * can be used only from a single-thread program */
 		static char buffer[8192];
 		wchar_t *wstr = NULL;
-		int res = vsnprintf_s(buffer, 8192, _TRUNCATE, format, args);
-		if (res < 0)
+		int res = vsnprintf(buffer, 8192, format, args);
+		if (res < 0 || res >= 8192)
 		{
 			errno = EINVAL;
-			return res;
+			return -1;
 		}
 		wstr = cstr_to_wchar(buffer, CP_UTF8);
 		res = fwprintf(out, L"%s", wstr);
