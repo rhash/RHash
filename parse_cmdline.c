@@ -991,6 +991,17 @@ static void make_final_options_checks(void)
 	if (opt.openssl_mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, 0, opt.openssl_mask, 0);
 }
 
+static struct parsed_cmd_line_t cmd_line;
+
+static void cmd_line_destroy(void)
+{
+	rsh_blocks_vector_destroy(&cmd_line.options);
+	free(cmd_line.files);
+#ifdef _WIN32
+	LocalFree(cmd_line.warg);
+#endif
+}
+
 /**
  * Parse command line options.
  *
@@ -998,8 +1009,6 @@ static void make_final_options_checks(void)
  */
 void read_options(int argc, char *argv[])
 {
-	struct parsed_cmd_line_t cmd_line;
-
 	opt.mem = rsh_vector_new_simple();
 	opt.find_max_depth = -1;
 
@@ -1008,6 +1017,7 @@ void read_options(int argc, char *argv[])
 	rsh_blocks_vector_init(&cmd_line.options);
 	cmd_line.argv = argv;
 	cmd_line.argc = argc;
+	rsh_install_exit_handler(cmd_line_destroy);
 
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
@@ -1020,19 +1030,14 @@ void read_options(int argc, char *argv[])
 	apply_cmdline_options(&cmd_line); /* process the rest of command options */
 
 	/* options were processed, so we don't need them anymore */
-	rsh_blocks_vector_destroy(&cmd_line.options);
 
 	/* set the files and directories to be processed later */
 	opt.search_data = file_search_data_new(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
 	opt.n_files = cmd_line.n_files;
 
-	free(cmd_line.files);
-
-#ifdef _WIN32
-	LocalFree(cmd_line.warg);
-#endif
+	rsh_remove_exit_handler();
+	cmd_line_destroy();
 
 	make_final_options_checks();
-
 	set_default_sums_flags(argv[0]); /* detect default hashes from program name */
 }

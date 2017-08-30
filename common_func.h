@@ -168,9 +168,11 @@ double rsh_timer_stop(timedelta_t* timer);
  */
 unsigned rhash_get_ticks(void);
 
-
-void  rhash_exit(int code);
-
+/* program exit handlers */
+typedef void (*exit_handler_t)(void);
+void rsh_install_exit_handler(exit_handler_t handler);
+void rsh_remove_exit_handler(void);
+void rsh_exit(int code);
 
 /* clever malloc with error detection */
 #define rsh_malloc(size) rhash_malloc(size, __FILE__, __LINE__)
@@ -187,8 +189,6 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 #endif
 
-
-extern void (*rsh_exit)(int code);
 extern void (*rsh_report_error)(const char* srcfile, int srcline, const char* format, ...);
 
 /* vector functions */

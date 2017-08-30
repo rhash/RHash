@@ -558,14 +558,50 @@ int if_file_exists(const char* path)
  * Custom program exit function
  *=========================================================================*/
 
+struct rhash_exit_handlers_t
+{
+	unsigned handlers_count;
+	exit_handler_t handlers[4];
+} rhash_exit_handlers = { 0 };
+
 /**
-* Exit the program, with restoring console state.
+* Install a handler to be called on program exit.
+*
+* @param handler the hadler to add
+*/
+void rsh_install_exit_handler(exit_handler_t handler)
+{
+	if (rhash_exit_handlers.handlers_count >= (sizeof(rhash_exit_handlers.handlers) / sizeof(rhash_exit_handlers.handlers[0])))
+	{
+		assert(!"to many handlers");
+		rsh_exit(2);
+	}
+	rhash_exit_handlers.handlers[rhash_exit_handlers.handlers_count] = handler;
+	rhash_exit_handlers.handlers_count++;
+}
+
+/**
+* Remove the last installed exit handler.
+*/
+void rsh_remove_exit_handler(void)
+{
+	if (rhash_exit_handlers.handlers_count == 0)
+	{
+		assert(rhash_exit_handlers.handlers_count > 0 && "no handlers installed");
+		rsh_exit(2);
+	}
+	rhash_exit_handlers.handlers_count--;
+}
+
+/**
+* Call all installed exit handlers, starting from the latest one, and exit the program.
 *
 * @param code the program exit code
 */
-void rhash_exit(int code)
+void rsh_exit(int code)
 {
-	IF_WINDOWS(restore_console());
+	while (rhash_exit_handlers.handlers_count > 0)
+		rhash_exit_handlers.handlers[--rhash_exit_handlers.handlers_count]();
 	exit(code);
 }
 
@@ -576,7 +612,6 @@ void rhash_exit(int code)
 static void report_error_default(const char* srcfile, int srcline,
 	const char* format, ...);
 
-void (*rsh_exit)(int code) = exit;
 void (*rsh_report_error)(const char* srcfile, int srcline,
 	const char* format, ...) = report_error_default;
 

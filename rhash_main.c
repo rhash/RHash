@@ -184,8 +184,13 @@ void rhash_destroy(struct rhash_t* ptr)
 	if (ptr->log) fclose(ptr->log);
 #ifdef _WIN32
 	if (ptr->program_dir) free(ptr->program_dir);
-	IF_WINDOWS(restore_console());
 #endif
+}
+
+static void free_allocated_data(void)
+{
+	options_destroy(&opt);
+	rhash_destroy(&rhash_data);
 }
 
 static void i18n_initialize(void)
@@ -216,6 +221,7 @@ int main(int argc, char *argv[])
 	memset(&opt, 0, sizeof(opt));
 	rhash_data.out = stdout; /* set initial output streams */
 	rhash_data.log = stderr; /* can be altered by options later */
+	rsh_install_exit_handler(free_allocated_data);
 
 	IF_WINDOWS(init_program_dir());
 	init_hash_info_table();
@@ -321,9 +327,6 @@ int main(int argc, char *argv[])
 	exit_code = (rhash_data.error_flag ? 1 :
 		opt.search_data->errors_count ? 2 :
 		rhash_data.interrupted ? 3 : 0);
-	options_destroy(&opt);
-	rhash_destroy(&rhash_data);
-
-	/* return non-zero error code if error occurred */
-	return exit_code;
+	rsh_exit(exit_code);
+	return 0; /* unreachable statement */
 }

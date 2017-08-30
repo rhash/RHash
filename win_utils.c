@@ -348,6 +348,21 @@ void set_benchmark_cpu_affinity(void)
 /* functions to setup/restore console */
 
 /**
+ * Restore console on program exit.
+ */
+void restore_console(void)
+{
+	CONSOLE_CURSOR_INFO cci;
+	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
+	if (hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
+		/* restore cursor size and visibility */
+		cci.dwSize = rhash_data.saved_cursor_size;
+		cci.bVisible = 1;
+		SetConsoleCursorInfo(hOut, &cci);
+	}
+}
+
+/**
  * Prepare console on program initialization: change console font codepage
  * according to program options and hide cursor.
  */
@@ -392,23 +407,8 @@ void setup_console(void)
 			/* now hide cursor */
 			cci.bVisible = 0;
 			SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
-			rsh_exit = rhash_exit;
+			rsh_install_exit_handler(restore_console);
 		}
-	}
-}
-
-/**
- * Restore console on program exit.
- */
-void restore_console(void)
-{
-	CONSOLE_CURSOR_INFO cci;
-	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
-	if (hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
-		/* restore cursor size and visibility */
-		cci.dwSize = rhash_data.saved_cursor_size;
-		cci.bVisible = 1;
-		SetConsoleCursorInfo(hOut, &cci);
 	}
 }
 
