@@ -118,7 +118,7 @@ check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test special characters:    "
 TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' - )
-TEST_EXPECTED=$( printf '\63\1\277\x0f\1\t\\ 4\r' )
+TEST_EXPECTED=$( printf '\63\1\277\17\1\t\\ 4\r' )
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test eDonkey link:          "
