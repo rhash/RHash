@@ -7,6 +7,11 @@
 #include <ctype.h>
 #include <assert.h>
 
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif /* _WIN32 */
+
 #include "librhash/rhash.h"
 #include "calc_sums.h"
 #include "parse_cmdline.h"
@@ -37,6 +42,7 @@ enum {
 		| PRINT_FLAG_HEX | PRINT_FLAG_BASE32 | PRINT_FLAG_BASE64,
 	PRINT_STR = 0x10000000,
 	PRINT_ZERO,
+	PRINT_NEWLINE,
 	PRINT_FILEPATH,
 	PRINT_BASENAME,
 	PRINT_URLNAME,
@@ -77,6 +83,7 @@ static char parse_escaped_char(const char **pformat)
 {
 	const char* start = *pformat;
 	switch ( *((*pformat)++) ) {
+		case '0': return '\0';
 		case 't': return '\t';
 		case 'r': return '\r';
 		case 'n': return '\n';
@@ -92,7 +99,7 @@ static char parse_escaped_char(const char **pformat)
 					ch = 16 * ch + (**pformat <= '9' ? **pformat & 15 : (**pformat + 9) & 15);
 					(*pformat)++;
 				}
-				if (ch) return ch;
+				return ch;
 			}
 			break;
 		default:
@@ -131,11 +138,16 @@ print_item* parse_print_string(const char* format, unsigned *sum_mask)
 			*(p++) = *(format++);
 
 		if (*format == '\\') {
-			if (*(++format) == '0') {
+			format++;
+			*p = parse_escaped_char(&format);
+			if (*p == '\0') {
 				item = new_print_item(PRINT_ZERO, 0, NULL);
-				format++;
+#ifdef _WIN32
+			} else if (*p == '\n') {
+				item = new_print_item(PRINT_NEWLINE, 0, NULL);
+#endif
 			} else {
-				*p++ = parse_escaped_char(&format);
+				p++;
 				continue;
 			}
 		} else if (*format == '%') {
@@ -402,6 +414,11 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 	const char* basename = get_basename(info->print_path), *tmp;
 	char *url = NULL, *ed2k_url = NULL;
 	char buffer[130];
+#ifdef _WIN32
+	/* switch to binary mode to correctly output binary hashes */
+	int out_fd = _fileno(out);
+	int old_mode = (out_fd > 0 && !isatty(out_fd) ? _setmode(out_fd, _O_BINARY) : -1);
+#endif
 
 	for (; list; list = list->next) {
 		int print_type = list->flags & ~(PRINT_FLAGS_ALL);
@@ -434,6 +451,11 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 			case PRINT_ZERO: /* the '\0' character */
 				rsh_fprintf(out, "%c", 0);
 				break;
+#ifdef _WIN32
+			case PRINT_NEWLINE:
+				rsh_fprintf(out, "%s", "\r\n");
+				break;
+#endif
 			case PRINT_FILEPATH:
 				rsh_fprintf(out, "%s", info->print_path);
 				break;
@@ -461,6 +483,11 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 	}
 	free(url);
 	free(ed2k_url);
+	fflush(out);
+#ifdef _WIN32
+	if (old_mode >= 0)
+		_setmode(out_fd, old_mode);
+#endif
 }
 
 /**

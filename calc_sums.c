@@ -431,12 +431,10 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	if (rhash_data.print_list && res >= 0) {
 		if (!opt.bt_batch_file) {
 			print_line(out, rhash_data.print_list, &info);
-			fflush(out);
 
 			/* print calculated line to stderr or log-file if verbose */
 			if ((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
 				print_line(rhash_data.log, rhash_data.print_list, &info);
-				fflush(rhash_data.log);
 			}
 		}
 
