@@ -161,7 +161,7 @@ test-static: $(TARGET)
 
 test-shared: $(SHARED_TRG) test-shared-lib
 	chmod +x tests/test_rhash.sh
-	LD_LIBRARY_PATH=../librhash:$(LD_LIBRARY_PATH) tests/test_rhash.sh ./$(SHARED_TRG)
+	tests/test_rhash.sh --shared ./$(SHARED_TRG)
 
 version.h: Makefile
 	echo "#define VERSION \"$(VERSION)\"" > version.h

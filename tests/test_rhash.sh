@@ -1,18 +1,62 @@
 #!/bin/sh
+# Run RHash tests
+# Usage: test_rhash.sh [ --full | --shared ] <PATH-TO-EXECUTABLE>
 LANG=en_US
 
-if [ "$1" = "--full" ]; then FULL_TEST=1; shift; fi
+# read options
+while [ "$#" -gt 0 ]; do
+  case $1 in
+    --full)
+      OPT_FULL=1
+      ;;
+    --shared)
+      OPT_SHARED=1
+      ;;
+    *)
+      [ -x "$1" -a -z "$rhash" -a -x "$1" ] && rhash="$(cd $(dirname $1) && echo $PWD/${1##*/})"
+      ;;
+  esac
+  shift
+done
 
-[ -x "$1" ] && rhash="$(cd ${1%/*} && echo $PWD/${1##*/})" || rhash="../rhash";
+[ -x "$rhash" ] || rhash="../rhash";
 cd $(dirname "$0") # chdir after getting absolute path of $1, but before checking for ../rhash
 [ -x "$rhash" ] || rhash="`which rhash`"
-if [ ! -x $rhash ]; then 
+if [ ! -x "$rhash" ]; then
   echo "Fatal: $rhash not found"
   exit 1
 fi
 [ "$rhash" != "../rhash" ] && echo "Testing $rhash"
 
-#version="`$rhash -V|sed 's/^.* v//'`"
+if [ -n "$OPT_SHARED" -a -d ../librhash ]; then
+  D=../librhash
+  N=$D/librhash
+  if [ -r $N.0.dylib ] && ( uname -s | grep -qi "^darwin" || [ ! -r $N.so.0 ] ); then
+    export DYLD_LIBRARY_PATH=$D:$DYLD_LIBRARY_PATH
+  elif [ -r $N.dll ] && ( uname -s | grep -qi "^mingw" || [ ! -r $N.so.0 ] ); then
+    export PATH=$D:$PATH
+  elif [ -r $N.so.0 ]; then
+    export LD_LIBRARY_PATH=$D:$LD_LIBRARY_PATH
+  else
+    echo "shared library not found at $D"
+  fi
+fi
+
+# run smoke test: test exit code of a simple command
+echo | $rhash --printf "" -
+res=$?
+if [ $res -ne 0 ]; then
+  if [ $res -eq 127 ]; then
+    echo "error: could not load dynamic libraries or execute $rhash"
+  elif [ $res -eq 139 ]; then
+    echo "error: got segmentation fault by running $rhash"
+  else
+    echo "error: obtained unexpected exit_code = $res from $rhash"
+  fi
+  exit 2
+fi
+
+# get the list of supported hash options
 HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;/[^3]-/s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
 
 fail_cnt=0
@@ -32,9 +76,9 @@ print_failed() {
 # verify obtained value $1 against the expected value $2
 check() {
   sub_test=$((sub_test+1))
-  if [ "$1" = "$2" ]; then 
+  if [ "$1" = "$2" ]; then
     test "$3" = "." || echo "Ok"
-  else 
+  else
     print_failed "$3"
     echo "obtained: \"$1\""
     echo "expected: \"$2\""
@@ -129,7 +173,7 @@ check "$TEST_RESULT" "$TEST_EXPECTED" .
 TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
-if [ "$FULL_TEST" = 1 ]; then
+if [ -n "$OPT_FULL" ]; then
   new_test "test all hash options:      "
   errors=0
   for opt in $HASHOPT ; do

@@ -34,6 +34,7 @@ DYLINK  = librhash.dylib
 DLLNAME = librhash.dll
 TEST_TARGET = test_hashes
 TEST_SHARED = test_shared
+TEST_DYLIB  = test_dylib
 # Set variables according to GNU coding standard
 INSTALL = install
 INSTALL_DATA    = $(INSTALL) -m 644
@@ -174,6 +175,17 @@ whirlpool.o: whirlpool.c byte_order.h ustd.h whirlpool.h
 whirlpool_sbox.o: whirlpool_sbox.c byte_order.h ustd.h
 	$(CC) -c $(ALLCFLAGS) $< -o $@
 
+# build shared library
+$(SONAME): $(SOURCES)
+	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(SO_HEADERS) > exports.sym
+	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
+	rm -f $(SOLINK)
+	ln -s $(SONAME) $(SOLINK)
+
+test-shared: $(SONAME) test_hashes.o
+	$(CC) $(PRGCFLAGS) test_hashes.o $(SONAME) $(LIBLDFLAGS) -o $(TEST_SHARED)
+	LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) ./$(TEST_SHARED)
+
 # MINGW: build a dll library
 $(DLLNAME): $(SOURCES)
 	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(LIB_HEADERS) > exports.sym
@@ -182,28 +194,22 @@ $(DLLNAME): $(SOURCES)
 test-dll: $(DLLNAME) test_hashes.o
 	$(CC) $(PRGCFLAGS) test_hashes.o $(DLLNAME) -o $(TEST_SHARED) && ./$(TEST_SHARED)
 
-# shared and static libraries
-$(SONAME): $(SOURCES)
-	sed -n '1s/.*/{ global:/p; s/^RHASH_API.* \([a-z0-9_]\+\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(SO_HEADERS) > exports.sym
-	$(CC) -fpic $(ALLCFLAGS) -shared $(SOURCES) -Wl,--version-script,exports.sym,-soname,$(SONAME) $(LIBLDFLAGS) -o $@
-	rm -f $(SOLINK)
-	ln -s $(SONAME) $(SOLINK)
-# use 'nm -Cg --defined-only $@' to view exported symbols
-
+# build osx shared library
 $(DYNAME): $(SOURCES)
 	$(CC) -fpic $(ALLCFLAGS) -dynamiclib $(SOURCES) $(LIBLDFLAGS) -Wl,-install_name,$(LIBDIR)/$@ -o $@
 	rm -f $(DYLINK)
 	ln -s $(DYNAME) $(DYLINK)
 
+test-dylib: $(DYNAME) test_hashes.o
+	$(CC) $(PRGCFLAGS) test_hashes.o $(DYNAME) $(LIBLDFLAGS) -o $(TEST_DYLIB)
+	DYLD_LIBRARY_PATH=.:$(DYLD_LIBRARY_PATH) ./$(TEST_DYLIB)
+
+# build static library
 $(LIBRARY): $(OBJECTS)
 	$(AR) cqs $@ $(OBJECTS)
 
 $(TEST_TARGET): $(LIBRARY) test_hashes.o
 	$(CC) $(ALLCFLAGS) test_hashes.o $(LIBRARY) $(LIBLDFLAGS) -o $@
-
-test-shared: $(SONAME) test_hashes.o
-	$(CC) $(PRGCFLAGS) test_hashes.o $(SONAME) $(LIBLDFLAGS) -o $(TEST_SHARED)
-	LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) ./$(TEST_SHARED)
 
 test-static: $(TEST_TARGET)
 	./$(TEST_TARGET)
@@ -212,4 +218,9 @@ test: test-static
 	if [ -f $(SONAME) ]; then make test-shared; fi
 
 clean:
-	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) exports.sym $(DLLNAME) librhash.def
+	rm -f *.o $(LIBRARY) $(TEST_TARGET) $(TEST_SHARED) $(SONAME) $(SOLINK) exports.sym $(DLLNAME) librhash.def $(DYNAME) $(DYLINK) $(TEST_DYLIB)
+
+.PHONY: all clean dist-clean dll dylib install-headers install-lib-shared \
+	install-lib-static install-so-link libs-all lib-shared lib-static \
+	test test-dll test-dylib test-shared test-static uninstall-headers \
+	uninstall-lib uninstall-lib-shared uninstall-lib-static uninstall-so-link
