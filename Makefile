@@ -159,7 +159,7 @@ test-static: $(TARGET)
 	chmod +x tests/test_rhash.sh
 	tests/test_rhash.sh
 
-test-shared: $(SHARED_TRG) test-shared-lib
+test-shared: $(SHARED_TRG)
 	chmod +x tests/test_rhash.sh
 	tests/test_rhash.sh --shared ./$(SHARED_TRG)
 
