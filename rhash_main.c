@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 	}
 	assert(opt.search_data != 0);
 
-	/* setup printf formating string */
+	/* setup printf formatting string */
 	rhash_data.printf_str = opt.printf_str;
 
 	if (opt.template_file) {

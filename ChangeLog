@@ -117,7 +117,7 @@ Sat Apr 27 2013 Aleksey
 	* Fixed memory leaks
 
 Tue Apr 23 2013 Aleksey
-	* Bugfix: %{mtime} formating option was broken
+	* Bugfix: %{mtime} formatting option was broken
 
 Mon Dec 31 2012 Aleksey
 	* imported translations from Launchpad: de, es, gl, it
@@ -525,7 +525,7 @@ Wed May 14 2008 Aleksey
 
 Tue Jan 22 2008 Aleksey
 	* option '-a' to print all supported hash sums
-	* Changed default behavior: if no formating option are set, sfv header is printed only for --crc32
+	* Changed default behavior: if no formatting option are set, sfv header is printed only for --crc32
 
 Wed Dec 19 2007 Aleksey
 	* Bugfix: fixed buffer overflow for command line -p '%%%%d'

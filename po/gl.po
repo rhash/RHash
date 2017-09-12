@@ -439,7 +439,7 @@ msgid "incompatible program modes\n"
 msgstr "modos de programa incompatíbeis\n"
 
 #: parse_cmdline.c:896
-msgid "too many formating options\n"
+msgid "too many formatting options\n"
 msgstr "demasiadas opcións de formatado\n"
 
 #: rhash_main.c:131

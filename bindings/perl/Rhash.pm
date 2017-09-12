@@ -358,7 +358,7 @@ Returns the hash mask, the $rhash object was constructed with.
 
 =back
 
-=head1 FORMATING HASH VALUE
+=head1 FORMATTING HASH VALUE
 
 Computed hash can be formatted as a hexadecimal string (in the forward or
 reverse byte order), a base32/base64-encoded string or as raw binary data.

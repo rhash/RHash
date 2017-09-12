@@ -842,7 +842,7 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		}
 	}
 
-	/* if no formating options were specified at the command line */
+	/* if no formatting options were specified at the command line */
 	if (!opt.printf_str && !opt.template_file && !opt.sum_flags && !opt.fmt) {
 		/* copy the format from config */
 		opt.printf_str = conf_opt.printf_str;
@@ -966,7 +966,7 @@ void options_destroy(struct options_t* o)
  */
 static void make_final_options_checks(void)
 {
-	unsigned ff; /* formating flags */
+	unsigned ff; /* formatting flags */
 
 	if ((opt.flags & OPT_VERBOSE) && conf_opt.config_file) {
 		/* note that the first log_msg call shall be made after setup_output() */
@@ -983,7 +983,7 @@ static void make_final_options_checks(void)
 
 	ff = (opt.printf_str ? 1 : 0) | (opt.template_file ? 2 : 0) | (opt.fmt ? 4 : 0);
 	if ((opt.fmt & (opt.fmt - 1)) || (ff & (ff - 1))) {
-		die(_("too many formating options\n"));
+		die(_("too many formatting options\n"));
 	}
 
 	if (!opt.crc_accept) opt.crc_accept = file_mask_new_from_list(".sfv");
