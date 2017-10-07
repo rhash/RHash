@@ -37,7 +37,7 @@ wchar_t* get_long_path_if_needed(const wchar_t* wpath);
 void set_benchmark_cpu_affinity(void);
 
 void setup_console(void);
-void restore_console(void);
+void hide_cursor(void);
 void init_program_dir(void);
 void setup_locale_dir(void);
 int win_fprintf(FILE*, const char* format, ...);

@@ -496,13 +496,17 @@ void setup_output(void)
 
 	setup_log_stream(&rhash_data.log, opt.log);
 	setup_log_stream(&rhash_data.out, opt.output);
+}
 
+void setup_percents(void)
+{
 	if (opt.flags & OPT_PERCENTS) {
 		/* NB: we don't use _fileno() cause it is not in ISO C90, and so
 		 * is incompatible with the GCC -ansi option */
 		if (rhash_data.log == stderr && isatty(2)) {
 			/* use one-line percents by default on console */
 			percents_output  = &p_perc;
+			IF_WINDOWS(hide_cursor());
 		} else {
 			/* print percents as dots */
 			percents_output  = &dots_perc;

@@ -231,6 +231,7 @@ int main(int argc, char *argv[])
 	read_options(argc, argv); /* load config and parse command line options */
 	prev_sigint_handler = signal(SIGINT, ctrl_c_handler); /* install SIGINT handler */
 	rhash_library_init();
+	setup_percents();
 
 	/* in benchmark mode just run benchmark and exit */
 	if (opt.mode & MODE_BENCHMARK) {

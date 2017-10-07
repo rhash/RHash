@@ -350,7 +350,7 @@ void set_benchmark_cpu_affinity(void)
 /**
  * Restore console on program exit.
  */
-void restore_console(void)
+static void restore_cursor(void)
 {
 	CONSOLE_CURSOR_INFO cci;
 	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
@@ -394,21 +394,21 @@ void setup_console(void)
 	{
 		setlocale(LC_CTYPE, opt.flags & OPT_OEM ? ".OCP" : ".ACP");
 	}
+}
 
-	if ((opt.flags & OPT_PERCENTS) != 0 && isatty(2))
+void hide_cursor(void)
+{
+	CONSOLE_CURSOR_INFO cci;
+	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
+	if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
 	{
-		CONSOLE_CURSOR_INFO cci;
-		HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
-		{
-			/* store current cursor size and visibility flag */
-			rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
+		/* store current cursor size and visibility flag */
+		rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
-			/* now hide cursor */
-			cci.bVisible = 0;
-			SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
-			rsh_install_exit_handler(restore_console);
-		}
+		/* now hide cursor */
+		cci.bVisible = 0;
+		SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
+		rsh_install_exit_handler(restore_cursor);
 	}
 }
 

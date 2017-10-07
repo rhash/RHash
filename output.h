@@ -29,6 +29,7 @@ extern struct percents_output_info_t *percents_output;
 
 /* initialization of percents output method */
 void setup_output(void);
+void setup_percents(void);
 
 void log_msg(const char* format, ...);
 void log_error(const char* format, ...);
