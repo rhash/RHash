@@ -2,31 +2,13 @@
 # compile with debug info: make CFLAGS=-g
 # compile for pentiumpro: make CFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
 # create rpm with statically linked program: make rpm ADDLDFLAGS="-static -s -Wl,--gc-sections"
+
+include config.mak
+
 VERSION = 1.3.5
-PREFIX  ?= /usr/local
-CC      ?= gcc
-# using OPTFLAGS/OPTLDFLAGS for compatibilty with old scripts using this makefile
-OPTFLAGS = -O2 -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections
-OPTLDFLAGS =
-CFLAGS = $(OPTFLAGS)
-LDFLAGS = $(OPTLDFLAGS)
-ADDCFLAGS =
-ADDLDFLAGS =
-ALLCFLAGS = -pipe $(CFLAGS) $(ADDCFLAGS) \
-  -Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith \
-  -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations
-LDLIBRHASH = -Llibrhash -lrhash
-ALLLDFLAGS = $(LDLIBRHASH) $(LDFLAGS) $(ADDLDFLAGS)
-SHAREDLIB  = librhash/librhash.so.0
-SHRDLFLAGS = $(LDFLAGS) $(ADDLDFLAGS)
 HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
-OUTDIR   =
-PROGNAME = rhash
-TARGET   = $(OUTDIR)$(PROGNAME)
-SHARED_TRG = $(TARGET)_shared
-SYMLINKS = sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash ed2k-link magnet-link
 SPECFILE = dist/rhash.spec
 LIN_DIST_FILES = Makefile ChangeLog INSTALL COPYING README \
   $(SPECFILE) $(SPECFILE).in $(SOURCES) $(HEADERS) \
@@ -53,36 +35,33 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/util.h librhash/Makefile
 I18N_FILES = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
-DESTDIR =
-BINDIR  = $(PREFIX)/bin
-MANDIR  = $(PREFIX)/share/man
-LOCALEDIR = $(PREFIX)/share/locale
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
-LIBRHASH = librhash/librhash.a
-# Set variables according to GNU coding standard
-INSTALL = install
 INSTALL_PROGRAM = $(INSTALL) -m 755
 INSTALL_DATA    = $(INSTALL) -m 644
 
-all: $(TARGET)
-build-shared: $(SHARED_TRG)
-lib-shared: $(SHAREDLIB)
-lib-static: $(LIBRHASH)
-
-install: build-install-binary install-data install-symlinks
-install-shared: build-install-shared-binary install-data install-symlinks
+all: $(BUILD_TARGETS)
+install: build-install-binary install-data install-symlinks $(EXTRA_INSTALL)
+build-static: $(RHASH_STATIC)
+build-shared: $(RHASH_SHARED)
+lib-shared: $(LIBRHASH_SHARED)
+lib-static: $(LIBRHASH_STATIC)
 install-data: install-man install-conf
 uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib
 
+config.mak:
+	echo "Run the ./configure script first"
+
 # creating archives
+RHASH_NAME     = rhash
 WIN_SUFFIX     = win32
-ARCHIVE_BZIP   = rhash-$(VERSION)-src.tar.bz2
-ARCHIVE_GZIP   = rhash-$(VERSION)-src.tar.gz
-ARCHIVE_FULL   = rhash-$(VERSION)-full-src.tar.gz
-ARCHIVE_DEB_GZ = rhash_$(VERSION).orig.tar.gz
-ARCHIVE_7Z     = rhash-$(VERSION)-src.tar.7z
-ARCHIVE_ZIP    = rhash-$(VERSION)-$(WIN_SUFFIX).zip
+PACKAGE_NAME   = $(RHASH_NAME)-$(VERSION)
+ARCHIVE_BZIP   = $(PACKAGE_NAME)-src.tar.bz2
+ARCHIVE_GZIP   = $(PACKAGE_NAME)-src.tar.gz
+ARCHIVE_FULL   = $(PACKAGE_NAME)-full-src.tar.gz
+ARCHIVE_DEB_GZ = $(RHASH_NAME)_$(VERSION).orig.tar.gz
+ARCHIVE_7Z     = $(PACKAGE_NAME)-src.tar.7z
+ARCHIVE_ZIP    = $(PACKAGE_NAME)-$(WIN_SUFFIX).zip
 WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
 dist: gzip gzip-bindings
 dist-full: gzip-full
@@ -90,30 +69,32 @@ win-dist: zip
 zip:  $(ARCHIVE_ZIP)
 dgz:  check $(ARCHIVE_DEB_GZ)
 
-build-install-binary: $(TARGET)
-	+$(MAKE) install-binary
+build-install-binary: build-install-$(BUILD_TYPE)-binary
+build-install-static-binary: $(RHASH_STATIC)
+	+$(MAKE) install-static-binary
 
-build-install-shared-binary: $(SHARED_TRG)
+build-install-shared-binary: $(RHASH_SHARED)
 	+$(MAKE) install-shared-binary
 
 mkdir-bin:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
 
 # install binary without (re-)compilation
-install-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(BINDIR)/$(PROGNAME)
+install-binary: install-$(BUILD_TYPE)-binary
+install-static-binary: mkdir-bin
+	$(INSTALL_PROGRAM) $(RHASH_STATIC) $(DESTDIR)$(BINDIR)/$(RHASH_NAME)
 
 # install dynamically linked binary without (re-)compilation
 install-shared-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(SHARED_TRG) $(DESTDIR)$(BINDIR)/$(PROGNAME)
+	$(INSTALL_PROGRAM) $(RHASH_SHARED) $(DESTDIR)$(BINDIR)/$(RHASH_NAME)
 
 install-man:
 	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
 	$(INSTALL_DATA) dist/rhash.1 $(DESTDIR)$(MANDIR)/man1/rhash.1
 
 install-conf:
-	$(INSTALL) -d $(DESTDIR)/etc
-	tr -d \\r < dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)/etc/rhashrc
+	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)
+	tr -d \\r < dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)$(SYSCONFDIR)/rhashrc
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
@@ -122,7 +103,7 @@ install-symlinks: mkdir-bin install-man
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-binary:
-	rm -f $(DESTDIR)$(BINDIR)/$(PROGNAME)
+	rm -f $(DESTDIR)$(BINDIR)/$(RHASH_STATIC) $(DESTDIR)$(BINDIR)/$(RHASH_SHARED)
 
 uninstall-data:
 	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
@@ -133,35 +114,35 @@ uninstall-symlinks:
 uninstall-lib:
 	+$(MAKE) -C librhash uninstall-lib
 
-install-lib-static: $(LIBRHASH)
+install-lib-static: $(LIBRHASH_STATIC)
 	+$(MAKE) -C librhash install-lib-static
 
-install-lib-shared: $(SHAREDLIB)
+install-lib-shared: $(LIBRHASH_SHARED)
 	+$(MAKE) -C librhash install-lib-shared
 
-$(SHAREDLIB):
+$(LIBRHASH_SHARED): $(LIBRHASH_FILES)
 	+$(MAKE) -C librhash lib-shared
 
-$(LIBRHASH): $(LIBRHASH_FILES)
+$(LIBRHASH_STATIC): $(LIBRHASH_FILES)
 	+$(MAKE) -C librhash lib-static
 
-test-static-lib: $(LIBRHASH)
+test-static-lib: $(LIBRHASH_STATIC)
 	+$(MAKE) -C librhash test-static
 
-test-shared-lib: $(SHAREDLIB)
+test-shared-lib: $(LIBRHASH_SHARED)
 	+$(MAKE) -C librhash test-shared
 
-test-libs: $(LIBRHASH) $(SHAREDLIB)
+test-libs: $(LIBRHASH_STATIC) $(LIBRHASH_SHARED)
 	+$(MAKE) -C librhash test-static test-shared
 
-test: test-static
-test-static: $(TARGET)
+test: test-$(BUILD_TYPE)
+test-static: $(RHASH_STATIC)
 	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh
+	tests/test_rhash.sh ./$(RHASH_STATIC)
 
-test-shared: $(SHARED_TRG)
+test-shared: $(RHASH_SHARED)
 	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh --shared ./$(SHARED_TRG)
+	tests/test_rhash.sh --shared ./$(RHASH_SHARED)
 
 version.h: Makefile
 	echo "#define VERSION \"$(VERSION)\"" > version.h
@@ -174,64 +155,64 @@ check: version.h
 		echo "version=$(VERSION)" > bindings/version.properties
 	[ -s dist/rhash.1.html ]
 
-$(TARGET): $(OBJECTS) $(LIBRHASH)
-	$(CC) $(OBJECTS) -o $@ $(ALLLDFLAGS)
+$(RHASH_STATIC): $(OBJECTS) $(LIBRHASH_STATIC)
+	$(CC) $(OBJECTS) $(LIBRHASH_STATIC) $(BIN_STATIC_LDFLAGS) -o $@
 
-$(SHARED_TRG): $(OBJECTS) $(SHAREDLIB)
-	$(CC) $(OBJECTS) $(SHRDLFLAGS) -o $(SHARED_TRG) $(SHAREDLIB)
+$(RHASH_SHARED): $(OBJECTS) $(LIBRHASH_SHARED)
+	$(CC) $(OBJECTS) $(LIBRHASH_SHARED) $(LDFLAGS) -o $@
 
 # NOTE: dependences were generated by 'gcc -Ilibrhash -MM *.c'
 # we are using plain old makefile style to support BSD make
 calc_sums.o: calc_sums.c common_func.h librhash/rhash.h \
  librhash/rhash_torrent.h parse_cmdline.h rhash_main.h hash_print.h \
  output.h win_utils.h calc_sums.h hash_check.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 common_func.o: common_func.c common_func.h win_utils.h parse_cmdline.h \
  version.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 file_mask.o: file_mask.c common_func.h file_mask.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 file_set.o: file_set.c librhash/rhash.h common_func.h hash_print.h \
  parse_cmdline.h rhash_main.h output.h file_set.h calc_sums.h \
  hash_check.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 find_file.o: find_file.c common_func.h output.h win_utils.h find_file.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 hash_check.o: hash_check.c librhash/rhash.h output.h common_func.h \
  parse_cmdline.h hash_print.h hash_check.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 hash_print.o: hash_print.c common_func.h librhash/rhash.h calc_sums.h \
  hash_check.h parse_cmdline.h win_utils.h hash_print.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 hash_update.o: hash_update.c common_func.h win_utils.h parse_cmdline.h \
  output.h rhash_main.h file_set.h calc_sums.h hash_check.h file_mask.h \
  hash_print.h hash_update.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 output.o: output.c common_func.h librhash/rhash.h calc_sums.h \
  hash_check.h parse_cmdline.h rhash_main.h win_utils.h output.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 parse_cmdline.o: parse_cmdline.c common_func.h librhash/rhash.h \
  win_utils.h file_mask.h find_file.h hash_print.h output.h rhash_main.h \
  parse_cmdline.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 rhash_main.o: rhash_main.c common_func.h librhash/rhash.h win_utils.h \
  find_file.h calc_sums.h hash_check.h hash_update.h file_mask.h \
  hash_print.h parse_cmdline.h output.h rhash_main.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 win_utils.o: win_utils.c common_func.h parse_cmdline.h rhash_main.h \
  win_utils.h
-	$(CC) -c $(ALLCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 dist/rhash.1.win.html: dist/rhash.1 dist/rhash.1.win.sed
 	sed -f dist/rhash.1.win.sed dist/rhash.1 | rman -fHTML -roff | \
@@ -257,39 +238,39 @@ clean-bindings:
 	+$(MAKE) -C bindings distclean
 
 copy-dist: $(DIST_FILES) permissions
-	rm -rf $(PROGNAME)-$(VERSION)
-	mkdir $(PROGNAME)-$(VERSION)
-	cp -rl --parents $(DIST_FILES) $(PROGNAME)-$(VERSION)/
+	rm -rf $(PACKAGE_NAME)
+	mkdir $(PACKAGE_NAME)
+	cp -rl --parents $(DIST_FILES) $(PACKAGE_NAME)/
 
 gzip: check
 	+$(MAKE) copy-dist
-	tar czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
-	rm -rf $(PROGNAME)-$(VERSION)
+	tar czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
+	rm -rf $(PACKAGE_NAME)
 
 gzip-bindings:
 	+$(MAKE) -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
 
 gzip-full: check clean-bindings
 	+$(MAKE) copy-dist
-	+$(MAKE) -C bindings copy-dist COPYDIR=../$(PROGNAME)-$(VERSION)/bindings
-	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
-	rm -rf $(PROGNAME)-$(VERSION)
+	+$(MAKE) -C bindings copy-dist COPYDIR=../$(PACKAGE_NAME)/bindings
+	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
+	rm -rf $(PACKAGE_NAME)
 
 bzip: check
 	+$(MAKE) copy-dist
-	tar cjf $(ARCHIVE_BZIP) --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/
-	rm -rf $(PROGNAME)-$(VERSION)
+	tar cjf $(ARCHIVE_BZIP) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
+	rm -rf $(PACKAGE_NAME)
 
 7z: check
 	+$(MAKE) copy-dist
-	tar cf - --owner=root:0 --group=root:0 $(PROGNAME)-$(VERSION)/ | 7zr a -si $(ARCHIVE_7Z)
-	rm -rf $(PROGNAME)-$(VERSION)
+	tar cf - --owner=root:0 --group=root:0 $(PACKAGE_NAME)/ | 7zr a -si $(ARCHIVE_7Z)
+	rm -rf $(PACKAGE_NAME)
 
 $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
-	[ -s dist/rhash.1.win.html -a -x $(TARGET) ]
+	[ -s dist/rhash.1.win.html -a -x $(RHASH_NAME) ]
 	-rm -rf $(WIN_ZIP_DIR)
 	mkdir $(WIN_ZIP_DIR)
-	cp $(TARGET).exe ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
+	cp $(RHASH_NAME).exe ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	cp dist/rhash.1.win.html $(WIN_ZIP_DIR)/rhash-doc.html
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
@@ -313,7 +294,7 @@ distclean: clean
 
 clean:
 	+$(MAKE) -C librhash clean
-	rm -f *.o $(SHARED_TRG) $(TARGET)
+	rm -f *.o $(RHASH_SHARED) $(RHASH_STATIC)
 	rm -f po/*.gmo po/*.po~
 
 update-po:

@@ -4,7 +4,10 @@
 po/*.gmo
 /rhash
 /rhash_shared
+/rhash_static
 /librhash/test_shared
+/librhash/test_static
+config.mak
 *.[ao]
 *.exe
 *.dll
