@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 #endif
 
@@ -347,7 +347,7 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
  */
 static double rsh_fsec(timedelta_t* timer)
 {
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
 	return (double)*timer / freq.QuadPart;
@@ -356,7 +356,7 @@ static double rsh_fsec(timedelta_t* timer)
 #endif
 }
 
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 #define get_timedelta(delta) QueryPerformanceCounter((LARGE_INTEGER*)delta)
 #else
@@ -372,7 +372,7 @@ double rsh_timer_stop(timedelta_t* timer)
 {
 	timedelta_t end;
 	get_timedelta(&end);
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 	*timer = end - *timer;
 #else
 	timer->tv_sec  = end.tv_sec  - timer->tv_sec - (end.tv_usec >= timer->tv_usec ? 0 : 1);
@@ -383,7 +383,7 @@ double rsh_timer_stop(timedelta_t* timer)
 
 unsigned rhash_get_ticks(void)
 {
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 	return GetTickCount();
 #else
 	struct timeval tv;

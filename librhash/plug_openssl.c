@@ -32,7 +32,7 @@
 #include "plug_openssl.h"
 
 #if defined(OPENSSL_RUNTIME)
-# ifdef _WIN32
+# if(defined(_WIN32) || defined(__CYGWIN__))
 #  include <windows.h>
 # else
 #  include <dlfcn.h>
@@ -117,7 +117,7 @@ rhash_hash_info rhash_openssl_methods[] = {
 rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 
 #ifdef OPENSSL_RUNTIME
-#ifdef _WIN32
+#if (defined(_WIN32) || defined(__CYGWIN__)) /* __CYGWIN__ is also defined in MSYS */
 #define LOAD_ADDR(n, name) \
 	p##name##_final = (os_fin_t)GetProcAddress(handle, #name "_Final"); \
 	rhash_openssl_methods[n].update = (pupdate_t)GetProcAddress(handle, #name "_Update"); \
@@ -139,14 +139,19 @@ rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
  */
 static int load_openssl_runtime(void)
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 	HMODULE handle;
 	/* suppress the error popup dialogs */
 	UINT oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 	SetErrorMode(oldErrorMode | SEM_FAILCRITICALERRORS);
 
+ #if defined(_WIN32)
 	handle = LoadLibraryA("libeay32.dll");
-
+ #elif defined(__MSYS__) /*  MSYS also defines __CYGWIN__ */
+        handle = LoadLibraryA("msys-crypto-1.0.0.dll");
+ #elif defined(__CYGWIN__)
+        handle = LoadLibraryA("cygcrypto-1.0.0.dll");
+ #endif
 	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
 	void* handle = dlopen("libcrypto.so", RTLD_NOW);

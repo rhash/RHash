@@ -26,7 +26,7 @@
 #include <errno.h>
 
 /* modifier for Windows DLL */
-#if defined(_WIN32) && defined(RHASH_EXPORTS)
+#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
 # define RHASH_API __declspec(dllexport)
 #endif
 
@@ -788,7 +788,7 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 	return rhash_print_bytes(output, digest, digest_size, flags);
 }
 
-#if defined(_WIN32) && defined(RHASH_EXPORTS)
+#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
 #include <windows.h>
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved);
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)

@@ -1,15 +1,19 @@
-/* win_utils.h utility functions for Windows */
+/* win_utils.h - utility functions for Windows and CygWin */
 #ifndef WIN_UTILS_H
 #define WIN_UTILS_H
 
-/* windows only definitions */
-#ifdef _WIN32
-#include "common_func.h"
-#include <stdarg.h>
+#if defined(_WIN32) || defined(__CYGWIN__)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void set_benchmark_cpu_affinity(void);
+
+/* windows only declarations */
+#ifdef _WIN32
+#include "common_func.h"
+#include <stdarg.h>
 
 /* encoding conversion functions */
 wchar_t* c2w(const char* str, int try_no);
@@ -29,12 +33,6 @@ int can_open_exclusive(const char* path);
 void set_errno_from_last_file_error(void);
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
 wchar_t* get_long_path_if_needed(const wchar_t* wpath);
-
-/**
- * Set process priority and affinity to use any CPU but the first one,
- * this improves benchmark results on a multi-core systems.
- */
-void set_benchmark_cpu_affinity(void);
 
 void setup_console(void);
 void hide_cursor(void);
@@ -66,10 +64,12 @@ WIN_DIR* win_wopendir(const wchar_t*);
 struct win_dirent* win_readdir(WIN_DIR*);
 void win_closedir(WIN_DIR*);
 
+#endif /* _WIN32 */
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _WIN32 */
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */
 
 #endif /* WIN_UTILS_H */

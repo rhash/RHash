@@ -31,6 +31,10 @@ install-lib-shared: $(LIBRHASH_SHARED)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(DESTDIR)$(LIBDIR)/
 
+install-implib:
+	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
+	$(INSTALL_SHARED) $(IMPLIBNAME) $(DESTDIR)$(LIBDIR)/
+
 install-so-link:
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	ln -s $(LIBRHASH_SHARED) $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SOLINK)
@@ -40,6 +44,9 @@ uninstall-lib-static: uninstall-headers
 
 uninstall-lib-shared:
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SHARED)
+
+uninstall-implib:
+	rm -f $(DESTDIR)$(LIBDIR)/$(IMPLIBNAME)
 
 uninstall-so-link:
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SOLINK)
@@ -189,4 +196,5 @@ clean:
 .PHONY: all clean dist-clean install-headers install-lib-shared install-lib-static \
 	install-so-link libs-all lib-shared lib-static test test-shared test-static \
 	print-info print-info-static print-info-shared uninstall-headers \
-	uninstall-lib uninstall-lib-shared uninstall-lib-static uninstall-so-link
+	uninstall-lib uninstall-lib-shared uninstall-lib-static uninstall-so-link \
+	install-implib uninstall-implib

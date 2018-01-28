@@ -82,6 +82,12 @@ from ctypes import (
 # initialization
 if sys.platform == 'win32':
     LIBNAME = 'librhash.dll'
+elif sys.platform == 'darwin':
+    LIBNAME = 'librhash.0.dylib'
+elif sys.platform == 'cygwin':
+    LIBNAME = 'cygrhash.dll'
+elif sys.platform == 'msys':
+    LIBNAME = 'msys-rhash.dll'
 else:
     LIBNAME = 'librhash.so.0'
 LIBRHASH = CDLL(LIBNAME)

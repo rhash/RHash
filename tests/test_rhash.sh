@@ -238,7 +238,8 @@ rm test1K.data.hash
 new_test "test *accept options:       "
 rm -rf test_dir/
 mkdir test_dir 2>/dev/null && touch test_dir/file.txt test_dir/file.bin
-if [ -n "$MSYSTEM" ]; then SLASH=//; else SLASH="/"; fi # correctly handle MSYS posix path conversion
+# correctly handle MIGW posix path conversion
+echo "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
 TEST_RESULT=$( $rhash -rC --simple --accept=.bin --path-separator=$SLASH test_dir )
 check "$TEST_RESULT" "00000000  test_dir/file.bin" .
 TEST_RESULT=$( $rhash -rC --simple --accept=.txt --path-separator=\\ test_dir )

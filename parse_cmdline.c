@@ -500,7 +500,11 @@ static void apply_option(options_t *opts, parsed_option_t* option)
  */
 static const char* find_conf_file(void)
 {
-# define CONF_FILE_NAME "rhashrc"
+# ifndef SYSCONFDIR
+  # define SYSCONFDIR "/etc"
+# endif
+# define CONFIG_FILENAME "rhashrc"
+
 	char *dir1, *path;
 
 #ifndef _WIN32 /* Linux/Unix part */
@@ -514,7 +518,7 @@ static const char* find_conf_file(void)
 		free(path);
 	}
 	/* then check for global config */
-	path = "/etc/" CONF_FILE_NAME;
+	path = SYSCONFDIR "/" CONFIG_FILENAME;
 	if (is_regular_file(path)) {
 		return (conf_opt.config_file = path);
 	}
@@ -524,7 +528,7 @@ static const char* find_conf_file(void)
 	/* first check for the %APPDATA%\RHash\rhashrc config */
 	if ( (dir1 = getenv("APPDATA")) ) {
 		dir1 = make_path(dir1, "RHash");
-		path = make_path(dir1, CONF_FILE_NAME);
+		path = make_path(dir1, CONFIG_FILENAME);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -537,7 +541,7 @@ static const char* find_conf_file(void)
 	/* note that %USERPROFILE% is generally not a user home dir */
 	if ( (dir1 = getenv("HOMEDRIVE")) && (path = getenv("HOMEPATH"))) {
 		dir1 = make_path(dir1, path);
-		path = make_path(dir1, CONF_FILE_NAME);
+		path = make_path(dir1, CONFIG_FILENAME);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -548,7 +552,7 @@ static const char* find_conf_file(void)
 	
 	/* check for ${PROGRAM_DIR}\rhashrc */
 	if (rhash_data.program_dir && (dir1 = w2c(rhash_data.program_dir))) {
-		path = make_path(dir1, CONF_FILE_NAME);
+		path = make_path(dir1, CONFIG_FILENAME);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);

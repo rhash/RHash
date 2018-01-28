@@ -16,7 +16,7 @@
 #include <assert.h>
 
 /* modifier for Windows DLL */
-#if defined(_WIN32) && defined(RHASH_EXPORTS)
+#if (defined(_WIN32) || defined(__CYGWIN__) ) && defined(RHASH_EXPORTS)
 # define RHASH_API __declspec(dllexport)
 #endif
 

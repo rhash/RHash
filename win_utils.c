@@ -1,7 +1,31 @@
-/* win_utils.c - Windows-specific utility functions */
-#ifdef _WIN32
-
+/* win_utils.c - utility functions for Windows and CygWin */
+#if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
+#include "win_utils.h"
+
+/**
+ * Set process priority and affinity to use any CPU but the first one,
+ * this improves benchmark results on a multi-core systems.
+ */
+void set_benchmark_cpu_affinity(void)
+{
+	DWORD_PTR dwProcessMask, dwSysMask, dwDesired;
+
+	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
+	if ( GetProcessAffinityMask(GetCurrentProcess(), &dwProcessMask, &dwSysMask) ) {
+		dwDesired = dwSysMask & (dwProcessMask & ~1); /* remove the first processor */
+		dwDesired = (dwDesired ? dwDesired : dwSysMask & ~1);
+		if (dwDesired != 0) {
+			SetProcessAffinityMask(GetCurrentProcess(), dwDesired);
+		}
+	}
+}
+
+#ifdef _WIN32
+/* Windows-only (non-CygWin) functions */
+
 #include <share.h> /* for _SH_DENYWR */
 #include <sys/stat.h>
 #include <fcntl.h> /* for _O_RDONLY, _O_BINARY */
@@ -10,10 +34,8 @@
 #include <errno.h>
 #include <locale.h>
 
-#include "common_func.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
-#include "win_utils.h"
 
 /**
  * Convert a c-string to wide character string using given codepage
@@ -327,22 +349,6 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	/* append filename */
 	memcpy(res + dir_len, filename, (len + 1) * sizeof(wchar_t));
 	return res;
-}
-
-void set_benchmark_cpu_affinity(void)
-{
-	DWORD_PTR dwProcessMask, dwSysMask, dwDesired;
-
-	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-
-	if ( GetProcessAffinityMask(GetCurrentProcess(), &dwProcessMask, &dwSysMask) ) {
-		dwDesired = dwSysMask & (dwProcessMask & ~1); /* remove the first processor */
-		dwDesired = (dwDesired ? dwDesired : dwSysMask & ~1);
-		if (dwDesired != 0) {
-			SetProcessAffinityMask(GetCurrentProcess(), dwDesired);
-		}
-	}
 }
 
 /* functions to setup/restore console */
@@ -719,6 +725,7 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 		}
 	}
 }
+#endif /* _WIN32 */
 #else
 typedef int dummy_declaration_required_by_strict_iso_c;
-#endif /* _WIN32 */
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */

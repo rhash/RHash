@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 /* portable timer definition */
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 typedef unsigned long long timedelta_t;
 #else
 #include <sys/time.h> /* for timeval */

@@ -24,10 +24,8 @@
 #include <time.h> /* for time_t */
 #include <stddef.h> /* for wchar_t */
 
-#ifndef _WIN32
+#if !defined( _WIN32) && !defined(__CYGWIN__)
 #include <sys/time.h> /* for timeval */
-/*#else
-#include <windows.h>*/
 #elif _MSC_VER > 1300
 #include "win32/platform-dependent.h"
 #endif
@@ -137,7 +135,7 @@ int file_statw(file_t* file);
 /* time data and functions */
 
 /* portable timer definition */
-#ifdef _WIN32
+#if defined( _WIN32) || defined(__CYGWIN__)
 typedef unsigned long long timedelta_t;
 #else
 #include <sys/time.h> /* for timeval */

@@ -15,7 +15,7 @@
  */
 
 /* modifier for Windows dll */
-#if defined(_WIN32) && defined(RHASH_EXPORTS)
+#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
 # define RHASH_API __declspec(dllexport)
 #endif
 
@@ -45,7 +45,7 @@ static uint64_t read_tsc(void) {
 
 /* TIMER FUNCTIONS */
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
 #define get_timedelta(delta) QueryPerformanceCounter((LARGE_INTEGER*)delta)
 #else
@@ -64,7 +64,7 @@ static uint64_t read_tsc(void) {
  */
 static double fsec(timedelta_t* timer)
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 	LARGE_INTEGER freq;
 	QueryPerformanceFrequency(&freq);
 	return (double)*timer / freq.QuadPart;
@@ -99,7 +99,7 @@ double rhash_timer_stop(timedelta_t* timer)
 {
 	timedelta_t end;
 	get_timedelta(&end);
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 	*timer = end - *timer;
 #else
 	timer->tv_sec  = end.tv_sec  - timer->tv_sec - (end.tv_usec >= timer->tv_usec ? 0 : 1);
@@ -108,7 +108,7 @@ double rhash_timer_stop(timedelta_t* timer)
 	return fsec(timer);
 }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 /**
  * Set process priority and affinity to use all cpu's but the first one.
  * This improves benchmark results on a multi-cpu systems.
@@ -181,7 +181,7 @@ void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 	double cpb = 0;
 #endif /* HAVE_TSC */
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 	benchmark_cpu_init(); /* set cpu affinity to improve test results */
 #endif
 
