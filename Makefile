@@ -50,7 +50,7 @@ install-data: install-man install-conf
 uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib
 
 config.mak:
-	echo "Run the ./configure script first"
+	echo "Run the ./configure script first" && false
 
 # creating archives
 RHASH_NAME     = rhash

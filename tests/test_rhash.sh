@@ -28,12 +28,20 @@ if [ ! -x "$rhash" ]; then
 fi
 [ "$rhash" != "../rhash" ] && echo "Testing $rhash"
 
+win32()
+{
+  case "$(uname -s)" in
+    MINGW*|MSYS*|[cC][yY][gG][wW][iI][nN]*) return 0 ;;
+  esac
+  return 1
+}
+
 if [ -n "$OPT_SHARED" -a -d ../librhash ]; then
   D=../librhash
   N=$D/librhash
   if [ -r $N.0.dylib ] && ( uname -s | grep -qi "^darwin" || [ ! -r $N.so.0 ] ); then
     export DYLD_LIBRARY_PATH=$D:$DYLD_LIBRARY_PATH
-  elif [ -r $N.dll ] && ( uname -s | grep -qi "^mingw" || [ ! -r $N.so.0 ] ); then
+  elif ls $D/*rhash.dll 2>/dev/null >/dev/null && ( win32 || [ ! -r $N.so.0 ] ); then
     export PATH=$D:$PATH
   elif [ -r $N.so.0 ]; then
     export LD_LIBRARY_PATH=$D:$LD_LIBRARY_PATH
@@ -48,6 +56,7 @@ res=$?
 if [ $res -ne 0 ]; then
   if [ $res -eq 127 ]; then
     echo "error: could not load dynamic libraries or execute $rhash"
+    [ -z "$OPT_SHARED" ] && echo "try running with --shared option"
   elif [ $res -eq 139 ]; then
     echo "error: got segmentation fault by running $rhash"
   else

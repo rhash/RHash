@@ -186,6 +186,15 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __MINGW32__
 	" __MINGW32__"
 #endif
+#ifdef __MINGW64__
+	" __MINGW64__"
+#endif
+#ifdef __CYGWIN__
+	" __CYGWIN__"
+#endif
+#ifdef __MSYS__
+	" __MSYS__"
+#endif
 #ifdef _WIN32
 	" _WIN32"
 #endif

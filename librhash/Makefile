@@ -21,7 +21,7 @@ uninstall-lib: uninstall-lib-shared uninstall-lib-static uninstall-so-link
 dist-clean: clean
 
 config.mak:
-	echo "Run the ./configure script first"
+	echo "Run the ./configure script first" && false
 
 install-lib-static: $(LIBRHASH_STATIC) install-headers
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)

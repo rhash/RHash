@@ -9,16 +9,18 @@ export LC_ALL=C
 CFG_LINE="$*"
 BUILD_PREFIX="/usr/local"
 test -z "$CC" && CC=cc
-BUILD_AR=ar
-BUILD_CROSS_COMPILE=auto
+CMD_AR=ar
+CMD_INSTALL=install
 BUILD_DEBUG=
 BUILD_STATIC=auto
-BUILD_LIB_STATIC=auto
-BUILD_LIB_SHARED=auto
-BUILD_INSTALL=install
-BUILD_SYMLINKS="sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash edonr256-hash edonr512-hash ed2k-link magnet-link"
-WARN_CFLAGS="-Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations"
+BUILD_EXTRA_CFLAGS=
+BUILD_EXTRA_LDFLAGS=
 LD_STATIC=-static
+CHECK_LDFLAGS=
+WARN_CFLAGS="-Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations"
+INSTALL_SYMLINKS="sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash edonr256-hash edonr512-hash ed2k-link magnet-link"
+INSTALL_LIB_STATIC=auto
+INSTALL_LIB_SHARED=auto
 
 case $(echo -n) in
   -n) # SysV style
@@ -63,7 +65,6 @@ Libraries options:
   --enable-openssl-runtime   load OpenSSL at runtime if present [autodetect]
 
 Miscellaneous options:
-  --enable-cross-compile enable cross-compilation [autodetect]
   --cc=COMPILER          C compiler to build RHash [gcc]
   --host-cc=COMPILER     C compiler for tools needed while building [gcc]
   --ar=AR                librarian to build RHash [ar]
@@ -77,7 +78,6 @@ Miscellaneous options:
 Use these options if autodetection fails:
   --extra-cflags=FLAGS        extra CFLAGS
   --extra-ldflags=FLAGS       extra LDFLAGS
-  --extra-libs=FLAGS          extra linker flags
 EOF
 exit 0
 }
@@ -128,12 +128,6 @@ for OPT do
   --disable-openssl-runtime)
       OPT_OPENSSL_RUNTIME=no
       ;;
-  --enable-cross-compile)
-      BUILD_CROSS_COMPILE=yes
-      ;;
-  --disable-cross-compile)
-      BUILD_CROSS_COMPILE=no
-      ;;
   --target=*)
     BUILD_TARGET=$(get_opt_value $OPT)
     ;;
@@ -144,7 +138,7 @@ for OPT do
     BUILD_HOST_CC=$(get_opt_value $OPT)
     ;;
   --ar=*)
-    BUILD_AR=$(get_opt_value $OPT)
+    CMD_AR=$(get_opt_value $OPT)
     ;;
   --enable-static)
     BUILD_STATIC=yes
@@ -153,25 +147,25 @@ for OPT do
     BUILD_STATIC=no
     ;;
   --enable-lib-static)
-    BUILD_LIB_STATIC=yes
+    INSTALL_LIB_STATIC=yes
     ;;
   --disable-lib-static)
-    BUILD_LIB_STATIC=no
+    INSTALL_LIB_STATIC=no
     ;;
   --enable-lib-shared)
-    BUILD_LIB_SHARED=yes
+    INSTALL_LIB_SHARED=yes
     ;;
   --disable-lib-shared)
-    BUILD_LIB_SHARED=no
+    INSTALL_LIB_SHARED=no
     ;;
   --enable-symlinks)
-    # use default BUILD_SYMLINKS list
+    # use default INSTALL_SYMLINKS list
     ;;
   --enable-symlinks=*)
-    BUILD_SYMLINKS=$(get_opt_value $OPT)
+    INSTALL_SYMLINKS=$(get_opt_value $OPT)
     ;;
   --disable-symlinks)
-    BUILD_SYMLINKS=
+    INSTALL_SYMLINKS=
     ;;
   --enable-debug)
     BUILD_DEBUG='-g'
@@ -183,16 +177,13 @@ for OPT do
     BUILD_DEBUG=
     ;;
   --with-install=*)
-    BUILD_INSTALL=$(get_opt_value $OPT)
+    CMD_INSTALL=$(get_opt_value $OPT)
     ;;
   --extra-cflags=*)
     BUILD_EXTRA_CFLAGS=$(get_opt_value $OPT)
     ;;
   --extra-ldflags=*)
     BUILD_EXTRA_LDFLAGS=$(get_opt_value $OPT)
-    ;;
-  --extra-libs=*)
-    BUILD_EXTRA_LIBS=$(get_opt_value $OPT)
     ;;
   *)
       echo "unknown option $OPT"
@@ -224,7 +215,7 @@ TMPBIN="$BUILD_TMPDIR/tmp"
 TMPLOG="config.log"
 rm -f "$TMPLOG"
 echo "Configuration parameters: \"$CFG_LINE\"" > "$TMPLOG"
-echo "Symlinks to install: $BUILD_SYMLINKS" >> "$TMPLOG"
+echo "Symlinks to install: $INSTALL_SYMLINKS" >> "$TMPLOG"
 echo >> "$TMPLOG"
 
 remove_tmpdir()
@@ -265,9 +256,9 @@ compile_check() {
   echo "----- source file: $source -----" >> "$TMPLOG"
   cat "$source" >> "$TMPLOG"
   echo "----- end of file: $source -----" >> "$TMPLOG"
-  echo "$CC $OPTFLAGS $WARN_CFLAGS $CFLAGS $source $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS -o $TMPBIN $@" >> "$TMPLOG"
+  echo "$CC $OPTFLAGS $WARN_CFLAGS $CFLAGS $source $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o $TMPBIN $@" >> "$TMPLOG"
   rm -f "$TMPBIN"
-  $CC $OPTFLAGS $WARN_CFLAGS $CFLAGS "$source" $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS -o "$TMPBIN" "$@" >> "$TMPLOG" 2>&1
+  $CC $OPTFLAGS $WARN_CFLAGS $CFLAGS "$source" $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o "$TMPBIN" "$@" >> "$TMPLOG" 2>&1
   TMPRES="$?"
   echo "Compilation result: $TMPRES" >> "$TMPLOG"
   echo >> "$TMPLOG"
@@ -339,14 +330,17 @@ case "$HOST_OS" in
   HP-UX*)
     HOST_OS=HP-UX
     ;;
-  [cC][yY][gG][wW][iI][nN]*)
-    HOST_OS=CYGWIN
-    ;;
   MINGW32*)
     HOST_OS=MINGW32
     ;;
   MINGW64*)
     HOST_OS=MINGW64
+    ;;
+  MSYS*)
+    HOST_OS=MSYS
+    ;;
+  [cC][yY][gG][wW][iI][nN]*)
+    HOST_OS=CYGWIN
     ;;
   OS/2*)
     HOST_OS=OS/2
@@ -357,9 +351,6 @@ case "$HOST_OS" in
 esac
 
 if test -z "$BUILD_TARGET" ; then
-  cc_check_macro '' '__MINGW64__' && HOST_OS=MINGW64
-  test "${HOST_OS}" != "MINGW64" && cc_check_macro '' '__MINGW32__' && HOST_OS=MINGW32
-  
   # host's CPU/instruction set
   set_host_arch() {
       case "$1" in
@@ -388,7 +379,7 @@ if test -z "$BUILD_TARGET" ; then
   TARGET_OS="$HOST_OS"
   TARGET_ARCH="$HOST_ARCH"
 else
-  set_os() {
+  set_target_os() {
     component=$1
     part=$(echo $BUILD_TARGET | cut -d '-' -f $component)
     case "$(echo $part | tr '[A-Z]' '[a-z]')" in
@@ -408,9 +399,9 @@ else
     esac
   }
   TARGET_OS="UNKNOWN"
-  set_os 3
+  set_target_os 3
   if test "$TARGET_OS" = UNKNOWN ; then
-    set_os 2
+    set_target_os 2
   fi
   TARGET_ARCH=$(echo $BUILD_TARGET | cut -d '-' -f 1)
   if test "$(echo $TARGET_ARCH)" != "x86_64" ; then
@@ -422,16 +413,12 @@ echo "Host   OS  : $HOST_OS" >> "$TMPLOG"
 echo "Target OS  : $TARGET_OS" >> "$TMPLOG"
 echo "Target ARCH: $TARGET_ARCH" >> "$TMPLOG"
 finish_check "$TARGET_OS"
-if test "$TARGET_OS" = UNKNOWN ; then
-  echo "Unknown target OS, please specify the --target option"
-  exit 1
-fi
+test "$TARGET_OS" = UNKNOWN && die "Unknown target OS, please specify the --target option"
 
 OS_LC="$(echo $TARGET_OS | tr '[A-Z]' '[a-z]')"
 aix()       { test "$OS_LC" = "aix"; }
 amigaos()   { test "$OS_LC" = "amigaos"; }
 bsdos()     { test "$OS_LC" = "bsd/os"; }
-cygwin()    { test "$OS_LC" = "cygwin"; }
 darwin()    { test "$OS_LC" = "darwin"; }
 dragonfly() { test "$OS_LC" = "dragonfly"; }
 freebsd()   { test "$OS_LC" = "freebsd" || test "$OS_LC" = "gnu/kfreebsd"; }
@@ -441,13 +428,15 @@ irix()      { test "$OS_LC" = "irix"; }
 linux()     { test "$OS_LC" = "linux"; }
 mingw32()   { test "$OS_LC" = "mingw32"; }
 mingw64()   { test "$OS_LC" = "mingw64"; }
+msys()      { test "$OS_LC" = "msys"; }
+cygwin()    { test "$OS_LC" = "cygwin"; }
 netbsd()    { test "$OS_LC" = "netbsd"; }
 openbsd()   { test "$OS_LC" = "openbsd"; }
 os2()       { test "$OS_LC" = "os/2"; }
 qnx()       { test "$OS_LC" = "qnx"; }
 sunos()     { test "$OS_LC" = "sunos"; }
 wine()      { test "$OS_LC" = "wine"; }
-win32()     { cygwin || mingw32 || mingw64 || wine; }
+win32()     { cygwin || mingw32 || mingw64 || msys || wine; }
 
 # Checking CC version...
 # Intel C++ Compilers (no autoselect, use CC=/some/binary ./configure)
@@ -533,7 +522,7 @@ NEED_SOLINK=yes
 if win32; then
   SHARED_EXT=".dll"
   NEED_SOLINK=no
-  if mingw64 || mingw32; then
+  if msys; then
     SHARED_PREFIX="msys-"
   elif cygwin; then
     SHARED_PREFIX="cyg"
@@ -543,6 +532,7 @@ elif darwin; then
   SOLINK_EXT=".dylib"
 fi
 
+# detect library build flags
 LIBRHASH_SHARED=${SHARED_PREFIX}rhash${SHARED_EXT}
 LIBRHASH_STATIC=${SHARED_PREFIX}rhash${STATIC_EXT}
 LIBRHASH_SOLINK=${SHARED_PREFIX}rhash${SOLINK_EXT}
@@ -557,10 +547,9 @@ LIBRHASH_SH_LDFLAGS=""
 LIBRHASH_RM_FILES=
 if win32; then
   LIBRHASH_SH_CFLAGS="-DRHASH_EXPORTS"
-  LIBRHASH_SH_LDFLAGS="-Wl,--out-implib=${LIBRHASH_IMPLIB} -Wl,--version-script,exports.sym,--output-def,${SHARED_DEF_FILE}"
+  LIBRHASH_SH_LDFLAGS="-shared -Wl,--out-implib=${LIBRHASH_IMPLIB},--version-script,exports.sym,--output-def,${LIBRHASH_DEF}"
   LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
-  LIBRHASH_RM_FILES="${LIBRHASH_IMPLIB} ${SHARED_DEF_FILE}"
-  test "$BUILD_STATIC" = "auto" && BUILD_STATIC=yes
+  LIBRHASH_RM_FILES="${LIBRHASH_IMPLIB} ${LIBRHASH_DEF}"
 elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
@@ -569,10 +558,20 @@ else
   LIBRHASH_SH_LDFLAGS="-shared -Wl,--version-script,exports.sym,-soname,\$(LIBRHASH_SHARED)"
   LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
 fi
-
-test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
 LIBRHASH_RM_FILES=$(str_concat $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
 
+# check for support of static libraries linking
+test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
+test "$OPT_OPENSSL_RUNTIME" = "yes" && ! win32 && LD_STATIC=
+if test -n "$LD_STATIC"; then
+  start_check "static linking"
+  if cc_check_cflag "$LD_STATIC"; then
+    test "$BUILD_STATIC" = "yes" && CHECK_LDFLAGS=$LD_STATIC
+  else
+    LD_STATIC=
+  fi
+  finish_check $(test -z "$LD_STATIC" && echo no || echo $LD_STATIC)
+fi
 
 RHASH_DEFINES=
 LIBRHASH_DEFINES=
@@ -581,36 +580,41 @@ OPENSSL_LDFLAGS=
 if test "$OPT_GETTEXT" != "no"; then
   start_check "gettext"
   GETTEXT_FOUND=no
-  if $(cc_check_statement "libintl.h" "gettext(\"\");"); then
+  if cc_check_statement "libintl.h" "gettext(\"\");"; then
     GETTEXT_FOUND=found
-    RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
-  elif  $(cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"); then
+  elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
     GETTEXT_LDFLAGS="-lintl"
-    RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
+    GETTEXT_FOUND=found
+  elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
+    GETTEXT_LDFLAGS="-lintl -liconv"
     GETTEXT_FOUND=found
   fi
+  test "$GETTEXT_FOUND" = "found" && RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
   finish_check $GETTEXT_FOUND
   test "$OPT_GETTEXT" = "yes" && test "$GETTEXT_FOUND" = "no" && die "gettext library not found"
 fi
 
 if test "$OPT_OPENSSL" != "no"; then
   start_check "OpenSSL"
-  test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && OPT_OPENSSL_RUNTIME=no
+  test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && ! win32 && OPT_OPENSSL_RUNTIME=no
   test "$OPT_OPENSSL" = "auto" && test "$OPT_OPENSSL_RUNTIME" = "yes" && OPT_OPENSSL=yes
   OPENSSL_FOUND=no
-  if $(cc_check_header "openssl/opensslv.h"); then
+  if cc_check_header "openssl/opensslv.h"; then
     if test "$OPT_OPENSSL_RUNTIME" != "no"; then
       OPENSSL_FOUND=runtime
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DOPENSSL_RUNTIME)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
-      # note: -ldl shall disable -static
-      win32 || OPENSSL_LDFLAGS="-ldl" && LD_STATIC=
-    elif win32 && $(cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"); then
+      if ! win32; then
+        # note: -ldl shall disable -static
+        OPENSSL_LDFLAGS="-ldl"
+        LD_STATIC=
+      fi
+    elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
       OPENSSL_FOUND=found
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-leay32"
-    elif  $(cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-lcrypto"); then
+    elif cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-lcrypto"; then
       OPENSSL_FOUND=found
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
@@ -621,45 +625,35 @@ if test "$OPT_OPENSSL" != "no"; then
   test "$OPT_OPENSSL" = "yes" && test "$OPENSSL_FOUND" = "no" && die "OpenSSL library not found"
 fi
 
-# check for support of statically linking of all libraries
-if test -n "$LD_STATIC"; then
-  start_check "static linking"
-  if ! $(cc_check_cflag "$LD_STATIC"); then
-    LD_STATIC=
-  fi
-  finish_check $(test -z "$LD_STATIC" && echo no || echo $LD_STATIC)
-fi
-
 if test "$BUILD_SYSCONFDIR" != "/etc"; then
   RHASH_DEFINES="$RHASH_DEFINES -DSYSCONFDIR=\"$BUILD_SYSCONFDIR\""
 fi
 
 # building of static/shared binary an library
-RHASH_STATIC=rhash.static
-RHASH_SHARED=rhash.shared
+RHASH_STATIC=rhash_static
+RHASH_SHARED=rhash_shared
 RHASH_BUILD_TARGETS=
 RHASH_EXTRA_INSTALL=
-RHASH_BUILD_TYPE=shared
 LIBRHASH_BUILD_TARGETS=
 LIBRHASH_TEST_TARGETS=
-if test "$BUILD_STATIC" != "yes"; then
-  RHASH_SHARED=rhash
-  RHASH_BUILD_TARGETS="\$(RHASH_SHARED)"
-  test "$BUILD_LIB_SHARED" = "auto" && BUILD_LIB_SHARED=yes
-  test "$BUILD_LIB_STATIC" = "yes"  && RHASH_BUILD_TARGETS="$RHASH_BUILD_TARGETS \$(LIBRHASH_STATIC)"
-else
+if test "$BUILD_STATIC" = "yes"; then
   RHASH_STATIC=rhash
   RHASH_BUILD_TYPE=static
   RHASH_BUILD_TARGETS="\$(RHASH_STATIC)"
-  test "$BUILD_LIB_STATIC" = "auto" && BUILD_LIB_STATIC=yes
-  test "$BUILD_LIB_SHARED" = "yes"  && RHASH_BUILD_TARGETS="$RHASH_BUILD_TARGETS \$(LIBRHASH_SHARED)"
+  test "$INSTALL_LIB_SHARED" = "yes"  && RHASH_BUILD_TARGETS="$RHASH_BUILD_TARGETS \$(LIBRHASH_SHARED)"
+else
+  RHASH_SHARED=rhash
+  RHASH_BUILD_TYPE=shared
+  RHASH_BUILD_TARGETS="\$(RHASH_SHARED)"
+  test "$INSTALL_LIB_SHARED" = "auto" && INSTALL_LIB_SHARED=yes
+  test "$INSTALL_LIB_STATIC" = "yes"  && RHASH_BUILD_TARGETS="$RHASH_BUILD_TARGETS \$(LIBRHASH_STATIC)"
 fi
-if test "$BUILD_LIB_STATIC" = "yes"; then
+if test "$INSTALL_LIB_STATIC" = "yes"; then
   RHASH_EXTRA_INSTALL=$(str_concat $RHASH_EXTRA_INSTALL install-lib-static)
   LIBRHASH_BUILD_TARGETS=$LIBRHASH_STATIC
   LIBRHASH_TEST_TARGETS=test-static
 fi
-if test "$BUILD_LIB_SHARED" = "yes"; then
+if test "$INSTALL_LIB_SHARED" = "yes"; then
   RHASH_EXTRA_INSTALL=$(str_concat $RHASH_EXTRA_INSTALL install-lib-shared)
   LIBRHASH_BUILD_TARGETS=$(str_concat $LIBRHASH_BUILD_TARGETS $LIBRHASH_SHARED)
   LIBRHASH_TEST_TARGETS=$(str_concat $LIBRHASH_TEST_TARGETS test-shared)
@@ -688,9 +682,9 @@ MANDIR  = $BUILD_MANDIR
 SYSCONFDIR = $BUILD_SYSCONFDIR
 LOCALEDIR  = $BUILD_LOCALEDIR
 
-AR      = $BUILD_AR
+AR      = $CMD_AR
 CC      = $CC
-INSTALL = $BUILD_INSTALL
+INSTALL = $CMD_INSTALL
 
 LIBRHASH_STATIC = librhash/$LIBRHASH_STATIC
 LIBRHASH_SHARED = librhash/$LIBRHASH_SHARED
@@ -699,7 +693,7 @@ RHASH_STATIC=$RHASH_STATIC
 RHASH_SHARED=$RHASH_SHARED
 BUILD_TARGETS=$RHASH_BUILD_TARGETS
 EXTRA_INSTALL=$RHASH_EXTRA_INSTALL
-SYMLINKS=$BUILD_SYMLINKS
+SYMLINKS=$INSTALL_SYMLINKS
 
 OPTFLAGS=$OPTFLAGS
 OPTLDFLAGS=
@@ -723,9 +717,9 @@ DESTDIR ?=
 INCDIR  = $BUILD_INCDIR
 LIBDIR  = $BUILD_LIBDIR
 
-AR      = $BUILD_AR
+AR      = $CMD_AR
 CC      = $CC
-INSTALL = $BUILD_INSTALL
+INSTALL = $CMD_INSTALL
 
 LIBRHASH_STATIC  = $LIBRHASH_STATIC
 LIBRHASH_SHARED  = $LIBRHASH_SHARED
