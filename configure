@@ -626,7 +626,7 @@ if test "$OPT_OPENSSL" != "no"; then
 fi
 
 if test "$BUILD_SYSCONFDIR" != "/etc"; then
-  RHASH_DEFINES="$RHASH_DEFINES -DSYSCONFDIR=\"$BUILD_SYSCONFDIR\""
+  RHASH_DEFINES="$RHASH_DEFINES -DSYSCONFDIR=\\\"$BUILD_SYSCONFDIR\\\""
 fi
 
 # building of static/shared binary an library
