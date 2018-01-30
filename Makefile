@@ -35,6 +35,8 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/util.h librhash/Makefile
 I18N_FILES = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
+RHASH_NAME     = rhash
+RHASH_BINARY   = rhash$(EXEC_EXT)
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
 INSTALL_PROGRAM = $(INSTALL) -m 755
@@ -53,7 +55,6 @@ config.mak:
 	echo "Run the ./configure script first" && false
 
 # creating archives
-RHASH_NAME     = rhash
 WIN_SUFFIX     = win32
 PACKAGE_NAME   = $(RHASH_NAME)-$(VERSION)
 ARCHIVE_BZIP   = $(PACKAGE_NAME)-src.tar.bz2
@@ -66,8 +67,8 @@ WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
 dist: gzip gzip-bindings
 dist-full: gzip-full
 win-dist: zip
-zip:  $(ARCHIVE_ZIP)
-dgz:  check $(ARCHIVE_DEB_GZ)
+zip: $(ARCHIVE_ZIP)
+dgz: check $(ARCHIVE_DEB_GZ)
 
 build-install-binary: build-install-$(BUILD_TYPE)-binary
 build-install-static-binary: $(RHASH_STATIC)
@@ -80,13 +81,8 @@ mkdir-bin:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
 
 # install binary without (re-)compilation
-install-binary: install-$(BUILD_TYPE)-binary
-install-static-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(RHASH_STATIC) $(DESTDIR)$(BINDIR)/$(RHASH_NAME)
-
-# install dynamically linked binary without (re-)compilation
-install-shared-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(RHASH_SHARED) $(DESTDIR)$(BINDIR)/$(RHASH_NAME)
+install-binary: mkdir-bin
+	$(INSTALL_PROGRAM) $(RHASH_BINARY) $(DESTDIR)$(BINDIR)/$(RHASH_BINARY)
 
 install-man:
 	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
@@ -98,12 +94,12 @@ install-conf:
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
-install-symlinks: mkdir-bin install-man  install-binary
-	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs rhash$(EXEC_EXT) $$f$(EXEC_EXT); done 
+install-symlinks: mkdir-bin install-man install-binary
+	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs $(RHASH_BINARY) $$f$(EXEC_EXT); done
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-binary:
-	rm -f $(DESTDIR)$(BINDIR)/$(RHASH_STATIC) $(DESTDIR)$(BINDIR)/$(RHASH_SHARED)
+	rm -f $(DESTDIR)$(BINDIR)/$(RHASH_BINARY)
 
 uninstall-data:
 	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
@@ -126,10 +122,11 @@ $(LIBRHASH_SHARED): $(LIBRHASH_FILES)
 $(LIBRHASH_STATIC): $(LIBRHASH_FILES)
 	+$(MAKE) -C librhash lib-static
 
-test-static-lib: $(LIBRHASH_STATIC)
+test-lib: test-lib-$(BUILD_TYPE)
+test-lib-static: $(LIBRHASH_STATIC)
 	+$(MAKE) -C librhash test-static
 
-test-shared-lib: $(LIBRHASH_SHARED)
+test-lib-shared: $(LIBRHASH_SHARED)
 	+$(MAKE) -C librhash test-shared
 
 test-libs: $(LIBRHASH_STATIC) $(LIBRHASH_SHARED)
@@ -267,10 +264,10 @@ bzip: check
 	rm -rf $(PACKAGE_NAME)
 
 $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
-	[ -s dist/rhash.1.win.html -a -x $(RHASH_NAME) ]
+	test -s dist/rhash.1.win.html && test -x $(RHASH_BINARY)
 	-rm -rf $(WIN_ZIP_DIR)
 	mkdir $(WIN_ZIP_DIR)
-	cp $(RHASH_NAME).exe ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
+	cp $(RHASH_BINARY) ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	cp dist/rhash.1.win.html $(WIN_ZIP_DIR)/rhash-doc.html
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)

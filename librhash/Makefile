@@ -8,8 +8,8 @@ OBJECTS = algorithms.o byte_order.o plug_openssl.o rhash.o rhash_timing.o rhash_
 LIB_HEADERS = rhash.h rhash_torrent.h
 LEGACY_LIB_HEADERS = rhash_timing.h
 SO_HEADERS = $(LIB_HEADERS) $(LEGACY_LIB_HEADERS)
-TEST_STATIC = test_static
-TEST_SHARED = test_shared
+TEST_STATIC = test_static$(EXEC_EXT)
+TEST_SHARED = test_shared$(EXEC_EXT)
 INSTALL_DATA    = $(INSTALL) -m 644
 INSTALL_SHARED  = $(INSTALL) -m 644
 
@@ -27,12 +27,12 @@ install-lib-static: $(LIBRHASH_STATIC) install-headers
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_DATA) $(LIBRHASH_STATIC) $(DESTDIR)$(LIBDIR)/
 
-install-lib-shared: $(LIBRHASH_SHARED)  $(EXTRA_INSTALL_LIBSHARED)
+install-lib-shared: $(LIBRHASH_SHARED) $(EXTRA_INSTALL_LIBSHARED)
 	$(INSTALL) -d $(DESTDIR)$(SO_DIR)
 	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(DESTDIR)$(SO_DIR)/
 
 install-implib:
-	$(INSTALL) -d $(DESTDIR)$(LIBDIR)                 
+	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
 	$(INSTALL_SHARED) $(LIBRHASH_IMPLIB) $(DESTDIR)$(LIBDIR)/
 
 install-so-link:
