@@ -1,7 +1,7 @@
 #!/bin/sh
 # Run RHash tests
 # Usage: test_rhash.sh [ --full | --shared ] <PATH-TO-EXECUTABLE>
-LANG=en_US
+export LC_ALL=C
 
 # read options
 while [ "$#" -gt 0 ]; do
@@ -197,18 +197,18 @@ TEST_RESULT=$( $rhash --simple -a test1K.data | $rhash -vc - 2>/dev/null | grep 
 match "$TEST_RESULT" "^test1K.data *OK"
 
 new_test "test checking magnet link:  "
-TEST_RESULT=$( $rhash --magnet -a test1K.data | $rhash -vc - 2>&1 | grep -i -e warn -e test1K.data )
+TEST_RESULT=$( $rhash --magnet -a test1K.data | $rhash -vc - 2>&1 | grep test1K.data )
 TEST_EXPECTED="^test1K.data *OK"
 match "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test bsd format checking:   "
-TEST_RESULT=$( $rhash --bsd -a test1K.data | $rhash -vc - 2>&1 | grep -i -e warn -e err )
-check "$TEST_RESULT" ""
+TEST_RESULT=$( $rhash --bsd -a test1K.data | $rhash -vc --skip-ok - 2>&1 | grep -v '^--' | grep -v '^$' )
+check "$TEST_RESULT" "Everything OK"
 
 new_test "test checking w/o filename: "
 $rhash -p '%c\n%m\n%e\n%h\n%g\n%t\n%a\n' test1K.data > test1K.data.hash
-TEST_RESULT=$( $rhash -vc test1K.data.hash 2>&1 | grep -i -e warn -e err )
-TEST_EXPECTED=""
+TEST_RESULT=$( $rhash -vc --skip-ok test1K.data.hash 2>&1 | grep -v '^--' | grep -v '^$' )
+TEST_EXPECTED="Everything OK"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test checking embedded crc: "
