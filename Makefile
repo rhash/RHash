@@ -98,8 +98,8 @@ install-conf:
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
-install-symlinks: mkdir-bin install-man install-binary
-	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs rhash$(EXEC_EXT) $$f$(EXEC_EXT); done
+install-symlinks: mkdir-bin install-man  install-binary
+	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs rhash$(EXEC_EXT) $$f$(EXEC_EXT); done 
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-binary:
