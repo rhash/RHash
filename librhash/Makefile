@@ -29,7 +29,15 @@ install-lib-static: $(LIBRHASH_STATIC) install-headers
 
 install-lib-shared: $(LIBRHASH_SHARED)
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
+ifeq ($(SHARED_IN_BINDIR),yes)
+	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(DESTDIR)$(BINDIR)/
+else
 	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(DESTDIR)$(LIBDIR)/
+endif
+ifeq ($(NEED_IMPLIB),yes)
+	$(INSTALL_SHARED) $(LIBRHASH_IMPLIB) $(DESTDIR)$(LIBDIR)/
+endif
 
 install-implib:
 	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
@@ -43,7 +51,14 @@ uninstall-lib-static: uninstall-headers
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_STATIC)
 
 uninstall-lib-shared:
+ifeq ($(SHARED_IN_BINDIR),yes)
+	rm -f $(DESTDIR)$(BINDIR)/$(LIBRHASH_SHARED)
+else
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SHARED)
+endif
+ifeq ($(NEED_IMPLIB), yes)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_IMPLIB)
+endif
 
 uninstall-implib:
 	rm -f $(DESTDIR)$(LIBDIR)/$(IMPLIBNAME)
