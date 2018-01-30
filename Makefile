@@ -98,8 +98,8 @@ install-conf:
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
-install-symlinks: mkdir-bin install-man
-	for f in $(SYMLINKS); do ln -fs rhash $(DESTDIR)$(BINDIR)/$$f; done
+install-symlinks: mkdir-bin install-man install-binary
+	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs rhash$(EXEC_EXT) $$f$(EXEC_EXT); done
 	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-binary:
@@ -109,7 +109,7 @@ uninstall-data:
 	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
 
 uninstall-symlinks:
-	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f $(DESTDIR)$(MANDIR)/man1/$$f.1; done
+	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f$(EXEC_EXT) $(DESTDIR)$(MANDIR)/man1/$$f.1; done
 
 uninstall-lib:
 	+$(MAKE) -C librhash uninstall-lib
