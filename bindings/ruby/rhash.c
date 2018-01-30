@@ -300,6 +300,7 @@ void Init_rhash() {
     while block = f.read(4096) \n\
       self.update(block) \n\
     end \n\
+    f.close \n\
     self \n\
   end \n\
 end\n\
