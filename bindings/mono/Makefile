@@ -15,8 +15,10 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
-CS=gmcs
-MDOC=mdoc
+include config.mak
+
+CS?=gmcs
+MDOC?=mdoc
 SOURCES=AssemblyInfo.cs Bindings.cs Hasher.cs HashType.cs
 
 all: assembly assemble-doc html
@@ -24,7 +26,7 @@ all: assembly assemble-doc html
 assembly: RHash.dll RHash.dll.mdb
 
 RHash.dll RHash.dll.mdb: $(SOURCES)
-	$(CS) -target:library -define:UNIX -out:RHash.dll -debug -keyfile:RHash.snk $(SOURCES)
+	$(CS) -target:library -define:$(MONO_OS) -out:RHash.dll -debug -keyfile:RHash.snk $(SOURCES)
 
 update-doc: RHash.dll
 	$(MDOC) update RHash.dll -o doc
