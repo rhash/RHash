@@ -26,7 +26,19 @@ namespace RHash {
 #if UNIX
 		private const string librhash = "librhash.so.0";
 #else
+  #if DARWIN
+                private const string librhash = "'librhash.0.dylib'";
+  #else
+    #if MSYS
+                private const string librhash = "msys-rhash.dll";
+    #else
+       #if CYGWIN
+                private const string librhash = "cygrhash.dll'
+       #else
 		private const string librhash = "librhash.dll";
+       #endif
+    #endif
+  #endif
 #endif
 
 		private Bindings() { }

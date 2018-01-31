@@ -534,12 +534,15 @@ if win32; then
   MONO_OS=WINDOWS
   if msys; then
     SHARED_PREFIX="msys-"
+    MONO_OS="MSYS"
   elif cygwin; then
     SHARED_PREFIX="cyg"
+    MONO_OS="CYGWIN"
   fi
 elif darwin; then
   SHARED_EXT=".0.dylib"
   SOLINK_EXT=".dylib"
+  MONO_OS="DARWIN"
 fi
 
 # detect library build flags
