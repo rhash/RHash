@@ -70,12 +70,8 @@ win-dist: zip
 zip: $(ARCHIVE_ZIP)
 dgz: check $(ARCHIVE_DEB_GZ)
 
-build-install-binary: build-install-$(BUILD_TYPE)-binary
-build-install-static-binary: $(RHASH_STATIC)
-	+$(MAKE) install-static-binary
-
-build-install-shared-binary: $(RHASH_SHARED)
-	+$(MAKE) install-shared-binary
+build-install-binary: $(BUILD_TARGETS)
+	+$(MAKE) install-binary
 
 mkdir-bin:
 	$(INSTALL) -d $(DESTDIR)$(BINDIR)
@@ -314,11 +310,10 @@ install-gmo: compile-gmo
 		$(INSTALL_DATA) $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
-.PHONY: all build-shared lib-shared lib-static dist win-dist dist-full mkdir-bin \
-	test test-static test-shared test-libs test-static-lib test-shared-lib \
-	install build-install-binary install-binary install-lib-static \
-	install-shared build-install-shared-binary install-shared-binary \
-	install-lib-shared install-data install-man install-symlinks install-conf \
+.PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean \
+	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
+	install build-install-binary install-binary install-lib-shared install-lib-static \
+	install-conf install-data install-gmo install-man install-symlinks \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
-	check copy-dist permissions gzip gzip-bindings gzip-full bzip 7z zip dgz rpm \
-	update-po compile-gmo install-gmo cpp-doc clean distclean clean-bindings
+	check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
+	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
