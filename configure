@@ -15,7 +15,6 @@ BUILD_DEBUG=
 BUILD_STATIC=auto
 BUILD_EXTRA_CFLAGS=
 BUILD_EXTRA_LDFLAGS=
-LD_STATIC=-static
 CHECK_LDFLAGS=
 WARN_CFLAGS="-Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations"
 INSTALL_SYMLINKS="sfv-hash tiger-hash tth-hash whirlpool-hash has160-hash gost-hash edonr256-hash edonr512-hash ed2k-link magnet-link"
@@ -38,7 +37,7 @@ die () {
   echo
   echo "Error: $@" >&2
   echo >&2
-  rm -f "$TMPBIN" "$TMPC"
+  rm -f "$TMPBIN" "$TMPC" "$TMPT"
   echo "Check \"$TMPLOG\" if you do not understand why it failed."
   exit 1
 }
@@ -210,7 +209,7 @@ test -z $RANDNUM && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
 BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
 mkdir $BUILD_TMPDIR || die "Unable to create tmp dir."
 TMPC="$BUILD_TMPDIR/tmp.c"
-TMPH="$BUILD_TMPDIR/tmp.h"
+TMPT="$BUILD_TMPDIR/tmp.txt"
 TMPBIN="$BUILD_TMPDIR/tmp"
 TMPLOG="config.log"
 rm -f "$TMPLOG"
@@ -540,7 +539,34 @@ elif darwin; then
   SOLINK_EXT=".dylib"
 fi
 
-# detect library build flags
+# check for linker flags
+LD_STATIC=-static
+test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
+test "$OPT_OPENSSL_RUNTIME" = "yes" && ! win32 && LD_STATIC=
+if test -n "$LD_STATIC"; then
+  start_check "linker $LD_STATIC support"
+  if cc_check_cflag "$LD_STATIC"; then
+    test "$BUILD_STATIC" = "yes" && CHECK_LDFLAGS=$LD_STATIC
+  else
+    LD_STATIC=
+  fi
+  finish_check $(test -n "$LD_STATIC" && echo yes || echo no)
+fi
+
+SHARED_VSCRIPT=
+if win32; then
+  VSCRIPT_ALLOWED=yes
+elif darwin; then
+  VSCRIPT_ALLOWED=no
+else
+  start_check "linker --version-script support"
+  echo "{ local: *; };" > $TMPT
+  cc_check_cflag "-Wl,--version-script,$TMPT" && VSCRIPT_ALLOWED=yes || VSCRIPT_ALLOWED=no
+  finish_check $VSCRIPT_ALLOWED
+fi
+test "$VSCRIPT_ALLOWED" = "yes" && SHARED_VSCRIPT=,--version-script,exports.sym
+
+# detect library names and build flags
 LIBRHASH_SHARED="${SHARED_PREFIX}rhash${SHARED_EXT}"
 LIBRHASH_STATIC="${STATIC_PREFIX}rhash${STATIC_EXT}"
 LIBRHASH_SOLINK="${SHARED_PREFIX}rhash${SOLINK_EXT}"
@@ -555,31 +581,18 @@ LIBRHASH_SH_LDFLAGS=""
 LIBRHASH_RM_FILES=
 if win32; then
   LIBRHASH_SH_CFLAGS="-DRHASH_EXPORTS"
-  LIBRHASH_SH_LDFLAGS="-shared -Wl,--out-implib=${LIBRHASH_IMPLIB},--version-script,exports.sym,--output-def,${LIBRHASH_DEF}"
-  LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
+  LIBRHASH_SH_LDFLAGS="-shared -Wl,--out-implib=${LIBRHASH_IMPLIB}${SHARED_VSCRIPT},--output-def,${LIBRHASH_DEF}"
+  test "$VSCRIPT_ALLOWED" = "yes" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
   LIBRHASH_RM_FILES="${LIBRHASH_IMPLIB} ${LIBRHASH_DEF}"
 elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
 else
   LIBRHASH_SH_CFLAGS="-fpic"
-  LIBRHASH_SH_LDFLAGS="-shared -Wl,--version-script,exports.sym,-soname,\$(LIBRHASH_SHARED)"
-  LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
+  LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SHARED)"
+  test "$VSCRIPT_ALLOWED" = "yes" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
 fi
 LIBRHASH_RM_FILES=$(str_concat $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
-
-# check for support of static libraries linking
-test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
-test "$OPT_OPENSSL_RUNTIME" = "yes" && ! win32 && LD_STATIC=
-if test -n "$LD_STATIC"; then
-  start_check "static linking"
-  if cc_check_cflag "$LD_STATIC"; then
-    test "$BUILD_STATIC" = "yes" && CHECK_LDFLAGS=$LD_STATIC
-  else
-    LD_STATIC=
-  fi
-  finish_check $(test -z "$LD_STATIC" && echo no || echo $LD_STATIC)
-fi
 
 RHASH_DEFINES=
 LIBRHASH_DEFINES=
