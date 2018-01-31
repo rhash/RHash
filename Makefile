@@ -1,7 +1,3 @@
-# Sample usage:
-# compile with debug info: make CFLAGS=-g
-# compile for pentiumpro: make CFLAGS="-O2 -DNDEBUG -march=i586 -mcpu=pentiumpro -fomit-frame-pointer"
-# create rpm with statically linked program: make rpm ADDLDFLAGS="-static -s -Wl,--gc-sections"
 
 include config.mak
 
@@ -104,29 +100,29 @@ uninstall-symlinks:
 	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f$(EXEC_EXT) $(DESTDIR)$(MANDIR)/man1/$$f.1; done
 
 uninstall-lib:
-	+$(MAKE) -C librhash uninstall-lib
+	+cd librhash && $(MAKE) uninstall-lib
 
 install-lib-static: $(LIBRHASH_STATIC)
-	+$(MAKE) -C librhash install-lib-static
+	+cd librhash && $(MAKE) install-lib-static
 
 install-lib-shared: $(LIBRHASH_SHARED)
-	+$(MAKE) -C librhash install-lib-shared
+	+cd librhash && $(MAKE) install-lib-shared
 
 $(LIBRHASH_SHARED): $(LIBRHASH_FILES)
-	+$(MAKE) -C librhash lib-shared
+	+cd librhash && $(MAKE) lib-shared
 
 $(LIBRHASH_STATIC): $(LIBRHASH_FILES)
-	+$(MAKE) -C librhash lib-static
+	+cd librhash && $(MAKE) lib-static
 
 test-lib: test-lib-$(BUILD_TYPE)
 test-lib-static: $(LIBRHASH_STATIC)
-	+$(MAKE) -C librhash test-static
+	+cd librhash && $(MAKE) test-static
 
 test-lib-shared: $(LIBRHASH_SHARED)
-	+$(MAKE) -C librhash test-shared
+	+cd librhash && $(MAKE) test-shared
 
 test-libs: $(LIBRHASH_STATIC) $(LIBRHASH_SHARED)
-	+$(MAKE) -C librhash test-static test-shared
+	+cd librhash && $(MAKE) test-static test-shared
 
 test: test-$(BUILD_TYPE)
 test-static: $(RHASH_STATIC)
@@ -228,7 +224,7 @@ permissions:
 	chmod +x tests/test_rhash.sh
 
 clean-bindings:
-	+$(MAKE) -C bindings distclean
+	+cd bindings && $(MAKE) distclean
 
 copy-dist: $(DIST_FILES) permissions
 	rm -rf $(PACKAGE_NAME)
@@ -241,11 +237,11 @@ gzip: check
 	rm -rf $(PACKAGE_NAME)
 
 gzip-bindings:
-	+$(MAKE) -C bindings gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
+	+cd bindings && $(MAKE) gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
 
 gzip-full: check clean-bindings
 	+$(MAKE) copy-dist
-	+$(MAKE) -C bindings copy-dist COPYDIR=../$(PACKAGE_NAME)/bindings
+	+cd bindings && $(MAKE) copy-dist COPYDIR=../$(PACKAGE_NAME)/bindings
 	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)
 
@@ -286,7 +282,7 @@ rpm: gzip
 distclean: clean
 
 clean:
-	+$(MAKE) -C librhash clean
+	+cd librhash && $(MAKE) clean
 	rm -f *.o $(RHASH_SHARED) $(RHASH_STATIC)
 	rm -f po/*.gmo po/*.po~
 
