@@ -33,50 +33,50 @@ ruby/Makefile: ruby/extconf.rb
 	$(RUBY) -C ruby extconf.rb
 
 build-java:
-	$(MAKE) -C java build-binary
+	+$(MAKE) -C java build-binary
 
 build-perl: configure-perl
-	$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
+	+$(MAKE) -C perl OPTIMIZE="$(PERL_OPTIMIZE)"
 
 build-php: configure-php
-	$(MAKE) -C php
+	+$(MAKE) -C php
 
 build-python:
 # not required
 
 build-ruby: configure-ruby
-	$(MAKE) -C ruby
+	+$(MAKE) -C ruby
 
 build-mono:
-	$(MAKE) -C mono
+	+$(MAKE) -C mono
 
 test-java:
-	$(MAKE) -C java test
+	+$(MAKE) -C java test
 
 test-perl:
-	$(MAKE) -C perl test
+	+$(MAKE) -C perl test
 
 test-php:
-	$(MAKE) -C php test TEST_PHP_ARGS=-q
+	+$(MAKE) -C php test TEST_PHP_ARGS=-q
 
 test-ruby:
 	$(RUBY) -C ruby -I. test_rhash.rb
 
 test-mono:
-	$(MAKE) -C mono test
+	+$(MAKE) -C mono test
 
 test-python:
 	$(PYTHON) python/test_rhash.py
 
 install-ruby:
 # clear MAKEFLAGS to overcome ruby1.8 mkmf concurrency bug
-	MAKEFLAGS= $(MAKE) -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
+	+MAKEFLAGS= $(MAKE) -C ruby install DESTDIR=$(DESTDIR) sitedir=$(DESTDIR)/usr/lib/ruby
 
 install-perl:
-	$(MAKE) -C perl install DESTDIR=$(DESTDIR)
+	+$(MAKE) -C perl install DESTDIR=$(DESTDIR)
 
 install-php:
-	$(MAKE) -C php install INSTALL_ROOT=$(DESTDIR)
+	+$(MAKE) -C php install INSTALL_ROOT=$(DESTDIR)
 
 copy-dist:
 	mkdir -p $(COPYDIR)
@@ -88,7 +88,7 @@ copy-dist:
 
 gzip: distclean
 	rm -rf "$(COPYDIR)" $(ARCHIVE_GZIP)
-	$(MAKE) copy-dist
+	+$(MAKE) copy-dist
 	tar -czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 "$(COPYDIR)"
 	rm -rf "$(COPYDIR)"
 
@@ -110,9 +110,9 @@ cpan:
 	rm -rf $(PERL_PKG)/
 
 distclean:
-	$(MAKE) -C java distclean
-	$(MAKE) -C mono clean
-	[ ! -f ruby/Makefile ] || $(MAKE) -C ruby distclean
-	[ ! -f perl/Makefile ] || $(MAKE) -C perl distclean
+	+$(MAKE) -C java distclean
+	+$(MAKE) -C mono clean
+	+[ ! -f ruby/Makefile ] || $(MAKE) -C ruby distclean
+	+[ ! -f perl/Makefile ] || $(MAKE) -C perl distclean
 	[ ! -f php/configure ] || (cd php && phpize --clean)
 	rm -f python/*.pyc

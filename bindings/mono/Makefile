@@ -39,12 +39,12 @@ html:
 
 test: RHash.dll
 	cp RHash.dll test/
-	$(MAKE) -C test
+	+$(MAKE) -C test
 
 clean:
 	rm -f RHash.dll RHash.dll.mdb
 	rm -f RHash.tree RHash.zip
 	rm -rf html
-	$(MAKE) -C test clean
+	+$(MAKE) -C test clean
 
 .PHONY : clean html test

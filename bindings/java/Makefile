@@ -53,7 +53,7 @@ jar-symlink:
 	ln -fs rhash-$(VERSION).jar $(DEST_DIR)/rhash.jar
 
 $(JARFILE): $(JAVA_FILES)
-	$(MAKE) compile-classes
+	+$(MAKE) compile-classes
 	mkdir -p $(DEST_DIR)
 	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
 
@@ -65,7 +65,7 @@ update-header: compile-classes
 	$(JAVAH) -o $(CSRC_DIR)/bindings.h -classpath $(CLASSES_DIR)  org.sf.rhash.Bindings
 
 $(DEST_DIR)/$(JNI_LIBRARY): $(JNI_FILES)
-	$(MAKE) -C $(CSRC_DIR)
+	+$(MAKE) -C $(CSRC_DIR)
 	mkdir -p $(DEST_DIR)
 	cp $(CSRC_DIR)/$(JNI_LIBRARY) $(DEST_DIR)
 
@@ -77,7 +77,7 @@ javadoc: clean-javadoc
 	           -link $(JAVADOC_API_URL)
 
 $(JAVADOC_FILE): $(JAVA_FILES)
-	$(MAKE) javadoc
+	+$(MAKE) javadoc
 	jar -cMf $(JAVADOC_FILE) $(JAVADOC_DIR)
 
 $(TEST_DIR)/RHashTest.class: $(JARFILE) $(TEST_DIR)/RHashTest.java
@@ -95,7 +95,7 @@ clean-classes:
 	rm -rf $(CLASSES_DIR)
 
 clean-jni:
-	$(MAKE) -C $(CSRC_DIR) clean
+	+$(MAKE) -C $(CSRC_DIR) clean
 
 clean-test:
 	rm -f $(TEST_DIR)/*.class
