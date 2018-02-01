@@ -108,6 +108,9 @@ install-lib-static: $(LIBRHASH_STATIC)
 install-lib-shared: $(LIBRHASH_SHARED)
 	+cd librhash && $(MAKE) install-lib-shared
 
+install-lib-so-link:
+	+cd librhash && $(MAKE) install-so-link
+
 $(LIBRHASH_SHARED): $(LIBRHASH_FILES)
 	+cd librhash && $(MAKE) lib-shared
 
@@ -309,7 +312,7 @@ install-gmo: compile-gmo
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean \
 	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
-	install-conf install-data install-gmo install-man install-symlinks \
+	install-lib-so-link install-conf install-data install-gmo install-man install-symlinks \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
 	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
