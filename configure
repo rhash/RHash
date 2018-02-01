@@ -65,7 +65,6 @@ Libraries options:
 
 Miscellaneous options:
   --cc=COMPILER          C compiler to build RHash [gcc]
-  --host-cc=COMPILER     C compiler for tools needed while building [gcc]
   --ar=AR                librarian to build RHash [ar]
   --target=PLATFORM      target platform (i386-linux, arm-linux, etc)
   --enable-static        statically link RHash binary
@@ -131,10 +130,7 @@ for OPT do
     BUILD_TARGET=$(get_opt_value $OPT)
     ;;
   --cc=*)
-    BUILD_CC=$(get_opt_value $OPT)
-    ;;
-  --host-cc=*)
-    BUILD_HOST_CC=$(get_opt_value $OPT)
+    CC=$(get_opt_value $OPT)
     ;;
   --ar=*)
     CMD_AR=$(get_opt_value $OPT)
