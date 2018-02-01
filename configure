@@ -509,7 +509,17 @@ test -z "$cc_vendor" && die "compiler not found"
 test "$cc_fail" = "yes" && die "unsupported compiler version"
 
 # select optimization flags
-OPTLEVEL="-O2"
+has_optimization()
+{
+  # posix-compatible way to find -O<n> option
+  for OPT in $BUILD_EXTRA_CFLAGS; do
+    case "$OPT" in
+      -O[0-3]|-O) return 0 ;;
+    esac
+  done
+  return 1
+}
+has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
 OPTFLAGS="-pipe -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections"
 OPTFLAGS=$(str_concat $BUILD_DEBUG $OPTLEVEL $OPTFLAGS)
 
