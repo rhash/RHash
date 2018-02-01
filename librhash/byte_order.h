@@ -7,6 +7,12 @@
 #ifdef __GLIBC__
 # include <endian.h>
 #endif
+#if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__APPLE__)
+# include <sys/types.h>
+#elif defined (__NetBSD__) || defined(__OpenBSD__)
+# include <sys/param.h>
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +40,8 @@ extern "C" {
 /* detect CPU endianness */
 #if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && \
 		__BYTE_ORDER == __LITTLE_ENDIAN) || \
+	(defined(_BYTE_ORDER) && defined(_LITTLE_ENDIAN) && \
+		_BYTE_ORDER == _LITTLE_ENDIAN) || \
 	(defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
 		__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
 	defined(CPU_IA32) || defined(CPU_X64) || \
@@ -44,6 +52,8 @@ extern "C" {
 # define IS_LITTLE_ENDIAN 1
 #elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && \
 		__BYTE_ORDER == __BIG_ENDIAN) || \
+	(defined(_BYTE_ORDER) && defined(_BIG_ENDIAN) && \
+		_BYTE_ORDER == _BIG_ENDIAN) || \
 	(defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
 		__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
 	defined(__sparc) || defined(__sparc__) || defined(sparc) || \

@@ -1,4 +1,6 @@
 /* test_hashes.h - detect compiler defines */
+#ifndef TEST_HASHES_H
+#define TEST_HASHES_H
 
 /* first some magic to convert a macro value to a string */
 #define STRINGIZE_ARG(x) #x
@@ -77,12 +79,6 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 #ifdef __LP64__
 	" __LP64__"
-#endif
-#ifdef CPU_X64
-	" CPU_X64"
-#endif
-#ifdef CPU_IA32
-	" CPU_IA32"
 #endif
 #ifdef __ia64
 	" __ia64"
@@ -183,6 +179,12 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __TINYC__ /* tcc */
 	" __TINYC__"
 #endif
+#ifdef __STDC_VERSION__
+	" __STDC_VERSION__=" EXPAND_TO_STRING(__STDC_VERSION__)
+#endif
+#ifdef __STRICT_ANSI__
+	" __STRICT_ANSI__"
+#endif
 #ifdef __MINGW32__
 	" __MINGW32__"
 #endif
@@ -230,22 +232,14 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __UCLIBC__
 	" __UCLIBC__"
 #endif
-
-
-
-/* other defines */
-#ifdef __STDC_VERSION__
-	" __STDC_VERSION__=" EXPAND_TO_STRING(__STDC_VERSION__)
-#endif
 #ifdef _UNICODE
 	" _UNICODE"
-#endif
-#ifdef __STRICT_ANSI__
-	" __STRICT_ANSI__"
 #endif
 #ifdef __PIC__
 	" __PIC__"
 #endif
+
+/* rhash-related macro */
 #ifdef USE_RHASH_DLL
 	" USE_RHASH_DLL"
 #endif
@@ -254,6 +248,12 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 #ifdef OPENSSL_RUNTIME
 	" OPENSSL_RUNTIME"
+#endif
+#ifdef CPU_X64
+	" CPU_X64"
+#endif
+#ifdef CPU_IA32
+	" CPU_IA32"
 #endif
 
 /* detect endianness */
@@ -264,10 +264,19 @@ char* compiler_flags = "Compile-time flags:"
 	" CPU_BIG_ENDIAN"
 #endif
 #if defined(__BYTE_ORDER)
-#if (__BYTE_ORDER==__LITTLE_ENDIAN)
+#if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER==__LITTLE_ENDIAN)
 	" (__BYTE_ORDER==__LITTLE_ENDIAN)"
-#elif (__BYTE_ORDER==__BIG_ENDIAN)
+#elif defined(__BIG_ENDIAN) && (__BYTE_ORDER==__BIG_ENDIAN)
 	" (__BYTE_ORDER==__BIG_ENDIAN)"
 #endif
 #endif
+#if defined(_BYTE_ORDER)
+#if defined(_LITTLE_ENDIAN) && (_BYTE_ORDER==_LITTLE_ENDIAN)
+	" (_BYTE_ORDER==_LITTLE_ENDIAN)"
+#elif defined(_BIG_ENDIAN) && (_BYTE_ORDER==_BIG_ENDIAN)
+	" (_BYTE_ORDER==_BIG_ENDIAN)"
+#endif
+#endif
 	"\n";
+
+#endif /* TEST_HASHES_H */
