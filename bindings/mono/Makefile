@@ -16,7 +16,6 @@
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
 include config.mak
-
 CS?=gmcs
 MDOC?=mdoc
 SOURCES=AssemblyInfo.cs Bindings.cs Hasher.cs HashType.cs
@@ -25,8 +24,12 @@ all: assembly assemble-doc html
 
 assembly: RHash.dll RHash.dll.mdb
 
+Bindings.cs:
+	cp Bindings.cs.in Bindings.cs
+	sed -e "s|_REPLACETHIS_|$(LIBRHASH_SHARED)|g" -i Bindings.cs
+
 RHash.dll RHash.dll.mdb: $(SOURCES)
-	$(CS) -target:library -define:$(MONO_OS) -out:RHash.dll -debug -keyfile:RHash.snk $(SOURCES)
+	$(CS) -target:library -define:UNIX -out:RHash.dll -debug -keyfile:RHash.snk $(SOURCES)
 
 update-doc: RHash.dll
 	$(MDOC) update RHash.dll -o doc

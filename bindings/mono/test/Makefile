@@ -15,8 +15,8 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
-MONO=mono
-CS=gmcs
+MONO?=mono
+CS?=gmcs
 
 test: Test.exe
 	$(MONO) Test.exe
