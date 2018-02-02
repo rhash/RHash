@@ -1,7 +1,6 @@
 
 include config.mak
 
-VERSION = 1.3.5
 HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
@@ -137,16 +136,12 @@ test-shared: $(RHASH_SHARED)
 	chmod +x tests/test_rhash.sh
 	tests/test_rhash.sh --shared ./$(RHASH_SHARED)
 
-version.h: Makefile
-	echo "#define VERSION \"$(VERSION)\"" > version.h
-
-# check version
-check: version.h
+# check that source tree is consistent
+check:
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
-	[ ! -d bindings -o bindings/version.properties -nt Makefile ] || \
-		echo "version=$(VERSION)" > bindings/version.properties
-	[ -s dist/rhash.1.html ]
+	test ! -f bindings/version.properties || grep -q '^version=$(VERSION)$$' bindings/version.properties
+	test -s dist/rhash.1.html
 
 $(RHASH_STATIC): $(OBJECTS) $(LIBRHASH_STATIC)
 	$(CC) $(OBJECTS) $(LIBRHASH_STATIC) $(BIN_STATIC_LDFLAGS) -o $@
