@@ -707,6 +707,7 @@ RHASH_VERSION=
 BINDINGS_VERSION=
 RHASH_SRC=
 LIBRHASH_SRC=
+LIBRHASH_PC=
 BINDINGS_SRC=
 SRC_FOUND=no
 test -f Makefile || die "Makefile not found"
@@ -737,6 +738,7 @@ if test "$HAS_RHASH" = "yes"; then
   RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
   echo "RHASH_VERSION=$RHASH_VERSION" >> "$TMPLOG"
   good_version "$RHASH_VERSION" || die "wrong version: $RHASH_VERSION"
+  test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
 fi
 if test "$HAS_BINDINGS" = "yes"; then
   BINDINGS_VERSION=$(cut -d = -f 2 "${BINDINGS_SRC}version.properties")
@@ -770,6 +772,7 @@ INSTALL = $CMD_INSTALL
 
 LIBRHASH_STATIC = librhash/$LIBRHASH_STATIC
 LIBRHASH_SHARED = librhash/$LIBRHASH_SHARED
+LIBRHASH_PC     = $LIBRHASH_PC
 BUILD_TYPE      = $RHASH_BUILD_TYPE
 VERSION         = $RHASH_VERSION
 EXEC_EXT        = $EXEC_EXT
@@ -834,6 +837,30 @@ LDFLAGS = \$(OPTLDFLAGS) \$(ADDLDFLAGS)
 SHARED_CFLAGS  = \$(CFLAGS) $LIBRHASH_SH_CFLAGS
 SHARED_LDFLAGS = \$(LDFLAGS) $(str_concat $OPENSSL_LDFLAGS $LIBRHASH_SH_LDFLAGS)
 BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(str_concat $LD_STATIC $OPENSSL_LDFLAGS)
+
+EOF
+fi
+
+if test -n "$LIBRHASH_PC"; then
+  PC_EXC="$BUILD_EXEC_PREFIX"
+  PC_INC="$BUILD_INCDIR"
+  PC_LIB="$BUILD_LIBDIR"
+  test "$PC_EXC" = "${INSTALL_PREFIX}" && PC_EXC='${prefix}'
+  test "$PC_INC" = "${INSTALL_PREFIX}/include" && PC_INC='${prefix}/include'
+  test "$PC_LIB" = "${INSTALL_EXEC_PREFIX}/lib" && PC_LIB='${exec_prefix}/lib'
+  echo "Writing ${LIBRHASH_PC}"
+  cat > $LIBRHASH_PC << EOF
+prefix=${INSTALL_PREFIX}
+exec_prefix=${PC_EXC}
+libdir=${PC_LIB}
+includedir=${PC_INC}
+
+Name: librash
+Description: LibRHash shared library
+Version: ${RHASH_VERSION}
+Cflags: -I\${includedir}
+Libs: -L\${libdir} -lrhash
+Libs.private: ${OPENSSL_LDFLAGS}
 
 EOF
 fi
