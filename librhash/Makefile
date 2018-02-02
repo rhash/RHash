@@ -17,7 +17,6 @@ lib-static: $(LIBRHASH_STATIC)
 lib-shared: $(LIBRHASH_SHARED)
 libs-all: lib-static lib-shared
 uninstall-lib: uninstall-lib-shared uninstall-lib-static uninstall-so-link
-dist-clean: clean
 
 config.mak:
 	echo "Run the ./configure script first" && false
@@ -189,10 +188,13 @@ print-info-static: $(TEST_STATIC)
 print-info-shared: $(TEST_SHARED)
 	LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=.:$(DYLD_LIBRARY_PATH) ./$(TEST_SHARED) --flags
 
+distclean: clean
+	rm -f config.mak
+
 clean:
 	rm -f *.o $(LIBRHASH_STATIC) $(LIBRHASH_SHARED) $(TEST_STATIC) $(TEST_SHARED) $(RM_FILES)
 
-.PHONY: all clean dist-clean install-headers install-lib-shared install-lib-static \
+.PHONY: all clean distclean install-headers install-lib-shared install-lib-static \
 	install-so-link libs-all lib-shared lib-static test test-shared test-static \
 	print-info print-info-static print-info-shared uninstall-headers \
 	uninstall-lib uninstall-lib-shared uninstall-lib-static uninstall-so-link \

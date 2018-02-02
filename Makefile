@@ -222,9 +222,6 @@ permissions:
 	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
 	chmod +x configure tests/test_rhash.sh
 
-clean-bindings:
-	+cd bindings && $(MAKE) distclean
-
 copy-dist: $(DIST_FILES) permissions
 	rm -rf $(PACKAGE_NAME)
 	mkdir $(PACKAGE_NAME)
@@ -278,12 +275,19 @@ rpm: gzip
 	mv -f `find $(RPMTOP) -name "*rhash*-$(VERSION)*.rpm"` .
 	rm -rf $(RPMTOP)
 
-distclean: clean
+clean-bindings:
+	+cd bindings && $(MAKE) clean
 
-clean:
-	+cd librhash && $(MAKE) clean
+clean-local:
 	rm -f *.o $(RHASH_SHARED) $(RHASH_STATIC)
 	rm -f po/*.gmo po/*.po~
+
+distclean: clean-local
+	rm -f config.log config.mak $(LIBRHASH_PC)
+	+cd librhash && $(MAKE) distclean
+
+clean: clean-local
+	+cd librhash && $(MAKE) clean
 
 update-po:
 	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot \
@@ -305,7 +309,7 @@ install-gmo: compile-gmo
 		$(INSTALL_DATA) $$f $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
-.PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean \
+.PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
 	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
 	install-lib-so-link install-conf install-data install-gmo install-man install-symlinks \
