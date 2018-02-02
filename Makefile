@@ -6,7 +6,7 @@ HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
 SPECFILE = dist/rhash.spec
-LIN_DIST_FILES = Makefile ChangeLog INSTALL COPYING README \
+LIN_DIST_FILES = configure Makefile ChangeLog INSTALL COPYING README \
   $(SPECFILE) $(SPECFILE).in $(SOURCES) $(HEADERS) \
   tests/test_rhash.sh tests/test1K.data \
   dist/rhash.1 dist/rhash.1.win.sed dist/rhash.1.html
@@ -224,7 +224,7 @@ cpp-doc:
 
 permissions:
 	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
-	chmod +x tests/test_rhash.sh
+	chmod +x configure tests/test_rhash.sh
 
 clean-bindings:
 	+cd bindings && $(MAKE) distclean
