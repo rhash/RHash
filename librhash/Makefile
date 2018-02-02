@@ -23,39 +23,39 @@ config.mak:
 	echo "Run the ./configure script first" && false
 
 install-lib-static: $(LIBRHASH_STATIC) install-headers
-	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
-	$(INSTALL_DATA) $(LIBRHASH_STATIC) $(DESTDIR)$(LIBDIR)/
+	$(INSTALL) -d $(LIBDIR)
+	$(INSTALL_DATA) $(LIBRHASH_STATIC) $(LIBDIR)/
 
 install-lib-shared: $(LIBRHASH_SHARED) $(EXTRA_INSTALL_LIBSHARED)
-	$(INSTALL) -d $(DESTDIR)$(SO_DIR)
-	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(DESTDIR)$(SO_DIR)/
+	$(INSTALL) -d $(SO_DIR)
+	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(SO_DIR)/
 
 install-implib:
-	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
-	$(INSTALL_SHARED) $(LIBRHASH_IMPLIB) $(DESTDIR)$(LIBDIR)/
+	$(INSTALL) -d $(LIBDIR)
+	$(INSTALL_SHARED) $(LIBRHASH_IMPLIB) $(LIBDIR)/
 
 install-so-link:
-	$(INSTALL) -d $(DESTDIR)$(LIBDIR)
-	ln -s $(LIBRHASH_SHARED) $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SOLINK)
+	$(INSTALL) -d $(LIBDIR)
+	ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SOLINK)
 
 uninstall-lib-static: uninstall-headers
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_STATIC)
+	rm -f $(LIBDIR)/$(LIBRHASH_STATIC)
 
 uninstall-lib-shared: $(EXTRA_UNINSTALL_LIBSHARED)
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SHARED)
+	rm -f $(LIBDIR)/$(LIBRHASH_SHARED)
 
 uninstall-implib:
-	rm -f $(DESTDIR)$(LIBDIR)/$(IMPLIBNAME)
+	rm -f $(LIBDIR)/$(IMPLIBNAME)
 
 uninstall-so-link:
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIBRHASH_SOLINK)
+	rm -f $(LIBDIR)/$(LIBRHASH_SOLINK)
 
 install-headers:
-	$(INSTALL) -d $(DESTDIR)$(INCDIR)
-	$(INSTALL_DATA) $(LIB_HEADERS) $(DESTDIR)$(INCDIR)/
+	$(INSTALL) -d $(INCDIR)
+	$(INSTALL_DATA) $(LIB_HEADERS) $(INCDIR)/
 
 uninstall-headers:
-	for f in $(LIB_HEADERS); do rm -f "$(DESTDIR)$(INCDIR)/$$f"; done
+	for f in $(LIB_HEADERS); do rm -f "$(INCDIR)/$$f"; done
 
 # not using GNU make extensions for compatibility with Unix/*BSD make
 #%.o: %.c

@@ -71,34 +71,34 @@ build-install-binary: $(BUILD_TARGETS)
 	+$(MAKE) install-binary
 
 mkdir-bin:
-	$(INSTALL) -d $(DESTDIR)$(BINDIR)
+	$(INSTALL) -d $(BINDIR)
 
 # install binary without (re-)compilation
 install-binary: mkdir-bin
-	$(INSTALL_PROGRAM) $(RHASH_BINARY) $(DESTDIR)$(BINDIR)/$(RHASH_BINARY)
+	$(INSTALL_PROGRAM) $(RHASH_BINARY) $(BINDIR)/$(RHASH_BINARY)
 
 install-man:
-	$(INSTALL) -d $(DESTDIR)$(MANDIR)/man1
-	$(INSTALL_DATA) dist/rhash.1 $(DESTDIR)$(MANDIR)/man1/rhash.1
+	$(INSTALL) -d $(MANDIR)/man1
+	$(INSTALL_DATA) dist/rhash.1 $(MANDIR)/man1/rhash.1
 
 install-conf:
-	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)
-	tr -d \\r < dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(DESTDIR)$(SYSCONFDIR)/rhashrc
+	$(INSTALL) -d $(SYSCONFDIR)
+	tr -d \\r < dist/rhashrc.sample > rc.tmp && $(INSTALL_DATA) rc.tmp $(SYSCONFDIR)/rhashrc
 	rm -f rc.tmp
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
 install-symlinks: mkdir-bin install-man install-binary
-	cd $(DESTDIR)$(BINDIR) && for f in $(SYMLINKS); do ln -fs $(RHASH_BINARY) $$f$(EXEC_EXT); done
-	cd $(DESTDIR)$(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
+	cd $(BINDIR) && for f in $(SYMLINKS); do ln -fs $(RHASH_BINARY) $$f$(EXEC_EXT); done
+	cd $(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
 uninstall-binary:
-	rm -f $(DESTDIR)$(BINDIR)/$(RHASH_BINARY)
+	rm -f $(BINDIR)/$(RHASH_BINARY)
 
 uninstall-data:
-	rm -f $(DESTDIR)$(MANDIR)/man1/rhash.1
+	rm -f $(MANDIR)/man1/rhash.1
 
 uninstall-symlinks:
-	for f in $(SYMLINKS); do rm -f $(DESTDIR)$(BINDIR)/$$f$(EXEC_EXT) $(DESTDIR)$(MANDIR)/man1/$$f.1; done
+	for f in $(SYMLINKS); do rm -f $(BINDIR)/$$f$(EXEC_EXT) $(MANDIR)/man1/$$f.1; done
 
 uninstall-lib:
 	+cd librhash && $(MAKE) uninstall-lib
@@ -306,8 +306,8 @@ compile-gmo:
 install-gmo: compile-gmo
 	for f in po/*.gmo; do \
 		l=`basename $$f .gmo`; \
-		$(INSTALL) -d $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES; \
-		$(INSTALL_DATA) $$f $(DESTDIR)$(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+		$(INSTALL) -d $(LOCALEDIR)/$$l/LC_MESSAGES; \
+		$(INSTALL_DATA) $$f $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean \
