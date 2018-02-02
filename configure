@@ -654,10 +654,6 @@ if test "$OPT_OPENSSL" != "no"; then
   test "$OPT_OPENSSL" = "yes" && test "$OPENSSL_FOUND" = "no" && die "OpenSSL library not found"
 fi
 
-if test "$BUILD_SYSCONFDIR" != "/etc"; then
-  RHASH_DEFINES="$RHASH_DEFINES -DSYSCONFDIR=\\\"$BUILD_SYSCONFDIR\\\""
-fi
-
 # building of static/shared binary an library
 RHASH_STATIC=rhash_static
 RHASH_SHARED=rhash_shared

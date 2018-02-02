@@ -33,6 +33,7 @@ I18N_FILES = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po p
 DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
 RHASH_NAME     = rhash
 RHASH_BINARY   = rhash$(EXEC_EXT)
+CONFDIR_MACRO  = -DSYSCONFDIR=\"$(SYSCONFDIR)\"
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
 INSTALL_PROGRAM = $(INSTALL) -m 755
@@ -195,7 +196,7 @@ output.o: output.c common_func.h librhash/rhash.h calc_sums.h \
 parse_cmdline.o: parse_cmdline.c common_func.h librhash/rhash.h \
  win_utils.h file_mask.h find_file.h hash_print.h output.h rhash_main.h \
  parse_cmdline.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CONFDIR_MACRO) $(CFLAGS) $< -o $@
 
 rhash_main.o: rhash_main.c common_func.h librhash/rhash.h win_utils.h \
  find_file.h calc_sums.h hash_check.h hash_update.h file_mask.h \
