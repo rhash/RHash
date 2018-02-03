@@ -578,6 +578,14 @@ if ! darwin; then
   finish_check $(yn_nonempty "$SHARED_VSCRIPT")
 fi
 
+WIN_LDFLAGS=
+if win32; then
+  start_check "linker support for --nxcompat --no-seh --dynamicbase"
+  cc_check_cflag "-Wl,--nxcompat,--no-seh,--dynamicbase" &&
+    WIN_LDFLAGS="-Wl,--nxcompat,--no-seh,--dynamicbase"
+  finish_check $(yn_nonempty "$WIN_LDFLAGS")
+fi
+
 # detect library names and build flags
 LIBRHASH_SHARED="${SHARED_PREFIX}rhash${SHARED_EXT}"
 LIBRHASH_STATIC="${STATIC_PREFIX}rhash${STATIC_EXT}"
@@ -784,7 +792,7 @@ EXTRA_INSTALL   = $RHASH_EXTRA_INSTALL
 SYMLINKS        = $INSTALL_SYMLINKS
 
 OPTFLAGS    = $OPTFLAGS
-OPTLDFLAGS  =
+OPTLDFLAGS  = $WIN_LDFLAGS
 WARN_CFLAGS = $WARN_CFLAGS
 ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
 ADDLDFLAGS  = $BUILD_EXTRA_LDFLAGS
@@ -829,7 +837,7 @@ EXTRA_INSTALL_LIBSHARED   = $EXTRA_INSTALL_LIBSHARED
 EXTRA_UNINSTALL_LIBSHARED = $EXTRA_UNINSTALL_LIBSHARED
 
 OPTFLAGS    = $OPTFLAGS
-OPTLDFLAGS  =
+OPTLDFLAGS  = $WIN_LDFLAGS
 WARN_CFLAGS = $WARN_CFLAGS
 ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
 ADDLDFLAGS  = $BUILD_EXTRA_LDFLAGS
