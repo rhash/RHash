@@ -299,13 +299,14 @@ cc_check_cflag() {
   cc_check $@
 }
 
-cc_check_header() {
-  cat > $TMPC << EOF
-#include <$1>
-int main(void) { return 0; }
-EOF
-  shift
-  cc_check $@
+cc_check_headers() {
+  echo $ECHO_N "$ECHO_C" > $TMPC
+  while test -n "$1"; do
+    echo "#include <$1>" >> $TMPC
+    shift
+  done
+  echo "int main(void) { return 0; }" >> $TMPC
+  cc_check "-c"
 }
 
 cc_check_statement() {
@@ -560,7 +561,7 @@ LD_STATIC=-static
 test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
 test "$OPT_OPENSSL_RUNTIME" = "yes" && ! win32 && LD_STATIC=
 if test -n "$LD_STATIC"; then
-  start_check "linker $LD_STATIC support"
+  start_check "linker support for $LD_STATIC"
   if cc_check_cflag "$LD_STATIC"; then
     test "$BUILD_STATIC" = "yes" && CHECK_LDFLAGS=$LD_STATIC
   else
@@ -568,10 +569,20 @@ if test -n "$LD_STATIC"; then
   fi
   finish_check $(yn_nonempty "$LD_STATIC")
 fi
+test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && ! win32 && OPT_OPENSSL_RUNTIME=no
+
+ALLOW_RUNTIME_LINKING=yes
+LIBDL_LDFLAGS=
+if ! win32 && test "$OPT_OPENSSL_RUNTIME" != "no"; then
+  start_check "linker support for -ldl"
+  cc_check_cflag "-ldl" && LIBDL_LDFLAGS="-ldl"
+  ALLOW_RUNTIME_LINKING=$(yn_nonempty "$LIBDL_LDFLAGS")
+  finish_check "$ALLOW_RUNTIME_LINKING"
+fi
 
 SHARED_VSCRIPT=
 if ! darwin; then
-  start_check "linker --version-script support"
+  start_check "linker support for --version-script"
   echo "{ local: *; };" > $TMPT
   cc_check_cflag "-Wl,--version-script,$TMPT" &&
     SHARED_VSCRIPT=",--version-script,exports.sym"
@@ -623,14 +634,16 @@ OPENSSL_LDFLAGS=
 if test "$OPT_GETTEXT" != "no"; then
   start_check "gettext"
   GETTEXT_FOUND=no
-  if cc_check_statement "libintl.h" "gettext(\"\");"; then
-    GETTEXT_FOUND=found
-  elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
-    GETTEXT_LDFLAGS="-lintl"
-    GETTEXT_FOUND=found
-  elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
-    GETTEXT_LDFLAGS="-lintl -liconv"
-    GETTEXT_FOUND=found
+  if cc_check_headers "libintl.h"; then
+    if cc_check_statement "libintl.h" "gettext(\"\");"; then
+      GETTEXT_FOUND=found
+    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
+      GETTEXT_LDFLAGS="-lintl"
+      GETTEXT_FOUND=found
+    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
+      GETTEXT_LDFLAGS="-lintl -liconv"
+      GETTEXT_FOUND=found
+	fi
   fi
   test "$GETTEXT_FOUND" = "found" && RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
   finish_check $GETTEXT_FOUND
@@ -639,19 +652,22 @@ fi
 
 if test "$OPT_OPENSSL" != "no"; then
   start_check "OpenSSL"
-  test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && ! win32 && OPT_OPENSSL_RUNTIME=no
   test "$OPT_OPENSSL" = "auto" && test "$OPT_OPENSSL_RUNTIME" = "yes" && OPT_OPENSSL=yes
   OPENSSL_FOUND=no
-  if cc_check_header "openssl/opensslv.h"; then
+  if test "$ALLOW_RUNTIME_LINKING" = "no"; then
+    echo "No runtime library loading, because libdl is not found!" >> "$TMPLOG"
+    test "$OPT_OPENSSL_RUNTIME" = "yes" && die "libdl is required for OpenSSL runtime loading"
+    OPT_OPENSSL_RUNTIME=no
+  fi
+  OPENSSL_HEADERS="openssl/opensslv.h openssl/md4.h openssl/md5.h openssl/ripemd.h openssl/sha.h"
+  if cc_check_headers $OPENSSL_HEADERS; then
     if test "$OPT_OPENSSL_RUNTIME" != "no"; then
       OPENSSL_FOUND=runtime
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DOPENSSL_RUNTIME)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
-      if ! win32; then
-        # note: -ldl shall disable -static
-        OPENSSL_LDFLAGS="-ldl"
-        LD_STATIC=
-      fi
+      OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
+      # note: libdl shall disable -static on non-windows platforms
+	  win32 || LD_STATIC=
     elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
       OPENSSL_FOUND=found
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
