@@ -4,7 +4,8 @@ include config.mak
 HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
-SPECFILE = dist/rhash.spec
+SPECFILE    = dist/rhash.spec
+LIBRHASH_PC = dist/librhash.pc
 LIN_DIST_FILES = configure Makefile ChangeLog INSTALL COPYING README \
   $(SPECFILE) $(SPECFILE).in $(SOURCES) $(HEADERS) \
   tests/test_rhash.sh tests/test1K.data \
@@ -45,7 +46,7 @@ build-shared: $(RHASH_SHARED)
 lib-shared: $(LIBRHASH_SHARED)
 lib-static: $(LIBRHASH_STATIC)
 install-data: install-man install-conf
-uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib
+uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib uninstall-pkg-config
 
 config.mak:
 	echo "Run the ./configure script first" && false
@@ -90,6 +91,10 @@ install-symlinks: mkdir-bin install-man install-binary
 	cd $(BINDIR) && for f in $(SYMLINKS); do ln -fs $(RHASH_BINARY) $$f$(EXEC_EXT); done
 	cd $(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
 
+install-pkg-config:
+	$(INSTALL) -d $(PKGCONFIGDIR)
+	$(INSTALL_DATA) $(LIBRHASH_PC) $(PKGCONFIGDIR)/
+
 uninstall-binary:
 	rm -f $(BINDIR)/$(RHASH_BINARY)
 
@@ -98,6 +103,9 @@ uninstall-data:
 
 uninstall-symlinks:
 	for f in $(SYMLINKS); do rm -f $(BINDIR)/$$f$(EXEC_EXT) $(MANDIR)/man1/$$f.1; done
+
+uninstall-pkg-config:
+	rm -f $(PKGCONFIGDIR)/librhash.pc
 
 uninstall-lib:
 	+cd librhash && $(MAKE) uninstall-lib
@@ -312,7 +320,8 @@ install-gmo: compile-gmo
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
 	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
-	install-lib-so-link install-conf install-data install-gmo install-man install-symlinks \
+	install-lib-so-link install-conf install-data install-gmo install-man \
+	install-symlinks install-pkg-config uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
 	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
