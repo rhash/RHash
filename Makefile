@@ -273,7 +273,7 @@ $(ARCHIVE_DEB_GZ) : $(DIST_FILES)
 	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
 
 # rpm packaging
-$(SPECFILE): $(SPECFILE).in Makefile
+$(SPECFILE): $(SPECFILE).in config.mak
 	sed -e 's/@VERSION@/$(VERSION)/' $(SPECFILE).in > $(SPECFILE)
 
 rpm: gzip
@@ -291,7 +291,7 @@ clean-local:
 	rm -f po/*.gmo po/*.po~
 
 distclean: clean-local
-	rm -f config.log config.mak $(LIBRHASH_PC)
+	rm -f config.log config.mak $(SPECFILE) $(LIBRHASH_PC)
 	+cd librhash && $(MAKE) distclean
 
 clean: clean-local
