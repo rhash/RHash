@@ -219,7 +219,6 @@
     <ClCompile Include="..\..\output.c" />
     <ClCompile Include="..\..\parse_cmdline.c" />
     <ClCompile Include="..\..\rhash_main.c" />
-    <ClCompile Include="..\..\librhash\util.c" />
     <ClCompile Include="..\..\win_utils.c" />
     <ClCompile Include="..\..\librhash\aich.c" />
     <ClCompile Include="..\..\librhash\algorithms.c" />
@@ -271,7 +270,6 @@
     <ClInclude Include="..\..\librhash\test_hashes.h" />
     <ClInclude Include="..\..\librhash\aich.h" />
     <ClInclude Include="..\..\librhash\byte_order.h" />
-    <ClInclude Include="..\..\librhash\config.h" />
     <ClInclude Include="..\..\librhash\crc32.h" />
     <ClInclude Include="..\..\librhash\ed2k.h" />
     <ClInclude Include="..\..\librhash\gost.h" />
