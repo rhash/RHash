@@ -892,7 +892,7 @@ Description: LibRHash shared library
 Version: ${RHASH_VERSION}
 Cflags: -I\${includedir}
 Libs: -L\${libdir} -lrhash
-Libs.private: ${OPENSSL_LDFLAGS}
+Libs.private: ${OPENSSL_LDFLAGS} ${GETTEXT_LDFLAGS} ${LIBDL_LDFLAGS}
 
 EOF
 fi
