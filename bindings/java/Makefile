@@ -16,12 +16,12 @@
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
 
-JAVA = java
-JAVAC = javac
-JAVADOC = javadoc
-JAVAH = javah
-JAR = jar
-JUNIT_CLASSPATH = /usr/share/java/junit4.jar
+JAVA ?= java
+JAVAC ?= javac
+JAVADOC ?= javadoc
+JAVAH ?= javah
+JAR ?= jar
+JUNIT_CLASSPATH ?= /usr/share/java/junit4.jar
 
 VERSION = $(shell sed -ne 's/^version=\(.*\)/\1/p' ../version.properties)
 
@@ -34,9 +34,7 @@ TEST_DIR    = test
 
 JAVA_FILES := $(shell find $(JAVASRC_DIR) -name '*.java')
 JNI_FILES := $(shell find $(CSRC_DIR) -name '*.c' -o -name '*.h')
-LIB_PREFIX = lib
-LIB_SUFFIX = .so
-JNI_LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
+JNI_LIBRARY = $(SHARED_PREFIX)rhash-jni$(SHARED_EXT)
 JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
 JAVADOC_FILE = $(DEST_DIR)/rhash-$(VERSION)-javadoc.zip
 JAVADOC_API_URL = http://download.oracle.com/javase/6/docs/api/
@@ -55,14 +53,14 @@ jar-symlink:
 $(JARFILE): $(JAVA_FILES)
 	+$(MAKE) compile-classes
 	mkdir -p $(DEST_DIR)
-	$(JAR) cf $(JARFILE) -C $(CLASSES_DIR) org/
+	"$(JAR)" cf $(JARFILE) -C $(CLASSES_DIR) org/
 
 compile-classes:
 	mkdir -p $(CLASSES_DIR)
-	$(JAVAC) -d $(CLASSES_DIR) -sourcepath $(JAVASRC_DIR) $(JAVA_FILES)
+	"$(JAVAC)" -d $(CLASSES_DIR) -sourcepath $(JAVASRC_DIR) $(JAVA_FILES)
 
 update-header: compile-classes
-	$(JAVAH) -o $(CSRC_DIR)/bindings.h -classpath $(CLASSES_DIR)  org.sf.rhash.Bindings
+	"$(JAVAH)" -o $(CSRC_DIR)/bindings.h -classpath $(CLASSES_DIR)  org.sf.rhash.Bindings
 
 $(DEST_DIR)/$(JNI_LIBRARY): $(JNI_FILES)
 	+$(MAKE) -C $(CSRC_DIR)
@@ -70,7 +68,7 @@ $(DEST_DIR)/$(JNI_LIBRARY): $(JNI_FILES)
 	cp $(CSRC_DIR)/$(JNI_LIBRARY) $(DEST_DIR)
 
 javadoc: clean-javadoc
-	$(JAVADOC) -windowtitle 'RHash' \
+	"$(JAVADOC)" -windowtitle 'RHash' \
 	           -sourcepath $(JAVASRC_DIR) \
 	           -subpackages org \
 	           -d $(JAVADOC_DIR) \
@@ -78,13 +76,13 @@ javadoc: clean-javadoc
 
 $(JAVADOC_FILE): $(JAVA_FILES)
 	+$(MAKE) javadoc
-	jar -cMf $(JAVADOC_FILE) $(JAVADOC_DIR)
+	"$(JAR)" -cMf $(JAVADOC_FILE) $(JAVADOC_DIR)
 
 $(TEST_DIR)/RHashTest.class: $(JARFILE) $(TEST_DIR)/RHashTest.java
-	$(JAVAC) -classpath $(JARFILE):$(JUNIT_CLASSPATH) $(TEST_DIR)/RHashTest.java
+	"$(JAVAC)" -classpath $(JARFILE):$(JUNIT_CLASSPATH) $(TEST_DIR)/RHashTest.java
 
 test: $(TEST_DIR)/RHashTest.class jni
-	$(JAVA) -classpath $(TEST_DIR):$(JARFILE):$(JUNIT_CLASSPATH) -Djava.library.path=$(DEST_DIR) junit.textui.TestRunner RHashTest
+	"$(JAVA)" -classpath $(TEST_DIR):$(JARFILE):$(JUNIT_CLASSPATH) -Djava.library.path=$(DEST_DIR) junit.textui.TestRunner RHashTest
 
 clean: clean-javadoc clean-jni clean-classes clean-test
 

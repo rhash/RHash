@@ -8,6 +8,12 @@ PYTHON ?= python
 PERL ?= perl
 CP = cp -l --parents
 PERL_OPTIMIZE = -O2 -g -Wall
+JAVA ?= java
+JAVAC ?= javac
+JAVADOC ?= javadoc
+JAVAH ?= javah
+JAR ?= jar
+JUNIT_CLASSPATH ?= /usr/share/java/junit4.jar
 ARCHIVE_GZIP = rhash-bindings-$(VERSION)-src.tar.gz
 COPYDIR = rhash-bindings-$(VERSION)
 
@@ -81,7 +87,7 @@ install-php:
 copy-dist:
 	mkdir -p $(COPYDIR)
 	find java ruby python -type f -regex '.*\(\.\([hc]\|java\|py\|rb\|txt\)\|Makefile\)' -exec $(CP) '{}' $(COPYDIR)/ \;
-	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\|sln\|csproj\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
+	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\|sln\|csproj\)\|Makefile\|\.config\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(shell sed -e 's/\([^ ]*\).*/perl\/\1/' perl/MANIFEST) "$(COPYDIR)/"
 	find php -type f -regex '.*\.\(m4\|c\|h\|phpt\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(FILES) "$(COPYDIR)/"

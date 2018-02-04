@@ -23,7 +23,7 @@ namespace RHash {
 	/* Pointer to native structure. */
 	sealed class Bindings {
 		
-		private const string librhash = "_REPLACETHIS_";
+		private const string librhash = "librhash.dll";
 
 		private Bindings() { }
 		
