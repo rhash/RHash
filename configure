@@ -591,7 +591,7 @@ SHARED_VSCRIPT=
 if ! darwin; then
   start_check "linker support for --version-script"
   echo "{ local: *; };" > $TMPT
-  cc_check_cflag "-Wl,--version-script,$TMPT" &&
+  cc_check_cflag "-Wl,--version-script,$TMPT -shared" &&
     SHARED_VSCRIPT=",--version-script,exports.sym"
   finish_check $(yn_nonempty "$SHARED_VSCRIPT")
 fi
