@@ -562,7 +562,7 @@ struct rhash_exit_handlers_t
 {
 	unsigned handlers_count;
 	exit_handler_t handlers[4];
-} rhash_exit_handlers = { 0 };
+} rhash_exit_handlers = { 0, { 0 } };
 
 /**
 * Install a handler to be called on program exit.
