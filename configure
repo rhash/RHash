@@ -112,7 +112,7 @@ for OPT do
     --libdir=*)
       INSTALL_LIBDIR=$(get_opt_value $OPT)
       ;;
-	--pkgconfigdir=*)
+    --pkgconfigdir=*)
       INSTALL_PKGCONFIGDIR=$(get_opt_value $OPT)
       ;;
     --localedir=*)
@@ -581,9 +581,14 @@ test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && ! win32 
 ALLOW_RUNTIME_LINKING=yes
 LIBDL_LDFLAGS=
 if ! win32 && test "$OPT_OPENSSL_RUNTIME" != "no"; then
-  start_check "linker support for -ldl"
-  cc_check_cflag "-ldl" && LIBDL_LDFLAGS="-ldl"
-  ALLOW_RUNTIME_LINKING=$(yn_nonempty "$LIBDL_LDFLAGS")
+  start_check "linker support for dlopen"
+  ALLOW_RUNTIME_LINKING=no
+  if cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);'; then
+    ALLOW_RUNTIME_LINKING=yes
+  elif cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);' "-ldl"; then
+    ALLOW_RUNTIME_LINKING=yes
+    LIBDL_LDFLAGS="-ldl"
+  fi
   finish_check "$ALLOW_RUNTIME_LINKING"
 fi
 
@@ -650,7 +655,7 @@ if test "$OPT_GETTEXT" != "no"; then
     elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
       GETTEXT_LDFLAGS="-lintl -liconv"
       GETTEXT_FOUND=found
-	fi
+    fi
   fi
   test "$GETTEXT_FOUND" = "found" && RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
   finish_check $GETTEXT_FOUND
@@ -662,8 +667,8 @@ if test "$OPT_OPENSSL" != "no"; then
   test "$OPT_OPENSSL" = "auto" && test "$OPT_OPENSSL_RUNTIME" = "yes" && OPT_OPENSSL=yes
   OPENSSL_FOUND=no
   if test "$ALLOW_RUNTIME_LINKING" = "no"; then
-    echo "No runtime library loading, because libdl is not found!" >> "$TMPLOG"
-    test "$OPT_OPENSSL_RUNTIME" = "yes" && die "libdl is required for OpenSSL runtime loading"
+    echo "No runtime library loading, because dlopen() is not found!" >> "$TMPLOG"
+    test "$OPT_OPENSSL_RUNTIME" = "yes" && die "dlopen() is required for OpenSSL runtime loading"
     OPT_OPENSSL_RUNTIME=no
   fi
   OPENSSL_HEADERS="openssl/opensslv.h openssl/md4.h openssl/md5.h openssl/ripemd.h openssl/sha.h"
@@ -673,8 +678,8 @@ if test "$OPT_OPENSSL" != "no"; then
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DOPENSSL_RUNTIME)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
       OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
-      # note: libdl shall disable -static on non-windows platforms
-	  win32 || LD_STATIC=
+      # note: libdl should disable -static
+      test -n "$LIBDL_LDFLAGS" && LD_STATIC=
     elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
       OPENSSL_FOUND=found
       RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
