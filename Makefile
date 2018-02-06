@@ -224,7 +224,7 @@ dist/rhash.1.txt: dist/rhash.1
 	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
 
 cpp-doc:
-	cppdoc_cmd -title=RHash -company=Animegorodok -classdir=classdoc -module="cppdoc-standard" -overwrite -extensions="c,h" -languages="c=cpp,h=cpp" -generate-deprecations-list=false $(SOURCES) $(HEADERS) ./Documentation/CppDoc/index.html
+	cppdoc_cmd -title=RHash -company=Akademgorodok -classdir=classdoc -module="cppdoc-standard" -overwrite -extensions="c,h" -languages="c=cpp,h=cpp" -generate-deprecations-list=false $(SOURCES) $(HEADERS) ./Documentation/CppDoc/index.html
 
 permissions:
 	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
@@ -237,7 +237,7 @@ copy-dist: $(DIST_FILES) permissions
 
 gzip: check
 	+$(MAKE) copy-dist
-	tar czf $(ARCHIVE_GZIP) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
+	tar czf $(ARCHIVE_GZIP) --owner=root --group=root $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)
 
 gzip-bindings:
