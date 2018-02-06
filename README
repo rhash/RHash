@@ -8,13 +8,13 @@ RIPEMD-160, HAS-160, EDON-R, Whirlpool and Snefru.
 Hash sums are used to  ensure and verify integrity  of large volumes of data
 for a long-term storing or transferring.
 
-Features:
+Program features:
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
- * Can calculate Magnet links.
- * Updating hash files (adding hash sums of files missing in the hash file).
- * Calculates several hash sums in one pass
+ * Calculation of Magnet links.
  * Ability to process directories recursively.
- * Portability: the program works the same on Linux, *BSD or Windows.
+ * Updating hash files (adding hash sums of files missing in the hash file).
+ * Calculates several hash sums in one pass.
+ * Portability: the program works the same on Linux, Unix, macOS or Windows.
 
 
                         === The LibRHash library ===
