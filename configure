@@ -38,6 +38,7 @@ die () {
   echo
   echo "Error: $@" >&2
   echo >&2
+  test -f "$TMPLOG" && echo "Error: $@" >> "$TMPLOG"
   rm -f "$TMPBIN" "$TMPC" "$TMPT"
   echo "Check \"$TMPLOG\" if you do not understand why it failed."
   exit 1
@@ -282,10 +283,9 @@ cc_check() {
 }
 
 create_c_file() {
+  rm -f "$TMPC"
   if test -n "$1"; then
-    echo "#include <$1>" > $TMPC
-  else
-    echo ${ECHO_N} "${ECHO_C}" > $TMPC
+    echo "#include <$1>" > $TMPC || die "Can't write to the $TMPC file"
   fi
 }
 
@@ -307,7 +307,7 @@ cc_check_cflag() {
 }
 
 cc_check_headers() {
-  echo $ECHO_N "$ECHO_C" > $TMPC
+  rm -f "$TMPC"
   while test -n "$1"; do
     echo "#include <$1>" >> $TMPC
     shift
@@ -462,7 +462,6 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
   cc_version=$($CC -V 2>&1 | head -n 1 | cut -d ',' -f 2 | cut -d ' ' -f 3)
   _cc_major=$(echo $cc_version | cut -d '.' -f 1)
   _cc_minor=$(echo $cc_version | cut -d '.' -f 2)
-  # TODO verify older icc/ecc compatibility
   case $cc_version in
     '')
       cc_version="v. ?.??, bad"
@@ -480,7 +479,7 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
 else
   CC_TMP="$CC"
   for CC in "$CC_TMP" gcc cc ; do
-    if which "$CC" 2>&1 >/dev/null; then
+    if "$CC" -v >/dev/null 2>&1; then
       cc_name_tmp=$($CC -v 2>&1 | tail -n 1 | cut -d ' ' -f 1)
       if test "$cc_name_tmp" = "gcc"; then
         cc_name=$cc_name_tmp
