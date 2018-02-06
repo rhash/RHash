@@ -2,6 +2,8 @@
 #ifndef TEST_HASHES_H
 #define TEST_HASHES_H
 
+#include "byte_order.h"
+
 /* first some magic to convert a macro value to a string */
 #define STRINGIZE_ARG(x) #x
 #define EXPAND_TO_STRING(x) STRINGIZE_ARG(x)
@@ -257,25 +259,29 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 
 /* detect endianness */
-#ifdef CPU_LITTLE_ENDIAN
-	" CPU_LITTLE_ENDIAN"
+#if IS_LITTLE_ENDIAN
+	" IS_LITTLE_ENDIAN"
 #endif
-#ifdef CPU_BIG_ENDIAN
-	" CPU_BIG_ENDIAN"
+#if IS_BIG_ENDIAN
+	" IS_BIG_ENDIAN"
 #endif
 #if defined(__BYTE_ORDER)
-#if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER==__LITTLE_ENDIAN)
+#  if defined(__LITTLE_ENDIAN) && (__BYTE_ORDER==__LITTLE_ENDIAN)
 	" (__BYTE_ORDER==__LITTLE_ENDIAN)"
-#elif defined(__BIG_ENDIAN) && (__BYTE_ORDER==__BIG_ENDIAN)
+#  elif defined(__BIG_ENDIAN) && (__BYTE_ORDER==__BIG_ENDIAN)
 	" (__BYTE_ORDER==__BIG_ENDIAN)"
-#endif
+#  endif
 #endif
 #if defined(_BYTE_ORDER)
-#if defined(_LITTLE_ENDIAN) && (_BYTE_ORDER==_LITTLE_ENDIAN)
+#  if defined(_LITTLE_ENDIAN) && (_BYTE_ORDER==_LITTLE_ENDIAN)
 	" (_BYTE_ORDER==_LITTLE_ENDIAN)"
-#elif defined(_BIG_ENDIAN) && (_BYTE_ORDER==_BIG_ENDIAN)
+#  elif defined(_BIG_ENDIAN) && (_BYTE_ORDER==_BIG_ENDIAN)
 	" (_BYTE_ORDER==_BIG_ENDIAN)"
-#endif
+#  endif
+#elif defined(_LITTLE_ENDIAN)
+	" _LITTLE_ENDIAN" /* Solaris case */
+#elif defined(_BIG_ENDIAN)
+	" _BIG_ENDIAN"
 #endif
 	"\n";
 

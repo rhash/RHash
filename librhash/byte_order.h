@@ -4,7 +4,7 @@
 #include "ustd.h"
 #include <stdlib.h>
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__)
 # include <endian.h>
 #endif
 #if defined(__FreeBSD__) || defined(__DragonFly__) || defined(__APPLE__)
@@ -36,38 +36,46 @@ extern "C" {
 # endif
 #endif
 
+#define RHASH_BYTE_ORDER_LE 1234
+#define RHASH_BYTE_ORDER_BE 4321
 
-/* detect CPU endianness */
-#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && \
-		__BYTE_ORDER == __LITTLE_ENDIAN) || \
-	(defined(_BYTE_ORDER) && defined(_LITTLE_ENDIAN) && \
-		_BYTE_ORDER == _LITTLE_ENDIAN) || \
-	(defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && \
-		__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || \
-	defined(CPU_IA32) || defined(CPU_X64) || \
-	defined(__ia64) || defined(__ia64__) || defined(__alpha__) || defined(_M_ALPHA) || \
-	defined(vax) || defined(MIPSEL) || defined(_ARM_) || defined(__arm__)
-# define CPU_LITTLE_ENDIAN
-# define IS_BIG_ENDIAN 0
-# define IS_LITTLE_ENDIAN 1
-#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && \
-		__BYTE_ORDER == __BIG_ENDIAN) || \
-	(defined(_BYTE_ORDER) && defined(_BIG_ENDIAN) && \
-		_BYTE_ORDER == _BIG_ENDIAN) || \
-	(defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && \
-		__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) || \
-	defined(__sparc) || defined(__sparc__) || defined(sparc) || \
-	defined(_ARCH_PPC) || defined(_ARCH_PPC64) || defined(_POWER) || \
-	defined(__POWERPC__) || defined(POWERPC) || defined(__powerpc) || \
-	defined(__powerpc__) || defined(__powerpc64__) || defined(__ppc__) || \
-	defined(__hpux)  || defined(_MIPSEB) || defined(mc68000) || \
-	defined(__s390__) || defined(__s390x__) || defined(sel)
-# define CPU_BIG_ENDIAN
-# define IS_BIG_ENDIAN 1
-# define IS_LITTLE_ENDIAN 0
-#else
-# error "Can't detect CPU architechture"
+#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || \
+    (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#  define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_LE
+#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) || \
+      (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#  define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_BE
+#elif defined(_BYTE_ORDER)
+#  if defined(_LITTLE_ENDIAN) && (_BYTE_ORDER == _LITTLE_ENDIAN)
+#    define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_LE
+#  elif defined(_BIG_ENDIAN) && (_BYTE_ORDER == _BIG_ENDIAN)
+#    define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_BE
+#  endif
+#elif defined(__sun) && defined(_LITTLE_ENDIAN)
+#  define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_LE
+#elif defined(__sun) && defined(_BIG_ENDIAN)
+#  define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_BE
 #endif
+
+/* try detecting endianness by CPU */
+#ifdef RHASH_BYTE_ORDER
+#elif defined(CPU_IA32) || defined(CPU_X64) || defined(__ia64) || defined(__ia64__) || \
+      defined(__alpha__) || defined(_M_ALPHA) || defined(vax) || defined(MIPSEL) || \
+      defined(_ARM_) || defined(__arm__)
+#  define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_LE
+#elif defined(__sparc) || defined(__sparc__) || defined(sparc) || \
+      defined(_ARCH_PPC) || defined(_ARCH_PPC64) || defined(_POWER) || \
+      defined(__POWERPC__) || defined(POWERPC) || defined(__powerpc) || \
+      defined(__powerpc__) || defined(__powerpc64__) || defined(__ppc__) || \
+      defined(__hpux)  || defined(_MIPSEB) || defined(mc68000) || \
+      defined(__s390__) || defined(__s390x__) || defined(sel)
+# define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_BE
+#else
+#  error "Can't detect CPU architechture"
+#endif
+
+#define IS_BIG_ENDIAN (RHASH_BYTE_ORDER == RHASH_BYTE_ORDER_BE)
+#define IS_LITTLE_ENDIAN (RHASH_BYTE_ORDER == RHASH_BYTE_ORDER_LE)
 
 #ifndef __has_builtin
 # define __has_builtin(x) 0
@@ -148,7 +156,7 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 }
 #endif /* bswap definitions */
 
-#ifdef CPU_BIG_ENDIAN
+#if IS_BIG_ENDIAN
 # define be2me_32(x) (x)
 # define be2me_64(x) (x)
 # define le2me_32(x) bswap_32(x)
@@ -161,7 +169,7 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 # define me64_to_be_str(to, from, length) memcpy((to), (from), (length))
 # define me64_to_le_str(to, from, length) rhash_swap_copy_u64_to_str((to), (from), (length))
 
-#else /* CPU_BIG_ENDIAN */
+#else /* IS_BIG_ENDIAN */
 # define be2me_32(x) bswap_32(x)
 # define be2me_64(x) bswap_64(x)
 # define le2me_32(x) (x)
@@ -173,7 +181,7 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 # define le64_copy(to, index, from, length) memcpy((to) + (index), (from), (length))
 # define me64_to_be_str(to, from, length) rhash_swap_copy_u64_to_str((to), (from), (length))
 # define me64_to_le_str(to, from, length) memcpy((to), (from), (length))
-#endif /* CPU_BIG_ENDIAN */
+#endif /* IS_BIG_ENDIAN */
 
 /* ROTL/ROTR macros rotate a 32/64-bit word left/right by n bits */
 #define ROTL32(dword, n) ((dword) << (n) ^ ((dword) >> (32 - (n))))

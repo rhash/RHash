@@ -363,7 +363,7 @@ void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
 		SHA1_FINAL(ctx, hash); /* return just sha1 hash */
 #else
 		SHA1_FINAL(ctx, 0); /* return just sha1 hash */
-#ifdef CPU_LITTLE_ENDIAN
+#if IS_LITTLE_ENDIAN
 		rhash_u32_mem_swap(ctx->sha1_context.hash, 5);
 #endif
 #endif

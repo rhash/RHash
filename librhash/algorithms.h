@@ -95,7 +95,7 @@ extern rhash_info info_edr512;
 #define F_SWAP64 4
 
 /* define endianness flags */
-#ifndef CPU_BIG_ENDIAN
+#if IS_LITTLE_ENDIAN
 #define F_LE32 0
 #define F_LE64 0
 #define F_BE32 F_SWAP32

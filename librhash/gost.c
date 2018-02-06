@@ -279,12 +279,12 @@ static void rhash_gost_block_compress(gost_ctx *ctx, const unsigned* block)
  */
 static void rhash_gost_compute_sum_and_hash(gost_ctx * ctx, const unsigned* block)
 {
-#ifdef CPU_BIG_ENDIAN
-	unsigned block_le[8]; /* tmp buffer for little endian number */
-# define LOAD_BLOCK_LE(i) (block_le[i] = le2me_32(block[i]))
-#else
+#if IS_LITTLE_ENDIAN
 # define block_le block
 # define LOAD_BLOCK_LE(i)
+#else
+	unsigned block_le[8]; /* tmp buffer for little endian number */
+# define LOAD_BLOCK_LE(i) (block_le[i] = le2me_32(block[i]))
 #endif
 
 	/* This optimization doesn't improve speed much,
