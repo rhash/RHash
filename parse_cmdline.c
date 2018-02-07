@@ -90,9 +90,8 @@ static void print_help(void)
 	print_help_line("      --percents   ", _("Show percents, while calculating or checking hashes.\n"));
 	print_help_line("      --speed   ", _("Output per-file and total processing speed.\n"));
 	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
-#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
-        print_help_line("      --openssl=<list> ", _("List hash functions to calculate by OpenSSL.\n"));
-#endif
+	if (rhash_is_openssl_supported())
+		print_help_line("      --openssl=<list> ", _("List hash functions to be calculated using OpenSSL.\n"));
 	print_help_line("  -o, --output=<file> ", _("File to output calculation or checking results.\n"));
 	print_help_line("  -l, --log=<file>    ", _("File to log errors and verbose information.\n"));
 	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));
@@ -168,38 +167,37 @@ static void bt_announce(options_t *o, char* announce_url, unsigned unused)
  */
 static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 {
-#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
-	char *cur, *next;
 	(void)type;
-	o->openssl_mask = 0x80000000; /* turn off using default mask */
+	if (rhash_is_openssl_supported())
+	{
+		unsigned openssl_supported_hashes = rhash_get_openssl_supported_mask();
+		char *cur, *next;
+		o->openssl_mask = 0x80000000; /* turn off using default mask */
 
-	/* set the openssl_mask */
-	for (cur = openssl_hashes; cur && *cur; cur = next) {
-		print_hash_info *info = hash_info_table;
-		unsigned bit;
-		size_t length;
-		next = strchr(cur, ',');
-		length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
+		/* set the openssl_mask */
+		for (cur = openssl_hashes; cur && *cur; cur = next) {
+			print_hash_info *info = hash_info_table;
+			unsigned bit;
+			size_t length;
+			next = strchr(cur, ',');
+			length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
 
-		for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
-			if ( (bit & RHASH_OPENSSL_SUPPORTED_HASHES) &&
-				memcmp(cur, info->short_name, length) == 0 &&
-				info->short_name[length] == 0) {
-					o->openssl_mask |= bit;
-					break;
+			for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
+				if ( (bit & openssl_supported_hashes) &&
+					memcmp(cur, info->short_name, length) == 0 &&
+					info->short_name[length] == 0) {
+						o->openssl_mask |= bit;
+						break;
+				}
+			}
+			if (bit > RHASH_ALL_HASHES) {
+				cur[length] = '\0'; /* terminate wrong hash name */
+				log_warning(_("openssl option doesn't support '%s' hash\n"), cur);
 			}
 		}
-		if (bit > RHASH_ALL_HASHES) {
-			cur[length] = '\0'; /* terminate wrong hash name */
-			log_warning(_("openssl option doesn't support '%s' hash\n"), cur);
-		}
 	}
-#else
-	(void)type;
-	(void)openssl_hashes;
-	(void)o;
-	log_warning(_("compiled without openssl support\n"));
-#endif
+	else
+		log_warning(_("compiled without openssl support\n"));
 }
 
 /**
@@ -503,10 +501,10 @@ static void apply_option(options_t *opts, parsed_option_t* option)
  */
 static const char* find_conf_file(void)
 {
-# ifndef SYSCONFDIR
-  # define SYSCONFDIR "/etc"
-# endif
-# define CONFIG_FILENAME "rhashrc"
+#ifndef SYSCONFDIR
+# define SYSCONFDIR "/etc"
+#endif
+#define CONFIG_FILENAME "rhashrc"
 
 	char *dir1, *path;
 
@@ -995,7 +993,7 @@ static void make_final_options_checks(void)
 
 	if (!opt.crc_accept) opt.crc_accept = file_mask_new_from_list(".sfv");
 
-	if (opt.openssl_mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, 0, opt.openssl_mask, 0);
+	if (opt.openssl_mask) rhash_set_openssl_mask(opt.openssl_mask);
 }
 
 static struct parsed_cmd_line_t cmd_line;
@@ -1036,7 +1034,7 @@ void read_options(int argc, char *argv[])
 
 	apply_cmdline_options(&cmd_line); /* process the rest of command options */
 
-	/* options were processed, so we don't need them anymore */
+	/* options were processed, so we don't need them any more */
 
 	/* set the files and directories to be processed later */
 	opt.search_data = file_search_data_new(cmd_line.files, cmd_line.n_files, opt.find_max_depth);

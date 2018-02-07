@@ -674,19 +674,16 @@ if test "$OPT_OPENSSL" != "no"; then
   if cc_check_headers $OPENSSL_HEADERS; then
     if test "$OPT_OPENSSL_RUNTIME" != "no"; then
       OPENSSL_FOUND=runtime
-      RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DOPENSSL_RUNTIME)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
       OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
       # note: libdl should disable -static
       test -n "$LIBDL_LDFLAGS" && LD_STATIC=
     elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
       OPENSSL_FOUND=found
-      RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-leay32"
     elif cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-lcrypto"; then
       OPENSSL_FOUND=found
-      RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_OPENSSL)
       LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-lcrypto"
     fi

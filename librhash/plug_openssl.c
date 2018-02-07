@@ -26,6 +26,9 @@
 #if (OPENSSL_VERSION_NUMBER >= 0x10000000L)
 #include <openssl/whrlpool.h>
 #define USE_OPENSSL_WHIRLPOOL
+#define PLUGIN_WHIRLPOOL RHASH_WHIRLPOOL
+#else
+#define PLUGIN_WHIRLPOOL 0
 #endif
 
 #include "algorithms.h"
@@ -39,8 +42,14 @@
 # endif
 #endif
 
-/* the mask of ids of hashing algorithms to use from the OpenSLL library */
-unsigned rhash_openssl_hash_mask = RHASH_OPENSSL_DEFAULT_HASHES;
+#define OPENSSL_DEFAULT_HASH_MASK (RHASH_MD5 | RHASH_SHA1 | \
+	RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512)
+#define PLUGIN_SUPPORTED_HASH_MASK (PLUGIN_WHIRLPOOL | RHASH_MD5 | \
+	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512)
+
+/* the mask of ids of hashing algorithms to use from the OpenSSL library */
+unsigned rhash_openssl_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
+unsigned openssl_available_algorithms_hash_mask = 0;
 
 #ifdef OPENSSL_RUNTIME
 typedef void (*os_fin_t)(void*, void*);
@@ -209,10 +218,33 @@ int rhash_plug_openssl(void)
 		bit_index = rhash_ctz(method->info->hash_id);
 		assert(method->info->hash_id == rhash_openssl_hash_info[bit_index].info->hash_id);
 		memcpy(&rhash_openssl_hash_info[bit_index], method, sizeof(rhash_hash_info));
+		openssl_available_algorithms_hash_mask |= method->info->hash_id;
 	}
 
 	rhash_info_table = rhash_openssl_hash_info;
 	return 1;
+}
+
+/**
+ * Returns bit-mask of OpenSSL algorithms supported by the plugin.
+ *
+ * @return the bit-mask of available OpenSSL algorithms.
+ */
+unsigned rhash_get_openssl_supported_hash_mask(void)
+{
+	return PLUGIN_SUPPORTED_HASH_MASK;
+}
+
+/**
+ * Returns bit-mask of available OpenSSL algorithms, if the OpenSSL has
+ * been successfully loaded, zero otherwise. Only supported by the plugin
+ * algorithms are listed.
+ *
+ * @return the bit-mask of available OpenSSL algorithms.
+ */
+unsigned rhash_get_openssl_available_hash_mask(void)
+{
+	return openssl_available_algorithms_hash_mask;
 }
 #else
 typedef int dummy_declaration_required_by_strict_iso_c;

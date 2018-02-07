@@ -8,9 +8,8 @@ extern "C" {
 #endif
 
 int rhash_plug_openssl(void); /* load openssl algorithms */
-
-#define RHASH_OPENSSL_DEFAULT_HASHES (RHASH_MD5 | RHASH_SHA1 | \
-	RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512)
+unsigned rhash_get_openssl_supported_hash_mask(void);
+unsigned rhash_get_openssl_available_hash_mask(void);
 
 extern unsigned rhash_openssl_hash_mask; /* mask of hash sums to use */
 
@@ -18,5 +17,8 @@ extern unsigned rhash_openssl_hash_mask; /* mask of hash sums to use */
 } /* extern "C" */
 #endif /* __cplusplus */
 
+#else
+# define rhash_get_openssl_supported_hash_mask() (0)
+# define rhash_get_openssl_available_hash_mask() (0)
 #endif /* defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME) */
 #endif /* RHASH_PLUG_OPENSSL_H */

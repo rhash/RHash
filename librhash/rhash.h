@@ -212,6 +212,8 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define RMSG_SET_AUTOFINAL 5
 #define RMSG_SET_OPENSSL_MASK 10
 #define RMSG_GET_OPENSSL_MASK 11
+#define RMSG_GET_OPENSSL_SUPPORTED_MASK 12
+#define RMSG_GET_OPENSSL_AVAILABLE_MASK 13
 
 #define RMSG_BT_ADD_FILE 32
 #define RMSG_BT_SET_OPTIONS 33
@@ -252,19 +254,34 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0)
 
 /**
- * Return current bit-mask of hash algorithms selected to be calculated
- * by OpenSSL library.
+ * Return current bit-mask of hash algorithms selected to be calculated by OpenSSL
+ * library. Return RHASH_ERROR if LibRHash is compiled without OpenSSL support.
  */
 #define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0)
 
-/** The bit mask of hash algorithms implemented by OpenSSL */
-#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
-# define RHASH_OPENSSL_SUPPORTED_HASHES (RHASH_MD4 | RHASH_MD5 | \
-	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | \
-	RHASH_SHA512 | RHASH_RIPEMD160 | RHASH_WHIRLPOOL)
-#else
-# define RHASH_OPENSSL_SUPPORTED_HASHES 0
-#endif
+/**
+ * Return the bit-mask of algorithms that can be provided by the OpenSSL plugin, 
+ * if the library is compiled with OpenSSL support, 0 otherwise. This bit-mask is
+ * a constant value computed at compile-time.
+ */
+#define rhash_get_openssl_supported_mask() rhash_transmit(RMSG_GET_OPENSSL_SUPPORTED_MASK, NULL, 0, 0)
+
+/**
+ * Return the bit-mask of algorithms that are successfully loaded from
+ * OpenSSL library. If the library is not loaded or not supported by LibRHash,
+ * then return 0.
+ */
+#define rhash_get_openssl_available_mask() rhash_transmit(RMSG_GET_OPENSSL_AVAILABLE_MASK, NULL, 0, 0)
+
+
+/** 
+ * Return non-zero if LibRHash hash been compiled with OpenSSL support,
+ * and zero otherwise.
+ */
+#define rhash_is_openssl_supported() (rhash_get_openssl_mask() != RHASH_ERROR)
+
+/** Legacy macro. The bit mask of hash algorithms implemented by OpenSSL */
+# define RHASH_OPENSSL_SUPPORTED_HASHES (rhash_get_openssl_supported_mask())
 
 #ifdef __cplusplus
 } /* extern "C" */
