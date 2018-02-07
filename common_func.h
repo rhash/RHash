@@ -3,7 +3,9 @@
 #define COMMON_FUNC_H
 
 /* use 64-bit off_t.
- * these macros must be defined before any include file */
+ * these macros must be defined before any included file */
+#undef _LARGEFILE64_SOURCE
+#undef _FILE_OFFSET_BITS
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64
 
