@@ -17,13 +17,13 @@
 
 #include <string.h>
 #include <assert.h>
-#include <openssl/opensslv.h>
+#include <openssl/opensslconf.h>
 #include <openssl/md4.h>
 #include <openssl/md5.h>
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10000000L)
+#ifndef OPENSSL_NO_WHIRLPOOL
 #include <openssl/whrlpool.h>
 #define USE_OPENSSL_WHIRLPOOL
 #define PLUGIN_WHIRLPOOL RHASH_WHIRLPOOL
