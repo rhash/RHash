@@ -670,7 +670,7 @@ if test "$OPT_OPENSSL" != "no"; then
     test "$OPT_OPENSSL_RUNTIME" = "yes" && die "dlopen() is required for OpenSSL runtime loading"
     OPT_OPENSSL_RUNTIME=no
   fi
-  OPENSSL_HEADERS="openssl/opensslconf.h openssl/md4.h openssl/md5.h openssl/ripemd.h openssl/sha.h"
+  OPENSSL_HEADERS="openssl/opensslconf.h openssl/md4.h openssl/md5.h openssl/sha.h"
   if cc_check_headers $OPENSSL_HEADERS; then
     if test "$OPT_OPENSSL_RUNTIME" != "no"; then
       OPENSSL_FOUND=runtime
