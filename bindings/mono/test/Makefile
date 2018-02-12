@@ -15,14 +15,15 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
-MONO=mono
-CS=gmcs
+MONO?=mono
+CS?=mcs
+MONO_PATH?=..
 
 test: Test.exe
-	$(MONO) Test.exe
+	MONO_PATH="$(MONO_PATH)" $(MONO) Test.exe
 
 Test.exe: Test.cs
-	$(CS) -r:RHash.dll Test.cs
+	$(CS) -r:RHash.dll -lib:.. Test.cs
 
 clean:
-	rm -f Test.exe RHash.dll
+	rm -f Test.exe

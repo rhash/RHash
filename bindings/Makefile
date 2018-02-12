@@ -81,7 +81,7 @@ install-php:
 copy-dist:
 	mkdir -p $(COPYDIR)
 	find java ruby python -type f -regex '.*\(\.\([hc]\|java\|py\|rb\|txt\)\|Makefile\)' -exec $(CP) '{}' $(COPYDIR)/ \;
-	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\|sln\|csproj\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
+	find mono -type f -regex '.*\(\.\([hc]\|cs\|xml\|txt\|snk\|sln\|csproj\|config\)\|Makefile\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(shell sed -e 's/\([^ ]*\).*/perl\/\1/' perl/MANIFEST) "$(COPYDIR)/"
 	find php -type f -regex '.*\.\(m4\|c\|h\|phpt\)' -exec $(CP) '{}' "$(COPYDIR)/" \;
 	$(CP) $(FILES) "$(COPYDIR)/"
