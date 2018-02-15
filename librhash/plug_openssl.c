@@ -228,11 +228,11 @@ int rhash_plug_openssl(void)
 	{
 		rhash_hash_info *method = &rhash_openssl_methods[i];
 		if (!method->init) continue;
+		openssl_available_algorithms_hash_mask |= method->info->hash_id;
 		if ((rhash_openssl_hash_mask & method->info->hash_id) == 0) continue;
 		bit_index = rhash_ctz(method->info->hash_id);
 		assert(method->info->hash_id == rhash_openssl_hash_info[bit_index].info->hash_id);
 		memcpy(&rhash_openssl_hash_info[bit_index], method, sizeof(rhash_hash_info));
-		openssl_available_algorithms_hash_mask |= method->info->hash_id;
 	}
 
 	rhash_info_table = rhash_openssl_hash_info;

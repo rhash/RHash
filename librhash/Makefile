@@ -184,9 +184,9 @@ test-shared: $(TEST_SHARED)
 
 print-info: print-info-$(BUILD_TYPE)
 print-info-static: $(TEST_STATIC)
-	./$(TEST_STATIC) --flags
+	./$(TEST_STATIC) --info
 print-info-shared: $(TEST_SHARED)
-	LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=.:$(DYLD_LIBRARY_PATH) ./$(TEST_SHARED) --flags
+	LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) DYLD_LIBRARY_PATH=.:$(DYLD_LIBRARY_PATH) ./$(TEST_SHARED) --info
 
 distclean: clean
 	rm -f config.mak

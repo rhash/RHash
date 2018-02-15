@@ -914,6 +914,38 @@ static unsigned find_hash(const char* name)
 }
 
 /**
+ * Print status of OpenSSL plugin.
+ */
+static void print_openssl_status(void)
+{
+	rhash_uptr_t available = rhash_get_openssl_available_mask();
+	rhash_uptr_t supported = rhash_get_openssl_supported_mask();
+	int has_openssl = rhash_is_openssl_supported();
+
+	printf("OpenSSL %s", (has_openssl ? "supported" : "not supported"));
+	if (has_openssl && available != RHASH_ERROR)
+	{
+		printf(", %s", (available ? "loaded" : "not loaded"));
+		if (available)
+		{
+			unsigned hash_id;
+			printf(":");
+			available &= RHASH_ALL_HASHES;
+			for (hash_id = 1; hash_id <= available; hash_id <<= 1) {
+				if (!!(hash_id & available))
+					printf(" %s", rhash_get_name(hash_id));
+			}
+			supported &= (~available & RHASH_ALL_HASHES);
+			for (hash_id = 1; hash_id <= supported; hash_id <<= 1) {
+				if (!!(hash_id & supported))
+					printf(" -%s", rhash_get_name(hash_id));
+			}
+		}
+	}
+	printf("\n");
+}
+
+/**
  * The program entry point.
  *
  * @param argc number of arguments including the program name
@@ -937,10 +969,11 @@ int main(int argc, char *argv[])
 			test_known_strings(hash_id);
 
 			rhash_run_benchmark(hash_id, 0, stdout);
-		} else if (strcmp(argv[1], "--flags") == 0) {
+		} else if (strcmp(argv[1], "--info") == 0) {
 			printf("%s", compiler_flags);
+			print_openssl_status();
 		} else {
-			printf("Options: [--speed [HASH_NAME]| --flags]\n");
+			printf("Options: [--speed [HASH_NAME]| --info]\n");
 		}
 	} else {
 		test_all_known_strings();
