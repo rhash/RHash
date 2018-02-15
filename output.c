@@ -16,17 +16,9 @@
 #include "win_utils.h"
 #include "output.h"
 
-/*#ifdef _WIN32
-#define WIN32_USE_CURSOR
-#endif*/
-
 #ifdef _WIN32
 #include <windows.h>
 #include <share.h> /* for _SH_DENYNO */
-#endif
-
-#ifdef WIN32_USE_CURSOR
-#include <io.h>
 #endif
 
 /* global pointer to the selected method of percents output */
@@ -114,11 +106,6 @@ struct percents_t
 	int use_cursor;
 	int same_output;
 	unsigned ticks;
-
-#ifdef WIN32_USE_CURSOR
-	HANDLE hOut;
-	unsigned short cur_x, cur_y; /* cursor position, where to print percents */
-#endif
 };
 static struct percents_t percents;
 
@@ -340,11 +327,6 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
  */
 static int p_init_percents(struct file_info *info)
 {
-#ifdef WIN32_USE_CURSOR
-	CONSOLE_SCREEN_BUFFER_INFO csbInfo;
-	percents.hOut = NULL;
-#endif
-
 	(void)info;
 	percents.points      = 0;
 	percents.same_output = 0;
@@ -356,21 +338,6 @@ static int p_init_percents(struct file_info *info)
 
 	/* note: this output differs from print_check_result() by file handle */
 	rsh_fprintf(rhash_data.log, "%-51s ", info->print_path);
-
-#ifdef WIN32_USE_CURSOR
-	if (percents.use_cursor) {
-		/* store cursor coordinates */
-		percents.hOut = GetStdHandle(STD_ERROR_HANDLE);
-		if (percents.hOut == INVALID_HANDLE_VALUE ||
-			!GetConsoleScreenBufferInfo(percents.hOut, &csbInfo)) {
-				percents.hOut = NULL;
-				return 0;
-		} else {
-			percents.cur_x = csbInfo.dwCursorPosition.X;
-			percents.cur_y = csbInfo.dwCursorPosition.Y;
-		}
-	}
-#endif
 
 	percents.same_output = (rhash_data.out == stdout && isatty(0));
 	percents.ticks = rhash_get_ticks();
@@ -391,11 +358,6 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 	int perc = 0;
 	unsigned ticks;
 
-#ifdef WIN32_USE_CURSOR
-	COORD dwCursorPosition;
-	if (percents.use_cursor && percents.hOut == NULL) return;
-#endif
-
 	if (info->size > 0) {
 		offset -= info->msg_offset;
 		/* use only two digits to display percents: 0%-99% */
@@ -415,20 +377,8 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 		rsh_fprintf(rhash_data.log, "%c", rot[(percents.points++) & 3]);
 	}
 
-#ifdef WIN32_USE_CURSOR
-	if (percents.use_cursor) {
-		fflush(rhash_data.log);
-
-		/* rewind the cursor position */
-		dwCursorPosition.X = percents.cur_x;
-		dwCursorPosition.Y = percents.cur_y;
-		SetConsoleCursorPosition(percents.hOut, dwCursorPosition);
-	} else
-#endif
-	{
-		rsh_fprintf(rhash_data.log, "\r%-51s ", info->print_path);
-		fflush(rhash_data.log);
-	}
+	rsh_fprintf(rhash_data.log, "\r%-51s ", info->print_path);
+	fflush(rhash_data.log);
 	percents.ticks  = ticks;
 }
 
@@ -442,10 +392,6 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 static void p_finish_percents(struct file_info *info, int process_res)
 {
 	int need_check_result;
-
-#ifdef WIN32_USE_CURSOR
-	if (percents.use_cursor && percents.hOut == NULL) return;
-#endif
 
 	need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
 		!((opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags));
