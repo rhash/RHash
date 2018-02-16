@@ -1,34 +1,30 @@
-LibRHash Description
-====================
+LibRHash Library
+================
 
-**LibRHash** is a professional, portable, thread-safe C library for computing a wide variety of hash sums.
+**LibRHash** is a professional, portable, thread-safe *C* library for computing a wide variety of hash sums.
 
-Main features
-
+### Main features
 * Small and easy to learn interface.
 * Hi-level and Low-level API.
 * Calculates several hash functions simultaneously in one pass.
-* Extremely portable: works the same on Linux, *BSD and Windows.
+* Extremely portable: works the same on Linux, Unix, macOS or Windows.
 * Written in pure C, small in size, open source.
 
+Scripting Languages Support
+---------------------------
+
+LibRHash has [bindings] to several programming languages: *Java*, *C#*, *Perl*, *PHP*, *Python*, *Ruby*.
+
 License
-=======
+-------
 
-The library is in public domain. The source code is licensed under [RHash License](http://rhash.anz.ru/license.php?l=en).
-
-Basically the library and its source code can be used for free in Commercial, [Open Source](http://en.wikipedia.org/wiki/Open_Source) and other projects.
-
-Source code
-===========
-
-The library is distributed as part of the **RHash** source tree and
-can be downloaded from https://github.com/rhash/RHash/releases
+The library is licensed under [RHash License].
+Basically the library and its source code can be used for free in Commercial, [Open Source] and other projects.
 
 Usage examples
-==============
+--------------
 
-Low-level interface
--------------------
+### Low-level interface
 
 * Calculating MD4 and MD5 digests simultaneously of a million characters of 'a'
 
@@ -66,8 +62,8 @@ Low-level interface
  }
 ```
 
-Hi-level interface
-------------------
+### Hi-level interface
+
 * Calculating SHA1 hash of a string
 
 ```c
@@ -125,3 +121,7 @@ Hi-level interface
    return 0;
  }
 ```
+
+[bindings]: ../bindings/
+[RHash License]: ../COPYING
+[Open Source]: http://en.wikipedia.org/wiki/Open_Source
