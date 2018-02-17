@@ -445,7 +445,10 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
 
 	if ((fd = fopen(filepath, "rb")) == NULL) return -1;
 
-	if ((ctx = rhash_init(hash_id)) == NULL) return -1;
+	if ((ctx = rhash_init(hash_id)) == NULL) {
+		fclose(fd);
+		return -1;
+	}
 
 	res = rhash_file_update(ctx, fd); /* hash the file */
 	fclose(fd);
@@ -480,7 +483,10 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 
 	if ((fd = _wfsopen(filepath, L"rb", _SH_DENYWR)) == NULL) return -1;
 
-	if ((ctx = rhash_init(hash_id)) == NULL) return -1;
+	if ((ctx = rhash_init(hash_id)) == NULL) {
+		fclose(fd);
+		return -1;
+	}
 
 	res = rhash_file_update(ctx, fd); /* hash the file */
 	fclose(fd);
