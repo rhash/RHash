@@ -23,12 +23,6 @@
 #include <windows.h>
 #endif
 
-#if !defined(_WIN32) && (defined(_BSD_SOURCE) || _XOPEN_SOURCE >= 500)
-# define USE_LSTAT 1
-#else
-# define USE_LSTAT 0
-#endif
-
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
 #define IS_CURRENT_OR_PARENT_DIR(s) ((s)[0]=='.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
 #define IS_CURRENT_OR_PARENT_DIRW(s) ((s)[0]==L'.' && (!(s)[1] || ((s)[1] == L'.' && !(s)[2])))
@@ -170,7 +164,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 		{
 			file.mode = FILE_IFSTDIN;
 		}
-		else if (file_stat2(&file, USE_LSTAT) < 0) {
+		else if (file_stat2(&file, 1) < 0) {
 			log_file_error(file.path);
 			file_cleanup(&file);
 			data->errors_count++;
@@ -207,7 +201,7 @@ void scan_files(file_search_data* data)
 {
 	size_t i;
 	size_t count = data->root_files.size;
-	int skip_symlink_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
+	int skip_symlinked_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
 
 	for (i = 0; i < count && !(data->options & FIND_CANCEL); i++)
 	{
@@ -217,7 +211,7 @@ void scan_files(file_search_data* data)
 		/* check if file is a directory */
 		if (FILE_ISDIR(file)) {
 			/* silently skip symlinks to directories if required */
-			if (skip_symlink_dirs && FILE_ISLNK(file)) {
+			if (skip_symlinked_dirs && FILE_ISLNK(file)) {
 				continue;
 			}
 
@@ -322,6 +316,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	int level = 0;
 	int max_depth = data->max_depth;
 	int options = data->options;
+	int skip_symlinked_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
 	file_t file;
 
 	if (max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
@@ -397,7 +392,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		{
 			int res;
 			file_init(&file, dir_path, 1);
-			res = file_stat2(&file, USE_LSTAT);
+			res = file_stat2(&file, skip_symlinked_dirs);
 
 			/* check if we should skip the directory */
 			if (res < 0 || !data->call_back(&file, data->call_back_data)) {
@@ -427,7 +422,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			file.path = make_path(dir_path, de->d_name);
 			if (!file.path) continue;
 
-			res  = file_stat2(&file, USE_LSTAT);
+			res  = file_stat2(&file, skip_symlinked_dirs);
 			if (res >= 0) {
 				/* process the file or directory */
 				if (FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {

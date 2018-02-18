@@ -1,3 +1,6 @@
+Sun Feb 18 2018 Aleksey
+	* Bugfix: fix --follow option
+
 Mon Jan 29 2018 J. Peter Mugaas
 	* better MSYS and CygWin support
 
