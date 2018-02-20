@@ -363,9 +363,7 @@ cmdline_opt_t cmdline_opt[] =
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
-#ifndef _WIN32 /* Unix-only option */
 	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
-#endif
 	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },

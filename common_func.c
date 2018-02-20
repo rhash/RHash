@@ -440,6 +440,8 @@ int file_statw(file_t* file)
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode &= FILE_OPT_DONT_FREE_PATH;
 		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : FILE_IFREG);
+		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+			file->mode |= FILE_IFLNK;
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
