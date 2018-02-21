@@ -211,7 +211,7 @@ test -z "$INSTALL_LOCALEDIR" && INSTALL_LOCALEDIR="$INSTALL_PREFIX/share/locale"
 
 # detect and prepare tmp directory
 for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp" ; do
-  test "$DETECT_TMP" && break
+  test -d "$DETECT_TMP" && break
 done
 RANDNUM=$RANDOM
 test -z $RANDNUM && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
