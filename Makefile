@@ -1,18 +1,13 @@
 
 include config.mak
 
-HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h version.h
+HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file_mask.h file_set.h find_file.h hash_check.h output.h parse_cmdline.h rhash_main.h win_utils.h platform.h version.h
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = calc_sums.o hash_print.o common_func.o hash_update.o file_mask.o file_set.o find_file.o hash_check.o output.o parse_cmdline.o rhash_main.o win_utils.o
-SPECFILE    = dist/rhash.spec
-LIBRHASH_PC = dist/librhash.pc
-LIN_DIST_FILES = configure Makefile ChangeLog INSTALL COPYING README \
-  $(SPECFILE) $(SPECFILE).in $(SOURCES) $(HEADERS) \
-  tests/test_rhash.sh tests/test1K.data \
-  dist/rhash.1 dist/rhash.1.win.sed dist/rhash.1.html
 WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
-WIN_SRC_FILES  = win32/dirent.h win32/stdint.h win32/unistd.h win32/platform-dependent.h \
-  win32/vc-2010/rhash.vcxproj
+OTHER_FILES = configure Makefile ChangeLog INSTALL.md COPYING README \
+  dist/rhash.spec.in dist/rhash.1 dist/rhash.1.win.sed \
+  tests/test_rhash.sh tests/test1K.data win32/vc-2010/rhash.vcxproj
 LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
   librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
@@ -29,8 +24,10 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_hashes.c \
   librhash/test_hashes.h librhash/torrent.h librhash/torrent.c librhash/ustd.h \
   librhash/util.h librhash/Makefile
-I18N_FILES = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po
-DIST_FILES     = $(LIN_DIST_FILES) $(LIBRHASH_FILES) $(WIN_DIST_FILES) $(WIN_SRC_FILES) $(I18N_FILES)
+I18N_FILES  = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po
+ALL_FILES   = $(SOURCES) $(HEADERS) $(LIBRHASH_FILES) $(OTHER_FILES) $(WIN_DIST_FILES) $(I18N_FILES)
+SPECFILE    = dist/rhash.spec
+LIBRHASH_PC = dist/librhash.pc
 RHASH_NAME     = rhash
 RHASH_BINARY   = rhash$(EXEC_EXT)
 CONFDIR_MACRO  = -DSYSCONFDIR=\"$(SYSCONFDIR)\"
@@ -149,7 +146,6 @@ check:
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
 	grep -q '^#define VERSION "$(VERSION)"' version.h
 	test ! -f bindings/version.properties || grep -q '^version=$(VERSION)$$' bindings/version.properties
-	test -s dist/rhash.1.html
 
 $(RHASH_STATIC): $(OBJECTS) $(LIBRHASH_STATIC)
 	$(CC) $(OBJECTS) $(LIBRHASH_STATIC) $(BIN_STATIC_LDFLAGS) -o $@
@@ -230,10 +226,10 @@ permissions:
 	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
 	chmod +x configure tests/test_rhash.sh
 
-copy-dist: $(DIST_FILES) permissions
+copy-dist: $(ALL_FILES) permissions
 	rm -rf $(PACKAGE_NAME)
 	mkdir $(PACKAGE_NAME)
-	cp -rl --parents $(DIST_FILES) $(PACKAGE_NAME)/
+	cp -rl --parents $(ALL_FILES) $(PACKAGE_NAME)/
 
 gzip: check
 	+$(MAKE) copy-dist
@@ -268,7 +264,7 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
 
-$(ARCHIVE_DEB_GZ) : $(DIST_FILES)
+$(ARCHIVE_DEB_GZ) : $(ALL_FILES)
 	+$(MAKE) $(ARCHIVE_GZIP)
 	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
 

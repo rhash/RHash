@@ -170,7 +170,7 @@ static void openssl_flags(options_t *o, char* openssl_hashes, unsigned type)
 	(void)type;
 	if (rhash_is_openssl_supported())
 	{
-		unsigned openssl_supported_hashes = rhash_get_openssl_supported_mask();
+		rhash_uptr_t openssl_supported_hashes = rhash_get_openssl_supported_mask();
 		char *cur, *next;
 		o->openssl_mask = 0x80000000; /* turn off using default mask */
 

@@ -1,7 +1,7 @@
 /* output.c */
 
 #include "common_func.h" /* should be included before the C library files */
-#include <unistd.h>
+#include "platform.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +18,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <io.h>
 #include <share.h> /* for _SH_DENYNO */
 #endif
 

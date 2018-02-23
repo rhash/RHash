@@ -5,22 +5,23 @@
  */
 
 #include "common_func.h" /* should be included before the C library files */
+#include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h> /* ino_t */
-#include <dirent.h>    /* opendir/readdir */
 #include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "output.h"
 #include "win_utils.h"
 #include "find_file.h"
 
-#if defined(_WIN32)
-#include <windows.h>
+#ifdef _WIN32
+# include <windows.h>
+#else
+# include <dirent.h>    /* opendir/readdir */
 #endif
 
 #define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')

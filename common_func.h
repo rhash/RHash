@@ -27,9 +27,9 @@
 #include <stddef.h> /* for wchar_t */
 
 #if !defined( _WIN32) && !defined(__CYGWIN__)
-#include <sys/time.h> /* for timeval */
+# include <sys/time.h> /* for timeval */
 #elif _MSC_VER > 1300
-#include "win32/platform-dependent.h"
+# include "platform.h"
 #endif
 
 

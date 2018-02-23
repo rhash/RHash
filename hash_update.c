@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h> /* for qsort */
 #include <string.h>
-#include <dirent.h>
 #include <sys/stat.h>
 #include <errno.h>
+#ifndef _WIN32
+# include <dirent.h>
+#endif
 
 #include "win_utils.h"
 #include "parse_cmdline.h"

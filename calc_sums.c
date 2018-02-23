@@ -1,15 +1,18 @@
 /* calc_sums.c - crc calculating and printing functions */
 
 #include "common_func.h" /* should be included before the C library files */
+#include "platform.h" /* read() on unix */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* free() */
-#include <unistd.h> /* read() */
 #include <fcntl.h>  /* open() */
 #include <time.h>   /* localtime(), time() */
 #include <sys/stat.h> /* stat() */
 #include <errno.h>
 #include <assert.h>
+#ifdef _WIN32
+# include <io.h>
+#endif
 
 #include "librhash/rhash.h"
 #include "librhash/rhash_torrent.h"

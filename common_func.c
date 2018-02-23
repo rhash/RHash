@@ -2,12 +2,9 @@
 
 #include "common_func.h" /* should be included before the C library files */
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include <stdint.h>
-#include <time.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <errno.h>
