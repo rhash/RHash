@@ -43,7 +43,7 @@ build-shared: $(RHASH_SHARED)
 lib-shared: $(LIBRHASH_SHARED)
 lib-static: $(LIBRHASH_STATIC)
 install-data: install-man install-conf
-uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib uninstall-pkg-config
+uninstall: uninstall-binary uninstall-data uninstall-symlinks uninstall-lib uninstall-gmo uninstall-pkg-config
 
 config.mak:
 	echo "Run the ./configure script first" && false
@@ -296,28 +296,33 @@ clean: clean-local
 update-po:
 	xgettext *.c -k_ -cTRANSLATORS -o po/rhash.pot \
 		--msgid-bugs-address='Aleksey <rhash.admin@gmail.com>' --package-name='RHash'
-	for f in po/*.po; do \
+	for f in $(I18N_FILES); do \
 		msgmerge -U $$f po/rhash.pot; \
 	done
 
 compile-gmo:
-	for f in po/*.po; do \
+	for f in $(I18N_FILES); do \
 		g=`basename $$f .po`; \
 		msgfmt $$f -o po/$$g.gmo; \
 	done
 
 install-gmo: compile-gmo
-	for f in po/*.gmo; do \
-		l=`basename $$f .gmo`; \
+	for f in $(I18N_FILES); do \
+		l=`basename $$f .po`; \
 		$(INSTALL) -d $(LOCALEDIR)/$$l/LC_MESSAGES; \
-		$(INSTALL_DATA) $$f $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+		$(INSTALL_DATA) $$l.gmo $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+	done
+
+uninstall-gmo:
+	for f in $(I18N_FILES); do \
+		rm -f $(LOCALEDIR)/`basename $$f .gmo`/LC_MESSAGES/rhash.mo; \
 	done
 
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
 	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
 	install-lib-so-link install-conf install-data install-gmo install-man \
-	install-symlinks install-pkg-config uninstall-pkg-config \
+	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
 	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
