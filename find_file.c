@@ -134,7 +134,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 			} else {
 				file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
 				if (failed) {
-					log_error(_("Can't convert the path to local encoding: %s\n"), file.path);
+					log_error(_("can't convert the file path to local encoding: %s\n"), file.path);
 					free(file.path);
 					data->errors_count++;
 					continue;
