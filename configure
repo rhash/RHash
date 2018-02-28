@@ -49,8 +49,14 @@ print_help()
   cat << EOF
 Usage: configure [OPTIONS]...
 
-Options:
+Generic Options:
   -h, --help             display this help and exit
+  --cc=COMPILER          C compiler to build RHash [gcc]
+  --ar=AR                librarian to build RHash [ar]
+  --target=PLATFORM      target platform (i386-linux, arm-linux, etc)
+  --with-install=PATH    path to a custom install program
+
+Directory Options:
   --prefix=DIR           prefix directory for installation [/usr/local]
   --exec-prefix=DIR      prefix directory for binaries [PREFIX]
   --bindir=DIR           directory for installing binaries [EXEC_PREFIX/bin]
@@ -61,21 +67,16 @@ Options:
   --pkgconfigdir=DIR     directory for pkg-config files [LIBDIR/pkgconfig]
   --localedir=DIR        directory for locale files [PREFIX/share/locale]
 
-Libraries options:
+Features options:
+  --disable-FEATURE      do not include FEATURE
   --enable-gettext       enable gettext (localization) support [autodetect]
   --enable-openssl       enable OpenSSL (optimized hash functions) support
                          [autodetect]
   --enable-openssl-runtime   load OpenSSL at runtime if present [autodetect]
-
-Miscellaneous options:
-  --cc=COMPILER          C compiler to build RHash [gcc]
-  --ar=AR                librarian to build RHash [ar]
-  --target=PLATFORM      target platform (i386-linux, arm-linux, etc)
   --enable-static        statically link RHash binary
   --enable-lib-static    build and install LibRHash static library [auto]
   --enable-lib-shared    build and install LibRHash shared library [auto]
   --enable-symlinks[=LIST]   install symlinks to the binary [enable]
-  --with-install=PATH    path to a custom install program
 
 Use these options if autodetection fails:
   --extra-cflags=FLAGS        extra CFLAGS
