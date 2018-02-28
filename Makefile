@@ -141,6 +141,9 @@ test-shared: $(RHASH_SHARED)
 	chmod +x tests/test_rhash.sh
 	tests/test_rhash.sh --shared ./$(RHASH_SHARED)
 
+print-info: lib-$(BUILD_TYPE)
+	+cd librhash && $(MAKE) print-info
+
 # check that source tree is consistent
 check:
 	grep -q '\* === Version $(VERSION) ===' ChangeLog
@@ -324,5 +327,5 @@ uninstall-gmo:
 	install-lib-so-link install-conf install-data install-gmo install-man \
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
-	check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
+	print-info check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
 	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
