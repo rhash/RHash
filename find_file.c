@@ -1,22 +1,16 @@
-/* find_file.c
- *
- * find_file function for searching through directory trees doing work
- * on each file found similar to the Unix find command.
- */
+/* find_file.c - functions for recursive scan of directories. */
 
-#include "common_func.h" /* should be included before the C library files */
-#include "platform.h"
+#include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include <sys/types.h> /* ino_t */
-#include <errno.h>
-#include <sys/stat.h>
 
+#include "platform.h"
+#include "find_file.h"
+#include "common_func.h"
 #include "output.h"
 #include "win_utils.h"
-#include "find_file.h"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -92,7 +86,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 					/* convert file name */
 					file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
 					if (!failed) {
-						failed = (file_statw(&file) < 0);
+						failed = (file_stat(&file, 0) < 0);
 					}
 
 					/* quietly skip unconvertible file names */
@@ -140,7 +134,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 					continue;
 				}
 				file.wpath = path;
-				if (file_statw(&file) < 0) {
+				if (file_stat(&file, 0) < 0) {
 					log_file_error(file.path);
 					free(file.path);
 					data->errors_count++;
@@ -165,7 +159,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 		{
 			file.mode = FILE_IFSTDIN;
 		}
-		else if (file_stat2(&file, 1) < 0) {
+		else if (file_stat(&file, FUseLstat) < 0) {
 			log_file_error(file.path);
 			file_cleanup(&file);
 			data->errors_count++;
@@ -175,7 +169,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 		file.mode |= FILE_IFROOT;
 		add_root_file(data, &file);
 	}
-#endif
+#endif /* _WIN32 */
 	return data;
 }
 
@@ -202,7 +196,7 @@ void scan_files(file_search_data* data)
 {
 	size_t i;
 	size_t count = data->root_files.size;
-	int skip_symlinked_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
+	int skip_symlinked_dirs = (data->options & FIND_FOLLOW_SYMLINKS ? 0 : FUseLstat);
 
 	for (i = 0; i < count && !(data->options & FIND_CANCEL); i++)
 	{
@@ -317,7 +311,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	int level = 0;
 	int max_depth = data->max_depth;
 	int options = data->options;
-	int skip_symlinked_dirs = !(data->options & FIND_FOLLOW_SYMLINKS);
+	int fstat_flags = (data->options & FIND_FOLLOW_SYMLINKS ? 0 : FUseLstat);
 	file_t file;
 
 	if (max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
@@ -393,7 +387,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		{
 			int res;
 			file_init(&file, dir_path, 1);
-			res = file_stat2(&file, skip_symlinked_dirs);
+			res = file_stat(&file, fstat_flags);
 
 			/* check if we should skip the directory */
 			if (res < 0 || !data->call_back(&file, data->call_back_data)) {
@@ -423,7 +417,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			file.path = make_path(dir_path, de->d_name);
 			if (!file.path) continue;
 
-			res  = file_stat2(&file, skip_symlinked_dirs);
+			res  = file_stat(&file, fstat_flags);
 			if (res >= 0) {
 				/* process the file or directory */
 				if (FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {

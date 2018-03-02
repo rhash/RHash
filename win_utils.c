@@ -27,13 +27,13 @@ void set_benchmark_cpu_affinity(void)
 /* Windows-only (non-CygWin) functions */
 
 #include <share.h> /* for _SH_DENYWR */
-#include <sys/stat.h>
 #include <fcntl.h> /* for _O_RDONLY, _O_BINARY */
 #include <io.h> /* for isatty */
 #include <assert.h>
 #include <errno.h>
 #include <locale.h>
 
+#include "file.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 
@@ -340,9 +340,9 @@ wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
 	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
 	if (dir_len > 0) {
 		memcpy(res, dir_path, dir_len * sizeof(wchar_t));
-		if (res[dir_len - 1] != (wchar_t)SYS_PATH_SEPARATOR) {
+		if (res[dir_len - 1] != L'\\') {
 			/* append path separator to the directory */
-			res[dir_len++] = (wchar_t)SYS_PATH_SEPARATOR;
+			res[dir_len++] = L'\\';
 		}
 	}
 

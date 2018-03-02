@@ -1,22 +1,21 @@
-/* hash_print.c - functions to output hash sums using printf-like format */
+/* hash_print.c - output hash sums using printf-like format */
 
-#include "common_func.h" /* should be included before the C library files */
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
-
 #ifdef _WIN32
-#include <fcntl.h>
-#include <io.h>
+# include <fcntl.h>
+# include <io.h>
 #endif /* _WIN32 */
 
-#include "librhash/rhash.h"
+#include "hash_print.h"
 #include "calc_sums.h"
+#include "common_func.h"
+#include "file.h"
 #include "parse_cmdline.h"
 #include "win_utils.h"
-#include "hash_print.h"
+#include "librhash/rhash.h"
 
 /*=========================================================================
 * Formatted output functions and structures

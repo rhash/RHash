@@ -1,16 +1,15 @@
-/* hash_check.c */
+/* hash_check.c - verification of hashes of files */
 
 #include <assert.h>
-#include <string.h>
 #include <ctype.h>  /* isspace */
-
-#include "librhash/rhash.h"
-#include "output.h"
-#include "common_func.h"
-#include "parse_cmdline.h"
-#include "hash_print.h"
+#include <string.h>
 
 #include "hash_check.h"
+#include "hash_print.h"
+#include "common_func.h"
+#include "output.h"
+#include "parse_cmdline.h"
+#include "librhash/rhash.h"
 
 /* hash conversion macros and functions */
 #define HEX2DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)

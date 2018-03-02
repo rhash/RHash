@@ -2,6 +2,8 @@
 #ifndef HASH_PRINT_H
 #define HASH_PRINT_H
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +32,7 @@ typedef struct print_hash_info
 extern print_hash_info hash_info_table[];
 
 struct file_info;
+struct file_t;
 struct strbuf_t;
 
 /* initialization of static data */
@@ -43,7 +46,7 @@ void free_print_list(print_item* list);
 
 /* SFV format functions */
 void print_sfv_banner(FILE* out);
-int print_sfv_header_line(FILE* out, file_t* file, const char* printpath);
+int print_sfv_header_line(FILE* out, struct file_t* file, const char* printpath);
 
 #ifdef __cplusplus
 } /* extern "C" */

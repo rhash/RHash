@@ -1,24 +1,24 @@
-/* hash_update.c functions to update a crc file */
+/* hash_update.c - functions to update a crc file */
 
-#include "common_func.h" /* should be included before the C library files */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h> /* for qsort */
 #include <string.h>
-#include <sys/stat.h>
-#include <errno.h>
 #ifndef _WIN32
 # include <dirent.h>
 #endif
 
-#include "win_utils.h"
-#include "parse_cmdline.h"
-#include "output.h"
-#include "rhash_main.h"
+#include "calc_sums.h"
+#include "common_func.h"
+#include "file.h"
 #include "file_set.h"
 #include "file_mask.h"
-#include "calc_sums.h"
 #include "hash_print.h"
 #include "hash_update.h"
+#include "output.h"
+#include "parse_cmdline.h"
+#include "rhash_main.h"
+#include "win_utils.h"
 
 /* first define some internal functions, implemented later in this file */
 static int add_new_crc_entries(file_t* file, file_set *crc_entries);
@@ -81,7 +81,7 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 	char buf[2048];
 	hash_check hc;
 
-	if ( !(fd = rsh_fopen_bin(file->path, "rb") )) {
+	if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
 		/* if file not exist, it will be created */
 		return (errno == ENOENT ? 0 : -1);
 	}
@@ -131,12 +131,12 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	int print_banner = (opt.fmt == FMT_SFV);
 
 	file->size = 0;
-	if (file_stat(file) == 0) {
+	if (file_stat(file, 0) == 0) {
 		if (print_banner && file->size > 0) print_banner = 0;
 	}
 
 	/* open the hash file for writing */
-	if ( !(fd = fopen(file->path, "r+") )) {
+	if ( !(fd = file_fopen(file, FOpenRead | FOpenWrite) )) {
 		log_file_error(file->path);
 		return -1;
 	}
@@ -167,14 +167,13 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	for (i = 0; i < files_to_add->size; i++, rhash_data.processed++) {
 		file_t file;
 		char *print_path = file_set_get(files_to_add, i)->filepath;
-		file.wpath = 0;
-		file.mode = 0;
+		memset(&file, 0, sizeof(file));
 
 		if (dir_path[0] != '.' || dir_path[1] != 0) {
 			/* prepend the file path by directory path */
-			file.path = make_path(dir_path, print_path);
+			file_init(&file, make_path(dir_path, print_path), 0);
 		} else {
-			file.path = rsh_strdup(print_path);
+			file_init(&file, print_path, FILE_OPT_DONT_FREE_PATH);
 		}
 
 		if (opt.fmt == FMT_SFV) {
@@ -183,7 +182,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 				print_banner = 0;
 			}
 		}
-		file_stat(&file);
+		file_stat(&file, 0);
 
 		/* print hash sums to the crc file */
 		calculate_and_print_sums(fd, &file, print_path);

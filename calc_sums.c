@@ -1,28 +1,26 @@
 /* calc_sums.c - crc calculating and printing functions */
 
-#include "common_func.h" /* should be included before the C library files */
-#include "platform.h" /* read() on unix */
+#include "platform.h" /* unlink() on unix */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* free() */
-#include <fcntl.h>  /* open() */
-#include <time.h>   /* localtime(), time() */
-#include <sys/stat.h> /* stat() */
 #include <errno.h>
 #include <assert.h>
 #ifdef _WIN32
+# include <fcntl.h>  /* _O_BINARY */
 # include <io.h>
 #endif
 
-#include "librhash/rhash.h"
-#include "librhash/rhash_torrent.h"
-#include "parse_cmdline.h"
-#include "rhash_main.h"
+#include "calc_sums.h"
+#include "common_func.h"
+#include "file.h"
 #include "hash_print.h"
 #include "output.h"
+#include "parse_cmdline.h"
+#include "rhash_main.h"
 #include "win_utils.h"
-
-#include "calc_sums.h"
+#include "librhash/rhash.h"
+#include "librhash/rhash_torrent.h"
 
 /**
  * Initialize BTIH hash function. Unlike other algorithms BTIH
@@ -126,10 +124,8 @@ static int calc_sums(struct file_info *info)
 
 		/* skip without reporting an error the files
 		 * opened exclusively by another process */
-		fd = rsh_fopen_bin(info->full_path, "rb");
-		if (!fd) {
-			return -1;
-		}
+		fd = file_fopen(info->file, FOpenRead | FOpenBin);
+		if (!fd) return -1;
 	}
 
 	re_init_rhash_context(info);
@@ -318,6 +314,7 @@ int rename_file_by_embeding_crc32(struct file_info *info)
  */
 int save_torrent_to(const char* path, rhash_context* rctx)
 {
+	file_t file;
 	FILE* fd;
 	int res = 0;
 
@@ -337,7 +334,8 @@ int save_torrent_to(const char* path, rhash_context* rctx)
 	}
 
 	/* write the torrent file */
-	fd = rsh_fopen_bin(path, "wb");
+	file_init(&file, path, FILE_OPT_DONT_FREE_PATH);
+	fd = file_fopen(&file, FOpenWrite | FOpenBin);
 	if (fd && text->length == fwrite(text->str, 1, text->length, fd) &&
 		!ferror(fd) && !fflush(fd))
 	{
@@ -347,6 +345,7 @@ int save_torrent_to(const char* path, rhash_context* rctx)
 		res = -1;
 	}
 	if (fd) fclose(fd);
+	file_cleanup(&file);
 	return res;
 }
 
@@ -552,7 +551,7 @@ int check_hash_file(file_t* file, int chdir)
 	if (file->mode & FILE_IFSTDIN) {
 		fd = stdin;
 		hash_file_path = "<stdin>";
-	} else if ( !(fd = rsh_fopen_bin(hash_file_path, "rb") )) {
+	} else if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
 		log_file_error(hash_file_path);
 		return -1;
 	}
@@ -625,7 +624,7 @@ int check_hash_file(file_t* file, int chdir)
 			}
 			memset(&file_to_check, 0, sizeof(file_t));
 			file_to_check.path = info.full_path;
-			file_stat(&file_to_check);
+			file_stat(&file_to_check, 0);
 			info.file = &file_to_check;
 
 			/* verify hash sums of the file */

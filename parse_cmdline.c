@@ -1,24 +1,23 @@
 /* parse_cmdline.c - parsing of command line options */
 
-#include "common_func.h" /* should be included before the C library files */
 #include <assert.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h> /* stat() */
 #ifdef _WIN32
-#include <windows.h> /* for SetFileApisToOEM(), CharToOem() */
+# include <windows.h> /* for SetFileApisToOEM(), CharToOem() */
 #endif
 
-#include "librhash/rhash.h"
-#include "win_utils.h"
+#include "parse_cmdline.h"
+#include "common_func.h"
 #include "file_mask.h"
 #include "find_file.h"
 #include "hash_print.h"
 #include "output.h"
 #include "rhash_main.h"
-#include "parse_cmdline.h"
+#include "win_utils.h"
+#include "librhash/rhash.h"
 
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */

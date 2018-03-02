@@ -1,12 +1,10 @@
-/*
- * rhash_main.c: compute CRC32, MD5, SHA1, Tiger, DC++ TTH and eDonkey 2000 hashes
+/* rhash_main.c - main() and other top-level functions
  *
  * rhash is a small utility written in C that computes various message
  * digests of files. The message digests include CRC32, MD5, SHA1, TTH,
  * ED2K, GOST and many other.
  */
 
-#include "common_func.h" /* shall be included before the C library files */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* free() */
@@ -14,17 +12,18 @@
 #include <locale.h>
 #include <assert.h>
 
-#include "librhash/rhash.h"
-#include "win_utils.h"
-#include "find_file.h"
+#include "rhash_main.h"
 #include "calc_sums.h"
-#include "hash_update.h"
+#include "common_func.h"
 #include "file_mask.h"
+#include "find_file.h"
 #include "hash_print.h"
+#include "hash_update.h"
 #include "parse_cmdline.h"
 #include "output.h"
+#include "win_utils.h"
+#include "librhash/rhash.h"
 
-#include "rhash_main.h"
 
 struct rhash_t rhash_data;
 
@@ -38,7 +37,7 @@ struct rhash_t rhash_data;
  */
 static int must_skip_file(file_t* file)
 {
-	const rsh_tchar* path = get_file_tpath(file);
+	const rsh_tchar* path = FILE_TPATH(file);
 
 	/* check if the file path is the same as the output or the log file path */
 	return (opt.output && are_paths_equal(path, opt.output)) ||

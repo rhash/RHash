@@ -1,4 +1,4 @@
-/* platform.h */
+/* platform.h - platform-specific includes and macro */
 #ifndef PLATFORM_H
 #define PLATFORM_H
 

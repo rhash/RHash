@@ -1,12 +1,9 @@
-/* find_file.h - declaration of find_file function.
- *
- * find_file function searches through a directory tree calling a call_back on
- * each file.
- */
+/* find_file.h - functions for recursive scan of directories. */
 #ifndef FIND_FILE_H
 #define FIND_FILE_H
 
 #include "common_func.h"
+#include "file.h"
 
 #ifdef __cplusplus
 extern "C" {

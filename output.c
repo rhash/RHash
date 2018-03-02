@@ -1,7 +1,5 @@
-/* output.c */
+/* output.c - output of results, errors and percents */
 
-#include "common_func.h" /* should be included before the C library files */
-#include "platform.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,17 +7,19 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "librhash/rhash.h"
+#include "platform.h"
+#include "output.h"
 #include "calc_sums.h"
+#include "common_func.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "win_utils.h"
-#include "output.h"
+#include "librhash/rhash.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <io.h>
-#include <share.h> /* for _SH_DENYNO */
+# include <windows.h>
+# include <io.h>
+# include <share.h> /* for _SH_DENYNO */
 #endif
 
 /* global pointer to the selected method of percents output */

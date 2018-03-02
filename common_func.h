@@ -1,13 +1,6 @@
-/* common_func.h */
+/* common_func.h - commonly used functions */
 #ifndef COMMON_FUNC_H
 #define COMMON_FUNC_H
-
-/* use 64-bit off_t.
- * these macros must be defined before any included file */
-#undef _LARGEFILE64_SOURCE
-#undef _FILE_OFFSET_BITS
-#define _LARGEFILE64_SOURCE
-#define _FILE_OFFSET_BITS 64
 
 /* internationalization support via gettext/libintl */
 #ifdef USE_GETTEXT
@@ -61,15 +54,10 @@ typedef  char rsh_tchar;
 
 #ifdef _WIN32
 # define IF_WINDOWS(code) code
-# define SYS_PATH_SEPARATOR '\\'
-# define IS_PATH_SEPARATOR(c) ((c) == '\\' || (c) == '/')
-# define IS_PATH_SEPARATOR_W(c) ((c) == L'\\' || (c) == L'/')
 # define is_utf8() win_is_utf8()
 # define to_utf8(str) win_to_utf8(str)
 #else /* non _WIN32 part */
 # define IF_WINDOWS(code)
-# define SYS_PATH_SEPARATOR '/'
-# define IS_PATH_SEPARATOR(c) ((c) == '/')
 /* stub for utf8 */
 # define is_utf8() 1
 # define to_utf8(str) NULL
@@ -80,54 +68,11 @@ const char* get_version_string(void);
 const char* get_bt_program_name(void);
 
 
-/**
- * Portable file information.
- */
-typedef struct file_t
-{
-	char* path;
-	wchar_t* wpath;
-	uint64_t size;
-	uint64_t mtime;
-	unsigned mode;
-} file_t;
-
-/* bit constants for the file_t.mode bit mask */
-#define FILE_IFDIR   0x01
-#define FILE_IFLNK   0x02
-#define FILE_IFREG   0x04
-#define FILE_IFROOT  0x10
-#define FILE_IFSTDIN 0x20
-#define FILE_OPT_DONT_FREE_PATH  0x40
-
-#define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
-#define FILE_ISLNK(file) ((file)->mode & FILE_IFLNK)
-#define FILE_ISREG(file) ((file)->mode & FILE_IFREG)
-
-/* file functions */
-
-const char* get_basename(const char* path);
-char* get_dirname(const char* path);
-char* make_path(const char* dir, const char* filename);
-int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
-
-void file_init(file_t* file, const char* path, int reuse_path);
-void file_cleanup(file_t* file);
-int file_stat(file_t* file);
-int file_stat2(file_t* file, int use_lstat);
-int is_regular_file(const char* path);
-int if_file_exists(const char* path);
-
 #ifdef _WIN32
-# define get_file_tpath(file) ((file)->wpath)
-int file_statw(file_t* file);
-# define rsh_fopen_bin(path, mode) win_fopen_bin(path, mode)
 # define rsh_fprintf win_fprintf
 # define rsh_vfprintf win_vfprintf
 # define rsh_fwrite win_fwrite
 #else
-# define get_file_tpath(file) ((file)->path)
-# define rsh_fopen_bin(path, mode) fopen(path, mode)
 # define rsh_fprintf fprintf
 # define rsh_vfprintf vfprintf
 # define rsh_fwrite fwrite
