@@ -8,9 +8,10 @@
 #include <errno.h>
 
 #include "platform.h"
-#include "output.h"
 #include "calc_sums.h"
 #include "common_func.h"
+#include "file.h"
+#include "output.h"
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "win_utils.h"
@@ -18,15 +19,13 @@
 
 #ifdef _WIN32
 # include <windows.h>
-# include <io.h>
-# include <share.h> /* for _SH_DENYNO */
 #endif
 
 /* global pointer to the selected method of percents output */
 struct percents_output_info_t *percents_output = NULL;
 
 /**
- * Print a formatted message to program log, and flush the log stream.
+ * Print a formatted message to the program log, and flush the log stream.
  *
  * @param format print a formatted message to the program log
  * @param args
@@ -38,7 +37,7 @@ static void log_va_msg(const char* format, va_list args)
 }
 
 /**
- * Print a formatted message to program log, and flush the log stream.
+ * Print a formatted message to the program log, and flush the log stream.
  *
  * @param format print a formatted message to the program log
  */
@@ -50,7 +49,7 @@ void log_msg(const char* format, ...)
 }
 
 /**
- * Print an error to program log.
+ * Print an error to the program log.
  *
  * @param format print a formatted message to the program log
  */
@@ -63,7 +62,7 @@ void log_error(const char* format, ...)
 }
 
 /**
- * Print an error to program log.
+ * Print an error to the program log.
  *
  * @param filepath the path to file caused the error
  */
@@ -76,7 +75,7 @@ void log_warning(const char* format, ...)
 }
 
 /**
- * Print a file error to program log.
+ * Print file error to the program log.
  *
  * @param filepath path to the file, which caused the error
  */
@@ -84,6 +83,19 @@ void log_file_error(const char* filepath)
 {
 	if (!filepath) filepath = "(null)";
 	log_error("%s: %s\n", filepath, strerror(errno));
+}
+
+/**
+ * Print file error to the program log.
+ *
+ * @param file the file, caused the error
+ */
+void log_file_t_error(const struct file_t* file)
+{
+#ifdef _WIN32
+	if (!file->path) log_file_error(w2c(file->wpath));
+#endif
+	log_file_error(file->path);
 }
 
 /**
@@ -420,16 +432,9 @@ struct percents_output_info_t p_perc = {
 
 static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path)
 {
-	if (stream_path) {
-#ifdef _WIN32
-		if ( !(*p_stream = _wfsopen(stream_path, L"w", _SH_DENYNO)) ) {
-			log_file_error(w2c((wchar_t*)stream_path));
-#else
-		if ( !(*p_stream = fopen(stream_path, "w")) ) {
-			log_file_error(stream_path);
-#endif
-			rsh_exit(2);
-		}
+	if (stream_path && !(*p_stream = rsh_tfopen(stream_path, RSH_T("w"))) ) {
+		log_file_error(t2c(stream_path));
+		rsh_exit(2);
 	}
 }
 

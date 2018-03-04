@@ -9,6 +9,7 @@ extern "C" {
 #endif
 
 struct file_info;
+struct file_t;
 
 /**
  * A 'method' to output percents.
@@ -35,6 +36,7 @@ void log_msg(const char* format, ...);
 void log_error(const char* format, ...);
 void log_warning(const char* format, ...);
 void log_file_error(const char* filepath);
+void log_file_t_error(const struct file_t* file);
 void report_interrupted(void);
 void print_check_stats(void);
 

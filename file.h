@@ -15,21 +15,23 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-typedef wchar_t rsh_tchar;
+typedef wchar_t file_tchar;
 # define SYS_PATH_SEPARATOR '\\'
 # define IS_PATH_SEPARATOR(c) ((c) == '\\' || (c) == '/')
 # define IS_PATH_SEPARATOR_W(c) ((c) == L'\\' || (c) == L'/')
 #else
-typedef  char rsh_tchar;
+typedef  char file_tchar;
 # define SYS_PATH_SEPARATOR '/'
 # define IS_PATH_SEPARATOR(c) ((c) == '/')
 #endif /* _WIN32 */
+typedef file_tchar* tpath_t;
+typedef const file_tchar* ctpath_t;
 
 /* Generic path functions */
 const char* get_basename(const char* path);
 char* get_dirname(const char* path);
 char* make_path(const char* dir, const char* filename);
-int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
+int are_paths_equal(ctpath_t a, ctpath_t b);
 
 int is_regular_file(const char* path); /* shall be deprecated */
 int if_file_exists(const char* path);
@@ -89,9 +91,11 @@ FILE* file_fopen(file_t* file, int fopen_flags);
 int file_rename(file_t* from, file_t* to);
 
 #ifdef _WIN32
+FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
 int file_is_write_locked(file_t* file);
 #else
 # define file_is_write_locked(f) (0)
+# define rsh_tfopen(tpath, tmode) fopen(tpath, tmode)
 #endif
 
 

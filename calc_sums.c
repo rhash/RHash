@@ -399,7 +399,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 		/* calculate sums */
 		if (calc_sums(&info) < 0) {
 			/* print i/o error */
-			log_file_error(file->path);
+			log_file_t_error(file);
 			res = -1;
 		}
 		if (rhash_data.interrupted) {

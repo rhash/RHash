@@ -137,7 +137,7 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 
 	/* open the hash file for writing */
 	if ( !(fd = file_fopen(file, FOpenRead | FOpenWrite) )) {
-		log_file_error(file->path);
+		log_file_t_error(file);
 		return -1;
 	}
 	rhash_data.upd_fd = fd;
@@ -145,14 +145,14 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	if (file->size > 0) {
 		/* read the last character of the file to check if it is EOL */
 		if (fseek(fd, -1, SEEK_END) != 0) {
-			log_file_error(file->path);
+			log_file_t_error(file);
 			return -1;
 		}
 		ch = fgetc(fd);
 
 		/* somehow writing doesn't work without seeking */
 		if (fseek(fd, 0, SEEK_END) != 0) {
-			log_file_error(file->path);
+			log_file_t_error(file);
 			return -1;
 		}
 
@@ -306,14 +306,14 @@ static int fix_sfv_header(file_t* file)
 	int err = 0;
 
 	if ( !(in = file_fopen(file, FOpenRead))) {
-		log_file_error(file->path);
+		log_file_t_error(file);
 		return -1;
 	}
 
 	/* open a temporary file for writing */
 	file_path_append(&new_file, file, ".new");
 	if ( !(out = file_fopen(&new_file, FOpenWrite) )) {
-		log_file_error(new_file.path);
+		log_file_t_error(&new_file);
 		file_cleanup(&new_file);
 		fclose(in);
 		return -1;
@@ -335,11 +335,11 @@ static int fix_sfv_header(file_t* file)
 		}
 	}
 	if (ferror(in)) {
-		log_file_error(file->path);
+		log_file_t_error(file);
 		err = 1;
 	}
 	if (ferror(out)) {
-		log_file_error(new_file.path);
+		log_file_t_error(&new_file);
 		err = 1;
 	}
 

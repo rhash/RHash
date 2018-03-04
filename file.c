@@ -112,7 +112,7 @@ char* make_path(const char* dir_path, const char* filename)
  * @param b the second path
  * @return 1 if paths a equal, 0 otherwise
  */
-int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
+int are_paths_equal(ctpath_t a, ctpath_t b)
 {
 	if (!a || !b) return 0;
 	if (a[0] == RSH_T('.') && IS_ANY_SLASH(a[1])) a += 2;
@@ -334,9 +334,9 @@ int file_stat(file_t* file, int fstat_flags)
  */
 FILE* file_fopen(file_t* file, int fopen_flags)
 {
-	const rsh_tchar* possible_modes[8] = { 0, RSH_T("r"), RSH_T("w"), RSH_T("r+"),
+	const file_tchar* possible_modes[8] = { 0, RSH_T("r"), RSH_T("w"), RSH_T("r+"),
 		0, RSH_T("rb"), RSH_T("wb"), RSH_T("r+b") };
-	const rsh_tchar* mode = possible_modes[fopen_flags & FOpenMask];
+	const file_tchar* mode = possible_modes[fopen_flags & FOpenMask];
 	assert((fopen_flags & FOpenRW) != 0);
 	assert((fopen_flags & FOpenRW) != 0);
 #ifdef _WIN32
@@ -359,6 +359,13 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 	return fopen(file->path, mode);
 #endif
 }
+
+#ifdef _WIN32
+FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode)
+{
+	return _wfsopen(tpath, tmode, _SH_DENYNO);
+}
+#endif
 
 /**
  * Rename or move the file. The source and destination paths should be on the same device.

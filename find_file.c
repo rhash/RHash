@@ -135,7 +135,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 				}
 				file.wpath = path;
 				if (file_stat(&file, 0) < 0) {
-					log_file_error(file.path);
+					log_file_t_error(&file);
 					free(file.path);
 					data->errors_count++;
 					continue;
@@ -160,7 +160,7 @@ file_search_data* file_search_data_new(rsh_tchar** paths, size_t count, int max_
 			file.mode = FILE_IFSTDIN;
 		}
 		else if (file_stat(&file, FUseLstat) < 0) {
-			log_file_error(file.path);
+			log_file_t_error(&file);
 			file_cleanup(&file);
 			data->errors_count++;
 			continue;
@@ -214,7 +214,7 @@ void scan_files(file_search_data* data)
 				dir_scan(file, data);
 			} else if ((data->options & FIND_LOG_ERRORS) != 0) {
 				errno = EISDIR;
-				log_file_error(file->path);
+				log_file_t_error(file);
 			}
 		} else {
 			/* process a regular file or a dash '-' path */
@@ -441,7 +441,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 				}
 			} else if (options & FIND_LOG_ERRORS) {
 				/* report error only if FIND_LOG_ERRORS option is set */
-				log_file_error(file.path);
+				log_file_t_error(&file);
 				data->errors_count++;
 			}
 			file_cleanup(&file);

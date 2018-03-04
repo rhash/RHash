@@ -47,9 +47,11 @@ size_t strlen_utf8_c(const char *str);
 #ifdef _WIN32
 typedef wchar_t rsh_tchar;
 # define RSH_T(str) L##str
+# define t2c(tstr) (w2c(tstr))
 #else
 typedef  char rsh_tchar;
 # define RSH_T(str) str
+# define t2c(tstr) (tstr)
 #endif /* _WIN32 */
 
 #ifdef _WIN32
