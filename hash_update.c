@@ -302,25 +302,19 @@ static int fix_sfv_header(file_t* file)
 	FILE* in;
 	FILE* out;
 	char line[2048];
-	size_t len;
-	char* tmp_file;
+	file_t new_file;
 	int err = 0;
 
-	if ( !(in = fopen(file->path, "r") )) {
+	if ( !(in = file_fopen(file, FOpenRead))) {
 		log_file_error(file->path);
 		return -1;
 	}
 
-	/* open another file for writing */
-	len = strlen(file->path);
-	tmp_file = (char*)rsh_malloc(len+8);
-	memcpy(tmp_file, file->path, len);
-	strcpy(tmp_file+len, ".new");
-
-	/* open the temporary file */
-	if ( !(out = fopen(tmp_file, "w") )) {
-		log_file_error(tmp_file);
-		free(tmp_file);
+	/* open a temporary file for writing */
+	file_path_append(&new_file, file, ".new");
+	if ( !(out = file_fopen(&new_file, FOpenWrite) )) {
+		log_file_error(new_file.path);
+		file_cleanup(&new_file);
 		fclose(in);
 		return -1;
 	}
@@ -345,7 +339,7 @@ static int fix_sfv_header(file_t* file)
 		err = 1;
 	}
 	if (ferror(out)) {
-		log_file_error(tmp_file);
+		log_file_error(new_file.path);
 		err = 1;
 	}
 
@@ -353,17 +347,10 @@ static int fix_sfv_header(file_t* file)
 	fclose(out);
 
 	/* overwrite the hash file with a new one */
-	if ( !err ) {
-#ifdef _WIN32
-		/* under win32 the hash file must be removed before overwriting it */
-		unlink(file->path);
-#endif
-		if (rename(tmp_file, file->path) < 0) {
-			log_error(_("can't move %s to %s: %s\n"),
-				tmp_file, file->path, strerror(errno));
-			err = 1;
-		}
+	if (!err && file_rename(&new_file, file) < 0) {
+		log_error(_("can't move %s to %s: %s\n"),
+			new_file.path, file->path, strerror(errno));
 	}
-	free(tmp_file);
+	file_cleanup(&new_file);
 	return (err ? -1 : 0);
 }

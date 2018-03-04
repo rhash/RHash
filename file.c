@@ -8,6 +8,7 @@
 #define _FILE_OFFSET_BITS 64
 
 #include <assert.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -26,22 +27,15 @@
 extern "C" {
 #endif
 
-/*
-const char* get_basename(const char* path);
-char* get_dirname(const char* path);
-char* make_path(const char* dir, const char* filename);
-int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b);
-*/
-
 /*=========================================================================
  * Path functions
  *=========================================================================*/
 
 /**
- * Return filename without path.
+ * Return file name without path.
  *
  * @param path file path
- * @return filename
+ * @return file name
  */
 const char* get_basename(const char* path)
 {
@@ -76,8 +70,8 @@ char* get_dirname(const char* path)
  * Assemble a filepath from its directory and filename.
  *
  * @param dir_path directory path
- * @param filename file name
- * @return filepath
+ * @param filename the file name
+ * @return assembled file path
  */
 char* make_path(const char* dir_path, const char* filename)
 {
@@ -116,6 +110,7 @@ char* make_path(const char* dir_path, const char* filename)
  *
  * @param a the first path
  * @param b the second path
+ * @return 1 if paths a equal, 0 otherwise
  */
 int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
 {
@@ -133,7 +128,12 @@ int are_paths_equal(const rsh_tchar* a, const rsh_tchar* b)
 	return (*a == *b);
 }
 
-
+/**
+ * Check if a path points to a regular file.
+ *
+ * @param path the path to check
+ * @return 1 if file exists an is a regular file, 0 otherwise
+ */
 int is_regular_file(const char* path)
 {
 	int is_regular = 0;
@@ -146,6 +146,12 @@ int is_regular_file(const char* path)
 	return is_regular;
 }
 
+/**
+ * Check if a file exists at the specified path.
+ *
+ * @param path the path to check
+ * @return 1 if file exists, 0 otherwise.
+ */
 int if_file_exists(const char* path)
 {
 	int exists;
@@ -171,6 +177,11 @@ void file_init(file_t* file, const char* path, int finit_flags)
 	}
 }
 
+/**
+ * Free the memory allocated by the fields of the file_t structure.
+ *
+ * @param file the file_t structure to clean
+ */
 void file_cleanup(file_t* file)
 {
 	if ((file->mode & FILE_OPT_DONT_FREE_PATH) == 0)
@@ -187,9 +198,41 @@ void file_cleanup(file_t* file)
 	file->mode = 0;
 }
 
+/**
+ * Append the specified suffix to the src file path.
+ *
+ * @param dst result of appending
+ * @param src the path to append the suffix to
+ * @param suffix the suffix to append
+ */
+void file_path_append(file_t* dst, file_t* src, const char* suffix)
+{
+	memset(dst, 0, sizeof(*dst));
+#ifdef _WIN32
+	if (src->wpath)
+	{
+		wchar_t* wsuffix = c2w(suffix, 0);
+		assert(wsuffix != 0);
+		size_t src_len = wcslen(src->wpath);
+		size_t dst_len = src_len + wcslen(wsuffix) + 1;
+		dst->wpath = (wchar_t*)rsh_malloc(dst_len * sizeof(wchar_t));
+		wcscpy(dst->wpath, src->wpath);
+		wcscpy(dst->wpath + src_len, wsuffix);
+		dst->path = w2c(dst->wpath); /* for legacy file handling */
+		return;
+	}
+#endif
+	assert(!!file->path);
+	size_t src_len = strlen(src->path);
+	size_t dst_len = src_len + strlen(suffix) + 1;
+	dst->path = (char*)rsh_malloc(dst_len);
+	strcpy(dst->path, src->path);
+	strcpy(dst->path + src_len, suffix);
+}
+
 #ifdef _WIN32
 /**
- * Retrive file information (type, size, mtime) into file_t fields.
+ * Retrieve file information (type, size, mtime) into file_t fields.
  *
  * @param file the file information
  * @return 0 on success, -1 on error
@@ -221,7 +264,7 @@ static int file_statw(file_t* file)
 #endif
 
 /**
- * Retrive file information (type, size, mtime) into file_t fields.
+ * Retrieve file information (type, size, mtime) into file_t fields.
  *
  * @param file the file information
  * @param fstat_flags bitmask consisting of FileStatModes bits
@@ -283,26 +326,62 @@ int file_stat(file_t* file, int fstat_flags)
 
 
 /**
- * Retrive file information (type, size, mtime) into file_t fields.
+ * Retrieve file information (type, size, mtime) into file_t fields.
  *
  * @param file the file information
- * @param fstat_flags bitmask consisting of FileStatModes bits
+ * @param fopen_flags bitmask consisting of FileFOpenModes bits
  * @return 0 on success, -1 on error
  */
 FILE* file_fopen(file_t* file, int fopen_flags)
 {
-	const char* possible_modes[8] = { 0, "r", "w", "r+", 0, "rb", "wb", "r+b" };
-	const char* mode = possible_modes[fopen_flags & (FOpenRW | FOpenBin)];
+	const rsh_tchar* possible_modes[8] = { 0, RSH_T("r"), RSH_T("w"), RSH_T("r+"),
+		0, RSH_T("rb"), RSH_T("wb"), RSH_T("r+b") };
+	const rsh_tchar* mode = possible_modes[fopen_flags & FOpenMask];
+	assert((fopen_flags & FOpenRW) != 0);
 	assert((fopen_flags & FOpenRW) != 0);
 #ifdef _WIN32
-	return win_fopen_ex(file->path, mode, (fopen_flags & FOpenExclusive) << 3);
+	if (!file->wpath)
+	{
+		FILE* fd = 0;
+		for (int i = 0; i < 2; i++) {
+			file->wpath = c2w_long_path(file->path, i);
+			if (file->wpath == NULL) continue;
+			fd = _wfsopen(file->wpath, mode, _SH_DENYNO);
+			if (fd || errno != ENOENT) break;
+			free(file->wpath);
+			file->wpath = 0;
+		}
+		return fd;
+	}
+	return _wfsopen(file->wpath, mode, _SH_DENYNO);
 #else
 	return fopen(file->path, mode);
 #endif
 }
 
+/**
+ * Rename or move the file. The source and destination paths should be on the same device.
+ *
+ * @param from the source file
+ * @param to the destination path
+ * @return 0 on success, -1 on error
+ */
+int file_rename(file_t* from, file_t* to)
+{
 #ifdef _WIN32
+	if (from->wpath && to->wpath)
+	{
+		/* Windows: file must be removed before overwriting it */
+		_wunlink(to->wpath);
+		return _wrename(from->wpath, to->wpath);
+	}
+	assert(from->path && to->path);
+	unlink(to->path);
+#endif
+	return rename(from->path, to->path);
+}
 
+#ifdef _WIN32
 static int win_can_open_exclusive(wchar_t* wpath)
 {
 	int fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYWR, 0);

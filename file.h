@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stddef.h> /* for wchar_t */
+#include <wchar.h> /* for wchar_t */
 
 #if _MSC_VER > 1300
 # include "platform.h"
@@ -70,6 +70,7 @@ typedef struct file_t
 /* file functions */
 void file_init(file_t* file, const char* path, int finit_flags);
 void file_cleanup(file_t* file);
+void file_path_append(file_t* dst, file_t* src, const char* suffix);
 
 enum FileStatModes {
 	FNoMode    = 0,
@@ -77,14 +78,15 @@ enum FileStatModes {
 };
 int file_stat(file_t* file, int fstat_flags);
 
-enum FileOpenModes {
+enum FileFOpenModes {
 	FOpenRead  = 1,
 	FOpenWrite = 2,
 	FOpenRW    = 3,
 	FOpenBin   = 4,
-	FOpenExclusive = 8
+	FOpenMask  = 7
 };
 FILE* file_fopen(file_t* file, int fopen_flags);
+int file_rename(file_t* from, file_t* to);
 
 #ifdef _WIN32
 int file_is_write_locked(file_t* file);
