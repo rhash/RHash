@@ -342,8 +342,9 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 #ifdef _WIN32
 	if (!file->wpath)
 	{
+		int i;
 		FILE* fd = 0;
-		for (int i = 0; i < 2; i++) {
+		for (i = 0; i < 2; i++) {
 			file->wpath = c2w_long_path(file->path, i);
 			if (file->wpath == NULL) continue;
 			fd = _wfsopen(file->wpath, mode, _SH_DENYNO);
