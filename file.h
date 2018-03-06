@@ -98,6 +98,14 @@ int file_is_write_locked(file_t* file);
 # define rsh_tfopen(tpath, tmode) fopen(tpath, tmode)
 #endif
 
+typedef struct file_list_t {
+	FILE* fd;
+	file_t current_file;
+	unsigned state;
+} file_list_t;
+int  file_list_open(file_list_t* list, file_t* file_path);
+int  file_list_read(file_list_t* list);
+void file_list_close(file_list_t* list);
 
 #ifdef __cplusplus
 } /* extern "C" */

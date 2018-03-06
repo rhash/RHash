@@ -283,12 +283,9 @@ int file_stat(file_t* file, int fstat_flags)
 		return file_statw(file);
 
 	for (i = 0; i < 2; i++) {
-		file->wpath = c2w(file->path, i);
+		file->wpath = c2w_long_path(file->path, i);
 		if (file->wpath == NULL) continue;
-
-		/* return on success */
-		if (file_statw(file) == 0) return 0;
-
+		if (file_statw(file) == 0) return 0; /* success */
 		free(file->wpath);
 		file->wpath = NULL;
 	}
@@ -418,6 +415,69 @@ int file_is_write_locked(file_t* file)
 	return 0;
 }
 #endif
+
+
+/*=========================================================================
+ * file-list functions
+ *=========================================================================*/
+
+/**
+ * Open a file, containing a list of file paths, to iterate over those paths
+ * using the file_list_read() function.
+ *
+ * @param list the file_list_t structure to initialize
+ * @param file_path the file to open
+ * @return 0 on success, -1 on error and set errno
+ */
+int file_list_open(file_list_t* list, file_t* file_path)
+{
+	memset(list, 0, sizeof(file_list_t));
+	list->fd = file_fopen(file_path, FOpenRead | FOpenBin);
+	return (list->fd ? 0 : -1);
+}
+
+/**
+ * Close file_list_t and free allocated memory.
+ */
+void file_list_close(file_list_t* list)
+{
+	if (list->fd) {
+		fclose(list->fd);
+		list->fd = 0;
+	}
+	file_cleanup(&list->current_file);
+}
+
+enum FileListStateBits {
+	NotFirstLine = 1
+};
+
+/**
+ * Iterate over file list.
+ *
+ * @param list the file list to iterate over
+ * @return 1 if next file have been obtained, 0 on EOF or error
+ */
+int file_list_read(file_list_t* list)
+{
+	char buf[2048];
+	file_cleanup(&list->current_file);
+	while(fgets(buf, 2048, list->fd)) {
+		char *p;
+		char* line = buf;
+		char *buf_back = buf + sizeof(buf) - 1;
+		/* detect and skip BOM */
+		if (buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF && !(list->state & NotFirstLine))
+			line += 3;
+		list->state |= NotFirstLine;
+		for (p = line; p < buf_back && *p && *p != '\r' && *p != '\n'; p++);
+		*p = 0;
+		if (*line == '\0') continue; /* skip empty lines */
+		file_init(&list->current_file, line, 0);
+		return 1;
+	}
+	return 0;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

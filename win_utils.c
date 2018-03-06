@@ -167,11 +167,11 @@ char* win_to_utf8(const char* str)
 
 /**
  * Allocate a wide string containing long file path with UNC prefix,
- * if it is needed to access the path, otherwize return NULL.
+ * if it is needed to access the path, otherwise return NULL.
  *
  * @param wpath original file path, can be a relative one
  * @return allocated long file path if it is needed to access
- *         the path, NULL otherwize
+ *         the path, NULL otherwise
  */
 wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 {
