@@ -86,8 +86,8 @@ void rhash_sha3_512_init(sha3_ctx *ctx)
 	rhash_keccak_init(ctx, 512);
 }
 
-#define DT(i) A[(i)] ^ A[(i) + 5] ^ A[(i) + 10] ^ A[(i) + 15] ^ A[(i) + 20]
-#define AT(i) \
+#define XORED_A(i) A[(i)] ^ A[(i) + 5] ^ A[(i) + 10] ^ A[(i) + 15] ^ A[(i) + 20]
+#define THETA_STEP(i) \
 	A[(i)]      ^= D[(i)]; \
 	A[(i) + 5]  ^= D[(i)]; \
 	A[(i) + 10] ^= D[(i)]; \
@@ -98,18 +98,16 @@ void rhash_sha3_512_init(sha3_ctx *ctx)
 static void keccak_theta(uint64_t *A)
 {
 	uint64_t D[5];
-
-	D[0] = ROTL64(DT(1), 1) ^ DT(4);
-	D[1] = ROTL64(DT(2), 1) ^ DT(0);
-	D[2] = ROTL64(DT(3), 1) ^ DT(1);
-	D[3] = ROTL64(DT(4), 1) ^ DT(2);
-	D[4] = ROTL64(DT(0), 1) ^ DT(3);
-
-	AT(0);
-	AT(1);
-	AT(2);
-	AT(3);
-	AT(4);
+	D[0] = ROTL64(XORED_A(1), 1) ^ XORED_A(4);
+	D[1] = ROTL64(XORED_A(2), 1) ^ XORED_A(0);
+	D[2] = ROTL64(XORED_A(3), 1) ^ XORED_A(1);
+	D[3] = ROTL64(XORED_A(4), 1) ^ XORED_A(2);
+	D[4] = ROTL64(XORED_A(0), 1) ^ XORED_A(3);
+	THETA_STEP(0);
+	THETA_STEP(1);
+	THETA_STEP(2);
+	THETA_STEP(3);
+	THETA_STEP(4);
 }
 
 /* Keccak pi() transformation */
@@ -144,7 +142,7 @@ static void keccak_pi(uint64_t *A)
 	/* note: A[ 0] is left as is */
 }
 
-#define CHIT(i) \
+#define CHI_STEP(i) \
 	A0 = A[0 + (i)]; \
 	A1 = A[1 + (i)]; \
 	A[0 + (i)] ^= ~A1 & A[2 + (i)]; \
@@ -156,12 +154,12 @@ static void keccak_pi(uint64_t *A)
 /* Keccak chi() transformation */
 static void keccak_chi(uint64_t *A)
 {
-	uint64_t  A0, A1;
-	CHIT(0);
-	CHIT(5);
-	CHIT(10);
-	CHIT(15);
-	CHIT(20);
+	uint64_t A0, A1;
+	CHI_STEP(0);
+	CHI_STEP(5);
+	CHI_STEP(10);
+	CHI_STEP(15);
+	CHI_STEP(20);
 }
 
 static void rhash_sha3_permutation(uint64_t *state)
