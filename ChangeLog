@@ -1,3 +1,6 @@
+Sun 11 Mar 2018 And Sch
+	* librhash: speedup sha3
+
 Sun Feb 18 2018 Aleksey
 	* Bugfix: fix --follow option
 
