@@ -197,6 +197,14 @@ TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' - )
 TEST_EXPECTED=$( printf '\63\1\277\17\1\t\\ 4\r' )
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
+new_test "test file lists:            "
+F="$RHASH_TMP/t"
+touch ${F}1 ${F}2 ${F}3 ${F}4
+( echo ${F}2; echo ${F}3 ) > ${F}l
+TEST_RESULT=$($rhash -p '%f ' ${F}1 --file-list ${F}l ${F}4)
+check "$TEST_RESULT" "t1 t2 t3 t4 "
+rm -f ${F}1 ${F}2 ${F}3 ${F}4 ${F}l
+
 new_test "test eDonkey link:          "
 TEST_RESULT=$( printf "a" | $rhash -p '%f %L %l\n' - )
 TEST_EXPECTED="(stdin) ed2k://|file|(stdin)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(stdin)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"

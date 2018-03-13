@@ -62,6 +62,7 @@ typedef struct file_t
 #define FILE_IFREG   0x04
 #define FILE_IFROOT  0x10
 #define FILE_IFSTDIN 0x20
+#define FILE_IFLIST  0x40
 #define FILE_OPT_DONT_FREE_PATH  0x200
 #define FILE_OPT_DONT_FREE_WPATH 0x400
 

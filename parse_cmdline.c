@@ -84,6 +84,7 @@ static void print_help(void)
 	print_help_line("  -B, --benchmark  ", _("Benchmark selected algorithm.\n"));
 	print_help_line("  -v, --verbose ", _("Be verbose.\n"));
 	print_help_line("  -r, --recursive  ", _("Process directories recursively.\n"));
+	print_help_line("      --file-list=<file> ", _("Process a list of files.\n"));
 	print_help_line("      --skip-ok ", _("Don't print OK messages for successfully verified files.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
 	print_help_line("      --percents   ", _("Show percents, while calculating or checking hashes.\n"));
@@ -125,6 +126,21 @@ enum file_suffix_type {
 	MASK_EXCLUDE,
 	MASK_CRC_ACCEPT
 };
+
+/**
+ * Add a file-list.
+ *
+ * @param o pointer to the options structure to update
+ * @param path the path to the file-list
+ * @param type the type of the option
+ */
+static void add_file_list(options_t *o, tstr_t path, unsigned is_file_list)
+{
+	if (o->search_data) {
+		file_search_add_file(o->search_data, path, is_file_list);
+		opt.has_files = 1;
+	}
+}
 
 /**
  * Process --accept, --exclude and --crc-accept options.
@@ -300,8 +316,9 @@ enum option_type_t
 	F_TOUT = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 4, /* just call a function */
 	F_PFNC = 5 | F_NEED_PARAM, /* process option parameter by calling a handler */
-	F_UFNC = 6 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
-	F_PRNT = 7, /* print a constant C-string and exit */
+	F_TFNC = 6 | F_NEED_PARAM, /* process option parameter by calling a handler */
+	F_UFNC = 7 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
+	F_PRNT = 8, /* print a constant C-string and exit */
 };
 
 #define is_param_required(option_type) ((option_type) & F_NEED_PARAM)
@@ -362,6 +379,7 @@ cmdline_opt_t cmdline_opt[] =
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
+	{ F_TFNC,   0,   0, "file-list", add_file_list, 1 },
 	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
 	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
@@ -394,6 +412,7 @@ cmdline_opt_t cmdline_opt[] =
 #endif
 	{ 0,0,0,0,0,0 }
 };
+cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", add_file_list, 0 };
 
 /**
  * Log a message and exit the program.
@@ -446,7 +465,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		}
 
 #ifdef _WIN32
-		if (option_type == F_TOUT) {
+		if (option_type == F_TOUT || option_type == F_TFNC) {
 			/* leave the value in UTF-16 */
 			value = (char*)rsh_wcsdup((wchar_t*)option->parameter);
 		}
@@ -475,6 +494,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
 		break;
 	case F_PFNC:
+	case F_TFNC:
 	case F_UFNC:
 		/* call option parameter handler */
 		( ( void(*)(options_t *, char*, unsigned) )o->ptr )(opts, value, o->param);
@@ -707,12 +727,22 @@ struct parsed_cmd_line_t
 	blocks_vector_t options; /* array of parsed options */
 	int  argc;
 	char **argv;
-	int n_files; /* the number of files */
-	rsh_tchar** files; /* array of files specified by command line */
 #ifdef _WIN32
 	rsh_tchar** warg; /* program arguments in Unicode */
 #endif
 };
+
+/**
+ * Allocate parsed option.
+ *
+ * @param cmd_line the command line to store the parsed option into.
+ * @return allocated parsed option
+ */
+static parsed_option_t* new_option(struct parsed_cmd_line_t* cmd_line)
+{
+	rsh_blocks_vector_add_empty(&cmd_line->options, 16, sizeof(parsed_option_t));
+	return rsh_blocks_vector_get_item(&cmd_line->options, cmd_line->options.size - 1, 16, parsed_option_t);
+}
 
 /**
  * Parse command line arguments.
@@ -722,8 +752,7 @@ struct parsed_cmd_line_t
 static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 {
 	int argc;
-	int n_files = 0, b_opt_end = 0;
-	rsh_tchar** files;
+	int b_opt_end = 0;
 	rsh_tchar **parg, **end_arg;
 	parsed_option_t *next_opt;
 
@@ -738,7 +767,6 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 #endif
 
 	/* allocate array for files */
-	files = (rsh_tchar**)rsh_malloc(argc * sizeof(rsh_tchar*));
 	end_arg = parg + argc;
 
 	/* loop by program arguments */
@@ -746,31 +774,19 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		/* if argument is not an option */
 		if ((*parg)[0] != RSH_T('-') || (*parg)[1] == 0 || b_opt_end) {
 			/* it's a file, note that '-' is interpreted as stdin */
-			files[n_files++] = *parg;
-			continue;
-		}
-
-		assert((*parg)[0] == RSH_T('-') && (*parg)[1] != 0);
-
-		if ((*parg)[1] == L'-' && (*parg)[2] == 0) {
+			next_opt = new_option(cmd_line);
+			next_opt->name = "";
+			next_opt->o = &cmdline_file;
+			next_opt->parameter = *parg;
+		} else if ((*parg)[1] == L'-' && (*parg)[2] == 0) {
 			b_opt_end = 1; /* string "--" means end of options */
 			continue;
-		}
-
-		/* check for "--" */
-		if ((*parg)[1] == RSH_T('-')) {
-			cmdline_opt_t *t;
-
-			/* allocate parsed_option */
-			rsh_blocks_vector_add_empty(&cmd_line->options, 16, sizeof(parsed_option_t));
-			next_opt = rsh_blocks_vector_get_item(&cmd_line->options, cmd_line->options.size - 1, 16, parsed_option_t);
-
-			/* find the long option */
+		} else if ((*parg)[1] == RSH_T('-')) {
+			next_opt = new_option(cmd_line);
 			parse_long_option(next_opt, &parg);
-			t = next_opt->o;
 
 			/* process encoding and -o/-l options early */
-			if (is_output_modifier(t->type)) {
+			if (is_output_modifier(next_opt->o->type)) {
 				apply_option(&opt, next_opt);
 			}
 		} else if ((*parg)[1] != 0) {
@@ -789,10 +805,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 					fail_on_unknow_option(w2c(ptr));
 				}
 #endif
-				/* allocate parsed_option */
-				rsh_blocks_vector_add_empty(&cmd_line->options, 16, sizeof(parsed_option_t));
-				next_opt = rsh_blocks_vector_get_item(&cmd_line->options, cmd_line->options.size - 1, 16, parsed_option_t);
-
+				next_opt = new_option(cmd_line);
 				next_opt->buf[0] = '-', next_opt->buf[1] = ch, next_opt->buf[2] = '\0';
 				next_opt->name = next_opt->buf;
 				next_opt->parameter = NULL;
@@ -819,9 +832,6 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		}
 
 	} /* for */
-
-	cmd_line->n_files = n_files;
-	cmd_line->files = files;
 }
 
 /**
@@ -878,10 +888,11 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = conf_opt.embed_crc_delimiter;
 	if (!opt.path_separator) opt.path_separator = conf_opt.path_separator;
-	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
-	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
 	if (opt.flags & OPT_EMBED_CRC) opt.sum_flags |= RHASH_CRC32;
 	if (opt.openssl_mask == 0) opt.openssl_mask = conf_opt.openssl_mask;
+	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
+	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
+	opt.search_data->max_depth = opt.find_max_depth;
 
 	/* set defaults */
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = " ";
@@ -998,7 +1009,6 @@ static struct parsed_cmd_line_t cmd_line;
 static void cmd_line_destroy(void)
 {
 	rsh_blocks_vector_destroy(&cmd_line.options);
-	free(cmd_line.files);
 #ifdef _WIN32
 	LocalFree(cmd_line.warg);
 #endif
@@ -1012,6 +1022,7 @@ static void cmd_line_destroy(void)
 void read_options(int argc, char *argv[])
 {
 	opt.mem = rsh_vector_new_simple();
+	opt.search_data = file_search_data_new();
 	opt.find_max_depth = -1;
 
 	/* initialize cmd_line */
@@ -1032,11 +1043,6 @@ void read_options(int argc, char *argv[])
 	apply_cmdline_options(&cmd_line); /* process the rest of command options */
 
 	/* options were processed, so we don't need them any more */
-
-	/* set the files and directories to be processed later */
-	opt.search_data = file_search_data_new(cmd_line.files, cmd_line.n_files, opt.find_max_depth);
-	opt.n_files = cmd_line.n_files;
-
 	rsh_remove_exit_handler();
 	cmd_line_destroy();
 

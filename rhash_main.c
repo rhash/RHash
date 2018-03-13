@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 		rsh_exit(exit_code);
 	}
 
-	if (opt.n_files == 0) {
+	if (!opt.has_files) {
 		if (argc > 1) {
 			log_warning(_("no files/directories were specified at command line\n"));
 		}

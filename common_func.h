@@ -53,6 +53,8 @@ typedef  char rsh_tchar;
 # define RSH_T(str) str
 # define t2c(tstr) (tstr)
 #endif /* _WIN32 */
+typedef rsh_tchar* tstr_t;
+typedef const rsh_tchar* ctstr_t;
 
 #ifdef _WIN32
 # define IF_WINDOWS(code) code

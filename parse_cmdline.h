@@ -88,7 +88,7 @@ struct options_t
 	char*  bt_batch_file;   /* path to save a batch torrent to */
 
 	char** argv;
-	int n_files; /* the number of files obtained from the command line */
+	int has_files; /* flag: command line contain files */
 	struct file_search_data* search_data; /* files obtained from the command line */
 	struct vector_t *mem; /* allocated memory blocks that must be freed on exit */
 };
