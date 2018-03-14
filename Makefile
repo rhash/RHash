@@ -316,12 +316,12 @@ install-gmo: compile-gmo
 	for f in $(I18N_FILES); do \
 		l=`basename $$f .po`; \
 		$(INSTALL) -d $(LOCALEDIR)/$$l/LC_MESSAGES; \
-		$(INSTALL_DATA) $$l.gmo $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
+		$(INSTALL_DATA) po/$$l.gmo $(LOCALEDIR)/$$l/LC_MESSAGES/rhash.mo; \
 	done
 
 uninstall-gmo:
 	for f in $(I18N_FILES); do \
-		rm -f $(LOCALEDIR)/`basename $$f .gmo`/LC_MESSAGES/rhash.mo; \
+		rm -f $(LOCALEDIR)/`basename $$f .po`/LC_MESSAGES/rhash.mo; \
 	done
 
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
