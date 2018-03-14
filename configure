@@ -487,6 +487,12 @@ else
         start_check "$CC version"
         cc_vendor=gnu
         cc_version=$($CC -dumpversion 2>&1)
+        if ! echo $cc_version | grep -q '^[0-9][0-9]*\.[0-9]'; then
+          cc_v2=$($CC -dumpfullversion -dumpversion 2>/dev/null)
+          if echo $cc_v2 | grep -q '^[0-9][0-9]*\.[0-9]'; then
+            cc_version=$cc_v2
+          fi
+        fi
         case $cc_version in
           2.96*)
             cc_fail=yes
