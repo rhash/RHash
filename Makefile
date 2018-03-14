@@ -309,7 +309,7 @@ update-po:
 compile-gmo:
 	for f in $(I18N_FILES); do \
 		g=`basename $$f .po`; \
-		msgfmt $$f -o po/$$g.gmo; \
+		msgfmt -o po/$$g.gmo $$f; \
 	done
 
 install-gmo: compile-gmo
