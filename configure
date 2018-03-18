@@ -480,7 +480,7 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
 else
   CC_TMP="$CC"
   for CC in "$CC_TMP" gcc cc ; do
-    if "$CC" -v >/dev/null 2>&1; then
+    if $CC -v >/dev/null 2>&1; then
       cc_name_tmp=$($CC -v 2>&1 | tail -n 1 | cut -d ' ' -f 1)
       if test "$cc_name_tmp" = "gcc"; then
         cc_name=$cc_name_tmp
