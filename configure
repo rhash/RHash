@@ -22,17 +22,6 @@ INSTALL_LIB_STATIC=auto
 INSTALL_LIB_SHARED=auto
 INSTALL_PKGCONFIGDIR="$PKG_INSTALLDIR"
 
-case $(echo -n) in
-  -n) # SysV style
-    ECHO_N=
-    ECHO_C='\c'
-    ;;
-  *) # BSD style
-    ECHO_N='-n '
-    ECHO_C=
-    ;;
-esac
-
 # display error message and exit
 die () {
   echo
@@ -235,7 +224,7 @@ trap remove_tmpdir EXIT
 
 str_concat()
 {
-  echo ${ECHO_N} $@ ${ECHO_C}
+  printf '%s ' $@
 }
 
 yn_nonempty()
@@ -246,7 +235,7 @@ yn_nonempty()
 # Use this before starting a check
 start_check() {
   echo "============ Checking for $1 ============" >> "$TMPLOG"
-  echo ${ECHO_N} "Checking for $1 ... ${ECHO_C}"
+  printf '%s' "Checking for $1 ... "
   res_comment=""
 }
 
