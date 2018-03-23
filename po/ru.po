@@ -326,7 +326,7 @@ msgstr "Спускаться не более чем на <n> уровней ди
 
 #: parse_cmdline.c:94
 msgid "List hash functions to be calculated using OpenSSL.\n"
-msgstr "Вывести список хэш-функций вычисляемых с помощью OpenSSL.\n"
+msgstr "Указать список хэш-функций, которые надо вычислять используя OpenSSL.\n"
 
 #: parse_cmdline.c:95
 msgid "File to output calculation or checking results.\n"
