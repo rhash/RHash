@@ -526,7 +526,18 @@ static const char* find_conf_file(void)
 	char *dir1, *path;
 
 #ifndef _WIN32 /* Linux/Unix part */
-	/* first check for $HOME/.rhashrc file */
+	/* first check for $XDG_CONFIG_HOME/rhash/rhashrc file */
+	if ( (dir1 = getenv("XDG_CONFIG_HOME")) ) {
+		dir1 = make_path(dir1, "rhash");
+		path = make_path(dir1, CONFIG_FILENAME);
+		free(dir1);
+		if (is_regular_file(path)) {
+			rsh_vector_add_ptr(opt.mem, path);
+			return (conf_opt.config_file = path);
+		}
+		free(path);
+	}
+	/* then check for $HOME/.rhashrc file */
 	if ( (dir1 = getenv("HOME")) ) {
 		path = make_path(dir1, ".rhashrc");
 		if (is_regular_file(path)) {
