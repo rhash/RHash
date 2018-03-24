@@ -398,7 +398,7 @@ else
     part=$(echo $BUILD_TARGET | cut -d '-' -f $component)
     case "$(echo $part | tr '[A-Z]' '[a-z]')" in
       linux) TARGET_OS=Linux ;;
-      freebsd) TARGET_OS=FreeBSD ;;
+      freebsd*) TARGET_OS=FreeBSD ;;
       gnu/kfreebsd) TARGET_OS=FreeBSD ;;
       netbsd) TARGET_OS=NetBSD ;;
       bsd/os) TARGET_OS=BSD/OS ;;
