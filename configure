@@ -410,6 +410,7 @@ else
       amigaos) TARGET_OS=AmigaOS ;;
       mingw32*) TARGET_OS=MINGW32 ;;
       wine) TARGET_OS=Wine ;;
+      darwin*) TARGET_OS=Darwin ;;
     esac
   }
   TARGET_OS="UNKNOWN"
