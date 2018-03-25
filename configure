@@ -222,9 +222,9 @@ remove_tmpdir()
 }
 trap remove_tmpdir EXIT
 
-str_concat()
+join_params()
 {
-  printf '%s ' $@
+  printf '%s ' $@ | sed -e 's/ $//'
 }
 
 yn_nonempty()
@@ -531,7 +531,7 @@ has_optimization()
 }
 has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
 OPTFLAGS="-pipe -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections"
-OPTFLAGS=$(str_concat $BUILD_DEBUG $OPTLEVEL $OPTFLAGS)
+OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTFLAGS)
 
 # detect proper shared library name
 SHARED_PREFIX="lib"
@@ -633,7 +633,7 @@ else
   LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SHARED)"
   test -n "$SHARED_VSCRIPT" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
 fi
-LIBRHASH_RM_FILES=$(str_concat $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
+LIBRHASH_RM_FILES=$(join_params $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
 
 RHASH_DEFINES=
 LIBRHASH_DEFINES=
@@ -653,7 +653,7 @@ if test "$OPT_GETTEXT" != "no"; then
       GETTEXT_FOUND=found
     fi
   fi
-  test "$GETTEXT_FOUND" = "found" && RHASH_DEFINES=$(str_concat $RHASH_DEFINES -DUSE_GETTEXT)
+  test "$GETTEXT_FOUND" = "found" && RHASH_DEFINES=$(join_params $RHASH_DEFINES -DUSE_GETTEXT)
   finish_check $GETTEXT_FOUND
   test "$OPT_GETTEXT" = "yes" && test "$GETTEXT_FOUND" = "no" && die "gettext library not found"
 fi
@@ -671,17 +671,17 @@ if test "$OPT_OPENSSL" != "no"; then
   if cc_check_headers $OPENSSL_HEADERS; then
     if test "$OPT_OPENSSL_RUNTIME" != "no"; then
       OPENSSL_FOUND=runtime
-      LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
+      LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
       OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
       # note: libdl should disable -static
       test -n "$LIBDL_LDFLAGS" && LD_STATIC=
     elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
       OPENSSL_FOUND=found
-      LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
+      LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-leay32"
     elif cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-lcrypto"; then
       OPENSSL_FOUND=found
-      LIBRHASH_DEFINES=$(str_concat $LIBRHASH_DEFINES -DUSE_OPENSSL)
+      LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-lcrypto"
     fi
   fi
@@ -711,7 +711,7 @@ else
   test "$INSTALL_LIB_STATIC" = "yes"  && RHASH_BUILD_TARGETS="$RHASH_BUILD_TARGETS \$(LIBRHASH_STATIC)"
 fi
 if test "$INSTALL_LIB_STATIC" = "yes"; then
-  RHASH_EXTRA_INSTALL=$(str_concat $RHASH_EXTRA_INSTALL install-lib-static)
+  RHASH_EXTRA_INSTALL=$(join_params $RHASH_EXTRA_INSTALL install-lib-static)
   LIBRHASH_BUILD_TARGETS=$LIBRHASH_STATIC
   LIBRHASH_TEST_TARGETS=test-static
 fi
@@ -720,9 +720,9 @@ if test "$NEED_IMPLIB" = "yes"; then
   EXTRA_UNINSTALL_LIBSHARED="uninstall-implib"
 fi
 if test "$INSTALL_LIB_SHARED" = "yes"; then
-  RHASH_EXTRA_INSTALL=$(str_concat $RHASH_EXTRA_INSTALL install-lib-shared)
-  LIBRHASH_BUILD_TARGETS=$(str_concat $LIBRHASH_BUILD_TARGETS $LIBRHASH_SHARED)
-  LIBRHASH_TEST_TARGETS=$(str_concat $LIBRHASH_TEST_TARGETS test-shared)
+  RHASH_EXTRA_INSTALL=$(join_params $RHASH_EXTRA_INSTALL install-lib-shared)
+  LIBRHASH_BUILD_TARGETS=$(join_params $LIBRHASH_BUILD_TARGETS $LIBRHASH_SHARED)
+  LIBRHASH_TEST_TARGETS=$(join_params $LIBRHASH_TEST_TARGETS test-shared)
 fi
 
 # check for old POSIX make
@@ -819,7 +819,7 @@ ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
 ADDLDFLAGS  = $BUILD_EXTRA_LDFLAGS
 CFLAGS  = $RHASH_DEFINES \$(OPTFLAGS) \$(WARN_CFLAGS) \$(ADDCFLAGS)
 LDFLAGS = \$(OPTLDFLAGS) \$(ADDLDFLAGS) $GETTEXT_LDFLAGS
-BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(str_concat $LD_STATIC $OPENSSL_LDFLAGS)
+BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(join_params $LD_STATIC $OPENSSL_LDFLAGS)
 
 EOF
 fi
@@ -865,8 +865,8 @@ ADDLDFLAGS  = $BUILD_EXTRA_LDFLAGS
 CFLAGS  = $LIBRHASH_DEFINES \$(OPTFLAGS) \$(WARN_CFLAGS) \$(ADDCFLAGS)
 LDFLAGS = \$(OPTLDFLAGS) \$(ADDLDFLAGS)
 SHARED_CFLAGS  = \$(CFLAGS) $LIBRHASH_SH_CFLAGS
-SHARED_LDFLAGS = \$(LDFLAGS) $(str_concat $OPENSSL_LDFLAGS $LIBRHASH_SH_LDFLAGS)
-BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(str_concat $LD_STATIC $OPENSSL_LDFLAGS)
+SHARED_LDFLAGS = \$(LDFLAGS) $(join_params $OPENSSL_LDFLAGS $LIBRHASH_SH_LDFLAGS)
+BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(join_params $LD_STATIC $OPENSSL_LDFLAGS)
 
 EOF
 fi
