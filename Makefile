@@ -85,8 +85,8 @@ install-conf:
 
 # dependencies should be properly set, otherwise 'make -j<n>' can fail
 install-symlinks: mkdir-bin install-man install-binary
-	cd $(BINDIR) && for f in $(SYMLINKS); do ln -fs $(RHASH_BINARY) $$f$(EXEC_EXT); done
-	cd $(MANDIR)/man1 && for f in $(SYMLINKS); do ln -fs rhash.1* $$f.1; done
+	cd $(BINDIR) && for f in $(SYMLINKS); do $(LN_S) $(RHASH_BINARY) $$f$(EXEC_EXT); done
+	cd $(MANDIR)/man1 && for f in $(SYMLINKS); do $(LN_S) rhash.1 $$f.1; done
 
 install-pkg-config:
 	$(INSTALL) -d $(PKGCONFIGDIR)

@@ -18,7 +18,9 @@
 
 #if defined( _WIN32) || defined(__CYGWIN__)
 # include <windows.h>
+#if !defined(__CYGWIN__)
 # include <share.h> /* for _SH_DENYWR */
+#endif
 # include <fcntl.h>  /* _O_RDONLY, _O_BINARY */
 # include <io.h>
 #endif
