@@ -313,12 +313,13 @@ enum option_type_t
 	F_UFLG = 1, /* set a bit flag in a uint32_t field */
 	F_UENC = F_UFLG | F_OUTPUT_OPT, /* an encoding changing option */
 	F_CSTR = 2 | F_NEED_PARAM, /* store parameter as a C string */
-	F_TOUT = 3 | F_NEED_PARAM | F_OUTPUT_OPT,
-	F_VFNC = 4, /* just call a function */
-	F_PFNC = 5 | F_NEED_PARAM, /* process option parameter by calling a handler */
-	F_TFNC = 6 | F_NEED_PARAM, /* process option parameter by calling a handler */
-	F_UFNC = 7 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
-	F_PRNT = 8, /* print a constant C-string and exit */
+	F_TSTR = 3 | F_NEED_PARAM, /* store parameter as a tstr_t */
+	F_TOUT = 4 | F_NEED_PARAM | F_OUTPUT_OPT,
+	F_VFNC = 5, /* just call a function */
+	F_PFNC = 6 | F_NEED_PARAM, /* process option parameter by calling a handler */
+	F_TFNC = 7 | F_NEED_PARAM, /* process option parameter by calling a handler */
+	F_UFNC = 8 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
+	F_PRNT = 9, /* print a constant C-string and exit */
 };
 
 #define is_param_required(option_type) ((option_type) & F_NEED_PARAM)
@@ -374,7 +375,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG, 'm',   0, "magnet",  &opt.fmt, FMT_MAGNET },
 	{ F_UFLG,   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
-	{ F_CSTR,   0,   0, "template",  &opt.template_file, 0 },
+	{ F_TSTR,   0,   0, "template",  &opt.template_file, 0 },
 	{ F_CSTR, 'p',   0, "printf",  &opt.printf_str, 0 },
 
 	/* other options */
@@ -465,7 +466,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		}
 
 #ifdef _WIN32
-		if (option_type == F_TOUT || option_type == F_TFNC) {
+		if (option_type == F_TOUT || option_type == F_TFNC || option_type == F_TSTR) {
 			/* leave the value in UTF-16 */
 			value = (char*)rsh_wcsdup((wchar_t*)option->parameter);
 		}
@@ -489,6 +490,7 @@ static void apply_option(options_t *opts, parsed_option_t* option)
 		*(unsigned*)((char*)opts + ((char*)o->ptr - (char*)&opt)) |= o->param;
 		break;
 	case F_CSTR:
+	case F_TSTR:
 	case F_TOUT:
 		/* save the option parameter */
 		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;

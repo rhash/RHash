@@ -136,13 +136,18 @@ static void ctrl_c_handler(int signum)
  */
 static int load_printf_template(void)
 {
-	FILE* fd = fopen(opt.template_file, "rb");
+	FILE* fd;
+	file_t file;
 	char buffer[8192];
 	size_t len;
 	int error = 0;
 
-	if (!fd) {
-		log_file_error(opt.template_file);
+	file_tinit(&file, opt.template_file, FILE_OPT_DONT_FREE_PATH);
+	fd = file_fopen(&file, FOpenRead | FOpenBin);
+	if (!fd)
+	{
+		log_file_t_error(&file);
+		file_cleanup(&file);
 		return 0;
 	}
 
@@ -154,17 +159,18 @@ static int load_printf_template(void)
 
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
-			log_msg(_("%s: template file is too big\n"), opt.template_file);
+			log_msg(_("%s: template file is too big\n"), file_cpath(&file));
 			error = 1;
 		}
 	}
 
 	if (ferror(fd)) {
-		log_file_error(opt.template_file);
+		log_file_t_error(&file);
 		error = 1;
 	}
 
 	fclose(fd);
+	file_cleanup(&file);
 	rhash_data.printf_str = rhash_data.template_text->str;
 	return !error;
 }
