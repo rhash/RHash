@@ -90,13 +90,16 @@ enum FileFOpenModes {
 };
 FILE* file_fopen(file_t* file, int fopen_flags);
 int file_rename(file_t* from, file_t* to);
+FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
 
 #ifdef _WIN32
-FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
+void file_tinit(file_t* file, ctpath_t tpath, int finit_flags);
+const char* file_cpath(file_t* file);
 int file_is_write_locked(file_t* file);
 #else
+# define file_tinit(file, tpath, finit_flags) file_init(file, tpath, finit_flags)
+# define file_cpath(file) ((const char*)(file)->path)
 # define file_is_write_locked(f) (0)
-# define rsh_tfopen(tpath, tmode) fopen(tpath, tmode)
 #endif
 
 typedef struct file_list_t {

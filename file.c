@@ -171,13 +171,33 @@ int if_file_exists(const char* path)
 void file_init(file_t* file, const char* path, int finit_flags)
 {
 	memset(file, 0, sizeof(*file));
+	file->mode = (unsigned)finit_flags;
 	if ((finit_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
 		file->path = (char*)path;
-		file->mode = (unsigned)finit_flags;
 	} else {
 		file->path = rsh_strdup(path);
 	}
 }
+
+#ifdef _WIN32
+void file_tinit(file_t* file, ctpath_t tpath, int finit_flags)
+{
+	memset(file, 0, sizeof(*file));
+	file->mode = (unsigned)finit_flags & ~FILE_OPT_DONT_FREE_PATH;
+	if ((finit_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
+		file->wpath = (wchar_t*)tpath;
+		file->mode |= FILE_OPT_DONT_FREE_WPATH;
+	} else {
+		file->wpath = rsh_wcsdup(tpath);
+	}
+}
+
+const char* file_cpath(file_t* file)
+{
+	if (!file->path && file->wpath) file->path = w2c(file->wpath);
+	return file->path;
+}
+#endif
 
 /**
  * Free the memory allocated by the fields of the file_t structure.
@@ -359,12 +379,14 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 #endif
 }
 
-#ifdef _WIN32
 FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode)
 {
+#ifdef _WIN32
 	return _wfsopen(tpath, tmode, _SH_DENYNO);
-}
+#else
+	return fopen(tpath, tmode);
 #endif
+}
 
 /**
  * Rename or move the file. The source and destination paths should be on the same device.

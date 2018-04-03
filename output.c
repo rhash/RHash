@@ -90,12 +90,9 @@ void log_file_error(const char* filepath)
  *
  * @param file the file, caused the error
  */
-void log_file_t_error(const struct file_t* file)
+void log_file_t_error(struct file_t* file)
 {
-#ifdef _WIN32
-	if (!file->path) log_file_error(w2c(file->wpath));
-#endif
-	log_file_error(file->path);
+	log_file_error(file_cpath(file));
 }
 
 /**
