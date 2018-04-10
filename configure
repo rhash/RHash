@@ -647,11 +647,11 @@ if test "$OPT_GETTEXT" != "no"; then
   if cc_check_headers "libintl.h"; then
     if cc_check_statement "libintl.h" "gettext(\"\");"; then
       GETTEXT_FOUND=found
-    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
-      GETTEXT_LDFLAGS="-lintl"
-      GETTEXT_FOUND=found
     elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
       GETTEXT_LDFLAGS="-lintl -liconv"
+      GETTEXT_FOUND=found
+    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
+      GETTEXT_LDFLAGS="-lintl"
       GETTEXT_FOUND=found
     fi
   fi

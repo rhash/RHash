@@ -108,10 +108,10 @@ uninstall-lib:
 	+cd librhash && $(MAKE) uninstall-lib
 
 install-lib-static: $(LIBRHASH_STATIC)
-	+cd librhash && $(MAKE) install-lib-static
+	+cd librhash && $(MAKE) install-lib-static install-headers
 
 install-lib-shared: $(LIBRHASH_SHARED)
-	+cd librhash && $(MAKE) install-lib-shared
+	+cd librhash && $(MAKE) install-lib-shared install-headers
 
 install-lib-so-link:
 	+cd librhash && $(MAKE) install-so-link
