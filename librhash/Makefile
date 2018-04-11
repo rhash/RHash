@@ -41,10 +41,10 @@ uninstall-lib-static: uninstall-lib-headers
 	rm -f $(LIBDIR)/$(LIBRHASH_STATIC)
 
 uninstall-lib-shared: $(EXTRA_UNINSTALL_LIBSHARED)
-	rm -f $(LIBDIR)/$(LIBRHASH_SHARED)
+	rm -f $(SO_DIR)/$(LIBRHASH_SHARED)
 
 uninstall-implib:
-	rm -f $(LIBDIR)/$(IMPLIBNAME)
+	rm -f $(LIBDIR)/$(LIBRHASH_IMPLIB)
 
 uninstall-so-link:
 	rm -f $(LIBDIR)/$(LIBRHASH_SOLINK)
