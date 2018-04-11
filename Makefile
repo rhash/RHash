@@ -225,9 +225,6 @@ dist/rhash.1.html: dist/rhash.1
 dist/rhash.1.txt: dist/rhash.1
 	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
 
-cpp-doc:
-	cppdoc_cmd -title=RHash -company=Akademgorodok -classdir=classdoc -module="cppdoc-standard" -overwrite -extensions="c,h" -languages="c=cpp,h=cpp" -generate-deprecations-list=false $(SOURCES) $(HEADERS) ./Documentation/CppDoc/index.html
-
 permissions:
 	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
 	chmod +x configure tests/test_rhash.sh
@@ -330,5 +327,5 @@ uninstall-gmo:
 	install-lib-so-link install-conf install-data install-gmo install-man \
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
-	print-info check copy-dist update-po compile-gmo cpp-doc mkdir-bin permissions \
+	print-info check copy-dist update-po compile-gmo mkdir-bin permissions \
 	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
