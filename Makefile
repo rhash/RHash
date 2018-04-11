@@ -107,11 +107,14 @@ uninstall-pkg-config:
 uninstall-lib:
 	+cd librhash && $(MAKE) uninstall-lib
 
-install-lib-static: $(LIBRHASH_STATIC)
+install-lib-static: $(LIBRHASH_STATIC) install-lib-headers
 	+cd librhash && $(MAKE) install-lib-static
 
 install-lib-shared: $(LIBRHASH_SHARED)
 	+cd librhash && $(MAKE) install-lib-shared
+
+install-lib-headers:
+	+cd librhash && $(MAKE) install-headers
 
 install-lib-so-link:
 	+cd librhash && $(MAKE) install-so-link
@@ -324,7 +327,7 @@ uninstall-gmo:
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
 	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
-	install-lib-so-link install-conf install-data install-gmo install-man \
+	install-lib-headers install-lib-so-link install-conf install-data install-gmo install-man \
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	print-info check copy-dist update-po compile-gmo mkdir-bin permissions \

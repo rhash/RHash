@@ -21,7 +21,7 @@ uninstall-lib: uninstall-lib-shared uninstall-lib-static uninstall-so-link
 config.mak:
 	echo "Run the ./configure script first" && false
 
-install-lib-static: $(LIBRHASH_STATIC) install-headers
+install-lib-static: $(LIBRHASH_STATIC)
 	$(INSTALL) -d $(LIBDIR)
 	$(INSTALL_DATA) $(LIBRHASH_STATIC) $(LIBDIR)/
 
@@ -37,7 +37,7 @@ install-so-link:
 	$(INSTALL) -d $(LIBDIR)
 	ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SOLINK)
 
-uninstall-lib-static: uninstall-headers
+uninstall-lib-static: uninstall-lib-headers
 	rm -f $(LIBDIR)/$(LIBRHASH_STATIC)
 
 uninstall-lib-shared: $(EXTRA_UNINSTALL_LIBSHARED)
@@ -49,11 +49,11 @@ uninstall-implib:
 uninstall-so-link:
 	rm -f $(LIBDIR)/$(LIBRHASH_SOLINK)
 
-install-headers:
+install-lib-headers:
 	$(INSTALL) -d $(INCDIR)
 	$(INSTALL_DATA) $(LIB_HEADERS) $(INCDIR)/
 
-uninstall-headers:
+uninstall-lib-headers:
 	for f in $(LIB_HEADERS); do rm -f "$(INCDIR)/$$f"; done
 
 # not using GNU make extensions for compatibility with Unix/*BSD make
@@ -194,8 +194,8 @@ distclean: clean
 clean:
 	rm -f *.o $(LIBRHASH_STATIC) $(LIBRHASH_SHARED) $(TEST_STATIC) $(TEST_SHARED) $(RM_FILES)
 
-.PHONY: all clean distclean install-headers install-lib-shared install-lib-static \
+.PHONY: all clean distclean install-lib-headers install-lib-shared install-lib-static \
 	install-so-link libs-all lib-shared lib-static test test-shared test-static \
-	print-info print-info-static print-info-shared uninstall-headers \
+	print-info print-info-static print-info-shared uninstall-lib-headers \
 	uninstall-lib uninstall-lib-shared uninstall-lib-static uninstall-so-link \
 	install-implib uninstall-implib
