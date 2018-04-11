@@ -114,7 +114,7 @@ install-lib-shared: $(LIBRHASH_SHARED)
 	+cd librhash && $(MAKE) install-lib-shared
 
 install-lib-headers:
-	+cd librhash && $(MAKE) install-headers
+	+cd librhash && $(MAKE) install-lib-headers
 
 install-lib-so-link:
 	+cd librhash && $(MAKE) install-so-link
