@@ -244,7 +244,7 @@ void file_path_append(file_t* dst, file_t* src, const char* suffix)
 		return;
 	}
 #endif
-	assert(!!file->path);
+	assert(!!src->path);
 	size_t src_len = strlen(src->path);
 	size_t dst_len = src_len + strlen(suffix) + 1;
 	dst->path = (char*)rsh_malloc(dst_len);
