@@ -9,7 +9,9 @@ extern "C" {
 #endif
 
 #ifndef RHASH_API
-/* modifier for LibRHash functions */
+/**
+ *  modifier for LibRHash functions
+ */
 # define RHASH_API
 #endif
 
@@ -65,7 +67,9 @@ enum rhash_ids
  */
 typedef struct rhash_context
 {
-	/** The size of the hashed message */
+	/**
+         * The size of the hashed message
+        */
 	unsigned long long msg_size;
 
 	/**
@@ -82,21 +86,30 @@ typedef struct rhash_context
 typedef struct rhash_context* rhash;
 #endif /* LIBRHASH_RHASH_CTX_DEFINED */
 
-/** type of a callback to be called periodically while hashing a file */
+/**
+  * type of a callback to be called periodically while hashing a file
+ */
 typedef void (*rhash_callback_t)(void* data, unsigned long long offset);
 
 RHASH_API void rhash_library_init(void); /* initialize static data */
 
-/* hi-level hashing functions */
+/**
+ * hi-level hashing functions 
+ */
 RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result);
 RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result);
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd);
 
-#ifdef _WIN32 /* windows only function */
+#ifdef _WIN32 
+/**
+ * windows only function
+ */
 RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
 #endif
 
-/* lo-level interface */
+/**
+ * lo-level interface
+ */
 RHASH_API rhash rhash_init(unsigned hash_id);
 /*RHASH_API rhash rhash_init_by_ids(unsigned hash_ids[], unsigned count);*/
 RHASH_API int  rhash_update(rhash ctx, const void* message, size_t length);
@@ -104,10 +117,14 @@ RHASH_API int  rhash_final(rhash ctx, unsigned char* first_result);
 RHASH_API void rhash_reset(rhash ctx); /* reinitialize the context */
 RHASH_API void rhash_free(rhash ctx);
 
-/* additional lo-level functions */
+/**
+ * additional lo-level functions 
+ */
 RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
 
-/** bit-flag: default hash output format is base32 */
+/**
+ * bit-flag: default hash output format is base32
+ */
 #define RHASH_INFO_BASE32 1
 
 /**
@@ -115,17 +132,25 @@ RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* c
  */
 typedef struct rhash_info
 {
-	/** hash function indentifier */
+	/** 
+         * hash function indentifier
+         */
 	unsigned hash_id;
-	/** flags bit-mask, including RHASH_INFO_BASE32 bit */
+	/**
+         * flags bit-mask, including RHASH_INFO_BASE32 bit
+         */
 	unsigned flags;
-	/** size of binary message digest in bytes */
+	/**
+          size of binary message digest in bytes
+        */
 	size_t digest_size;
 	const char* name;
 	const char* magnet_name;
 } rhash_info;
 
-/* information functions */
+/**
+ * information functions
+ */
 RHASH_API int  rhash_count(void); /* number of supported hashes */
 RHASH_API int  rhash_get_digest_size(unsigned hash_id); /* size of binary message digest */
 RHASH_API int  rhash_get_hash_length(unsigned hash_id); /* length of formatted hash string */
@@ -169,20 +194,28 @@ enum rhash_print_sum_flags
 	RHPR_FILESIZE  = 0x40,
 };
 
-/* output hash into the given buffer */
+/**
+ * output hash into the given buffer 
+ */
 RHASH_API size_t rhash_print_bytes(char* output,
 	const unsigned char* bytes, size_t size, int flags);
 
 RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
 	int flags);
 
-/* output magnet URL into the given buffer */
+/**
+ * output magnet URL into the given buffer 
+ */
 RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	rhash context, unsigned hash_mask, int flags);
 
-/* macros for message API */
+/**
+ * macros for message API 
+ */
 
-/** The type of an unsigned integer large enough to hold a pointer */
+/** 
+ * The type of an unsigned integer large enough to hold a pointer 
+ */
 #if defined(UINTPTR_MAX)
 typedef uintptr_t rhash_uptr_t;
 #elif defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
@@ -192,18 +225,26 @@ typedef unsigned long long rhash_uptr_t;
 typedef unsigned long rhash_uptr_t;
 #endif
 
-/** The value returned by rhash_transmit on error */
+/** 
+ * The value returned by rhash_transmit on error 
+ */
 #define RHASH_ERROR ((rhash_uptr_t)-1)
-/** Convert a pointer to rhash_uptr_t */
+/**
+ * Convert a pointer to rhash_uptr_t 
+ */
 #define RHASH_STR2UPTR(str) ((rhash_uptr_t)(char*)(str))
-/** Convert a rhash_uptr_t to a void* pointer */
+/** 
+ * Convert a rhash_uptr_t to a void* pointer 
+ */
 #define RHASH_UPTR2PVOID(u) ((void*)((u) + 0))
 
 /* rhash API to set/get data via messages */
 RHASH_API rhash_uptr_t rhash_transmit(
 	unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata);
 
-/* rhash message constants */
+/**
+ * rhash message constants
+ */
 
 #define RMSG_GET_CONTEXT 1
 #define RMSG_CANCEL      2
@@ -223,19 +264,31 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define RMSG_BT_GET_TEXT 37
 #define RMSG_BT_SET_BATCH_SIZE 38
 
-/* possible BitTorrent options for the RMSG_BT_SET_OPTIONS message */
+/**
+ * possible BitTorrent options for the RMSG_BT_SET_OPTIONS message 
+ */
 #define RHASH_BT_OPT_PRIVATE 1
 #define RHASH_BT_OPT_INFOHASH_ONLY 2
 
-/* helper macros */
+/**
+ * helper macros
+ */
 
-/** Get a pointer to context of the specified hash function */
+/**
+  * Get a pointer to context of the specified hash function 
+  */
 #define rhash_get_context_ptr(ctx, hash_id) RHASH_UPTR2PVOID(rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
-/** Cancel hash calculation of a file */
+/**
+ * Cancel hash calculation of a file
+ */
 #define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
-/** Return non-zero if hash calculation was canceled, zero otherwise */
+/** 
+ * Return non-zero if hash calculation was canceled, zero otherwise
+ */
 #define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
-/** Return non-zero if rhash_final was called for rhash_context */
+/**
+ * Return non-zero if rhash_final was called for rhash_context
+ */
 #define rhash_get_finalized(ctx) rhash_transmit(RMSG_GET_FINALIZED, ctx, 0, 0)
 
 /**
@@ -280,7 +333,9 @@ RHASH_API rhash_uptr_t rhash_transmit(
  */
 #define rhash_is_openssl_supported() (rhash_get_openssl_mask() != RHASH_ERROR)
 
-/** Legacy macro. The bit mask of hash algorithms implemented by OpenSSL */
+/**
+ * Legacy macro. The bit mask of hash algorithms implemented by OpenSSL
+ */
 # define RHASH_OPENSSL_SUPPORTED_HASHES (rhash_get_openssl_supported_mask())
 
 #ifdef __cplusplus
