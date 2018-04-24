@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.2.3)
 project(RHash)
+#Do not prefix BUILD_SHARED_LIBS and BUILD_STATIC_LIBS because those are standard cmake options
+#We only put them in the menu for convenience.
 option(BUILD_SHARED_LIBS "Build shared FLIF encoder/decoder libraries" ON)
 option(BUILD_STATIC_LIBS "Build static FLIF encoder/decoder libraries" ON)
+
 option(RHASH_USE_OPENSSL "Build Rhash with OpenSSL Crypto support" ON)
 option(RHASH_OPENSSL_RUNTIME "load OpenSSL at runtime if present" ON)
 option(RHASH_BUILD_EXE "Build rhash executable" ON)
@@ -217,9 +220,9 @@ SET(CPACK_PACKAGE_VERSION_PATCH "${RHASH_VERSION_PATCH}")
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  if(RHASH_INCLUDE_WINDIST_FILES)
-    SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/\\\\icon.ico")
-  endif(RHASH_INCLUDE_WINDIST_FILES)    
+ if(CMAKE_RC_COMPILER)
+    SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/\\\\rhash.exe")
+  endif(CMAKE_RC_COMPILER)
   SET(CPACK_NSIS_MODIFY_PATH ON)
   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\rhash.exe")
   SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Rhash")
@@ -239,6 +242,7 @@ set(RHASH_ADDITIONAL_DIRS "")
 set(RHASH_DEFINITIONS_FOR_ALL_TARGETS "")
 
 if(RHASH_USE_OPENSSL)
+
   message(STATUS "OpenSSL Crypto Includes: ${OPENSSL_INCLUDE_DIR}")
   message(STATUS "OpenSSL Crypto Library:  ${OPENSSL_CRYPTO_LIBRARY}")
   if (OPENSSL_FOUND)
@@ -254,6 +258,61 @@ if(RHASH_USE_OPENSSL)
 endif(RHASH_USE_OPENSSL)
 
 if(RHASH_BUILD_EXE)
+  # Make .rc file  
+  if(CMAKE_RC_COMPILER)
+      file(COPY icon.ico DESTINATION ${RHASH_BUILD_DIR})
+  		set(RHASH_FILE_CONTENTS "1 VERSIONINFO
+FILEVERSION     ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+PRODUCTVERSION  ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+BEGIN
+  BLOCK \"StringFileInfo\"
+  BEGIN
+    BLOCK \"040904E4\"
+    BEGIN
+      VALUE \"CompanyName\", \"Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"FileDescription\", \"LibRHash shared library\"
+      VALUE \"FileVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+      VALUE \"InternalName\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash\"
+      VALUE \"LegalCopyright\", \"Copyright (c) 2005-2014 Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"OriginalFilename\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash${CMAKE_SHARED_LIBRARY_SUFFIX}\"
+      VALUE \"ProductName\", \"RHash\"
+      VALUE \"ProductVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+    END
+  END
+  BLOCK \"VarFileInfo\"
+  BEGIN
+    VALUE \"Translation\", 0x409, 1252
+  END
+END")
+     FILE(WRITE ${RHASH_BUILD_DIR}/librhash.rc "${RHASH_FILE_CONTENTS}")
+	 
+	set(RHASH_FILE_CONTENTS "id ICON \"icon.ico\"
+1 VERSIONINFO
+FILEVERSION     ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+PRODUCTVERSION  ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+BEGIN
+  BLOCK \"StringFileInfo\"
+  BEGIN
+    BLOCK \"040904E4\"
+    BEGIN
+      VALUE \"CompanyName\", \"Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"FileDescription\", \"calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.\"
+      VALUE \"FileVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+      VALUE \"InternalName\", \"rhash\"
+      VALUE \"LegalCopyright\", \"Copyright (c) 2005-2014 Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"OriginalFilename\", \"rhash${CMAKE_EXECUTABLE_SUFFIX}\"
+      VALUE \"ProductName\", \"RHash\"
+      VALUE \"ProductVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+    END
+  END
+  BLOCK \"VarFileInfo\"
+  BEGIN
+    VALUE \"Translation\", 0x409, 1252
+  END
+END")
+     FILE(WRITE ${RHASH_BUILD_DIR}/rhash.rc "${RHASH_FILE_CONTENTS}")
+endif(CMAKE_RC_COMPILER)
+  
   if (Intl_FOUND)
     list(APPEND RHASH_ADDITIONAL_DIRS ${Intl_INCLUDE_DIR})
     list(APPEND RHASH_ADDITIONAL_LIBS ${Intl_LIBRARIES})
@@ -261,7 +320,11 @@ if(RHASH_BUILD_EXE)
   message(STATUS "Intl Includes:           ${Intl_INCLUDE_DIR}")
   message(STATUS "Intl Library:            ${Intl_LIBRARIES}")
 
-  add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES})
+  if(CMAKE_RC_COMPILER)
+    add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES} ${RHASH_BUILD_DIR}/rhash.rc)
+  else()
+    add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES})
+  endif(CMAKE_RC_COMPILER)
   target_include_directories(rhash_exe PRIVATE ${RHASH_ADDITIONAL_DIRS})
   target_link_libraries(rhash_exe PUBLIC ${RHASH_ADDITIONAL_LIBS}) 
   set_target_properties(rhash_exe PROPERTIES OUTPUT_NAME rhash)
@@ -363,7 +426,11 @@ endif(RHASH_BUILD_EXE)
 set(RHASH_LIB_DEPEND_LIBS "${RHASH_LIB_DEPEND_LIBS};${CMAKE_DL_LIBS}")
 
 if(BUILD_SHARED_LIBS)
-    add_library(rhash_lib SHARED ${RHASH_LIB_SOURCES})
+   if(CMAKE_RC_COMPILER)
+     add_library(rhash_lib SHARED ${RHASH_LIB_SOURCES} ${RHASH_BUILD_DIR}/librhash.rc)
+   else()
+     add_library(rhash_lib SHARED ${RHASH_LIB_SOURCES})
+	endif(CMAKE_RC_COMPILER)
     set_target_properties(rhash_lib PROPERTIES OUTPUT_NAME rhash)
 	if (WIN32 OR CYGWIN OR MSYS OR WINCE)
       set_target_properties(rhash_lib PROPERTIES PUBLIC_HEADER "${RHASH_LIB_PUBLIC_HEADERS}")   
