@@ -315,18 +315,27 @@ endif(CMAKE_RC_COMPILER)
   
   if (Intl_FOUND)
     list(APPEND RHASH_ADDITIONAL_DIRS ${Intl_INCLUDE_DIR})
-    list(APPEND RHASH_ADDITIONAL_LIBS ${Intl_LIBRARIES})
+	 if(Intl_LIBRARIES)
+      list(APPEND RHASH_ADDITIONAL_LIBS ${Intl_LIBRARIES})
+	 endif(Intl_LIBRARIES)
+	 message(STATUS "Intl Includes:           ${Intl_INCLUDE_DIR}")
+	 # Intl_LIBRARIES may be empty on systems that don't require you to link to an additional library.
+	 if(Intl_LIBRARIES) 
+      message(STATUS "Intl Library:            ${Intl_LIBRARIES}")
+	 endif(Intl_LIBRARIES)
   endif(Intl_FOUND )
-  message(STATUS "Intl Includes:           ${Intl_INCLUDE_DIR}")
-  message(STATUS "Intl Library:            ${Intl_LIBRARIES}")
-
+  message(STATUS "Intl Library:            Not Found")	 
   if(CMAKE_RC_COMPILER)
     add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES} ${RHASH_BUILD_DIR}/rhash.rc)
   else()
     add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES})
   endif(CMAKE_RC_COMPILER)
-  target_include_directories(rhash_exe PRIVATE ${RHASH_ADDITIONAL_DIRS})
-  target_link_libraries(rhash_exe PUBLIC ${RHASH_ADDITIONAL_LIBS}) 
+  if(RHASH_ADDITIONAL_DIRS)
+    target_include_directories(rhash_exe PRIVATE ${RHASH_ADDITIONAL_DIRS})
+  endif(RHASH_ADDITIONAL_DIRS)
+  if(RHASH_ADDITIONAL_LIBS)
+    target_link_libraries(rhash_exe PUBLIC ${RHASH_ADDITIONAL_LIBS}) 
+  endif(RHASH_ADDITIONAL_LIBS)
   set_target_properties(rhash_exe PROPERTIES OUTPUT_NAME rhash)
   install(TARGETS rhash_exe
         RUNTIME DESTINATION bin
@@ -549,6 +558,8 @@ if(RHASH_BUILD_LIB_DOCS)
 
 	 # Optional - use mscgen
 	 find_program(MSCGEN mscgen)
+	 # Doxygen will use this dir to find mscgen   
+	 get_filename_component(RHASH_MSCGEN_PATH ${MSCGEN} DIRECTORY)
     # request to configure the file
     configure_file(${RHASH_DOXYGEN_IN} ${RHASH_DOXYGEN_OUT} @ONLY)
 
