@@ -26,7 +26,10 @@ checkrun()
 file(WRITE "${TMPDIR}/test1K.data.hash" "${TEST_OUTPUT}")
 execute_process(COMMAND ${RHASH} -vc "${TMPDIR}/test1K.data.hash"
    OUTPUT_VARIABLE TEST_RESULT RESULT_VARIABLE TEST_ERR_VAR ERROR_VARIABLE TEST_ERROR_RESULT)
-checkrun()
+#TEST_ERROR_RESULT may not be empty
+if(TEST_ERR_VAR GREATER 0)
+   report_failed_test()
+endif(TEST_ERR_VAR GREATER 0)
 
 string(REGEX MATCH "OK" _POS_OK ${TEST_RESULT})
 check_POS_OK()

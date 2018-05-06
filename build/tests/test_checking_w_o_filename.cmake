@@ -25,7 +25,10 @@ execute_process(COMMAND ${RHASH} -vc "${TMPDIR}/${TEST_FILE}"
    OUTPUT_VARIABLE TEST_RESULT
    RESULT_VARIABLE TEST_ERR_VAR
    ERROR_VARIABLE TEST_ERROR_RESULT)
-checkrun()
+#TEST_ERROR_RESULT may not be empty
+if(TEST_ERR_VAR GREATER 0)
+   report_failed_test()
+endif(TEST_ERR_VAR GREATER 0)
 
 string(FIND "warn" _POS_MSG "${TEST_ERROR_RESULT}")
 if(NOT _POS_MSG)
