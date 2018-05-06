@@ -15,6 +15,7 @@ option(RHASH_INCLUDE_WINDIST_FILES "Include Windows distribution files" ON)
 option(RHASH_INCLUDE_OTHER_FILES "Include other files from the distribution" ON)
 
 enable_testing()
+include( CTest )
 
 include(GNUInstallDirs)
 include(FindPkgConfig)
@@ -322,9 +323,12 @@ endif(CMAKE_RC_COMPILER)
 	 # Intl_LIBRARIES may be empty on systems that don't require you to link to an additional library.
 	 if(Intl_LIBRARIES) 
       message(STATUS "Intl Library:            ${Intl_LIBRARIES}")
+    elseif()
+      message(STATUS "Intl Library:            Not Required")	 
 	 endif(Intl_LIBRARIES)
+  elseif()
+    message(STATUS "Intl Library:            Not Found")	 
   endif(Intl_FOUND )
-  message(STATUS "Intl Library:            Not Found")	 
   if(CMAKE_RC_COMPILER)
     add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES} ${RHASH_BUILD_DIR}/rhash.rc)
   else()
@@ -601,10 +605,74 @@ add_custom_command(PRE_BUILD OUTPUT bindings/version.properties
 add_custom_target(bindings_dir ALL DEPENDS bindings bindings/version.properties)
 
 if(RHASH_BUILD_EXE)
-  add_test(NAME test_with_text_string
-    COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_BUILD_DIR}/${RASH_TARGET_NAME}${CMAKE_EXECUTABLE_SUFFIX} -DTDATA=${CMAKE_CURRENT_LIST_DIR}/../tests/test1K.data -P ${CMAKE_CURRENT_LIST_DIR}/tests/test_with_text_string.cmake
-  )
-  add_test(NAME test_exit_code
-  COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_BUILD_DIR}/${RASH_TARGET_NAME}${CMAKE_EXECUTABLE_SUFFIX} -DTDATA=${CMAKE_CURRENT_LIST_DIR}/../tests/test1K.data -P ${CMAKE_CURRENT_LIST_DIR}/tests/test_exit_code.cmake
-  )
+ set(RHASH_TEST_RHASH_EXE "$<TARGET_FILE:rhash_exe>")
+ set(RHASH_TMPDIR "${CMAKE_BINARY_DIR}/tests")
+set(RHASH_TEST_DATA_FILE "test1K.data")
+set(RHASH_BIN_DATA_FILE "binary.data")
+set(CREATE_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+#These two files have to be copied to the temp dir so links can work
+#in our tests.
+file(COPY "${RHASH_SRC_DIR}/tests/test1K.data" DESTINATION "${RHASH_TMPDIR}")
+file(COPY "${RHASH_SRC_DIR}/tests/test1K.data" DESTINATION ${CMAKE_SOURCE_DIR}/tests)
+file(COPY "${CMAKE_SOURCE_DIR}/tests/binary.data" DESTINATION "${RHASH_TMPDIR}")
+
+ add_test(NAME test_string1              WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_string1.cmake)
+
+add_test(NAME test_with_1Kb_data_file   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_with_1Kb_data_file.cmake)
+
+add_test(NAME test_handling_empty_files WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_handling_empty_files.cmake)
+
+add_test(NAME test_default_format       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_default_format.cmake)
+
+add_test(NAME test_x_b_B_modifiers      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_x_b_B_modifiers.cmake)
+
+#This one requires RHASH_BIN_DATA_FILE isntead of RHASH_TEST_DATA_FILE
+add_test(NAME test_special_characters   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_BIN_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_special_characters.cmake)
+
+#if   (TESTS_OPT_FULL)
+add_test(NAME test_all_hash_options     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_ignoring_of_log_files.cmake)
+
+#endif(TESTS_OPT_FULL)
+
+add_test(NAME test_eDonkey_link         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_eDonkey_link.cmake)
+
+add_test(NAME test_checking_all_hashes  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_checking_all_hashes.cmake)
+
+add_test(NAME test_checking_magnet_link WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_checking_magnet_link.cmake)
+
+add_test(NAME test_bsd_format_checking  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_bsd_format_checking.cmake)
+
+add_test(NAME test_checking_w_o_filename WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_checking_w_o_filename.cmake)
+
+add_test(NAME test_checking_embedded_crc WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_checking_embedded_crc.cmake)
+
+add_test(NAME test_wrong_sums_detection WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_wrong_sums_detection.cmake)
+
+add_test(NAME test_accept_options WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_accept_options.cmake)
+
+add_test(NAME test_ignoring_of_log_files WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_ignoring_of_log_files.cmake)
+
+add_test(NAME test_creating_torrent_file WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_creating_torrent_file.cmake)
+
+add_test(NAME test_exit_code WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests 
+COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_exit_code.cmake)
+
 endif(RHASH_BUILD_EXE)
+
