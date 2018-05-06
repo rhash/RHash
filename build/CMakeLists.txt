@@ -564,10 +564,15 @@ if(RHASH_BUILD_LIB_DOCS)
 	 find_program(MSCGEN mscgen)
 	 # Doxygen will use this dir to find mscgen   
 	 get_filename_component(RHASH_MSCGEN_PATH ${MSCGEN} DIRECTORY)
+	 	 # Optional - use dia
+	 find_program(DIA dia)
+	 # Doxygen will use this dir to find mscgen   
+	 get_filename_component(RHASH_DIA_PATH ${DIA} DIRECTORY)
     # request to configure the file
     configure_file(${RHASH_DOXYGEN_IN} ${RHASH_DOXYGEN_OUT} @ONLY)
 
 	 message("DOXYGEN_MSCGEN_EXECUTABLE - ${MSCGEN}")
+	 message("DOXYGEN_DIA_EXECUTABLE    - ${DIA}")
     message("Doxygen build started")
 
       # note the option ALL which allows to build the docs together with the application
