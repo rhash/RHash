@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.2.3)
 project(RHash)
 #Do not prefix BUILD_SHARED_LIBS and BUILD_STATIC_LIBS because those are standard cmake options
 #We only put them in the menu for convenience.
-option(BUILD_SHARED_LIBS "Build shared FLIF encoder/decoder libraries" ON)
-option(BUILD_STATIC_LIBS "Build static FLIF encoder/decoder libraries" ON)
+option(BUILD_SHARED_LIBS "Build shared LibRHash libraries" ON)
+option(BUILD_STATIC_LIBS "Build static LibRHash libraries" ON)
 
 option(RHASH_USE_OPENSSL "Build Rhash with OpenSSL Crypto support" ON)
 option(RHASH_OPENSSL_RUNTIME "load OpenSSL at runtime if present" ON)
@@ -13,6 +13,7 @@ option(RHASH_BUILD_LIB_DOCS "Build libRhash documentation with Doxygen" ON)
 option(RHASH_WITH_PKGCONFIG_SUPPORT "Generate and install .pc files" ON)
 option(RHASH_INCLUDE_WINDIST_FILES "Include Windows distribution files" ON)
 option(RHASH_INCLUDE_OTHER_FILES "Include other files from the distribution" ON)
+option(RHASH_TESTS_OPT_FULL "Run rhash executable all hash options test" ON)
 
 enable_testing()
 include( CTest )
@@ -209,7 +210,7 @@ IF(NOT RHASH_VERSION_FOUND)
     MESSAGE(FATAL_ERROR "Failed to parse version string properly. Expect X.Y.Z")
 endif(NOT RHASH_VERSION_FOUND)
 
-message(STATUS "RHash version:           ${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}")
+message(STATUS "RHash version:                    ${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}")
 
 #cpack stuff
 INCLUDE(InstallRequiredSystemLibraries)
@@ -243,50 +244,29 @@ set(RHASH_ADDITIONAL_DIRS "")
 set(RHASH_DEFINITIONS_FOR_ALL_TARGETS "")
 
 if(RHASH_USE_OPENSSL)
-
-  message(STATUS "OpenSSL Crypto Includes: ${OPENSSL_INCLUDE_DIR}")
-  message(STATUS "OpenSSL Crypto Library:  ${OPENSSL_CRYPTO_LIBRARY}")
   if (OPENSSL_FOUND)
+    message(STATUS "OpenSSL Crypto Library:           ${OPENSSL_CRYPTO_LIBRARY}")
+    message(STATUS "OpenSSL Crypto Includes:          ${OPENSSL_INCLUDE_DIR}")
+    message(STATUS "OpenSSL Crypto Library Version:   ${OPENSSL_VERSION}")
     list(APPEND RHASH_ADDITIONAL_DIRS ${OPENSSL_INCLUDE_DIR})
-    if (OPENSSL_RUNTIME)
+    if (RHASH_OPENSSL_RUNTIME)
       set(RHASH_DEFINITIONS_FOR_ALL_TARGETS ${RHASH_DEFINITIONS_FOR_ALL_TARGETS} OPENSSL_RUNTIME)
     else()
       list(APPEND RHASH_ADDITIONAL_LIBS ${OPENSSL_CRYPTO_LIBRARY})
       set(RHASH_DEFINITIONS_FOR_ALL_TARGETS ${RHASH_DEFINITIONS_FOR_ALL_TARGETS} USE_OPENSSL)
       list(APPEND RHASH_LIB_DEPEND_LIBS ${OPENSSL_CRYPTO_LIBRARY})
-    endif(OPENSSL_RUNTIME)
+    endif(RHASH_OPENSSL_RUNTIME)
+  else()
+      message(STATUS "OpenSSL Crypto Library:           Not Found")
   endif (OPENSSL_FOUND)
+else()
+  message(STATUS "OpenSSL Crypto Support:           Not Selected")
 endif(RHASH_USE_OPENSSL)
 
 if(RHASH_BUILD_EXE)
-  # Make .rc file  
+#make .rc file for .exe
   if(CMAKE_RC_COMPILER)
-      file(COPY icon.ico DESTINATION ${RHASH_BUILD_DIR})
-  		set(RHASH_FILE_CONTENTS "1 VERSIONINFO
-FILEVERSION     ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
-PRODUCTVERSION  ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
-BEGIN
-  BLOCK \"StringFileInfo\"
-  BEGIN
-    BLOCK \"040904E4\"
-    BEGIN
-      VALUE \"CompanyName\", \"Aleksey Kravchenko <rhash.admin@gmail.com>\"
-      VALUE \"FileDescription\", \"LibRHash shared library\"
-      VALUE \"FileVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
-      VALUE \"InternalName\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash\"
-      VALUE \"LegalCopyright\", \"Copyright (c) 2005-2014 Aleksey Kravchenko <rhash.admin@gmail.com>\"
-      VALUE \"OriginalFilename\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash${CMAKE_SHARED_LIBRARY_SUFFIX}\"
-      VALUE \"ProductName\", \"RHash\"
-      VALUE \"ProductVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
-    END
-  END
-  BLOCK \"VarFileInfo\"
-  BEGIN
-    VALUE \"Translation\", 0x409, 1252
-  END
-END")
-     FILE(WRITE ${RHASH_BUILD_DIR}/librhash.rc "${RHASH_FILE_CONTENTS}")
-	 
+   file(COPY icon.ico DESTINATION ${RHASH_BUILD_DIR})
 	set(RHASH_FILE_CONTENTS "id ICON \"icon.ico\"
 1 VERSIONINFO
 FILEVERSION     ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
@@ -312,23 +292,28 @@ BEGIN
   END
 END")
      FILE(WRITE ${RHASH_BUILD_DIR}/rhash.rc "${RHASH_FILE_CONTENTS}")
-endif(CMAKE_RC_COMPILER)
+  endif(CMAKE_RC_COMPILER)
   
-  if (Intl_FOUND)
-    list(APPEND RHASH_ADDITIONAL_DIRS ${Intl_INCLUDE_DIR})
-	 if(Intl_LIBRARIES)
-      list(APPEND RHASH_ADDITIONAL_LIBS ${Intl_LIBRARIES})
-	 endif(Intl_LIBRARIES)
-	 message(STATUS "Intl Includes:           ${Intl_INCLUDE_DIR}")
-	 # Intl_LIBRARIES may be empty on systems that don't require you to link to an additional library.
-	 if(Intl_LIBRARIES) 
-      message(STATUS "Intl Library:            ${Intl_LIBRARIES}")
-    elseif()
-      message(STATUS "Intl Library:            Not Required")	 
-	 endif(Intl_LIBRARIES)
-  elseif()
-    message(STATUS "Intl Library:            Not Found")	 
-  endif(Intl_FOUND )
+  if (RHASH_USE_GETTEXT)
+    if (Intl_FOUND)
+      set(RHASH_EXE_DEFS "${RHASH_EXE_DEFS} USE_GETTEXT")
+      list(APPEND RHASH_ADDITIONAL_DIRS ${Intl_INCLUDE_DIR})
+	   if(Intl_LIBRARIES)
+        list(APPEND RHASH_ADDITIONAL_LIBS ${Intl_LIBRARIES})
+	   endif(Intl_LIBRARIES)
+	   message(STATUS "Intl Includes:                    ${Intl_INCLUDE_DIR}")
+	   # Intl_LIBRARIES may be empty on systems that don't require you to link to an additional library.
+	   if(Intl_LIBRARIES) 
+        message(STATUS "Intl Library:                     ${Intl_LIBRARIES}")
+      elseif()
+        message(STATUS "Intl Library:                     Not Required")	 
+	   endif(Intl_LIBRARIES)
+    else()
+      message(STATUS "Intl Library:                     Not Found")	 
+    endif(Intl_FOUND )
+  else()
+    message(STATUS "Intl Library Support:             Not Selected")	 
+  endif(RHASH_USE_GETTEXT)
   if(CMAKE_RC_COMPILER)
     add_executable(rhash_exe ${RHASH_EXE_HEADERS} ${RHASH_EXE_SOURCES} ${RHASH_BUILD_DIR}/rhash.rc)
   else()
@@ -337,9 +322,13 @@ endif(CMAKE_RC_COMPILER)
   if(RHASH_ADDITIONAL_DIRS)
     target_include_directories(rhash_exe PRIVATE ${RHASH_ADDITIONAL_DIRS})
   endif(RHASH_ADDITIONAL_DIRS)
+  
   if(RHASH_ADDITIONAL_LIBS)
     target_link_libraries(rhash_exe PUBLIC ${RHASH_ADDITIONAL_LIBS}) 
   endif(RHASH_ADDITIONAL_LIBS)
+  set(RHASH_EXE_CONFDIR_MACRO "SYSCONFDIR=\"${CMAKE_INSTALL_FULL_SYSCONFDIR}\"")
+  
+  target_compile_definitions(rhash_exe PRIVATE ${RHASH_EXE_DEFS} ${RHASH_EXE_CONFDIR_MACRO})
   set_target_properties(rhash_exe PROPERTIES OUTPUT_NAME rhash)
   install(TARGETS rhash_exe
         RUNTIME DESTINATION bin
@@ -371,17 +360,19 @@ endif(CMAKE_RC_COMPILER)
   
   find_program(SED sed)
   if(SED)
-    message(STATUS "SED                      ${SED}")
+    message(STATUS "SED                               ${SED}")
     add_custom_command(POST_BUILD OUTPUT ${RHASH_BUILD_DIST_DIR}/rhash.1.win 
       COMMENT "Creating rhash.1.win" 
       COMMAND ${CMAKE_COMMAND} -D SED=${SED} -DSED_FILE=${RHASH_SOURCE_RHASH_DIST_DIR}/rhash.1.win.sed -D MAN_FILE=${RHASH_SOURCE_RHASH_DIST_DIR}/rhash.1 -DWIN_FILE=${RHASH_BUILD_DIST_DIR}/rhash.1.win -P ${CMAKE_CURRENT_LIST_DIR}/make_win_man.cmake)
     add_custom_target(win_doc ALL DEPENDS ${RHASH_BUILD_DIST_DIR}/rhash.1.win)
     install(FILES ${RHASH_BUILD_DIST_DIR}/rhash.1.win DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+  else()
+    message(STATUS "SED                               Not Found") 
   endif(SED)
 
   find_program(RMAN rman)
-  message(STATUS "Polyglotman (rman)       ${RMAN}")
   if(RMAN)
+    message(STATUS "Polyglotman (rman)                ${RMAN}")
     add_custom_command(POST_BUILD OUTPUT ${RHASH_BUILD_DIST_DIR}/rhash.1.html COMMENT "Creating rhash.1.html" 
       COMMAND ${CMAKE_COMMAND} -D RMAN=${RMAN} -D MAN_FILE=${RHASH_SOURCE_RHASH_DIST_DIR}/rhash.1 -DHTML_FILE=${RHASH_BUILD_DIST_DIR}/rhash.1.html -P ${CMAKE_CURRENT_LIST_DIR}/make_html.cmake)
     install(FILES ${RHASH_BUILD_DIST_DIR}/rhash.1.html DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
@@ -395,13 +386,15 @@ endif(CMAKE_RC_COMPILER)
     else()
       add_custom_target(html_doc ALL DEPENDS ${RHASH_BUILD_DIST_DIR}/rhash.1.html)
     endif(SED)  
+  else()
+    message(STATUS "Polyglotman (rman)                Not Found")
   endif(RMAN)
 
   find_program(GROFF groff)
   if(GROFF)
     #dist/rhash.1.txt: dist/rhash.1
     #	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
-    message(STATUS "groff                    ${GROFF}")
+    message(STATUS "groff                             ${GROFF}")
     add_custom_command(POST_BUILD OUTPUT ${RHASH_BUILD_DIST_DIR}/rhash.1.txt COMMENT "Creating rhash.1.txt" 
       COMMAND ${CMAKE_COMMAND} -D GROFF=${GROFF} -D MAN_FILE=${RHASH_SOURCE_RHASH_DIST_DIR}/rhash.1 -DTXT_FILE=${RHASH_BUILD_DIST_DIR}/rhash.1.txt -P ${CMAKE_CURRENT_LIST_DIR}/make_txt.cmake)
     install(FILES ${RHASH_BUILD_DIST_DIR}/rhash.1.txt DESTINATION ${CMAKE_INSTALL_DOCDIR}/txt)
@@ -414,6 +407,8 @@ endif(CMAKE_RC_COMPILER)
     else()
       add_custom_target(txt_doc ALL DEPENDS ${RHASH_BUILD_DIST_DIR}/rhash.1.txt ${RHASH_BUILD_DIST_DIR}/rhash.1.win.txt)
     endif(SED)
+  else()
+     message(STATUS "groff                             Not Found")
   endif(GROFF)
 
   #rhashrc
@@ -427,19 +422,53 @@ endif(CMAKE_RC_COMPILER)
   endif(RHASH_INCLUDE_OTHER_FILES)
 
   #Gettext support
-  if(GETTEXT_FOUND)
-    foreach(RHASH_PO_FILE ${RHASH_I18N_FILES})
-      get_filename_component(CUR_LANG ${RHASH_PO_FILE} NAME_WE)
-      GETTEXT_PROCESS_PO_FILES(${CUR_LANG} ALL INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LOCALEDIR} RHASH_PO_FILES ${RHASH_PO_FILE})
-    endforeach(RHASH_PO_FILE)
-  endif(GETTEXT_FOUND)
-
+  if (RHASH_USE_GETTEXT)
+    if(GETTEXT_FOUND)
+		message(STATUS "Gettext version                   ${GETTEXT_VERSION_STRING}")	
+	   message(STATUS "Gettext     (msgmerge)            ${GETTEXT_MSGMERGE_EXECUTABLE}")    
+      message(STATUS "Gettext     (msgfmt)              ${GETTEXT_MSGFMT_EXECUTABLE}")    
+      foreach(RHASH_PO_FILE ${RHASH_I18N_FILES})
+        get_filename_component(CUR_LANG ${RHASH_PO_FILE} NAME_WE)
+        GETTEXT_PROCESS_PO_FILES(${CUR_LANG} ALL INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LOCALEDIR} RHASH_PO_FILES ${RHASH_PO_FILE})
+      endforeach(RHASH_PO_FILE)
+	 else()
+      message(STATUS "Gettext:                        Not Found")    
+    endif(GETTEXT_FOUND)
+  else()
+    message(STATUS "i18n support with Gettext:        Not Selected")    
+  endif(RHASH_USE_GETTEXT)
 endif(RHASH_BUILD_EXE)
 
 set(RHASH_LIB_DEPEND_LIBS "${RHASH_LIB_DEPEND_LIBS};${CMAKE_DL_LIBS}")
 
 if(BUILD_SHARED_LIBS)
    if(CMAKE_RC_COMPILER)
+  # Make .rc file  
+  		set(RHASH_FILE_CONTENTS "1 VERSIONINFO
+FILEVERSION     ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+PRODUCTVERSION  ${RHASH_VERSION_MAJOR},${RHASH_VERSION_MINOR},${RHASH_VERSION_PATCH},0
+BEGIN
+  BLOCK \"StringFileInfo\"
+  BEGIN
+    BLOCK \"040904E4\"
+    BEGIN
+      VALUE \"CompanyName\", \"Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"FileDescription\", \"LibRHash shared library\"
+      VALUE \"FileVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+      VALUE \"InternalName\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash\"
+      VALUE \"LegalCopyright\", \"Copyright (c) 2005-2014 Aleksey Kravchenko <rhash.admin@gmail.com>\"
+      VALUE \"OriginalFilename\", \"${CMAKE_SHARED_MODULE_PREFIX}rhash${CMAKE_SHARED_LIBRARY_SUFFIX}\"
+      VALUE \"ProductName\", \"RHash\"
+      VALUE \"ProductVersion\", \"${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION_PATCH}\"
+    END
+  END
+  BLOCK \"VarFileInfo\"
+  BEGIN
+    VALUE \"Translation\", 0x409, 1252
+  END
+END")
+     FILE(WRITE ${RHASH_BUILD_DIR}/librhash.rc "${RHASH_FILE_CONTENTS}")
+	 
      add_library(rhash_lib SHARED ${RHASH_LIB_SOURCES} ${RHASH_BUILD_DIR}/librhash.rc)
    else()
      add_library(rhash_lib SHARED ${RHASH_LIB_SOURCES})
@@ -541,48 +570,63 @@ if(RHASH_INCLUDE_OTHER_FILES)
 endif(RHASH_INCLUDE_OTHER_FILES)
 
 if(RHASH_BUILD_LIB_DOCS)
+#Note that we use this to ensure that the Doxyfile has the appropriate properly formatted settings
+#including _NOT_FOUND messages.
+  set(RHASH_HAVE_DOT "NO")  
 #This is somewhat messy because I couldn't figure out how to use the FindDoxygen module using FindPackage
 #and some stuff might not be available in older versions of CMake.  I also wanted to provide Doxygen with as
 #much of it's helper program functionality as I could.  Some I had to do manually for compatability with older
 #cmake versions.
   if(DOXYGEN_FOUND)
+    message(STATUS "doxygen                           ${DOXYGEN_EXECUTABLE}")
+    message(STATUS "doxygen version                   ${DOXYGEN_VERSION}")
     #based from: https://vicrucann.github.io/tutorials/quick-cmake-doxygen/
     # set input and output files
     set(RHASH_DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
 	 if(DOXYGEN_DOT_FOUND)
-	  set(RHASH_HAVE_DOT "YES")
-	 elseif()
-	  if(DOXYGEN_DOT_EXECUTABLE)
-       set(RHASH_HAVE_DOT "NO")
-	  elseif()
-       set(RHASH_HAVE_DOT "YES")   
-	  endif(${DOXYGEN_DOT_EXECUTABLE})
+	   set(RHASH_HAVE_DOT "YES")
+	   set(RHASH_DOT_EXECUTABLE ${DOXYGEN_DOT_EXECUTABLE})
+      message(STATUS "Graphviz    (dot)                 ${DOXYGEN_DOT_EXECUTABLE}")	
+	 else()
+      set(RHASH_HAVE_DOT "NO")
+      unset(RHASH_DOT_EXECUTABLE)
+	   message(STATUS "Graphviz    (dot)                 Not Found")	
 	 endif(DOXYGEN_DOT_FOUND)
     set(RHASH_DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 	 # Optional - use mscgen
 	 find_program(MSCGEN mscgen)
-	 # Doxygen will use this dir to find mscgen   
-	 get_filename_component(RHASH_MSCGEN_PATH ${MSCGEN} DIRECTORY)
-	 	 # Optional - use dia
+	 if(MSCGEN)
+       message(STATUS "mscgen                            ${MSCGEN}")		
+	   	 # Doxygen will use this dir to find mscgen   
+	    get_filename_component(RHASH_MSCGEN_PATH ${MSCGEN} DIRECTORY)
+	 else()
+       message(STATUS "mscgen                            Not Found")	
+	    unset(RHASH_MSCGEN_PATH)	   
+    endif(MSCGEN)
+
+	 # Optional - use dia
 	 find_program(DIA dia)
-	 # Doxygen will use this dir to find mscgen   
-	 get_filename_component(RHASH_DIA_PATH ${DIA} DIRECTORY)
+	 if(DIA)
+       message(STATUS "dia                               ${DIA}")		
+	   # Doxygen will use this dir to find mscgen   
+	   get_filename_component(RHASH_DIA_PATH ${DIA} DIRECTORY)
+	 else()
+       message(STATUS "dia                               Not Found")		
+	    unset(RHASH_DIA_PATH)
+    endif(DIA)
     # request to configure the file
     configure_file(${RHASH_DOXYGEN_IN} ${RHASH_DOXYGEN_OUT} @ONLY)
-
-	 message("DOXYGEN_MSCGEN_EXECUTABLE - ${MSCGEN}")
-	 message("DOXYGEN_DIA_EXECUTABLE    - ${DIA}")
-    message("Doxygen build started")
-
-      # note the option ALL which allows to build the docs together with the application
-      add_custom_target( doc_doxygen ALL
+    # note the option ALL which allows to build the docs together with the application
+    add_custom_target( doc_doxygen ALL
         COMMAND ${DOXYGEN_EXECUTABLE} ${RHASH_DOXYGEN_OUT}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
      install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc_doxygen/html DESTINATION ${CMAKE_INSTALL_DOCDIR}) 
 	  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc_doxygen/man/ DESTINATION ${CMAKE_INSTALL_MANDIR}) 
+  else()
+	  message(STATUS "doxygen                           Not Found")		
   endif(DOXYGEN_FOUND)
 endif(RHASH_BUILD_LIB_DOCS)
 
@@ -640,11 +684,11 @@ COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHAS
 add_test(NAME test_special_characters   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
 COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_BIN_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_special_characters.cmake)
 
-#if   (TESTS_OPT_FULL)
+if   (RHASH_TESTS_OPT_FULL)
 add_test(NAME test_all_hash_options     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
 COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_ignoring_of_log_files.cmake)
 
-#endif(TESTS_OPT_FULL)
+endif(RHASH_TESTS_OPT_FULL)
 
 add_test(NAME test_eDonkey_link         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests
 COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHASH_TEST_DATA_FILE} -DTMPDIR=${RHASH_TMPDIR} -P ${CMAKE_SOURCE_DIR}/tests/test_eDonkey_link.cmake)
@@ -681,3 +725,19 @@ COMMAND ${CMAKE_COMMAND} -DRHASH=${RHASH_TEST_RHASH_EXE} -DTEST_DATA_FILE=${RHAS
 
 endif(RHASH_BUILD_EXE)
 
+  #dump GNUInstallDirs vars
+message(STATUS "CMAKE_INSTALL_FULL_BINDIR         ${CMAKE_INSTALL_FULL_BINDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_SBINDIR        ${CMAKE_INSTALL_FULL_SBINDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_LIBEXECDIR     ${CMAKE_INSTALL_FULL_LIBEXECDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_SYSCONFDIR     ${CMAKE_INSTALL_FULL_SYSCONFDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_SHAREDSTATEDIR ${CMAKE_INSTALL_FULL_SHAREDSTATEDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_LOCALSTATEDIR  ${CMAKE_INSTALL_FULL_LOCALSTATEDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_LIBDIR         ${CMAKE_INSTALL_FULL_LIBDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_INCLUDEDIR     ${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_OLDINCLUDEDIR  ${CMAKE_INSTALL_FULL_OLDINCLUDEDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_DATAROOTDIR    ${CMAKE_INSTALL_FULL_DATAROOTDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_DATADIR        ${CMAKE_INSTALL_FULL_DATADIR}")
+message(STATUS "CMAKE_INSTALL_FULL_INCLUDEDIR     ${CMAKE_INSTALL_FULL_INFODIR}")
+message(STATUS "CMAKE_INSTALL_FULL_LOCALEDIR      ${CMAKE_INSTALL_FULL_LOCALEDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_MANDIR         ${CMAKE_INSTALL_FULL_MANDIR}")
+message(STATUS "CMAKE_INSTALL_FULL_DOCDIR         ${CMAKE_INSTALL_FULL_DOCDIR}")
