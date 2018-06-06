@@ -3,7 +3,6 @@
 #include <ctype.h>  /* isspace */
 #include <stddef.h> /* ptrdiff_t */
 #include <stdlib.h> /* qsort */
-#include <stdio.h>  /* fopen */
 #include <string.h>
 
 #include "file_set.h"
