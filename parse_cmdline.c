@@ -11,6 +11,7 @@
 
 #include "parse_cmdline.h"
 #include "common_func.h"
+#include "file.h"
 #include "file_mask.h"
 #include "find_file.h"
 #include "hash_print.h"
@@ -605,6 +606,7 @@ static int read_config(void)
 {
 #define LINE_BUF_SIZE 2048
 	char buf[LINE_BUF_SIZE];
+	file_t file;
 	FILE* fd;
 	parsed_option_t option;
 	int res;
@@ -615,7 +617,9 @@ static int read_config(void)
 
 	if (!find_conf_file()) return 0;
 
-	fd = fopen(conf_opt.config_file, "r");
+	file_init(&file, conf_opt.config_file, FILE_OPT_DONT_FREE_PATH);
+	fd = file_fopen(&file, FOpenRead);
+	file_cleanup(&file);
 	if (!fd) return -1;
 
 	while (fgets(buf, LINE_BUF_SIZE, fd)) {
