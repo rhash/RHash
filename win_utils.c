@@ -89,17 +89,6 @@ wchar_t* c2w_long_path(const char* str, int try_no)
 }
 
 /**
- * Convert a UTF8-encoded string to wide string.
- *
- * @param str the UTF8-encoded string to convert
- * @return wide string on success, NULL on error
- */
-static wchar_t* utf8_to_wchar(const char* utf8_str)
-{
-	return cstr_to_wchar(utf8_str, CP_UTF8);
-}
-
-/**
  * Convert a wide character string to c-string using given codepage.
  * Optionally set a flag if conversion failed.
  *
@@ -189,33 +178,6 @@ wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 		free(result);
 	}
 	return NULL;
-}
-
-/**
- * Open file path given in the current encoding, using desired shared access.
- *
- * @param path file path
- * @param mode string specifying file opening mode
- * @param exclusive non-zero to prohibit write access to the file
- * @return file descriptor on success, NULL on error
- */
-FILE* win_fopen_ex(const char* path, const char* mode, int exclusive)
-{
-	FILE* fd = 0;
-	int i;
-	wchar_t* wmode = utf8_to_wchar(mode);
-	assert(wmode != NULL);
-
-	/* try two code pages */
-	for (i = 0; i < 2; i++) {
-		wchar_t* wpath = c2w_long_path(path, i);
-		if (wpath == NULL) continue;
-		fd = _wfsopen(wpath, wmode, (exclusive ? _SH_DENYWR : _SH_DENYNO));
-		free(wpath);
-		if (fd || errno != ENOENT) break;
-	}
-	free(wmode);
-	return fd;
 }
 
 /* the range of error codes for access errors */

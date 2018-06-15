@@ -25,9 +25,6 @@ char* win_to_utf8(const char* str);
 char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed);
 
 /* file functions */
-FILE* win_fopen_ex(const char* path, const char* mode, int exclusive);
-#define fopen(path, mode) win_fopen_ex(path, mode, 0)
-
 void set_errno_from_last_file_error(void);
 wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
 wchar_t* get_long_path_if_needed(const wchar_t* wpath);
