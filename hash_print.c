@@ -669,12 +669,8 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 	/* skip stdin stream */
 	if ((file->mode & FILE_IFSTDIN) != 0) return 0;
 
-#ifdef _WIN32
 	/* skip file if it can't be opened with exclusive sharing rights */
-	if (!can_open_exclusive(file->path)) {
-		return 0;
-	}
-#endif
+	if (file_is_write_locked(file)) return 0;
 
 	if (!printpath) printpath = file->path;
 	if (printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1])) printpath += 2;

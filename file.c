@@ -345,11 +345,11 @@ int file_stat(file_t* file, int fstat_flags)
 
 
 /**
- * Retrieve file information (type, size, mtime) into file_t fields.
+ * Open the file and return its decriptor.
  *
- * @param file the file information
+ * @param file the file information, including the path
  * @param fopen_flags bitmask consisting of FileFOpenModes bits
- * @return 0 on success, -1 on error
+ * @return file descriptor on success, NULL on error
  */
 FILE* file_fopen(file_t* file, int fopen_flags)
 {
@@ -379,6 +379,13 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 #endif
 }
 
+/**
+ * Open file at the specified path and return its decriptor.
+ *
+ * @param tpath the file path
+ * @param tmode the mode for file access
+ * @return file descriptor on success, NULL on error
+ */
 FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode)
 {
 #ifdef _WIN32
@@ -411,28 +418,35 @@ int file_rename(file_t* from, file_t* to)
 }
 
 #ifdef _WIN32
-static int win_can_open_exclusive(wchar_t* wpath)
+/**
+ * Check if the given file can't be opened with exclusive write access.
+ *
+ * @param file the file
+ * @return 1 if the file is locked and can't be exclusively opened, 0 otherwise
+ */
+static int can_not_open_exclusive(wchar_t* wpath)
 {
 	int fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYWR, 0);
-	if (fd < 0) return 0;
+	if (fd < 0) return 1;
 	_close(fd);
-	return 1;
+	return 0;
 }
 
 /**
- * Check if given file can be opened with exclusive write access.
+ * Check if given file is write-locked, i.e. can not be opened
+ * with exclusive write access.
  *
- * @param path path to the file
- * @return 1 if file can be opened, 0 otherwise
+ * @param file the file
+ * @return 1 if file can't be opened, 0 otherwise
  */
 int file_is_write_locked(file_t* file)
 {
 	int i, res = 0;
 	if (file->wpath)
-		return win_can_open_exclusive(file->wpath);
+		return can_not_open_exclusive(file->wpath);
 	for (i = 0; i < 2 && !res; i++) {
 		file->wpath = c2w_long_path(file->path, i);
-		if(file->wpath && win_can_open_exclusive(file->wpath)) return 1;
+		if(file->wpath && can_not_open_exclusive(file->wpath)) return 1;
 		free(file->wpath);
 	}
 	file->wpath = NULL;
