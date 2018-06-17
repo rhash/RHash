@@ -111,6 +111,30 @@ int  file_list_open(file_list_t* list, file_t* file_path);
 int  file_list_read(file_list_t* list);
 void file_list_close(file_list_t* list);
 
+#ifdef _WIN32
+/* readdir structures and functions */
+#define DIR WIN_DIR
+#define dirent win_dirent
+#define opendir  win_opendir
+#define readdir  win_readdir
+#define closedir win_closedir
+
+/* dirent struct for windows to traverse directory content */
+struct win_dirent {
+	char*     d_name;   /* file name */
+	wchar_t*  d_wname;  /* file name in Unicode (UTF-16) */
+	int       d_isdir;  /* non-zero if file is a directory */
+};
+
+struct WIN_DIR_t;
+typedef struct WIN_DIR_t WIN_DIR;
+
+WIN_DIR* win_opendir(const char*);
+WIN_DIR* win_wopendir(const wchar_t*);
+struct win_dirent* win_readdir(WIN_DIR*);
+void win_closedir(WIN_DIR*);
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
