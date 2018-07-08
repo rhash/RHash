@@ -73,7 +73,7 @@ typedef struct file_t
 /* file functions */
 void file_init(file_t* file, const char* path, int finit_flags);
 void file_cleanup(file_t* file);
-void file_path_append(file_t* dst, file_t* src, const char* suffix);
+void file_path_append(file_t* dst, const file_t* src, const char* suffix);
 
 enum FileStatModes {
 	FNoMode    = 0,
@@ -89,8 +89,10 @@ enum FileFOpenModes {
 	FOpenMask  = 7
 };
 FILE* file_fopen(file_t* file, int fopen_flags);
-int file_rename(file_t* from, file_t* to);
 FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
+
+int file_rename(file_t* from, file_t* to);
+int file_move_to_bak(file_t* file);
 
 #ifdef _WIN32
 void file_tinit(file_t* file, ctpath_t tpath, int finit_flags);

@@ -315,7 +315,10 @@ int main(int argc, char *argv[])
 	if (!rhash_data.interrupted) {
 		if (opt.bt_batch_file && rhash_data.rctx) {
 			rhash_final(rhash_data.rctx, 0);
-			save_torrent_to(opt.bt_batch_file, rhash_data.rctx);
+			
+			file_t batch_torrent_file;
+			file_tinit(&batch_torrent_file, opt.bt_batch_file, FILE_OPT_DONT_FREE_PATH);
+			save_torrent_to(&batch_torrent_file, rhash_data.rctx);
 		}
 
 		if ((opt.flags & OPT_SPEED) &&

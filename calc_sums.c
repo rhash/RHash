@@ -13,7 +13,6 @@
 
 #include "calc_sums.h"
 #include "common_func.h"
-#include "file.h"
 #include "hash_print.h"
 #include "output.h"
 #include "parse_cmdline.h"
@@ -308,44 +307,36 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 /**
  * Save torrent file to the given path.
  *
- * @param path the path to save torrent file to
+ * @param torrent_file the path to save torrent file to
  * @param rctx the context containing torrent data
  * @return 0 on success, -1 on fail with error code in errno
  */
-int save_torrent_to(const char* path, rhash_context* rctx)
+int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 {
-	file_t file;
 	FILE* fd;
 	int res = 0;
 
 	const rhash_str* text = rhash_torrent_generate_content(rctx);
 	if (!text) {
 		errno = ENOMEM;
-		log_file_error(path);
+		log_file_t_error(torrent_file);
 		return -1;
 	}
-
-	if (if_file_exists(path)) {
-		/* make backup copy of the existing torrent file */
-		char *bak_path = str_append(path, ".bak");
-		unlink(bak_path);
-		rename(path, bak_path);
-		free(bak_path);
-	}
+	
+	/* make backup copy of the existing torrent file */
+	file_move_to_bak(torrent_file);
 
 	/* write the torrent file */
-	file_init(&file, path, FILE_OPT_DONT_FREE_PATH);
-	fd = file_fopen(&file, FOpenWrite | FOpenBin);
+	fd = file_fopen(torrent_file, FOpenWrite | FOpenBin);
 	if (fd && text->length == fwrite(text->str, 1, text->length, fd) &&
 		!ferror(fd) && !fflush(fd))
 	{
-		log_msg(_("%s saved\n"), path);
+		log_msg(_("%s saved\n"), file_cpath(torrent_file));
 	} else {
-		log_file_error(path);
+		log_file_t_error(torrent_file);
 		res = -1;
 	}
 	if (fd) fclose(fd);
-	file_cleanup(&file);
 	return res;
 }
 
@@ -357,9 +348,10 @@ int save_torrent_to(const char* path, rhash_context* rctx)
 static void save_torrent(struct file_info* info)
 {
 	/* append .torrent extension to the file path */
-	char* path = str_append(info->full_path, ".torrent");
-	save_torrent_to(path, info->rctx);
-	free(path);
+	file_t torrent_file;
+	file_path_append(&torrent_file, info->file, ".torrent");
+	save_torrent_to(&torrent_file, info->rctx);	
+	file_cleanup(&torrent_file);
 }
 
 /**

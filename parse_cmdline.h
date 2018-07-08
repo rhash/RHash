@@ -85,7 +85,7 @@ struct options_t
 	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
 	struct vector_t * bt_announce; /* BitTorrent announce URL */
 	size_t bt_piece_length; /* BitTorrent piece length */
-	char*  bt_batch_file;   /* path to save a batch torrent to */
+	opt_tchar*  bt_batch_file;   /* path to save a batch torrent to */
 
 	char** argv;
 	int has_files; /* flag: command line contain files */

@@ -403,7 +403,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
 	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
 	{ F_UFNC,   0,   0, "bt-announce", bt_announce, 0 },
-	{ F_CSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
+	{ F_TSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
 	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
 

@@ -227,7 +227,7 @@ void file_cleanup(file_t* file)
  * @param src the path to append the suffix to
  * @param suffix the suffix to append
  */
-void file_path_append(file_t* dst, file_t* src, const char* suffix)
+void file_path_append(file_t* dst, const file_t* src, const char* suffix)
 {
 	memset(dst, 0, sizeof(*dst));
 #ifdef _WIN32
@@ -417,6 +417,23 @@ int file_rename(file_t* from, file_t* to)
 	return rename(from->path, to->path);
 }
 
+int file_move_to_bak(file_t* file)
+{
+	if (file_stat(file, 0) >= 0) {
+		int res;
+		int save_errno;
+		file_t bak_file;
+		file_path_append(&bak_file, file, ".bak");
+		res = file_rename(file, &bak_file);
+		save_errno = errno;
+		file_cleanup(&bak_file);
+		if (res < 0)
+			errno = save_errno;
+		return res;
+	}
+	return -1;
+}
+
 #ifdef _WIN32
 /**
  * Check if the given file can't be opened with exclusive write access.
@@ -494,7 +511,7 @@ enum FileListStateBits {
  * Iterate over file list.
  *
  * @param list the file list to iterate over
- * @return 1 if next file have been obtained, 0 on EOF or error
+ * @return 1 if the next file has been obtained, 0 on EOF or error
  */
 int file_list_read(file_list_t* list)
 {
