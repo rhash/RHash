@@ -148,31 +148,22 @@ int is_regular_file(const char* path)
 	return is_regular;
 }
 
-/**
- * Check if a file exists at the specified path.
- *
- * @param path the path to check
- * @return 1 if file exists, 0 otherwise.
- */
-int if_file_exists(const char* path)
-{
-	int exists;
-	file_t file;
-	file_init(&file, path, FILE_OPT_DONT_FREE_PATH);
-	exists = (file_stat(&file, 0) >= 0);
-	file_cleanup(&file);
-	return exists;
-}
-
 /*=========================================================================
  * file_t functions
  *=========================================================================*/
 
-void file_init(file_t* file, const char* path, int finit_flags)
+/**
+ * Initialize file_t structure, associating it with the given file path.
+ *
+ * @param file the file_t structure to initialize
+ * @param path the file path
+ * @param init_flags initialization flags
+ */
+void file_init(file_t* file, const char* path, int init_flags)
 {
 	memset(file, 0, sizeof(*file));
-	file->mode = (unsigned)finit_flags;
-	if ((finit_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
+	file->mode = (unsigned)init_flags;
+	if ((init_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
 		file->path = (char*)path;
 	} else {
 		file->path = rsh_strdup(path);
@@ -180,11 +171,18 @@ void file_init(file_t* file, const char* path, int finit_flags)
 }
 
 #ifdef _WIN32
-void file_tinit(file_t* file, ctpath_t tpath, int finit_flags)
+/**
+ * Initialize file_t structure, associating it with the given file path.
+ *
+ * @param file the file_t structure to initialize
+ * @param tpath the file path
+ * @param init_flags initialization flags
+ */
+void file_tinit(file_t* file, ctpath_t tpath, int init_flags)
 {
 	memset(file, 0, sizeof(*file));
-	file->mode = (unsigned)finit_flags & ~FILE_OPT_DONT_FREE_PATH;
-	if ((finit_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
+	file->mode = (unsigned)init_flags & ~FILE_OPT_DONT_FREE_PATH;
+	if ((init_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
 		file->wpath = (wchar_t*)tpath;
 		file->mode |= FILE_OPT_DONT_FREE_WPATH;
 	} else {
@@ -192,6 +190,13 @@ void file_tinit(file_t* file, ctpath_t tpath, int finit_flags)
 	}
 }
 
+/**
+ * Get the path of the file as a c-string.
+ * On Windows lossy unicode conversion can be applied.
+ *
+ * @param file the file to get the path
+ * @return the path of the file
+ */
 const char* file_cpath(file_t* file)
 {
 	if (!file->path && file->wpath) file->path = w2c(file->wpath);
@@ -417,6 +422,12 @@ int file_rename(file_t* from, file_t* to)
 	return rename(from->path, to->path);
 }
 
+/**
+ * Rename a given file to *.bak, if it exists.
+ *
+ * @param file the file to move
+ * @return 0 on success, -1 on error and errno is set
+ */
 int file_move_to_bak(file_t* file)
 {
 	if (file_stat(file, 0) >= 0) {

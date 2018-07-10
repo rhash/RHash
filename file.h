@@ -34,7 +34,6 @@ char* make_path(const char* dir, const char* filename);
 int are_paths_equal(ctpath_t a, ctpath_t b);
 
 int is_regular_file(const char* path); /* shall be deprecated */
-int if_file_exists(const char* path);
 
 /**
  * Portable file information.
