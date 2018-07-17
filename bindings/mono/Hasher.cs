@@ -132,7 +132,7 @@ namespace RHash {
 				throw new ArgumentException("This hasher does not support hash type "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
-			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
+			Bindings.rhash_print(sb, ptr, (uint)type, BASE64);
 			return sb.ToString();
 		}
 
