@@ -971,7 +971,8 @@ static void set_default_sums_flags(const char* progName)
 
 	/* change program flags only if opt.sum_flags was not set */
 	if (!opt.sum_flags) {
-		opt.sum_flags = (res ? res : (opt.fmt == FMT_MAGNET ? RHASH_TTH | RHASH_ED2K | RHASH_AICH : RHASH_CRC32));
+		opt.sum_flags = (res ? res : (opt.fmt == FMT_MAGNET ? RHASH_TTH | RHASH_ED2K | RHASH_AICH :
+			(!(opt.mode & MODE_CHECK) ? RHASH_CRC32 : 0)));
 	}
 }
 

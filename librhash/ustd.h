@@ -6,7 +6,7 @@
 # include <stddef.h> /* size_t for vc6.0 */
 
 # if _MSC_VER >= 1600
-// Visual Studio >= 2010 has stdint.h
+/* Visual Studio >= 2010 has stdint.h */
 #  include <stdint.h>
 # else
   /* vc6.0 has bug with __int8, so using char instead */
@@ -31,3 +31,4 @@
 #endif /* _MSC_VER > 1000 */
 
 #endif /* LIBRHASH_USTD_H */
+

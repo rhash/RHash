@@ -497,7 +497,7 @@ static int verify_sums(struct file_info *info)
 int check_hash_file(file_t* file, int chdir)
 {
 	FILE *fd;
-	char buf[2048];
+	char buf[4096];
 	size_t pos;
 	const char *ralign;
 	timedelta_t timer;
@@ -562,7 +562,7 @@ int check_hash_file(file_t* file, int chdir)
 	} else pos = 0;
 
 	/* read crc file line by line */
-	for (line_num = 0; fgets(buf, 2048, fd); line_num++) {
+	for (line_num = 0; fgets(buf, sizeof(buf), fd); line_num++) {
 		char* line = buf;
 		char* path_without_ext = NULL;
 

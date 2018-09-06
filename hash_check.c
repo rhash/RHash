@@ -107,20 +107,19 @@ unsigned get_ctz(unsigned x)
 #endif /* (GCC >= 4.3) */
 
 /**
- * Encode a hash function digest size into a small number in {0,...,24}.
- * The digest size must be a positive number not greater then 128.
+ * Encode a hash function digest size into a small number in [0,...,7].
+ * The digest size must be in the set { 4, 16, 20, 24, 28, 32, 48, 64 }.
  *
  * @param digest_size digest size (aka hash length) in bytes
  * @return code for digest size on success, 32 on error
  */
 static int code_digest_size(int digest_size)
 {
-	int pow, code;
-	/* check (0 < size && size <= 128)) */
-	if ((unsigned)(digest_size - 1) > 127) return 32;
-	pow = get_ctz(digest_size >> 2);
-	code = ((digest_size >> (pow + 3)) << 3) | pow;
-	return (code <= 24 ? code : 32);
+	static int size_codes[17] = {
+		-1, 0,-1, -1, 1, 2, 3, 4, 5, -1,
+		-1, -1, 6, -1, -1, -1, 7
+	};
+	return (digest_size <= 64 ? size_codes[digest_size / 4] : -1);
 }
 
 /**
@@ -131,21 +130,19 @@ static int code_digest_size(int digest_size)
  */
 static unsigned hash_check_mask_by_digest_size(int digest_size)
 {
-	static unsigned mask[26] = { 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0, 0,0 };
+	static unsigned mask[10] = { 0,0,0,0,0,0,0,0,0,0 };
 	int code;
-
-	if (mask[25] == 0) {
+	if (mask[9] == 0) {
 		unsigned hid;
 		for (hid = 1; hid <= RHASH_ALL_HASHES; hid <<= 1) {
 			code = code_digest_size(rhash_get_digest_size(hid));
-			assert(0 <= code && code <= 24);
-			if (code <= 24) mask[code] |= hid; /* 'if' for paranoid protection */
+			assert(0 <= code && code <= 7);
+			if (code >= 0) mask[code] |= hid;
 		}
-		mask[25] = 1;
+		mask[9] = 1;
 	}
 	code = code_digest_size(digest_size);
-	return (code <= 24 ? mask[code] : 0);
+	return (code >= 0 ? mask[code] : 0);
 }
 
 #define HV_BIN 0

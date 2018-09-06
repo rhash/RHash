@@ -514,7 +514,7 @@ void free_print_list(print_item* list)
  */
 void init_hash_info_table(void)
 {
-	unsigned index, bit;
+	unsigned bit;
 	unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST | OPT_ED2K_LINK;
 	char* short_opt = "cmhteawrgl";
@@ -523,9 +523,12 @@ void init_hash_info_table(void)
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
 
-	for (index = 0, bit = 1; bit <= fullmask; index++, bit = bit << 1, info++) {
+	for (bit = 1; bit <= fullmask; bit = bit << 1) {
 		const char *p;
 		char *e, *d;
+
+		if (!(bit & fullmask))
+			continue;
 
 		info->short_char = ((bit & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
@@ -551,6 +554,7 @@ void init_hash_info_table(void)
 			}
 		}
 		*d = 0;
+		++info;
 	}
 }
 
