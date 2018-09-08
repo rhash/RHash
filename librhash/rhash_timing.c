@@ -169,7 +169,7 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
  */
 void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 {
-	unsigned char ALIGN_ATTR(16) message[8192]; /* 8 KiB */
+	unsigned char ALIGN_ATTR(64) message[8192]; /* 8 KiB */
 	timedelta_t timer;
 	int i, j;
 	size_t sz_mb, msg_size;

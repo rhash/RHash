@@ -607,7 +607,7 @@ static void assert_hash(unsigned hash_id, const char* msg, const char* expected_
  */
 static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const char* hash, int set_filename)
 {
-	char ALIGN_ATTR(16) msg_chunk[8192]; /* 8 KiB */
+	char ALIGN_ATTR(64) msg_chunk[8192]; /* 8 KiB */
 	char msg_name[20];
 	memset(msg_chunk, ch, 8192);
 	if (ch >= 32) sprintf(msg_name, "\"%c\"x%d", ch, (int)msg_size);

@@ -713,7 +713,7 @@ static uint64_t read_tsc(void) {
 
 void run_benchmark(unsigned hash_id, unsigned flags)
 {
-	unsigned char ALIGN_DATA(16) message[8192]; /* 8 KiB */
+	unsigned char ALIGN_DATA(64) message[8192]; /* 8 KiB */
 	timedelta_t timer;
 	int i, j;
 	size_t sz_mb, msg_size;
