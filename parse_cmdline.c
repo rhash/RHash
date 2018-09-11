@@ -59,6 +59,7 @@ static void print_help(void)
 	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
 	print_help_line("  -h, --help    ", _("Print this help screen.\n"));
 	print_help_line("  -C, --crc32   ", _("Calculate CRC32 hash sum.\n"));
+	print_help_line("      --crc32c  ", _("Calculate CRC32C hash sum.\n"));
 	print_help_line("      --md4     ", _("Calculate MD4   hash sum.\n"));
 	print_help_line("  -M, --md5     ", _("Calculate MD5   hash sum.\n"));
 	print_help_line("  -H, --sha1    ", _("Calculate SHA1  hash sum.\n"));
@@ -342,6 +343,7 @@ cmdline_opt_t cmdline_opt[] =
 	/* hash sums options */
 	{ F_UFLG, 'a',   0, "all",    &opt.sum_flags, RHASH_ALL_HASHES },
 	{ F_UFLG, 'C',   0, "crc32",  &opt.sum_flags, RHASH_CRC32 },
+	{ F_UFLG,   0,   0, "crc32c", &opt.sum_flags, RHASH_CRC32C },
 	{ F_UFLG,   0,   0, "md4",    &opt.sum_flags, RHASH_MD4 },
 	{ F_UFLG, 'M',   0, "md5",    &opt.sum_flags, RHASH_MD5 },
 	{ F_UFLG, 'H',   0, "sha1",   &opt.sum_flags, RHASH_SHA1 },
@@ -936,7 +938,8 @@ static void set_default_sums_flags(const char* progName)
 	/* convert progName to lowercase */
 	buf = str_tolower(progName);
 
-	if (strstr(buf, "crc32")) res |= RHASH_CRC32;
+	if (strstr(buf, "crc32c")) res |= RHASH_CRC32C;
+	else if (strstr(buf, "crc32")) res |= RHASH_CRC32;
 	if (strstr(buf, "md4"))   res |= RHASH_MD4;
 	if (strstr(buf, "md5"))   res |= RHASH_MD5;
 	if (strstr(buf, "sha1"))  res |= RHASH_SHA1;
@@ -952,8 +955,8 @@ static void set_default_sums_flags(const char* progName)
 	if (strstr(buf, "tth"))   res |= RHASH_TTH;
 	if (strstr(buf, "btih"))  res |= RHASH_BTIH;
 	if (strstr(buf, "aich"))  res |= RHASH_AICH;
-	if (strstr(buf, "gost"))  res |= RHASH_GOST;
 	if (strstr(buf, "gost-cryptopro"))  res |= RHASH_GOST_CRYPTOPRO;
+	else if (strstr(buf, "gost"))  res |= RHASH_GOST;
 	if (strstr(buf, "has160"))  res |= RHASH_HAS160;
 	if (strstr(buf, "ripemd160"))  res |= RHASH_RIPEMD160;
 	if (strstr(buf, "whirlpool"))  res |= RHASH_WHIRLPOOL;

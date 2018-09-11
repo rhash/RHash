@@ -1,17 +1,17 @@
 # RHash
 
 RHash is a console utility for calculation  and verification of magnet links
-and a wide range of hash sums like  CRC32,  MD4, MD5,  SHA1, SHA256, SHA512,
-SHA3,   AICH,  ED2K,  Tiger,  DC++ TTH,  BitTorrent BTIH,   GOST R 34.11-94,
+and a wide range of hash sums like  CRC32, CRC32C,  MD4, MD5,  SHA1, SHA256, 
+SHA512, SHA3, AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94,
 RIPEMD-160, HAS-160, EDON-R, Whirlpool and Snefru.
 
 Hash sums are used to  ensure and verify integrity  of large volumes of data
 for a long-term storing or transferring.
 
 ### Program features:
+ * Ability to process directories recursively.
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
  * Calculation of Magnet links.
- * Ability to process directories recursively.
  * Updating hash files (adding hash sums of files missing in the hash file).
  * Calculates several hash sums in one pass.
  * Portability: the program works the same on Linux, Unix, macOS or Windows.

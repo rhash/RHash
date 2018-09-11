@@ -11,8 +11,8 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.
 .B RHash
 (Recursive Hasher)
 computes and verifies various message digests (hash sums) of files.
-Supported message digests include CRC32, MD4, MD5, SHA1, SHA256, SHA512,
-SHA3, Tiger, DC++ TTH, BitTorrent BTIH, AICH, ED2K, GOST R 34.11\-94,
+Supported message digests include CRC32, CRC32C, MD4, MD5, SHA1, SHA256,
+SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-94,
 RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links 
@@ -28,10 +28,10 @@ The format can be changed by options \-\-bsd, \-\-magnet, \-\-simple,
 To output all sums use the `\-a' option.
 
 The default output format can also be changed by renaming the program or
-placing a hardlink/symlink to it with a name containing strings `crc32',
-`md4', `md5', `sha1', `sha256' `sha512', `tiger', `tth', `btih', `aich',
-`ed2k', `ed2k\-link', `gost', `gost\-cryptopro', `ripemd160', `has160',
-`whirlpool', `edonr256', `edonr512', `snefru128', `snefru256',
+placing a hardlink/symlink to it with a filename containing strings `crc32',
+`crc32c', `md4', `md5', `sha1', `sha256' `sha512', `tiger', `tth', `btih',
+`aich', `ed2k', `ed2k\-link', `gost', `gost\-cryptopro', `ripemd160',
+`has160', `whirlpool', `edonr256', `edonr512', `snefru128', `snefru256',
 `sfv' or `magnet'.
 
 .SH PROGRAM MODE OPTIONS
@@ -64,6 +64,8 @@ Run benchmark for selected algorithm(s).
 .SH HASH SUMS OPTIONS
 .IP "\-C, \-\-crc32"
 CRC32: calculate and print CRC32 hash sum.
+.IP "\-\-crc32c"
+CRC32C: calculate and print CRC32C hash sum.
 .IP "\-\-md4"
 MD4: calculate and print MD4 hash sum.
 .IP "\-M, \-\-md5"
