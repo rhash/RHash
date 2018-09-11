@@ -8,11 +8,12 @@ extern "C" {
 
 /* hash functions */
 
+#ifndef DISABLE_CRC32
 unsigned rhash_get_crc32(unsigned crcinit, const unsigned char* msg, size_t size);
-unsigned rhash_get_crc32_str(unsigned crcinit, const char* str);
+#endif
 
-#ifdef GENERATE_CRC32_TABLE
-void rhash_crc32_init_table(void); /* initialize algorithm static data */
+#ifndef DISABLE_CRC32C
+unsigned rhash_get_crc32c(unsigned crcinit, const unsigned char* msg, size_t size);
 #endif
 
 #ifdef __cplusplus

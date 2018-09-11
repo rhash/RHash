@@ -54,13 +54,8 @@
 #else
 # define NEED_GOST_INIT 0
 #endif /* GENERATE_GOST_LOOKUP_TABLE */
-#ifdef GENERATE_CRC32_TABLE
-# define NEED_CRC32_INIT RHASH_CRC32
-#else
-# define NEED_CRC32_INIT 0
-#endif /* GENERATE_CRC32_TABLE */
 
-#define RHASH_NEED_INIT_ALG (NEED_CRC32_INIT | NEED_GOST_INIT | NEED_OPENSSL_INIT)
+#define RHASH_NEED_INIT_ALG (NEED_GOST_INIT | NEED_OPENSSL_INIT)
 unsigned rhash_uninitialized_algorithms = RHASH_NEED_INIT_ALG;
 
 rhash_hash_info* rhash_info_table = rhash_hash_info_default;
@@ -69,8 +64,12 @@ int rhash_info_size = RHASH_HASH_COUNT;
 static void rhash_crc32_init(uint32_t* crc32);
 static void rhash_crc32_update(uint32_t* crc32, const unsigned char* msg, size_t size);
 static void rhash_crc32_final(uint32_t* crc32, unsigned char* result);
+static void rhash_crc32c_init(uint32_t* crc32);
+static void rhash_crc32c_update(uint32_t* crc32, const unsigned char* msg, size_t size);
+static void rhash_crc32c_final(uint32_t* crc32, unsigned char* result);
 
-rhash_info info_crc32 = { RHASH_CRC32, F_BE32, 4, "CRC32", "crc32" };
+rhash_info info_crc32  = { RHASH_CRC32,  F_BE32, 4, "CRC32", "crc32" };
+rhash_info info_crc32c = { RHASH_CRC32C, F_BE32, 4, "CRC32C", "crc32c" };
 rhash_info info_md4 = { RHASH_MD4, F_LE32, 16, "MD4", "md4" };
 rhash_info info_md5 = { RHASH_MD5, F_LE32, 16, "MD5", "md5" };
 rhash_info info_sha1 = { RHASH_SHA1,      F_BE32, 20, "SHA1", "sha1" };
@@ -135,6 +134,7 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ &info_sha3_256, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_256), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 256 bit */
 	{ &info_sha3_384, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_384), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 384 bit */
 	{ &info_sha3_512, sizeof(sha3_ctx), dgshft(sha3), ini(rhash_sha3_512), upd(rhash_sha3), fin(rhash_sha3), 0 }, /* 512 bit */
+	{ &info_crc32c, sizeof(uint32_t), 0, iuf(rhash_crc32c), 0 }, /* 32 bit */
 };
 
 /**
@@ -147,9 +147,6 @@ void rhash_init_algorithms(unsigned mask)
 	/* verify that RHASH_HASH_COUNT is the index of the major bit of RHASH_ALL_HASHES */
 	assert(1 == (RHASH_ALL_HASHES >> (RHASH_HASH_COUNT - 1)));
 
-#ifdef GENERATE_CRC32_TABLE
-	rhash_crc32_init_table();
-#endif
 #ifdef GENERATE_GOST_LOOKUP_TABLE
 	rhash_gost_init_table();
 #endif
@@ -196,5 +193,46 @@ static void rhash_crc32_final(uint32_t* crc32, unsigned char* result)
 	/* correct saving BigEndian integer on all archs */
 	result[0] = (unsigned char)(*crc32 >> 24), result[1] = (unsigned char)(*crc32 >> 16);
 	result[2] = (unsigned char)(*crc32 >> 8), result[3] = (unsigned char)(*crc32);
+#endif
+}
+
+/**
+ * Initialize crc32c hash.
+ *
+ * @param crc32c pointer to the hash to initialize
+ */
+static void rhash_crc32c_init(uint32_t* crc32c)
+{
+	*crc32c = 0; /* note: context size is sizeof(uint32_t) */
+}
+
+/**
+ * Calculate message CRC32C hash.
+ * Can be called repeatedly with chunks of the message to be hashed.
+ *
+ * @param crc32c pointer to the hash
+ * @param msg message chunk
+ * @param size length of the message chunk
+ */
+static void rhash_crc32c_update(uint32_t* crc32c, const unsigned char* msg, size_t size)
+{
+	*crc32c = rhash_get_crc32c(*crc32c, msg, size);
+}
+
+/**
+ * Store calculated hash into the given array.
+ *
+ * @param crc32c pointer to the current hash value
+ * @param result calculated hash in binary form
+ */
+static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
+{
+#if defined(CPU_IA32) || defined(CPU_X64)
+	/* intel CPUs support assigment with non 32-bit aligned pointers */
+	*(unsigned*)result = be2me_32(*crc32c);
+#else
+	/* correct saving BigEndian integer on all archs */
+	result[0] = (unsigned char)(*crc32c >> 24), result[1] = (unsigned char)(*crc32c >> 16);
+	result[2] = (unsigned char)(*crc32c >> 8), result[3] = (unsigned char)(*crc32c);
 #endif
 }
