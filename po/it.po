@@ -7,39 +7,39 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2018-03-14 02:23+0300\n"
-"PO-Revision-Date: 2012-06-15 18:22+0000\n"
+"POT-Creation-Date: 2018-09-12 00:00+0300\n"
+"PO-Revision-Date: 2018-03-14 21:31+0000\n"
 "Last-Translator: Valter Mura <valtermura@gmail.com>\n"
 "Language-Team: Italian <ubuntu-l10n-it@lists.ubuntu.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2017-07-15 21:12+0000\n"
-"X-Generator: Launchpad (build 18419)\n"
+"X-Launchpad-Export-Date: 2018-09-08 20:08+0000\n"
+"X-Generator: Launchpad (build 18767)\n"
 "Language: it\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
-#: calc_sums.c:266
+#: calc_sums.c:265
 #, c-format
 msgid "wrong embedded CRC32, should be %s\n"
 msgstr "CRC32 incorporato non corretto, dovrebbe essere %s\n"
 
-#: calc_sums.c:290 hash_update.c:351
+#: calc_sums.c:289 hash_update.c:351
 #, c-format
 msgid "can't move %s to %s: %s\n"
 msgstr "impossibile spostare %s in %s: %s\n"
 
-#: calc_sums.c:342
+#: calc_sums.c:334
 #, c-format
 msgid "%s saved\n"
 msgstr "%s salvato\n"
 
-#: calc_sums.c:541
+#: calc_sums.c:533
 #, c-format
 msgid "file name doesn't contain a CRC32: %s\n"
 msgstr "il nome del file non contiene un CRC32: %s\n"
 
-#: calc_sums.c:561
+#: calc_sums.c:553
 #, c-format
 msgid ""
 "\n"
@@ -48,7 +48,7 @@ msgstr ""
 "\n"
 "--( verifica in corso di %s )%s\n"
 
-#: calc_sums.c:583
+#: calc_sums.c:575
 #, c-format
 msgid "file is binary: %s\n"
 msgstr "il file è binario: %s\n"
@@ -58,12 +58,12 @@ msgstr "il file è binario: %s\n"
 msgid "can't convert the file path to local encoding: %s\n"
 msgstr ""
 
-#: hash_check.c:480
+#: hash_check.c:477
 #, c-format
 msgid "unknown hash in magnet link: %s\n"
 msgstr "hash sconosciuto nel magnet link: %s\n"
 
-#: hash_check.c:533
+#: hash_check.c:530
 #, c-format
 msgid "can't parse line: %s\n"
 msgstr "impossibile analizzare la riga: %s\n"
@@ -96,40 +96,40 @@ msgstr "il file binario %s verrà tralasciato\n"
 msgid "Updated: %s\n"
 msgstr "Aggiornato: %s\n"
 
-#: output.c:109
+#: output.c:106
 msgid "Interrupted by user...\n"
 msgstr "Interrotto dall'utente...\n"
 
-#: output.c:138
+#: output.c:135
 msgid "ERROR"
 msgstr "ERRORE"
 
-#: output.c:143
+#: output.c:140
 #, c-format
 msgid ", size is %s should be %s"
 msgstr ", la dimensione è %s deve essere %s"
 
-#: output.c:148
+#: output.c:145
 #, c-format
 msgid ", embedded CRC32 should be %s"
 msgstr ", il CRC32 incorporato deve essere %s"
 
-#: output.c:178
+#: output.c:175
 #, c-format
 msgid ", %s is %s should be %s"
 msgstr ", %s è %s deve essere %s"
 
 #. TRANSLATORS: use at least 3 characters to overwrite "99%"
-#: output.c:206
+#: output.c:203
 msgid "OK \n"
 msgstr "OK \n"
 
 #. TRANSLATORS: ERR is short for 'error'
-#: output.c:208
+#: output.c:205
 msgid "ERR\n"
 msgstr "ERR\n"
 
-#: output.c:314
+#: output.c:311
 #, c-format
 msgid ""
 "\n"
@@ -138,7 +138,7 @@ msgstr ""
 "\n"
 "Controllo in corso di %s\n"
 
-#: output.c:316
+#: output.c:313
 #, c-format
 msgid ""
 "\n"
@@ -147,27 +147,27 @@ msgstr ""
 "\n"
 "Elaborazione in corso di %s\n"
 
-#: output.c:480
+#: output.c:477
 msgid "Everything OK\n"
 msgstr "Tutto OK\n"
 
-#: output.c:482
+#: output.c:479
 #, c-format
 msgid "Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"
 msgstr ""
 "Errori verificatisi: Errori:%-3u Persi:%-3u Riusciti:%-3u Totale:%-3u\n"
 
-#: output.c:502
+#: output.c:499
 #, c-format
 msgid "Total %.3f sec, %4.2f MBps\n"
 msgstr "Totale %.3f sec, %4.2f MBps\n"
 
-#: output.c:504
+#: output.c:501
 #, c-format
 msgid "Calculated in %.3f sec, %4.2f MBps\n"
 msgstr "Calcolato in %.3f sec, %4.2f MBps\n"
 
-#: parse_cmdline.c:53
+#: parse_cmdline.c:54
 #, c-format
 msgid ""
 "%s\n"
@@ -180,192 +180,196 @@ msgstr ""
 "       %s --printf=<format string> [FILE | -]...\n"
 "\n"
 
-#: parse_cmdline.c:56
+#: parse_cmdline.c:57
 msgid "Options:\n"
 msgstr "Opzioni:\n"
 
-#: parse_cmdline.c:58
+#: parse_cmdline.c:59
 msgid "Print program version and exit.\n"
 msgstr "Mostra la versione del programma ed esce.\n"
 
-#: parse_cmdline.c:59
+#: parse_cmdline.c:60
 msgid "Print this help screen.\n"
 msgstr "Mostra la schermata di questa guida.\n"
 
-#: parse_cmdline.c:60
+#: parse_cmdline.c:61
 msgid "Calculate CRC32 hash sum.\n"
 msgstr "Calcola la somma hash CRC32.\n"
 
-#: parse_cmdline.c:61
+#: parse_cmdline.c:62
+msgid "Calculate CRC32C hash sum.\n"
+msgstr "Calcola la somma hash CRC32C.\n"
+
+#: parse_cmdline.c:63
 msgid "Calculate MD4   hash sum.\n"
 msgstr "Calcola la somma hash MD4.\n"
 
-#: parse_cmdline.c:62
+#: parse_cmdline.c:64
 msgid "Calculate MD5   hash sum.\n"
 msgstr "Calcola la somma hash MD5.\n"
 
-#: parse_cmdline.c:63
+#: parse_cmdline.c:65
 msgid "Calculate SHA1  hash sum.\n"
 msgstr "Calcola la somma hash SHA1.\n"
 
-#: parse_cmdline.c:64
+#: parse_cmdline.c:66
 msgid "Calculate SHA2 hash sum.\n"
 msgstr "Calcola la somma hash SHA2.\n"
 
-#: parse_cmdline.c:65
+#: parse_cmdline.c:67
 msgid "Calculate SHA3 hash sum.\n"
 msgstr "Calcola la somma hash SHA3.\n"
 
-#: parse_cmdline.c:66
+#: parse_cmdline.c:68
 msgid "Calculate TTH sum.\n"
 msgstr "Calcola la somma TTH.\n"
 
-#: parse_cmdline.c:67
+#: parse_cmdline.c:69
 msgid "Calculate BitTorrent InfoHash.\n"
 msgstr "Calcola l'informazione hash BitTorrent.\n"
 
-#: parse_cmdline.c:68
+#: parse_cmdline.c:70
 msgid "Calculate AICH hash.\n"
 msgstr "Calcola l'hash AICH.\n"
 
-#: parse_cmdline.c:69
+#: parse_cmdline.c:71
 msgid "Calculate eDonkey hash sum.\n"
 msgstr "Calcola la somma hash eDonkey.\n"
 
-#: parse_cmdline.c:70
+#: parse_cmdline.c:72
 msgid "Calculate and print eDonkey link.\n"
 msgstr "Calcola e mostra il collegamento eDonkey.\n"
 
-#: parse_cmdline.c:71
+#: parse_cmdline.c:73
 msgid "Calculate Tiger hash sum.\n"
 msgstr "Calcola la somma hash Tiger.\n"
 
-#: parse_cmdline.c:72
+#: parse_cmdline.c:74
 msgid "Calculate GOST R 34.11-94 hash.\n"
 msgstr "Calcola l'hash GOST R 34.11-94.\n"
 
-#: parse_cmdline.c:73
+#: parse_cmdline.c:75
 msgid "CryptoPro version of the GOST R 34.11-94 hash.\n"
 msgstr "Versione CryptoPro dell'hash GOST R 34.11-94.\n"
 
-#: parse_cmdline.c:74
+#: parse_cmdline.c:76
 msgid "Calculate RIPEMD-160 hash.\n"
 msgstr "Calcola l'hash RIPEMD-160.\n"
 
-#: parse_cmdline.c:75
+#: parse_cmdline.c:77
 msgid "Calculate HAS-160 hash.\n"
 msgstr "Calcola l'hash HAS-160.\n"
 
-#: parse_cmdline.c:76
+#: parse_cmdline.c:78
 msgid "Calculate EDON-R 256/512 hash.\n"
 msgstr "Calcola l'hash EDON-R 256/512.\n"
 
-#: parse_cmdline.c:77
+#: parse_cmdline.c:79
 msgid "Calculate SNEFRU-128/256 hash.\n"
 msgstr "Calcola l'hash SNEFRU-128/256.\n"
 
-#: parse_cmdline.c:78
+#: parse_cmdline.c:80
 msgid "Calculate all supported hashes.\n"
 msgstr "Calcola tutti gli hash supportati.\n"
 
-#: parse_cmdline.c:79
+#: parse_cmdline.c:81
 msgid "Check hash files specified by command line.\n"
 msgstr "Verifica i file hash specificati dalla riga di comando.\n"
 
-#: parse_cmdline.c:80
+#: parse_cmdline.c:82
 msgid "Update hash files specified by command line.\n"
 msgstr "Aggiorna i file hash specificati dalla riga di comando.\n"
 
-#: parse_cmdline.c:81
+#: parse_cmdline.c:83
 msgid "Rename files by inserting crc32 sum into name.\n"
 msgstr "Rinomina i file inserendo la somma crc32 nel nome.\n"
 
-#: parse_cmdline.c:82
+#: parse_cmdline.c:84
 msgid "Verify files by crc32 sum embedded in their names.\n"
 msgstr "Verifica i file dalla somma crc32 incorporata nei loro nomi.\n"
 
-#: parse_cmdline.c:83
+#: parse_cmdline.c:85
 msgid "List the names of supported hashes, one per line.\n"
 msgstr "Elenca i nomi degli hash supportati, uno per riga.\n"
 
-#: parse_cmdline.c:84
+#: parse_cmdline.c:86
 msgid "Benchmark selected algorithm.\n"
 msgstr "Esegue il benchmark dell'algoritmo selezionato.\n"
 
-#: parse_cmdline.c:85
+#: parse_cmdline.c:87
 msgid "Be verbose.\n"
 msgstr "Modo verboso.\n"
 
-#: parse_cmdline.c:86
+#: parse_cmdline.c:88
 msgid "Process directories recursively.\n"
 msgstr "Elabora ricorsivamente le directory.\n"
 
-#: parse_cmdline.c:87
+#: parse_cmdline.c:89
 msgid "Process a list of files.\n"
 msgstr ""
 
-#: parse_cmdline.c:88
+#: parse_cmdline.c:90
 msgid "Don't print OK messages for successfully verified files.\n"
 msgstr "Non mostra i messaggi di OK per i file verificati correttamente.\n"
 
-#: parse_cmdline.c:89
+#: parse_cmdline.c:91
 msgid "Ignore case of filenames when updating hash files.\n"
 msgstr "Ignora le maiuscole dei nomi_file quando si aggiornano i file hash.\n"
 
-#: parse_cmdline.c:90
+#: parse_cmdline.c:92
 msgid "Show percents, while calculating or checking hashes.\n"
 msgstr "Mostra le percentuali durante il calcolo o il controllo degli hash.\n"
 
-#: parse_cmdline.c:91
+#: parse_cmdline.c:93
 msgid "Output per-file and total processing speed.\n"
 msgstr "Visualizza la velocità di elaborazione totale e per file.\n"
 
-#: parse_cmdline.c:92
+#: parse_cmdline.c:94
 msgid "Descend at most <n> levels of directories.\n"
 msgstr ""
 "Analizza in profondità le directory fino a un massimo di <n> livelli.\n"
 
-#: parse_cmdline.c:94
+#: parse_cmdline.c:96
 msgid "List hash functions to be calculated using OpenSSL.\n"
 msgstr ""
 
-#: parse_cmdline.c:95
+#: parse_cmdline.c:97
 msgid "File to output calculation or checking results.\n"
 msgstr "File in cui restituire il calcolo o i risultati del controllo.\n"
 
-#: parse_cmdline.c:96
+#: parse_cmdline.c:98
 msgid "File to log errors and verbose information.\n"
 msgstr "File in cui registrare gli errori e le informazioni dettagliate.\n"
 
-#: parse_cmdline.c:97
+#: parse_cmdline.c:99
 msgid "Print hash sums, using SFV format (default).\n"
 msgstr "Mostra le somme hash, utilizzando il formato SFV (predefinito).\n"
 
-#: parse_cmdline.c:98
+#: parse_cmdline.c:100
 msgid "Print hash sums, using BSD-like format.\n"
 msgstr "Mostra le somme hash, utilizzando il formato in stile BSD.\n"
 
-#: parse_cmdline.c:99
+#: parse_cmdline.c:101
 msgid "Print hash sums, using simple format.\n"
 msgstr "Mostra le somme hash, utilizzando il formato semplice.\n"
 
-#: parse_cmdline.c:100
+#: parse_cmdline.c:102
 msgid "Print hash sums  as magnet links.\n"
 msgstr "Mostra le somme hash come magnet link.\n"
 
-#: parse_cmdline.c:101
+#: parse_cmdline.c:103
 msgid "Create torrent files.\n"
 msgstr "Crea file torrent.\n"
 
-#: parse_cmdline.c:103
+#: parse_cmdline.c:105
 msgid "Use Windows codepage for output (Windows only).\n"
 msgstr "Usa il codice Windows per il risultato (solo Windows).\n"
 
-#: parse_cmdline.c:105
+#: parse_cmdline.c:107
 msgid "Load a printf-like template from the <file>\n"
 msgstr "Carica un modello tipo printf dal <file>\n"
 
-#: parse_cmdline.c:107
+#: parse_cmdline.c:109
 msgid ""
 "Format and print hash sums.\n"
 "                See the RHash manual for details.\n"
@@ -373,95 +377,95 @@ msgstr ""
 "Formatta e mostra somme hash.\n"
 "                Consultare il manuale RHash per dettagli.\n"
 
-#: parse_cmdline.c:210
+#: parse_cmdline.c:212
 #, c-format
 msgid "openssl option doesn't support '%s' hash\n"
 msgstr "l'opzione openssl non supporta l'hash '%s'\n"
 
-#: parse_cmdline.c:215
+#: parse_cmdline.c:217
 msgid "compiled without openssl support\n"
 msgstr "compilato senza supporto openssl\n"
 
 #. TRANSLATORS: Keep it secret ;)
-#: parse_cmdline.c:235
+#: parse_cmdline.c:237
 msgid "Purrr..."
 msgstr "Purrr..."
 
-#: parse_cmdline.c:250
+#: parse_cmdline.c:252
 #, c-format
 msgid "maxdepth parameter is not a number: %s\n"
 msgstr "il parametro maxdepth non è un numero: %s\n"
 
-#: parse_cmdline.c:267
+#: parse_cmdline.c:269
 #, c-format
 msgid "bt-piece-length parameter is not a number: %s\n"
 msgstr "il parametro bt-piece-length non è un numero: %s\n"
 
-#: parse_cmdline.c:288
+#: parse_cmdline.c:290
 msgid "wrong path-separator, use '//' instead of '/' on MSYS\n"
 msgstr "separatore percorso errato, usare '//' anziché '/' su MSYS\n"
 
-#: parse_cmdline.c:292
+#: parse_cmdline.c:294
 #, c-format
 msgid "path-separator is not '/' or '\\': %s\n"
 msgstr "il separatore percorso non è '/' o '\\': %s\n"
 
-#: parse_cmdline.c:435
+#: parse_cmdline.c:439
 #, c-format
 msgid "unknown option: %s\n"
 msgstr "opzione sconosciuta: %s\n"
 
-#: parse_cmdline.c:463 parse_cmdline.c:821
+#: parse_cmdline.c:467 parse_cmdline.c:840
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr "è richiesto l'argomento per l'opzione %s\n"
 
-#: parse_cmdline.c:619
+#: parse_cmdline.c:638
 #, c-format
 msgid "%s: can't parse line \"%s\"\n"
 msgstr "%s: impossibile analizzare la riga \"%s\"\n"
 
-#: parse_cmdline.c:632
+#: parse_cmdline.c:651
 #, c-format
 msgid "%s: unknown option \"%s\"\n"
 msgstr "%s: opzione sconosciuta \"%s\"\n"
 
-#: parse_cmdline.c:762
+#: parse_cmdline.c:781
 msgid "CommandLineToArgvW failed\n"
 msgstr "CommandLineToArgvW non riuscito\n"
 
-#: parse_cmdline.c:986
+#: parse_cmdline.c:1007
 #, c-format
 msgid "Config file: %s\n"
 msgstr "File di configurazione: %s\n"
 
-#: parse_cmdline.c:986
+#: parse_cmdline.c:1007
 msgid "None"
 msgstr "Nessuno"
 
-#: parse_cmdline.c:994
+#: parse_cmdline.c:1015
 msgid "incompatible program modes\n"
 msgstr "modalità di programma incompatibili\n"
 
-#: parse_cmdline.c:999
+#: parse_cmdline.c:1020
 msgid "too many formatting options\n"
 msgstr "troppe opzioni di formato\n"
 
-#: rhash_main.c:157
+#: rhash_main.c:162
 #, c-format
 msgid "%s: template file is too big\n"
 msgstr "%s: il file del modello è troppo grande\n"
 
-#: rhash_main.c:239
+#: rhash_main.c:245
 #, c-format
 msgid "%s v%s benchmarking...\n"
 msgstr "%s v%s benchmark in corso...\n"
 
-#: rhash_main.c:248
+#: rhash_main.c:254
 msgid "no files/directories were specified at command line\n"
 msgstr "nessun file o directory sono stati specificati alla riga di comando\n"
 
-#: rhash_main.c:252
+#: rhash_main.c:258
 #, c-format
 msgid ""
 "Usage: %s [OPTION...] <FILE>...\n"
@@ -472,10 +476,7 @@ msgstr ""
 "\n"
 "Avviare `%s --help' per ulteriore aiuto.\n"
 
-#: rhash_main.c:270
+#: rhash_main.c:276
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "La stringa del formato: %s\n"
-
-#~ msgid "%s: %s\n"
-#~ msgstr "%s: %s\n"
