@@ -4,7 +4,7 @@ include config.mak
 
 HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_timing.h rhash_torrent.h aich.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h sha3.h ripemd-160.h gost.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
 SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c rhash_torrent.c aich.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
-OBJECTS = algorithms.o byte_order.o plug_openssl.o rhash.o rhash_timing.o rhash_torrent.o aich.o crc32.o ed2k.o edonr.o hex.o md4.o md5.o sha1.o sha256.o sha512.o sha3.o ripemd-160.o gost.o has160.o snefru.o tiger.o tiger_sbox.o tth.o torrent.o whirlpool.o whirlpool_sbox.o
+OBJECTS = $(SOURCES:.c=.o)
 LIB_HEADERS = rhash.h rhash_torrent.h
 SO_HEADERS = $(LIB_HEADERS) $(LEGACY_HEADERS)
 TEST_STATIC = test_static$(EXEC_EXT)
