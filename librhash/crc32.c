@@ -23,7 +23,7 @@
 #if IS_LITTLE_ENDIAN
 # define GET_BYTE(uint, shift) (((uint) >> (shift)) & 0xFF)
 #else
-# define GET_BYTE(uint, shift) (((uint) >> 24 - (shift)) & 0xFF)
+# define GET_BYTE(uint, shift) (((uint) >> (24 - (shift))) & 0xFF)
 #endif
 
 /**
