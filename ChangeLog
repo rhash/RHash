@@ -1,3 +1,6 @@
+Sat Sep 29 2018 Aleksey
+	* Bugfix: `--file-list=-' shall read a file list from stdin
+
 Tue Sep 11 2018 Aleksey
 	* CRC32C hash function supported, option --crc32c
 	* speedup CRC32 hash function

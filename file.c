@@ -498,6 +498,11 @@ int file_is_write_locked(file_t* file)
 int file_list_open(file_list_t* list, file_t* file_path)
 {
 	memset(list, 0, sizeof(file_list_t));
+	if (!!(file_path->mode & FILE_IFSTDIN))
+	{
+		list->fd = stdin;
+		return 0;
+	}
 	list->fd = file_fopen(file_path, FOpenRead | FOpenBin);
 	return (list->fd ? 0 : -1);
 }
