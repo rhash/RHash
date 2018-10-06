@@ -73,28 +73,11 @@ static double fsec(timedelta_t* timer)
 #endif
 }
 
-/**
- * Start a timer.
- *
- * @deprecated This function shall be removed soon, since
- * it is not related to the hashing library main functionality.
- *
- * @param timer timer to start
- */
 void rhash_timer_start(timedelta_t* timer)
 {
 	get_timedelta(timer);
 }
 
-/**
- * Stop given timer.
- *
- * @deprecated This function shall be removed soon, since
- * it is not related to the hashing library main functionality.
- *
- * @param timer the timer to stop
- * @return number of seconds timed
- */
 double rhash_timer_stop(timedelta_t* timer)
 {
 	timedelta_t end;
@@ -157,16 +140,6 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
 	return 1;
 }
 
-/**
- * Benchmark a hash algorithm.
- *
- * @deprecated This function shall be removed soon, since
- * it is not related to the hashing library main functionality.
- *
- * @param hash_id hash algorithm identifier
- * @param flags benchmark flags, can be RHASH_BENCHMARK_QUIET and RHASH_BENCHMARK_CPB
- * @param output the stream to print results
- */
 void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 {
 	unsigned char ALIGN_ATTR(64) message[8192]; /* 8 KiB */

@@ -20,7 +20,7 @@ typedef struct rhash_context* rhash;
 #endif /* LIBRHASH_RHASH_CTX_DEFINED */
 
 /**
- * Binary string with length
+ * Binary string with length.
  */
 typedef struct rhash_str
 {
@@ -29,7 +29,14 @@ typedef struct rhash_str
 } rhash_str;
 
 /* possible torrent options */
+
+/**
+ * Torrent option: generate private BitTorrent.
+ */
 #define RHASH_TORRENT_OPT_PRIVATE 1
+/**
+ * Torrent option: calculate infohash without torrent file body.
+ */
 #define RHASH_TORRENT_OPT_INFOHASH_ONLY 2
 
 /* torrent functions */
@@ -91,7 +98,7 @@ RHASH_API size_t rhash_torrent_get_default_piece_length(uint64_t total_size);
 /*
  * Macro to set a torrent batch size (the total size of files included into this torrent).
  * It's defined as rhash_torrent_set_piece_length(ctx, rhash_torrent_get_default_piece_length(total_size))
- * 
+ *
  * @param ctx rhash context
  * @param total_size total size of files included into the torrent file
  */
