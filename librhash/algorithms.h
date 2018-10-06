@@ -15,6 +15,38 @@ extern "C" {
 # define RHASH_API
 #endif
 
+/**
+ * Bit flag: default hash output format is base32.
+ */
+#define RHASH_INFO_BASE32 1
+
+/**
+ * Information about a hash function.
+ */
+typedef struct rhash_info
+{
+	/**
+	 * Hash function indentifier.
+	 */
+	unsigned hash_id;
+	/**
+	 * Flags bit-mask, including RHASH_INFO_BASE32 bit.
+	 */
+	unsigned flags;
+	/**
+	 The size of of the raw message digest in bytes.
+	 */
+	size_t digest_size;
+	/**
+	 * The hash function name.
+	 */
+	const char* name;
+	/**
+	 * The corresponding paramenter name in a magnet link.
+	 */
+	const char* magnet_name;
+} rhash_info;
+
 typedef void (*pinit_t)(void*);
 typedef void (*pupdate_t)(void *ctx, const void* msg, size_t size);
 typedef void (*pfinal_t)(void*, unsigned char*);
@@ -63,6 +95,7 @@ extern int rhash_info_size;
 extern unsigned rhash_uninitialized_algorithms;
 
 extern rhash_info info_crc32;
+extern rhash_info info_crc32c;
 extern rhash_info info_md4;
 extern rhash_info info_md5;
 extern rhash_info info_sha1;
@@ -108,6 +141,7 @@ extern rhash_info info_edr512;
 #endif
 
 void rhash_init_algorithms(unsigned mask);
+const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 
 #if defined(OPENSSL_RUNTIME) && !defined(USE_OPENSSL)
 # define USE_OPENSSL

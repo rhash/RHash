@@ -210,38 +210,6 @@ RHASH_API void rhash_free(rhash ctx);
  */
 RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
 
-/**
- * Bit flag: default hash output format is base32.
- */
-#define RHASH_INFO_BASE32 1
-
-/**
- * Information about a hash function.
- */
-typedef struct rhash_info
-{
-	/**
-	 * Hash function indentifier.
-	 */
-	unsigned hash_id;
-	/**
-	 * Flags bit-mask, including RHASH_INFO_BASE32 bit.
-	 */
-	unsigned flags;
-	/**
-	 The size of of the raw message digest in bytes.
-	 */
-	size_t digest_size;
-	/**
-	 * The hash function name.
-	 */
-	const char* name;
-	/**
-	 * The corresponding paramenter name in a magnet link.
-	 */
-	const char* magnet_name;
-} rhash_info;
-
 
 /* INFORMATION FUNCTIONS */
 
@@ -293,9 +261,6 @@ RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function nam
  * @return name
  */
 RHASH_API const char* rhash_get_magnet_name(unsigned hash_id); /* get name part of magnet urn */
-
-/* note, that rhash_info_by_id() is not exported to a shared library or DLL */
-const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 
 /* HASH SUM OUTPUT INTERFACE */
 

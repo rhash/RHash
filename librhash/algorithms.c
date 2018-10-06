@@ -105,7 +105,7 @@ rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" 
 #define iuf(name) ini(name), upd(name), fin(name)
 #define diuf(name) dgshft(name), ini(name), upd(name), fin(name)
 
-/* information about all hashes */
+/* information about all supported hash functions */
 rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 {
 	{ &info_crc32, sizeof(uint32_t), 0, iuf(rhash_crc32), 0 }, /* 32 bit */
@@ -139,6 +139,8 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 
 /**
  * Initialize requested algorithms.
+ *
+ * @param mask ids of hash sums to initialize
  */
 void rhash_init_algorithms(unsigned mask)
 {
@@ -151,6 +153,21 @@ void rhash_init_algorithms(unsigned mask)
 	rhash_gost_init_table();
 #endif
 	rhash_uninitialized_algorithms = 0;
+}
+
+/**
+ * Returns information about a hash function by its hash_id.
+ *
+ * @param hash_id the id of hash algorithm
+ * @return pointer to the rhash_info structure containing the information
+ */
+const rhash_info* rhash_info_by_id(unsigned hash_id)
+{
+	hash_id &= RHASH_ALL_HASHES;
+	/* check that only one bit is set */
+	if (hash_id != (hash_id & -(int)hash_id)) return NULL;
+	/* note: alternative condition is (hash_id == 0 || (hash_id & (hash_id - 1)) != 0) */
+	return rhash_info_table[rhash_ctz(hash_id)].info;
 }
 
 /* CRC32 helper functions */

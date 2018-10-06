@@ -409,21 +409,6 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 
 /* RHash information functions */
 
-/**
- * Returns information about a hash function by its hash_id.
- *
- * @param hash_id the id of hash algorithm
- * @return pointer to the rhash_info structure containing the information
- */
-const rhash_info* rhash_info_by_id(unsigned hash_id)
-{
-	hash_id &= RHASH_ALL_HASHES;
-	/* check that only one bit is set */
-	if (hash_id != (hash_id & -(int)hash_id)) return NULL;
-	/* note: alternative condition is (hash_id == 0 || (hash_id & (hash_id - 1)) != 0) */
-	return rhash_info_table[rhash_ctz(hash_id)].info;
-}
-
 RHASH_API int rhash_is_base32(unsigned hash_id)
 {
 	/* fast method is just to test a bit-mask */
