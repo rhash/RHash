@@ -7,15 +7,17 @@ my $libs  = '';
 my $inc   = '';
 my $obj   = '';
 my $clean = '';
+my $local_librhash_dir = 'librhash';
+my $has_builtin_librhash = (-f $local_librhash_dir . '/rhash.h');
 
 # set the location of LibRHash headers and the linking flags
 $inc = $ENV{'LIBRHASH_INC'} if defined($ENV{'LIBRHASH_INC'});
 if(defined($ENV{'LIBRHASH_LD'}) && $ENV{'LIBRHASH_LD'} =~ /-L/) {
-    $libs = $ENV{'LIBRHASH_LD'} . ' ' . $libs;
+	$libs = $ENV{'LIBRHASH_LD'} . ' ' . $libs;
 }
 
 # use a system-wide librhash
-$libs = '-lrhash' if (defined($ENV{'USE_SYSTEM_LIBRHASH'}));
+$libs = '-lrhash' if (defined($ENV{'USE_SYSTEM_LIBRHASH'}) || ($libs eq '' && !$has_builtin_librhash));
 
 # copy and rename *.c files by prepending underscore '_'
 sub copy_c_files($) {
@@ -37,12 +39,11 @@ sub copy_c_files($) {
 	return @result;
 }
 
-my $local_dir = 'librhash';
-if($inc eq '' && $libs eq '' && -f $local_dir . '/rhash.h') {
+if($inc eq '' && $libs eq '' && $has_builtin_librhash) {
 	# use the local version of librhash
 	print "Using builtin LibRHash\n";
-	$inc = '-I' . $local_dir;
-	my @c_files = copy_c_files($local_dir);
+	$inc = '-I' . $local_librhash_dir;
+	my @c_files = copy_c_files($local_librhash_dir);
 	$clean = join(' ', @c_files);
 	$obj = join(' ', map { s/\.c$/\$(OBJ_EXT)/; $_ } @c_files) . ' ';
 }

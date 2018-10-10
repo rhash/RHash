@@ -1,3 +1,4 @@
 rhash_context *					T_PTROBJ
 rhash_uptr_t					T_NV
 ulonglong					T_NV
+const char *					T_PV
