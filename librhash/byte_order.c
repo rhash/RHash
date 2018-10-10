@@ -165,11 +165,9 @@ static uint64_t get_cpuid_features(void)
 int has_cpu_feature(unsigned feature_bit)
 {
 	static uint64_t features;
-	if (!features)
-	{
-		features = (get_cpuid_features() | 1);
-	}
 	const uint64_t feature = ((uint64_t)1) << feature_bit;
+	if (!features)
+		features = (get_cpuid_features() | 1);
 	return !!(features & feature);
 }
 #endif

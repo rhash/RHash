@@ -493,7 +493,7 @@ else
             _cc_mini=$(echo $cc_version | cut -d '.' -f 3)
             ;;
         esac
-        finish_check "$cc_version"
+        finish_check "$cc_name $cc_version"
         break
       fi
       if $CC -v 2>&1 | grep -q "clang"; then
@@ -517,6 +517,10 @@ else
 fi # icc
 test -z "$cc_vendor" && die "compiler not found"
 test "$cc_fail" = "yes" && die "unsupported compiler version"
+
+if test "$cc_name" = "gcc" && test "$_cc_major" -gt 3; then
+  WARN_CFLAGS="$WARN_CFLAGS -Wdeclaration-after-statement"
+fi
 
 # select optimization flags
 has_optimization()

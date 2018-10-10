@@ -95,7 +95,7 @@ static void process_backslashes(char* path)
  * @param x the number to process
  * @return zero-based index of the trailing bit
  */
-unsigned get_ctz(unsigned x)
+static unsigned get_ctz(unsigned x)
 {
 	/* see http://graphics.stanford.edu/~seander/bithacks.html */
 	static unsigned char bit_pos[32] =  {

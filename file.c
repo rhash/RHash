@@ -234,14 +234,16 @@ void file_cleanup(file_t* file)
  */
 void file_path_append(file_t* dst, const file_t* src, const char* suffix)
 {
+	size_t src_len;
+	size_t dst_len;
 	memset(dst, 0, sizeof(*dst));
 #ifdef _WIN32
 	if (src->wpath)
 	{
 		wchar_t* wsuffix = c2w(suffix, 0);
 		assert(wsuffix != 0);
-		size_t src_len = wcslen(src->wpath);
-		size_t dst_len = src_len + wcslen(wsuffix) + 1;
+		src_len = wcslen(src->wpath);
+		dst_len = src_len + wcslen(wsuffix) + 1;
 		dst->wpath = (wchar_t*)rsh_malloc(dst_len * sizeof(wchar_t));
 		wcscpy(dst->wpath, src->wpath);
 		wcscpy(dst->wpath + src_len, wsuffix);
@@ -250,8 +252,8 @@ void file_path_append(file_t* dst, const file_t* src, const char* suffix)
 	}
 #endif
 	assert(!!src->path);
-	size_t src_len = strlen(src->path);
-	size_t dst_len = src_len + strlen(suffix) + 1;
+	src_len = strlen(src->path);
+	dst_len = src_len + strlen(suffix) + 1;
 	dst->path = (char*)rsh_malloc(dst_len);
 	strcpy(dst->path, src->path);
 	strcpy(dst->path + src_len, suffix);
