@@ -1,4 +1,4 @@
-use Test::More tests => 26;
+use Test::More tests => 27;
 use Crypt::Rhash;
 
 #########################
@@ -7,6 +7,7 @@ $r = new Crypt::Rhash(RHASH_ALL);
 $r->update("a")->final();
 
 is( $r->hash(RHASH_CRC32), "e8b7be43");
+is( $r->hash(RHASH_CRC32C), "c1d04330");
 is( $r->hash(RHASH_MD4),   "bde52cb31de33e46245e05fbdbd6fb24");
 is( $r->hash(RHASH_MD5),   "0cc175b9c0f1b6a831c399e269772661");
 is( $r->hash(RHASH_SHA1),  "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8");

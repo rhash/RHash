@@ -10,8 +10,8 @@ our @ISA = (qw(Exporter));
 # possible tags for export
 our %EXPORT_TAGS = (
 	Functions => [qw(raw2hex raw2base32 raw2base64)],
-	Constants => [qw(RHASH_CRC32 RHASH_MD4 RHASH_MD5 RHASH_SHA1 RHASH_TIGER
-		RHASH_TTH RHASH_BTIH RHASH_ED2K RHASH_AICH RHASH_WHIRLPOOL
+	Constants => [qw(RHASH_CRC32 RHASH_CRC32C RHASH_MD4 RHASH_MD5 RHASH_SHA1
+		RHASH_TIGER RHASH_TTH RHASH_BTIH RHASH_ED2K RHASH_AICH RHASH_WHIRLPOOL
 		RHASH_RIPEMD160 RHASH_GOST RHASH_GOST_CRYPTOPRO RHASH_HAS160
 		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_SHA224 RHASH_SHA256
 		RHASH_SHA384 RHASH_SHA512 RHASH_EDONR256 RHASH_EDONR512
@@ -54,7 +54,8 @@ use constant RHASH_SHA3_224  => 0x0400000;
 use constant RHASH_SHA3_256  => 0x0800000;
 use constant RHASH_SHA3_384  => 0x1000000;
 use constant RHASH_SHA3_512  => 0x2000000;
-use constant RHASH_ALL       => 0x3FFFFFF;
+use constant RHASH_CRC32C    => 0x4000000;
+use constant RHASH_ALL       => 0x7FFFFFF;
 
 ##############################################################################
 # Rhash class methods
@@ -274,6 +275,7 @@ Creates and returns new Crypt::Rhash object.
 The $hash_id parameter can be union (via bitwise OR) of any of the following bit-flags:
 
   RHASH_CRC32,
+  RHASH_CRC32C,
   RHASH_MD4,
   RHASH_MD5,
   RHASH_SHA1,
