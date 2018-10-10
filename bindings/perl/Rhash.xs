@@ -3,6 +3,7 @@
 #include "XSUB.h"
 
 #include <rhash.h>
+#include <rhash_torrent.h>
 
 typedef unsigned long long ulonglong;
 
@@ -278,28 +279,6 @@ raw2base64(bytes)
 	OUTPUT:
 		RETVAL
 
-# rhash_print_bytes should not be used directly
-#SV *
-#rhash_print_bytes(bytes, flags)
-#	PROTOTYPE: $;$
-#	PREINIT:
-#		STRLEN size;
-#	INPUT:
-#		unsigned char * bytes = SvPV(ST(0), size);
-#		int flags
-#	CODE:
-#		RETVAL = allocate_string_buffer(size * 2);
-#		rhash_print_bytes(SvPVX(RETVAL), bytes, size, flags);
-#	OUTPUT:
-#		RETVAL
-
-#rhash_uptr_t
-#rhash_transmit(msg_id, dst, ldata, rdata)
-#	unsigned msg_id
-#	void * dst
-#	rhash_uptr_t ldata
-#	rhash_uptr_t rdata
-
 ##############################################################################
 # BTIH / BitTorrent support functions
 
@@ -310,7 +289,7 @@ rhash_bt_add_filename(ctx, filename, filesize)
 		ulonglong filesize
 	PROTOTYPE: $$$
 	CODE:
-		rhash_transmit(RMSG_BT_ADD_FILE, ctx, RHASH_STR2UPTR(filename), (rhash_uptr_t)&filesize);
+		rhash_torrent_add_file(ctx, filename, filesize);
 
 void
 rhash_bt_set_piece_length(ctx, piece_length)
@@ -318,27 +297,26 @@ rhash_bt_set_piece_length(ctx, piece_length)
 		unsigned piece_length
 	PROTOTYPE: $$
 	CODE:
-		rhash_transmit(RMSG_BT_SET_PIECE_LENGTH, ctx, RHASH_STR2UPTR(piece_length), 0);
+		rhash_torrent_set_piece_length(ctx, piece_length);
 
 void
 rhash_bt_set_private(ctx)
 		rhash_context * ctx
 	PROTOTYPE: $
 	CODE:
-		rhash_transmit(RMSG_BT_SET_OPTIONS, ctx, RHASH_BT_OPT_PRIVATE, 0);
+		rhash_torrent_set_options(ctx, RHASH_TORRENT_OPT_PRIVATE);
 
 SV *
 rhash_bt_get_torrent_text(ctx)
 		rhash_context * ctx
 	PROTOTYPE: $
 	PREINIT:
-		size_t len;
-		char *text;
+		const rhash_str* text;
 	CODE:
-		len = rhash_transmit(RMSG_BT_GET_TEXT, ctx, RHASH_STR2UPTR(&text), 0);
-		if(len == RHASH_ERROR) {
+		text = rhash_torrent_generate_content(ctx);
+		if(!text) {
 			XSRETURN_UNDEF;
 		}
-		RETVAL = newSVpv(text, len);
+		RETVAL = newSVpv(text->str, text->length);
 	OUTPUT:
 		RETVAL
