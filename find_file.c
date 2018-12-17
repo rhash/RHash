@@ -70,7 +70,8 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 		handle = FindFirstFileW(path, &d);
 		if (INVALID_HANDLE_VALUE != handle)
 		{
-			do {
+			do
+			{
 				file_t file;
 				int failed;
 				if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName)) continue;
@@ -84,15 +85,16 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 
 				/* convert file name */
 				file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
-				if (!failed) {
+				if (!failed)
+				{
 					failed = (file_stat(&file, 0) < 0);
 				}
 
 				/* quietly skip unconvertible file names */
-				if (!file.path || failed) {
-					if (failed) {
+				if (!file.path || failed)
+				{
+					if (failed)
 						data->errors_count++;
-					}
 					free(file.path);
 					free(file.wpath);
 					continue;
@@ -104,7 +106,9 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 				added++;
 			} while (FindNextFileW(handle, &d));
 			FindClose(handle);
-		} else {
+		}
+		else
+		{
 			/* report error on the specified wildcard */
 			char * cpath = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, NULL);
 			set_errno_from_last_file_error();
@@ -124,16 +128,20 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 		{
 			file.mode = FILE_IFSTDIN;
 			file.path = rsh_strdup("(stdin)");
-		} else {
+		}
+		else
+		{
 			file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
-			if (failed) {
+			if (failed)
+			{
 				log_error(_("can't convert the file path to local encoding: %s\n"), file.path);
 				free(file.path);
 				data->errors_count++;
 				return;
 			}
 			file.wpath = path;
-			if (file_stat(&file, 0) < 0) {
+			if (file_stat(&file, 0) < 0)
+			{
 				log_file_t_error(&file);
 				free(file.path);
 				data->errors_count++;
@@ -156,7 +164,8 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 	{
 		file.mode = FILE_IFSTDIN;
 	}
-	else if (file_stat(&file, FUseLstat) < 0) {
+	else if (file_stat(&file, FUseLstat) < 0)
+	{
 		log_file_t_error(&file);
 		file_cleanup(&file);
 		data->errors_count++;
@@ -200,29 +209,40 @@ void scan_files(file_search_data* data)
 		assert(!!(file->mode & FILE_IFROOT));
 
 		/* check if file is a directory */
-		if (!!(file->mode & FILE_IFLIST)) {
+		if (!!(file->mode & FILE_IFLIST))
+		{
 			file_list_t list;
-			if (file_list_open(&list, file) < 0) {
+			if (file_list_open(&list, file) < 0)
+			{
 				log_file_t_error(file);
 				continue;
 			}
-			while (file_list_read(&list)) {
+			while (file_list_read(&list))
+			{
 				data->call_back(&list.current_file, data->call_back_data);
 			}
 			file_list_close(&list);
-		} else if (FILE_ISDIR(file)) {
+		}
+		else if (FILE_ISDIR(file))
+		{
 			/* silently skip symlinks to directories if required */
-			if (skip_symlinked_dirs && FILE_ISLNK(file)) {
+			if (skip_symlinked_dirs && FILE_ISLNK(file))
+			{
 				continue;
 			}
 
-			if (data->max_depth != 0) {
+			if (data->max_depth != 0)
+			{
 				dir_scan(file, data);
-			} else if ((data->options & FIND_LOG_ERRORS) != 0) {
+			}
+			else if ((data->options & FIND_LOG_ERRORS) != 0)
+			{
 				errno = EISDIR;
 				log_file_t_error(file);
 			}
-		} else {
+		}
+		else
+		{
 			/* process a regular file or a dash '-' path */
 			data->call_back(file, data->call_back_data);
 		}
@@ -251,13 +271,17 @@ static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
 {
 	dir_entry* e = (dir_entry*)malloc(sizeof(dir_entry));
 	if (!e) return NULL;
-	if (filename) {
+	if (filename)
+	{
 		e->filename = rsh_strdup(filename);
-		if (!e->filename) {
+		if (!e->filename)
+		{
 			free(e);
 			return NULL;
 		}
-	} else {
+	}
+	else
+	{
 		e->filename = NULL;
 	}
 	e->next = next;
@@ -320,29 +344,29 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	int fstat_flags = (data->options & FIND_FOLLOW_SYMLINKS ? 0 : FUseLstat);
 	file_t file;
 
-	if (max_depth < 0 || max_depth >= MAX_DIRS_DEPTH) {
+	if (max_depth < 0 || max_depth >= MAX_DIRS_DEPTH)
 		max_depth = MAX_DIRS_DEPTH - 1;
-	}
 
 	/* skip the directory if max_depth == 0 */
 	if (!max_depth) return 0;
 
-	if (!FILE_ISDIR(start_dir)) {
+	if (!FILE_ISDIR(start_dir))
+	{
 		errno = ENOTDIR;
 		return -1;
 	}
 
 	/* check if we should descend into the root directory */
-	if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0) {
+	if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0)
+	{
 		if (!data->call_back(start_dir, data->call_back_data))
 			return 0;
 	}
 
 	/* allocate array of counters of directory elements */
 	it = (dir_iterator*)malloc((MAX_DIRS_DEPTH + 1) * sizeof(dir_iterator));
-	if (!it) {
+	if (!it)
 		return -1;
-	}
 
 	/* push dummy counter for the root element */
 	it[0].count = 1;
@@ -358,11 +382,13 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		struct dirent *de;
 
 		/* climb down from the tree */
-		while (--it[level].count < 0) {
+		while (--it[level].count < 0)
+		{
 			/* do not need this dir_path anymore */
 			free(it[level].dir_path);
 
-			if (--level < 0) {
+			if (--level < 0)
+			{
 				/* walked the whole tree */
 				assert(!dirs_stack);
 				free(it);
@@ -372,16 +398,20 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		assert(level >= 0 && it[level].count >= 0);
 
 		/* take a filename from dirs_stack and construct the next path */
-		if (level) {
+		if (level)
+		{
 			assert(dirs_stack != NULL);
 			dir_path = make_path(it[level].dir_path, dirs_stack->filename);
 			dir_entry_drop_head(&dirs_stack);
-		} else {
+		}
+		else
+		{
 			/* the first cycle: start from a root directory */
 			dir_path = rsh_strdup(start_dir->path);
 		}
 
-		if (!dir_path) continue;
+		if (!dir_path)
+			continue;
 
 		/* fill the next level of directories */
 		level++;
@@ -396,10 +426,10 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			res = file_stat(&file, fstat_flags);
 
 			/* check if we should skip the directory */
-			if (res < 0 || !data->call_back(&file, data->call_back_data)) {
-				if (res < 0 && (options & FIND_LOG_ERRORS)) {
+			if (res < 0 || !data->call_back(&file, data->call_back_data))
+			{
+				if (res < 0 && (options & FIND_LOG_ERRORS))
 					data->errors_count++;
-				}
 				file_cleanup(&file);
 				continue;
 			}
@@ -424,11 +454,15 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			if (!file.path) continue;
 
 			res  = file_stat(&file, fstat_flags);
-			if (res >= 0) {
+			if (res >= 0)
+			{
 				/* process the file or directory */
-				if (FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS))) {
+				if (FILE_ISDIR(&file) && (options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)))
+				{
 					res = ((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file));
-				} else if (FILE_ISREG(&file)) {
+				}
+				else if (FILE_ISREG(&file))
+				{
 					/* handle file by callback function */
 					res = data->call_back(&file, data->call_back_data);
 				}
@@ -439,13 +473,16 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 					((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file)))
 				{
 					/* add the directory name to the dirs_stack */
-					if (dir_entry_insert(insert_at, de->d_name, file.mode)) {
+					if (dir_entry_insert(insert_at, de->d_name, file.mode))
+					{
 						/* the directory name was successfully inserted */
 						insert_at = &((*insert_at)->next);
 						it[level].count++;
 					}
 				}
-			} else if (options & FIND_LOG_ERRORS) {
+			}
+			else if (options & FIND_LOG_ERRORS)
+			{
 				/* report error only if FIND_LOG_ERRORS option is set */
 				log_file_t_error(&file);
 				data->errors_count++;
@@ -455,10 +492,12 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		closedir(dp);
 	}
 
-	while (dirs_stack) {
+	while (dirs_stack)
+	{
 		dir_entry_drop_head(&dirs_stack);
 	}
-	while (level) {
+	while (level)
+	{
 		free(it[level--].dir_path);
 	}
 	free(it);
