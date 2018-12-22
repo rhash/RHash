@@ -1,4 +1,5 @@
 Sat Dec 22 2018 Aleksey
+	* === Version 1.3.7 ===
 	* new option `--message==<string>' to calculate a hash for string
 	* changed magnet link short option from '-m' to '-g'
 
