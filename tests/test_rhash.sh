@@ -144,7 +144,13 @@ match() {
   return 0
 }
 
-new_test "test with text string:      "
+new_test "test with a text string:    "
+TEST_STR="test_string1"
+TEST_RESULT=$( $rhash --message "$TEST_STR" | tail -1 )
+TEST_EXPECTED="(message) F0099E81"
+check "$TEST_RESULT" "$TEST_EXPECTED"
+
+new_test "test stdin processing:      "
 TEST_STR="test_string1"
 TEST_RESULT=$( printf "$TEST_STR" | $rhash -CHMETAGW --sfv - | tail -1 )
 TEST_EXPECTED="(stdin) F0099E81 B78F440152DBAD00E77017074DC15417 EA8511AE2CA899D68DB423AD751B446C6F958507 R37TT7VDWGK26FUDTFANGUJBFKYDGAV4ARK3EEI 9EDCAE6F50EFE09F0837DA66A8B88C13 5KCRDLRMVCM5NDNUEOWXKG2ENRXZLBIH 01D00FBBA6A0903499385151BF678CDF4294986CF5B76A6A5660AC5834FA429E12861BC5174C7648CA4086B0FCE3F211F80423824E9A9589A20FC43A81D8B752 3D3E1DB92A2030B1287769AAD2190DD69EED5911644EC6E7BB7AEAB5FC701BE3"
@@ -154,7 +160,7 @@ new_test "test with 1Kb data file:    "
 TEST_RESULT=$( $rhash --printf "%f %C %M %H %E %G %T %A %W\n" test1K.data 2>/dev/null )
 TEST_EXPECTED="test1K.data B70B4C26 B2EA9F7FCEA831A4A63B213F41A8855B 5B00669C480D5CFFBDFA8BDBA99561160F2D1B77 5AE257C47E9BE1243EE32AABE408FB6B 890BB3EE5DBE4DA22D6719A14EFD9109B220607E1086C1ABBB51EEAC2B044CBB 4OQY25UN2XHIDQPV5U6BXAZ47INUCYGIBK7LFNI LMAGNHCIBVOP7PP2RPN2TFLBCYHS2G3X D606B7F44BD288759F8869D880D9D4A2F159D739005E72D00F93B814E8C04E657F40C838E4D6F9030A8C9E0308A4E3B450246250243B2F09E09FA5A24761E26B"
 check "$TEST_RESULT" "$TEST_EXPECTED" .
-# test reversed GOST hashes and verification of them
+# test calculation/verification of reversed GOST hashes with 1Kb data file
 TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data )
 TEST_EXPECTED="test1K.data  bb4c042bacee51bbabc186107e6020b20991fd4ea119672da24dbe5deeb30b89  06cc52d9a7fb5137d01667d1641683620060391722a56222bb4b14ab332ec9d9"
 check "$TEST_RESULT" "$TEST_EXPECTED" .
@@ -166,7 +172,10 @@ EMPTY_FILE="$RHASH_TMP/test-empty.file"
 printf "" > "$EMPTY_FILE"
 TEST_RESULT=$( $rhash -p "%m" "$EMPTY_FILE" )
 check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
-# now test processing of empty stdin
+# test processing of empty message
+TEST_RESULT=$( $rhash -p "%m" -m "" )
+check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
+# test processing of empty stdin
 TEST_RESULT=$( printf "" | $rhash -p "%m" - )
 check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 # test verification of empty file
@@ -188,12 +197,12 @@ $rhash test1K.data | (
 rm -f "$MATCH_LOG"
 
 new_test "test %x, %b, %B modifiers:  "
-TEST_RESULT=$( printf "a" | $rhash -p '%f %s %xC %bc %bM %Bh %bE %bg %xT %xa %bW\n' - )
-TEST_EXPECTED="(stdin) 1 E8B7BE43 5c334qy BTAXLOOA6G3KQMODTHRGS5ZGME hvfkN/qlp/zhXR3cuerq6jd2Z7g= XXSSZMY54M7EMJC6AX55XVX3EQ 2qwfhhrwprtotsekqapwmsjutqqyog2ditdkk47yjh644yxtctoq 16614B1F68C5C25EAF6136286C9C12932F4F73E87E90A273 86f7e437faa5a7fce15d1ddcb9eaeaea377667b8 RLFCMATZFLWG6ENGOIDFGH5X27YN75MUCMKF42LTYRIADUAIPNBNCG6GIVATV37WHJBDSGRZCRNFSGUSEAGVMAMV4U5UPBME7WXCGGQ"
+TEST_RESULT=$( $rhash -p '%f %s %xC %bc %bM %Bh %bE %bg %xT %xa %bW\n' -m "a" )
+TEST_EXPECTED="(message) 1 E8B7BE43 5c334qy BTAXLOOA6G3KQMODTHRGS5ZGME hvfkN/qlp/zhXR3cuerq6jd2Z7g= XXSSZMY54M7EMJC6AX55XVX3EQ 2qwfhhrwprtotsekqapwmsjutqqyog2ditdkk47yjh644yxtctoq 16614B1F68C5C25EAF6136286C9C12932F4F73E87E90A273 86f7e437faa5a7fce15d1ddcb9eaeaea377667b8 RLFCMATZFLWG6ENGOIDFGH5X27YN75MUCMKF42LTYRIADUAIPNBNCG6GIVATV37WHJBDSGRZCRNFSGUSEAGVMAMV4U5UPBME7WXCGGQ"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test special characters:    "
-TEST_RESULT=$( echo | $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' - )
+TEST_RESULT=$( $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' -m "" )
 TEST_EXPECTED=$( printf '\63\1\277\17\1\t\\ 4\r' )
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
@@ -206,10 +215,10 @@ check "$TEST_RESULT" "t1 t2 t3 t4 "
 rm -f ${F}1 ${F}2 ${F}3 ${F}4 ${F}l
 
 new_test "test eDonkey link:          "
-TEST_RESULT=$( printf "a" | $rhash -p '%f %L %l\n' - )
-TEST_EXPECTED="(stdin) ed2k://|file|(stdin)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(stdin)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
+TEST_RESULT=$( $rhash -p '%L %l\n' -m "a" )
+TEST_EXPECTED="ed2k://|file|(message)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(message)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
 check "$TEST_RESULT" "$TEST_EXPECTED" .
-# here we should test checking of ed2k links but it is currently unsupported
+# test verification of ed2k links
 TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
@@ -217,7 +226,7 @@ if [ -n "$OPT_FULL" ]; then
   new_test "test all hash options:      "
   errors=0
   for opt in $HASHOPT ; do
-    TEST_RESULT=$( printf "a" | $rhash --$opt --simple - )
+    TEST_RESULT=$( $rhash --$opt --simple -m "a" )
     match "$TEST_RESULT" "\b[0-9a-z]\{8,128\}\b" . || errors=$((errors+1))
   done
   check $errors 0
@@ -260,7 +269,7 @@ check "$TEST_RESULT" "d3d99e8b  test_[D3D99E8B].data"
 rm 'test_[D3D99E8B].data' 'test_[D3D99E8C].data'
 
 new_test "test wrong sums detection:  "
-printf WRONG | $rhash -p '%c\n%m\n%e\n%h\n%g\n%t\n%a\n%w\n' - > t.sum
+$rhash -p '%c\n%m\n%e\n%h\n%g\n%t\n%a\n%w\n' -m WRONG > t.sum
 TEST_RESULT=$( $rhash -vc t.sum 2>&1 | grep 'OK' )
 check "$TEST_RESULT" ""
 rm t.sum

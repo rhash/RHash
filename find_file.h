@@ -30,7 +30,7 @@ typedef struct file_search_data
 } file_search_data;
 
 file_search_data* file_search_data_new(void);
-void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list);
+void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mode);
 void file_search_data_free(file_search_data* data);
 
 void scan_files(file_search_data* data);

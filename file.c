@@ -221,7 +221,10 @@ void file_cleanup(file_t* file)
 	file->wpath = NULL;
 #endif /* _WIN32 */
 
-	file->mtime = file->size = 0;
+	free(file->data);
+	file->data = NULL;
+	file->mtime = 0;
+	file->size = 0;
 	file->mode = 0;
 }
 

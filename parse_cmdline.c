@@ -87,6 +87,7 @@ static void print_help(void)
 	print_help_line("  -v, --verbose ", _("Be verbose.\n"));
 	print_help_line("  -r, --recursive  ", _("Process directories recursively.\n"));
 	print_help_line("      --file-list=<file> ", _("Process a list of files.\n"));
+	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
 	print_help_line("      --skip-ok ", _("Don't print OK messages for successfully verified files.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
 	print_help_line("      --percents   ", _("Show percents, while calculating or checking hashes.\n"));
@@ -99,7 +100,7 @@ static void print_help(void)
 	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));
 	print_help_line("      --bsd     ", _("Print hash sums, using BSD-like format.\n"));
 	print_help_line("      --simple  ", _("Print hash sums, using simple format.\n"));
-	print_help_line("  -m, --magnet  ", _("Print hash sums  as magnet links.\n"));
+	print_help_line("  -g, --magnet  ", _("Print hash sums  as magnet links.\n"));
 	print_help_line("      --torrent ", _("Create torrent files.\n"));
 #ifdef _WIN32
 	print_help_line("      --ansi    ", _("Use Windows codepage for output (Windows only).\n"));
@@ -130,16 +131,16 @@ enum file_suffix_type {
 };
 
 /**
- * Add a file-list.
+ * Add a special file.
  *
  * @param o pointer to the options structure to update
- * @param path the path to the file-list
+ * @param path the path of the file
  * @param type the type of the option
  */
-static void add_file_list(options_t *o, tstr_t path, unsigned is_file_list)
+static void add_special_file(options_t *o, tstr_t path, unsigned file_mode)
 {
 	if (o->search_data) {
-		file_search_add_file(o->search_data, path, is_file_list);
+		file_search_add_file(o->search_data, path, file_mode);
 		opt.has_files = 1;
 	}
 }
@@ -375,7 +376,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "sfv",     &opt.fmt, FMT_SFV },
 	{ F_UFLG,   0,   0, "bsd",     &opt.fmt, FMT_BSD },
 	{ F_UFLG,   0,   0, "simple",  &opt.fmt, FMT_SIMPLE },
-	{ F_UFLG, 'm',   0, "magnet",  &opt.fmt, FMT_MAGNET },
+	{ F_UFLG, 'g',   0, "magnet",  &opt.fmt, FMT_MAGNET },
 	{ F_UFLG,   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
 	{ F_TSTR,   0,   0, "template",  &opt.template_file, 0 },
@@ -383,7 +384,8 @@ cmdline_opt_t cmdline_opt[] =
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
-	{ F_TFNC,   0,   0, "file-list", add_file_list, 1 },
+	{ F_TFNC, 'm',   0, "message", add_special_file, FILE_IFDATA },
+	{ F_TFNC,   0,   0, "file-list", add_special_file, FILE_IFLIST },
 	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
 	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
@@ -416,7 +418,7 @@ cmdline_opt_t cmdline_opt[] =
 #endif
 	{ 0,0,0,0,0,0 }
 };
-cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", add_file_list, 0 };
+cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", add_special_file, 0 };
 
 /**
  * Log a message and exit the program.

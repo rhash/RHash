@@ -132,13 +132,24 @@ char* w2c(const wchar_t* wstr)
 }
 
 /**
+ * Convert wide string to utf8.
+ *
+ * @param wstr the wide string to convert
+ * @return utf8-encoded c-string on success, NULL on fail
+ */
+char* wcs_to_utf8(const wchar_t* wstr)
+{
+	return wchar_to_cstr(wstr, CP_UTF8, NULL);
+}
+
+/**
  * Convert given C-string from encoding specified by
  * command line options to utf8.
  *
  * @param str the string to convert
  * @return converted string on success, NULL on fail
  */
-char* win_to_utf8(const char* str)
+char* str_to_utf8(const char* str)
 {
 	char* res;
 	wchar_t* buf;
@@ -147,7 +158,7 @@ char* win_to_utf8(const char* str)
 	if (opt.flags & OPT_UTF8) return rsh_strdup(str);
 
 	if ((buf = c2w(str, 0)) == NULL) return NULL;
-	res = wchar_to_cstr(buf, CP_UTF8, NULL);
+	res = wcs_to_utf8(buf);
 	free(buf);
 	return res;
 }

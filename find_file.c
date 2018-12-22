@@ -18,7 +18,7 @@
 # include <dirent.h>    /* opendir/readdir */
 #endif
 
-#define IS_DASH_STR(s) ((s)[0] == '-' && (s)[1] == '\0')
+#define IS_DASH_TSTR(s) ((s)[0] == RSH_T('-') && (s)[1] == RSH_T('\0'))
 #define IS_CURRENT_OR_PARENT_DIR(s) ((s)[0]=='.' && (!(s)[1] || ((s)[1] == '.' && !(s)[2])))
 #define IS_CURRENT_OR_PARENT_DIRW(s) ((s)[0]==L'.' && (!(s)[1] || ((s)[1] == L'.' && !(s)[2])))
 
@@ -38,20 +38,57 @@ file_search_data* file_search_data_new(void)
 	return data;
 }
 
-void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
+static void file_search_add_special_file(file_search_data* search_data, unsigned file_mode, tstr_t str)
+{
+	file_t file;
+	char* filename = (file_mode & FILE_IFSTDIN ? "(stdin)" : "(message)");
+	char* ext_data = 0;
+	if (file_mode & FILE_IFDATA)
+	{
+#ifdef _WIN32
+		ext_data = wcs_to_utf8(str);
+		/* we assume that conversion alwais succeed and the following condition is never met */
+		if (!ext_data)
+			return;
+#else
+		ext_data = rsh_strdup(str);
+#endif
+	}
+	file_init(&file, filename, file_mode);
+	if (file_mode & FILE_IFDATA)
+	{
+		file.data = ext_data;
+		file.size = strlen(ext_data);
+	}
+	add_root_file(search_data, &file);
+}
+
+void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mode)
 {
 #ifdef _WIN32
-	/* expand wildcards and fill the root_files */
-	int added = 0;
 	size_t length, index;
-	wchar_t* p = wcschr(path, L'\0') - 1;
+	wchar_t* p;
+#endif
+	file_t file;
+	
+	file_mode &= (FILE_IFLIST | FILE_IFDATA);
+	assert((file_mode & (file_mode - 1)) == 0);
+	if ((file_mode & FILE_IFDATA) != 0)
+	{
+		file_search_add_special_file(data, (FILE_IFROOT | FILE_IFDATA), path);
+		return;
+	}
+	if (IS_DASH_TSTR(path))
+	{
+		file_search_add_special_file(data, (FILE_IFROOT | FILE_IFSTDIN), NULL);
+		return;
+	}
 
-	/* strip trailing '\','/' symbols (if not preceded by ':') */
-	for (; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--) *p = 0;
-
-	/* Expand a wildcard in the current file path and store results into data->root_files.
-	 * If a wildcard is not found then just the file path is stored.
-	 * NB, only wildcards in the last filename of the path are expanded. */
+#ifdef _WIN32
+	/* remove trailing path separators, except a separator preceded by ':' */
+	p = wcschr(path, L'\0') - 1;
+	for (; p > path && IS_PATH_SEPARATOR_W(*p) && p[-1] != L':'; p--)
+		*p = 0;
 
 	length = p - path + 1;
 	index = wcscspn(path, L"*?");
@@ -62,6 +99,10 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 		wchar_t* parent;
 		WIN32_FIND_DATAW d;
 		HANDLE handle;
+		
+		/* Expand the wildcard, found in the provided file path, and store the results into
+		 * data->root_files. If the wildcard is not found then error is reported.
+		 * NB, only wildcards in the basename (the last filename) of the path are expanded. */
 
 		/* find a directory separator before the file name */
 		for (; index > 0 && !IS_PATH_SEPARATOR(path[index]); index--);
@@ -72,25 +113,24 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 		{
 			do
 			{
-				file_t file;
 				int failed;
-				if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName)) continue;
-
+				if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName))
+					continue;
 				memset(&file, 0, sizeof(file));
 				file.wpath = make_pathw(parent, index + 1, d.cFileName);
-				if (!file.wpath) continue;
+				if (!file.wpath)
+					continue;
 
-				/* skip directories if not in recursive mode */
-				if (data->max_depth == 0 && (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+				/* skip directories unless we are in recursive mode */
+				if (data->max_depth == 0 && (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+					continue;
 
 				/* convert file name */
 				file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
 				if (!failed)
-				{
 					failed = (file_stat(&file, 0) < 0);
-				}
 
-				/* quietly skip unconvertible file names */
+				/* quietly skip unconvertible file names and nonexistent files */
 				if (!file.path || failed)
 				{
 					if (failed)
@@ -103,8 +143,8 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 				/* fill the file information */
 				file.mode |= FILE_IFROOT;
 				add_root_file(data, &file);
-				added++;
-			} while (FindNextFileW(handle, &d));
+			}
+			while (FindNextFileW(handle, &d));
 			FindClose(handle);
 		}
 		else
@@ -120,60 +160,41 @@ void file_search_add_file(file_search_data* data, tstr_t path, int is_file_list)
 	else
 	{
 		int failed;
-		file_t file;
 		memset(&file, 0, sizeof(file));
 
-		/* if filepath is a dash string "-" */
-		if ((path[0] == L'-' && path[1] == L'\0'))
+		file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
+		if (failed)
 		{
-			file.mode = FILE_IFSTDIN;
-			file.path = rsh_strdup("(stdin)");
+			log_error(_("can't convert the file path to local encoding: %s\n"), file.path);
+			free(file.path);
+			data->errors_count++;
+			return;
 		}
-		else
+		file.wpath = path;
+		if (file_stat(&file, 0) < 0)
 		{
-			file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
-			if (failed)
-			{
-				log_error(_("can't convert the file path to local encoding: %s\n"), file.path);
-				free(file.path);
-				data->errors_count++;
-				return;
-			}
-			file.wpath = path;
-			if (file_stat(&file, 0) < 0)
-			{
-				log_file_t_error(&file);
-				free(file.path);
-				data->errors_count++;
-				return;
-			}
+			log_file_t_error(&file);
+			free(file.path);
+			data->errors_count++;
+			return;
 		}
 
 		/* mark the file as obtained from the command line */
-		file.mode |= FILE_IFROOT;
-		if (is_file_list) file.mode |= FILE_IFLIST;
+		file.mode |= (file_mode | FILE_IFROOT);
 		file.wpath = rsh_wcsdup(path);
 		add_root_file(data, &file);
 	}
 #else
-	/* copy file path */
-	file_t file;
+	/* init the file and test for its existence */
 	file_init(&file, path, 0);
-
-	if (IS_DASH_STR(file.path))
-	{
-		file.mode = FILE_IFSTDIN;
-	}
-	else if (file_stat(&file, FUseLstat) < 0)
+	if (file_stat(&file, FUseLstat) < 0)
 	{
 		log_file_t_error(&file);
 		file_cleanup(&file);
 		data->errors_count++;
 		return;
 	}
-
-	file.mode |= FILE_IFROOT;
-	if (is_file_list) file.mode |= FILE_IFLIST;
+	file.mode |= (FILE_IFROOT | file_mode);
 	add_root_file(data, &file);
 #endif /* _WIN32 */
 }
@@ -209,7 +230,7 @@ void scan_files(file_search_data* data)
 		assert(!!(file->mode & FILE_IFROOT));
 
 		/* check if file is a directory */
-		if (!!(file->mode & FILE_IFLIST))
+		if (FILE_ISLIST(file))
 		{
 			file_list_t list;
 			if (file_list_open(&list, file) < 0)
@@ -227,9 +248,7 @@ void scan_files(file_search_data* data)
 		{
 			/* silently skip symlinks to directories if required */
 			if (skip_symlinked_dirs && FILE_ISLNK(file))
-			{
 				continue;
-			}
 
 			if (data->max_depth != 0)
 			{
@@ -270,7 +289,8 @@ typedef struct dir_entry
 static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
 {
 	dir_entry* e = (dir_entry*)malloc(sizeof(dir_entry));
-	if (!e) return NULL;
+	if (!e)
+		return NULL;
 	if (filename)
 	{
 		e->filename = rsh_strdup(filename);
@@ -300,7 +320,8 @@ static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
 static dir_entry* dir_entry_insert(dir_entry **at, char* filename, unsigned type)
 {
 	dir_entry* e = dir_entry_new(*at, filename, type);
-	if (e) *at = e;
+	if (e)
+		*at = e;
 	return e;
 }
 
@@ -348,7 +369,8 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		max_depth = MAX_DIRS_DEPTH - 1;
 
 	/* skip the directory if max_depth == 0 */
-	if (!max_depth) return 0;
+	if (!max_depth)
+		return 0;
 
 	if (!FILE_ISDIR(start_dir))
 	{
@@ -438,8 +460,8 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 
 		/* step into directory */
 		dp = opendir(dir_path);
-		if (!dp) continue;
-
+		if (!dp)
+			continue;
 		insert_at = &dirs_stack;
 
 		while ((de = readdir(dp)) != NULL)
@@ -447,12 +469,12 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			int res;
 
 			/* skip the "." and ".." directories */
-			if (IS_CURRENT_OR_PARENT_DIR(de->d_name)) continue;
-
+			if (IS_CURRENT_OR_PARENT_DIR(de->d_name))
+				continue;
 			file.mode = 0;
 			file.path = make_path(dir_path, de->d_name);
-			if (!file.path) continue;
-
+			if (!file.path)
+				continue;
 			res  = file_stat(&file, fstat_flags);
 			if (res >= 0)
 			{

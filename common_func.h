@@ -59,7 +59,7 @@ typedef const rsh_tchar* ctstr_t;
 #ifdef _WIN32
 # define IF_WINDOWS(code) code
 # define is_utf8() win_is_utf8()
-# define to_utf8(str) win_to_utf8(str)
+# define to_utf8(str) str_to_utf8(str)
 #else /* non _WIN32 part */
 # define IF_WINDOWS(code)
 /* stub for utf8 */

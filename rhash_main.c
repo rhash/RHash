@@ -63,7 +63,7 @@ static int find_file_callback(file_t* file, int preprocess)
 	}
 
 	if (preprocess) {
-		if (!file_mask_match(opt.files_accept, file->path) ||
+		if (FILE_ISDATA(file) || !file_mask_match(opt.files_accept, file->path) ||
 			(opt.files_exclude && file_mask_match(opt.files_exclude, file->path)) ||
 			must_skip_file(file)) {
 			return 0;
@@ -77,37 +77,44 @@ static int find_file_callback(file_t* file, int preprocess)
 	} else {
 		int not_root = !(file->mode & FILE_IFROOT);
 
-		if (not_root) {
-			if ((opt.mode & (MODE_CHECK | MODE_UPDATE)) != 0) {
-				/* check and update modes use the crc_accept list */
-				if (!file_mask_match(opt.crc_accept, file->path)) {
-					return 0;
-				}
-			} else {
-				if (!file_mask_match(opt.files_accept, file->path) ||
-					(opt.files_exclude && file_mask_match(opt.files_exclude, file->path))) {
-					return 0;
+		if (!FILE_ISSPECIAL(file)) {
+			if (not_root) {
+				if ((opt.mode & (MODE_CHECK | MODE_UPDATE)) != 0) {
+					/* check and update modes use the crc_accept list */
+					if (!file_mask_match(opt.crc_accept, file->path)) {
+						return 0;
+					}
+				} else {
+					if (!file_mask_match(opt.files_accept, file->path) ||
+						(opt.files_exclude && file_mask_match(opt.files_exclude, file->path))) {
+						return 0;
+					}
 				}
 			}
+			if (must_skip_file(file))
+				return 0;
+		} else if (FILE_ISDATA(file) && (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED | MODE_UPDATE | MODE_TORRENT))) {
+			log_warning(_("skipping: %s\n"), file->path);
+			return 0;
 		}
-		if (must_skip_file(file)) return 0;
 
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			res = check_hash_file(file, not_root);
+		} else if (opt.mode & MODE_UPDATE) {
+			res = update_hash_file(file);
 		} else {
-			if (opt.mode & MODE_UPDATE) {
-				res = update_hash_file(file);
-			} else {
-				/* default mode: calculate hash */
-				const char* print_path = file->path;
-				if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1])) print_path += 2;
-				res = calculate_and_print_sums(rhash_data.out, file, print_path);
-				if (rhash_data.interrupted) return 0;
-				rhash_data.processed++;
-			}
+			/* default mode: calculate hash */
+			const char* print_path = file->path;
+			if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
+				print_path += 2;
+			res = calculate_and_print_sums(rhash_data.out, file, print_path);
+			if (rhash_data.interrupted)
+				return 0;
+			rhash_data.processed++;
 		}
 	}
-	if (res < 0) rhash_data.error_flag = 1;
+	if (res < 0)
+		rhash_data.error_flag = 1;
 	return 1;
 }
 

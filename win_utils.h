@@ -19,7 +19,8 @@ void set_benchmark_cpu_affinity(void);
 wchar_t* c2w(const char* str, int try_no);
 wchar_t* c2w_long_path(const char* str, int try_no);
 char* w2c(const wchar_t* wstr);
-char* win_to_utf8(const char* str);
+char* wcs_to_utf8(const wchar_t* wstr);
+char* str_to_utf8(const char* str);
 #define win_is_utf8() (opt.flags & OPT_UTF8)
 #define WIN_DEFAULT_ENCODING -1
 char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed);

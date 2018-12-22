@@ -1,3 +1,7 @@
+Sat Dec 22 2018 Aleksey
+	* new option `--message==<string>' to calculate a hash for string
+	* changed magnet link short option from '-m' to '-g'
+
 Sat Sep 29 2018 Aleksey
 	* Bugfix: `--file-list=-' shall read a file list from stdin
 

@@ -44,6 +44,7 @@ typedef struct file_t
 #ifdef _WIN32
 	wchar_t* wpath;
 #endif
+	char* data;
 	uint64_t size;
 	uint64_t mtime;
 	unsigned mode;
@@ -60,14 +61,20 @@ typedef struct file_t
 #define FILE_IFLNK   0x02
 #define FILE_IFREG   0x04
 #define FILE_IFROOT  0x10
-#define FILE_IFSTDIN 0x20
+#define FILE_IFDATA  0x20
 #define FILE_IFLIST  0x40
+#define FILE_IFSTDIN 0x80
+#define FILE_IFSPEC_MASK (FILE_IFDATA | FILE_IFLIST | FILE_IFSTDIN)
 #define FILE_OPT_DONT_FREE_PATH  0x200
 #define FILE_OPT_DONT_FREE_WPATH 0x400
 
-#define FILE_ISDIR(file) ((file)->mode & FILE_IFDIR)
-#define FILE_ISLNK(file) ((file)->mode & FILE_IFLNK)
-#define FILE_ISREG(file) ((file)->mode & FILE_IFREG)
+#define FILE_ISDIR(file)   ((file)->mode & FILE_IFDIR)
+#define FILE_ISLNK(file)   ((file)->mode & FILE_IFLNK)
+#define FILE_ISREG(file)   ((file)->mode & FILE_IFREG)
+#define FILE_ISDATA(file)  ((file)->mode & FILE_IFDATA)
+#define FILE_ISLIST(file)  ((file)->mode & FILE_IFLIST)
+#define FILE_ISSTDIN(file) ((file)->mode & FILE_IFSTDIN)
+#define FILE_ISSPECIAL(file) ((file)->mode & (FILE_IFSPEC_MASK))
 
 /* file functions */
 void file_init(file_t* file, const char* path, int finit_flags);

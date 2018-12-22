@@ -10,9 +10,9 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.
 .SH DESCRIPTION
 .B RHash
 (Recursive Hasher)
-computes and verifies various message digests (hash sums) of files.
-Supported message digests include CRC32, CRC32C, MD4, MD5, SHA1, SHA256,
-SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-94,
+computes and verifies various message digests (hash sums) of files or
+strings. Supported message digests include CRC32, CRC32C, MD4, MD5, SHA1,
+SHA256, SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-94,
 RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links 
@@ -27,8 +27,8 @@ The format can be changed by options \-\-bsd, \-\-magnet, \-\-simple,
 \-\-printf, \-\-template.
 To output all sums use the `\-a' option.
 
-The default output format can also be changed by renaming the program or
-placing a hardlink/symlink to it with a filename containing strings `crc32',
+The default output format can be changed by renaming the program or placing
+a hardlink/symlink to it with a filename containing strings `crc32',
 `crc32c', `md4', `md5', `sha1', `sha256' `sha512', `tiger', `tth', `btih',
 `aich', `ed2k', `ed2k\-link', `gost', `gost\-cryptopro', `ripemd160',
 `has160', `whirlpool', `edonr256', `edonr512', `snefru128', `snefru256',
@@ -114,8 +114,11 @@ List names of all supported hashes, one per line.
 .IP "\-r, \-\-recursive"
 Recursively process directories, specified by command line.
 .IP "\-\-file\-list=<file>"
-Process a file-list. File-list is a text file, containing paths to files,
-one path per line.
+Process given file as a file-list. Lines of this file are
+interpreted as paths to files to be processed. Multiple
+file lists can be specified at command line.
+.IP "\-m, \-\-message=<text>"
+Calculate hash sums of the text message.
 .IP "\-\-follow"
 Follow symbolic links when processing directories recursively.
 .IP "\-v, \-\-verbose"
@@ -188,7 +191,7 @@ so they will not look like options anymore.
 Print hash sums in the SFV (Simple File Verification) output format (default). 
 But unlike common SFV file, not only CRC32, but any hash sums specified
 by options can be printed.
-.IP "\-m, \-\-magnet"
+.IP "\-g, \-\-magnet"
 Print hash sums formatted as magnet links.
 .IP "\-\-bsd"
 Use BSD output format. Each hash sum is printed on separate line
