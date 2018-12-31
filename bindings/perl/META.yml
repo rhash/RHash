@@ -19,8 +19,8 @@ no_index:
     - inc
 requires: {}
 resources:
-  bugtracker: https://sourceforge.net/p/rhash/bugs/
+  bugtracker: https://github.com/rhash/RHash/issues
   homepage: http://rhash.sf.net/
-  license: http://rhash.anz.ru/license.php
+  license: https://github.com/rhash/RHash/blob/master/COPYING
   repository: https://github.com/rhash/RHash
 version: 0.94

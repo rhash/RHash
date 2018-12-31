@@ -37,11 +37,11 @@
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://sourceforge.net/p/rhash/bugs/"
+         "web" : "https://github.com/rhash/RHash/issues"
       },
       "homepage" : "http://rhash.sf.net/",
       "license" : [
-         "http://rhash.anz.ru/license.php"
+         "https://github.com/rhash/RHash/blob/master/COPYING"
       ],
       "repository" : {
          "url" : "https://github.com/rhash/RHash"

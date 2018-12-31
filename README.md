@@ -24,7 +24,6 @@ For more complicated cases of installation see the [INSTALL.md] file.
 
 ## Documentation
 
-* RHash [Manual Page]
 * RHash [ChangeLog]
 * [The LibRHash Library] documentation
 
@@ -46,7 +45,6 @@ restrictions. In the case an  OSI-approved license is required the
 [MIT license] should be used.
 
 [INSTALL.md]: INSTALL.md
-[Manual Page]: http://rhash.anz.ru/manpage.php
 [The LibRHash Library]: docs/LIBRHASH.md
 [ChangeLog]: ChangeLog
 [MIT license]: http://www.opensource.org/licenses/MIT

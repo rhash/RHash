@@ -71,8 +71,8 @@ WriteMakefile(
         META_ADD => {
             resources => {
                 homepage    => 'http://rhash.sf.net/',
-                license     => 'http://rhash.anz.ru/license.php',
-                bugtracker  => 'https://sourceforge.net/p/rhash/bugs/',
+                bugtracker  => 'https://github.com/rhash/RHash/issues',
+                license     => 'https://github.com/rhash/RHash/blob/master/COPYING',
                 repository  => 'https://github.com/rhash/RHash',
             },
         },
