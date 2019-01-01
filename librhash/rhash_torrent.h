@@ -49,7 +49,7 @@ typedef struct rhash_str
  * @param filesize file size
  * @return non-zero on success, zero on fail
  */
-RHASH_API int  rhash_torrent_add_file(rhash ctx, const char* filepath, uint64_t filesize);
+RHASH_API int  rhash_torrent_add_file(rhash ctx, const char* filepath, unsigned long long filesize);
 
 /**
  * Set the torrent algorithm options.
@@ -93,7 +93,7 @@ RHASH_API void rhash_torrent_set_piece_length(rhash ctx, size_t piece_length);
  * @param total_size the total size of files included into a torrent file
  * @return piece length for the torrent file
  */
-RHASH_API size_t rhash_torrent_get_default_piece_length(uint64_t total_size);
+RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total_size);
 
 /*
  * Macro to set a torrent batch size (the total size of files included into this torrent).

@@ -27,7 +27,7 @@
 /* obtain torrent context from rhash context */
 #define BT_CTX(rctx) ((torrent_ctx*)(((rhash_context_ext*)rctx)->bt_ctx))
 
-RHASH_API int rhash_torrent_add_file(rhash ctx, const char* filepath, uint64_t filesize)
+RHASH_API int rhash_torrent_add_file(rhash ctx, const char* filepath, unsigned long long filesize)
 {
 	if (!BT_CTX(ctx)) return 0;
 	return bt_add_file(BT_CTX(ctx), filepath, filesize);
@@ -57,7 +57,7 @@ RHASH_API void rhash_torrent_set_piece_length(rhash ctx, size_t piece_length)
 	bt_set_piece_length(BT_CTX(ctx), piece_length);
 }
 
-RHASH_API size_t rhash_torrent_get_default_piece_length(uint64_t total_size)
+RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total_size)
 {
 	return bt_default_piece_length(total_size);
 }
