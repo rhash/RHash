@@ -1,9 +1,9 @@
 # RHash
 
-RHash is a console utility for calculation  and verification of magnet links
-and a wide range of hash sums like  CRC32, CRC32C,  MD4, MD5,  SHA1, SHA256, 
-SHA512, SHA3, AICH, ED2K, Tiger, DC++ TTH, BitTorrent BTIH, GOST R 34.11-94,
-RIPEMD-160, HAS-160, EDON-R, Whirlpool and Snefru.
+RHash  (Recursive  Hasher)   is  a  console  utility  for   calculation  and
+verification of magnet links and various hash sums, including CRC32, CRC32C,
+MD4, MD5, SHA1, SHA256, SHA512, SHA3, AICH, ED2K, DC++ TTH, BitTorrent BTIH,
+Tiger, GOST R 34.11-94, RIPEMD-160, HAS-160, EDON-R, and Whirlpool.
 
 Hash sums are used to  ensure and verify integrity  of large volumes of data
 for a long-term storing or transferring.
@@ -30,6 +30,7 @@ For more complicated cases of installation see the [INSTALL.md] file.
 ## Links
 * Project Home Page: http://rhash.sourceforge.net/
 * Official Releases: https://github.com/rhash/RHash/releases/
+* Bynary Windows Releases: https://sf.net/projects/rhash/files/rhash/
 * The table of the supported by RHash [hash functions](http://sf.net/p/rhash/wiki/HashFunctions/)
 * ECRYPT [The Hash Function Zoo](http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo)
 * ECRYPT [Benchmarking of hash functions](https://bench.cr.yp.to/results-hash.html)
