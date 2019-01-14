@@ -393,7 +393,7 @@ else
       bsd/os) TARGET_OS=BSD/OS ;;
       openbsd) TARGET_OS=OpenBSD ;;
       dragonfly) TARGET_OS=DragonFly ;;
-      sunos) TARGET_OS=SunOS ;;
+      sunos|solaris2.*) TARGET_OS=SunOS ;;
       qnx) TARGET_OS=QNX ;;
       morphos) TARGET_OS=MorphOS ;;
       amigaos) TARGET_OS=AmigaOS ;;
