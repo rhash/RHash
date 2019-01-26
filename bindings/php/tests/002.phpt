@@ -7,6 +7,7 @@ $r->update('a')->final();
 echo $r->hashed_length() . "\n";
 
 echo $r->hash(RHASH_CRC32) . "\n";
+echo $r->hash(RHASH_CRC32C) . "\n";
 echo $r->hash(RHASH_MD4) . "\n";
 echo $r->hash(RHASH_MD5) . "\n";
 echo $r->hash(RHASH_SHA1) . "\n";
@@ -17,8 +18,10 @@ echo $r->hash(RHASH_ED2K) . "\n";
 echo $r->hash(RHASH_AICH) . "\n";
 echo $r->hash(RHASH_WHIRLPOOL) . "\n";
 echo $r->hash(RHASH_RIPEMD160) . "\n";
-echo $r->hash(RHASH_GOST) . "\n";
-echo $r->hash(RHASH_GOST_CRYPTOPRO) . "\n";
+echo $r->hash(RHASH_GOST94) . "\n";
+echo $r->hash(RHASH_GOST94_CRYPTOPRO) . "\n";
+echo $r->hash(RHASH_GOST12_256) . "\n";
+echo $r->hash(RHASH_GOST12_512) . "\n";
 echo $r->hash(RHASH_HAS160) . "\n";
 echo $r->hash(RHASH_SNEFRU128) . "\n";
 echo $r->hash(RHASH_SNEFRU256) . "\n";
@@ -43,6 +46,7 @@ echo "Done\n";
 --EXPECTF--
 1
 e8b7be43
+c1d04330
 bde52cb31de33e46245e05fbdbd6fb24
 0cc175b9c0f1b6a831c399e269772661
 86f7e437faa5a7fce15d1ddcb9eaeaea377667b8
@@ -55,6 +59,8 @@ q336in72uwt7zyk5dxolt2xk5i3xmz5y
 0bdc9d2d256b3ee9daae347be6f4dc835a467ffe
 d42c539e367c66e9c88a801f6649349c21871b4344c6a573f849fdce62f314dd
 e74c52dd282183bf37af0079c9f78055715a103f17e3133ceff1aacf2f403011
+ba31099b9cc84ec2a671e9313572378920a705b363b031a1cb4fc03e01ce8df3
+8b2a40ecab7b7496bc4cc0f773595452baf658849b495acc3ba017206810efb00420ccd73fb3297e0f7890941b84ac4a8bc27e3c95e1f97c094609e2136abb7e
 4872bcbc4cd0f0a9dc7c2f7045e5b43b6c830db8
 bf5ce540ae51bc50399f96746c5a15bd
 45161589ac317be0ceba70db2573ddda6e668a31984b39bf65e4b664b584c63d

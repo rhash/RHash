@@ -12,7 +12,7 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other hash sums.
 (Recursive Hasher)
 computes and verifies various message digests (hash sums) of files or
 strings. Supported message digests include CRC32, CRC32C, MD4, MD5, SHA1,
-SHA256, SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-94,
+SHA256, SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-*,
 RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links 
@@ -29,10 +29,10 @@ To output all sums use the `\-a' option.
 
 The default output format can be changed by renaming the program or placing
 a hardlink/symlink to it with a filename containing strings `crc32',
-`crc32c', `md4', `md5', `sha1', `sha256' `sha512', `tiger', `tth', `btih',
-`aich', `ed2k', `ed2k\-link', `gost', `gost\-cryptopro', `ripemd160',
-`has160', `whirlpool', `edonr256', `edonr512', `snefru128', `snefru256',
-`sfv' or `magnet'.
+`crc32c', `md4', `md5', `sha1', `sha256' `sha512', `tiger', `tth',
+`btih', `aich', `ed2k', `ed2k\-link', `gost12\-256', `gost12\-512',
+`gost94', `gost94\-cryptopro', `ripemd160', `has160', `whirlpool',
+`edonr256', `edonr512', `snefru128', `snefru256', `sfv' or `magnet'.
 
 .SH PROGRAM MODE OPTIONS
 The default mode is to print hash sums for all files and directory trees
@@ -90,7 +90,13 @@ ED2K: calculate and print eDonkey 2000 hash sum.
 eDonkey link: calculate and print eDonkey link.
 .IP "\-W, \-\-whirlpool"
 Whirlpool: calculate and print Whirlpool hash sum.
-.IP "\-G, \-\-gost94"
+.IP "\-G, \-\-gost12-256"
+GOST\-2012: calculate and print 256-bit GOST R 34.11\-2012 hash, 
+the Russian GOST standard hash function.
+.IP "\-\-gost12-512"
+GOST\-2012: calculate and print 512-bit GOST R 34.11\-2012 hash, 
+the Russian GOST standard hash function.
+.IP "\-\-gost94"
 GOST\-94: calculate and print GOST R 34.11\-94 hash, 
 the deprecated Russian standard hash function.
 .IP "\-\-gost94\-cryptopro"
@@ -261,12 +267,14 @@ RIPEMD-160 hash.
 TTH sum.
 .IP "%w or %W"
 Whirlpool hash.
-.IP "%{md4}, %{sha-224}, %{sha-256}, %{sha-384}, %{sha-512}, %{sha3-224},\
- %{sha3-256}, %{sha3-384}, %{sha3-512} %{tiger}, %{btih}, %{gost\-cryptopro},\
- %{has160}, %{snefru128}, %{snefru256}, %{edon\-r256}, %{edon\-r512}"
-Print specified hash sum. Actually the %{<hash sum>} directive can print any
-supported hash sum. If a hash sum name starts with a capital letter then the
-hash is printed in uppercase, e.g. %{TTH}, %{Sha-512}.
+.IP "%{crc32}, %{crc32c}, %{md4}, %{md5}, %{sha1}, %{tiger}, %{tth}, %{btih},\
+ %{ed2k}, %{aich}, %{whirlpool}, %{ripemd160}, %{has160},\
+ %{gost94}, %{gost94\-cryptopro}, %{gost12\-256}, %{gost12\-512},\
+ %{sha\-224}, %{sha\-256}, %{sha\-384}, %{sha\-512},\
+ %{sha3\-224}, %{sha3\-256}, %{sha3\-384}, %{sha3\-512},\
+ %{edon\-r256}, %{edon\-r512}, %{snefru128}, %{snefru256}"
+Print the specified hash sum. The hash is printed in uppercase, if the name
+of the hash sum starts with a capital letter, e.g. %{TTH}, %{Sha-512}.
 .IP "%x<hash>, %b<hash>, %B<hash>, %@<hash>"
 Use one of these prefixes to output a hash sum in hexadecimal, base32,
 base64 or raw (binary) format respectively, e.g. %b{md4}, %BH or %xT.

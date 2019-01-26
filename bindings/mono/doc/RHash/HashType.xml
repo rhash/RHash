@@ -106,9 +106,9 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
         <summary>EDON-R 512.</summary>
       </Docs>
     </Member>
-    <Member MemberName="GOST">
-      <MemberSignature Language="C#" Value="GOST" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST = unsigned int32(2048)" />
+    <Member MemberName="GOST94">
+      <MemberSignature Language="C#" Value="GOST94" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST94 = unsigned int32(2048)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.1.1</AssemblyVersion>
@@ -120,9 +120,9 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
         <summary>GOST R 34.11-94.</summary>
       </Docs>
     </Member>
-    <Member MemberName="GOST_CRYPTOPRO">
-      <MemberSignature Language="C#" Value="GOST_CRYPTOPRO" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST_CRYPTOPRO = unsigned int32(4096)" />
+    <Member MemberName="GOST94_CRYPTOPRO">
+      <MemberSignature Language="C#" Value="GOST94_CRYPTOPRO" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST94_CRYPTOPRO = unsigned int32(4096)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.1.1</AssemblyVersion>

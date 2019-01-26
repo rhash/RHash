@@ -26,6 +26,7 @@
 #include "crc32.h"
 #include "ed2k.h"
 #include "edonr.h"
+#include "gost12.h"
 #include "gost94.h"
 #include "has160.h"
 #include "md4.h"
@@ -80,6 +81,8 @@ rhash_info info_ed2k = { RHASH_ED2K,      F_LE32, 16, "ED2K", "ed2k" };
 rhash_info info_aich = { RHASH_AICH,      F_BS32, 20, "AICH", "aich" };
 rhash_info info_whirlpool = { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL", "whirlpool" };
 rhash_info info_rmd160 = { RHASH_RIPEMD160,  F_LE32, 20, "RIPEMD-160", "ripemd160" };
+rhash_info info_gost12_256 = { RHASH_GOST12_256, F_LE64, 32, "GOST12-256", "gost12-256" };
+rhash_info info_gost12_512 = { RHASH_GOST12_512, F_LE64, 64, "GOST12-512", "gost12-512" };
 rhash_info info_gost94 = { RHASH_GOST94,       F_LE32, 32, "GOST94", "gost94" };
 rhash_info info_gost94pro = { RHASH_GOST94_CRYPTOPRO, F_LE32, 32, "GOST94-CRYPTOPRO", "gost94-cryptopro" };
 rhash_info info_has160 = { RHASH_HAS160,     F_LE32, 20, "HAS-160", "has160" };
@@ -123,8 +126,8 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ &info_gost94, sizeof(gost94_ctx), dgshft(gost94), iuf(rhash_gost94), 0 }, /* 256 bit */
 	{ &info_gost94pro, sizeof(gost94_ctx), dgshft(gost94), iuf2(rhash_gost94_cryptopro, rhash_gost94), 0 }, /* 256 bit */
 	{ &info_has160, sizeof(has160_ctx), dgshft(has160), iuf(rhash_has160), 0 }, /* 160 bit */
-	{ &info_snf128, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru128, rhash_snefru), 0 }, /* 128 bit */
-	{ &info_snf256, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru256, rhash_snefru), 0 }, /* 256 bit */
+	{ &info_gost12_256, sizeof(gost12_ctx), dgshft2(gost12, h) + 32, iuf2(rhash_gost12_256, rhash_gost12), 0 }, /* 256 bit */
+	{ &info_gost12_512, sizeof(gost12_ctx), dgshft2(gost12, h), iuf2(rhash_gost12_512, rhash_gost12), 0 }, /* 512 bit */
 	{ &info_sha224, sizeof(sha256_ctx), dgshft(sha256), iuf2(rhash_sha224, rhash_sha256), 0 }, /* 224 bit */
 	{ &info_sha256, sizeof(sha256_ctx), dgshft(sha256), iuf(rhash_sha256), 0 },  /* 256 bit */
 	{ &info_sha384, sizeof(sha512_ctx), dgshft(sha512), iuf2(rhash_sha384, rhash_sha512), 0 }, /* 384 bit */
@@ -136,6 +139,8 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ &info_sha3_384, sizeof(sha3_ctx), dgshft(sha3), iuf2(rhash_sha3_384, rhash_sha3), 0 }, /* 384 bit */
 	{ &info_sha3_512, sizeof(sha3_ctx), dgshft(sha3), iuf2(rhash_sha3_512, rhash_sha3), 0 }, /* 512 bit */
 	{ &info_crc32c, sizeof(uint32_t), 0, iuf(rhash_crc32c), 0 }, /* 32 bit */
+	{ &info_snf128, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru128, rhash_snefru), 0 }, /* 128 bit */
+	{ &info_snf256, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru256, rhash_snefru), 0 }, /* 256 bit */
 };
 
 /**

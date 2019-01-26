@@ -10,12 +10,14 @@ our @ISA = (qw(Exporter));
 # possible tags for export
 our %EXPORT_TAGS = (
 	Functions => [qw(raw2hex raw2base32 raw2base64)],
-	Constants => [qw(RHASH_CRC32 RHASH_CRC32C RHASH_MD4 RHASH_MD5 RHASH_SHA1
-		RHASH_TIGER RHASH_TTH RHASH_BTIH RHASH_ED2K RHASH_AICH RHASH_WHIRLPOOL
-		RHASH_RIPEMD160 RHASH_GOST RHASH_GOST_CRYPTOPRO RHASH_HAS160
-		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_SHA224 RHASH_SHA256
-		RHASH_SHA384 RHASH_SHA512 RHASH_EDONR256 RHASH_EDONR512
-		RHASH_SHA3_224 RHASH_SHA3_256 RHASH_SHA3_384 RHASH_SHA3_512 RHASH_ALL)]
+	Constants => [qw(RHASH_CRC32 RHASH_CRC32C RHASH_MD4 RHASH_MD5
+		RHASH_SHA1 RHASH_TIGER RHASH_TTH RHASH_BTIH RHASH_ED2K
+		RHASH_AICH RHASH_WHIRLPOOL RHASH_RIPEMD160 RHASH_GOST94
+		RHASH_GOST94_CRYPTOPRO RHASH_GOST12_256 RHASH_GOST12_512
+		RHASH_SHA224 RHASH_SHA256 RHASH_SHA384 RHASH_SHA512
+		RHASH_SHA3_224 RHASH_SHA3_256 RHASH_SHA3_384 RHASH_SHA3_512
+		RHASH_HAS160 RHASH_EDONR256 RHASH_EDONR512
+		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_ALL)]
 );
 
 Exporter::export_tags( );
@@ -39,11 +41,11 @@ use constant RHASH_ED2K  => 0x80;
 use constant RHASH_AICH  => 0x100;
 use constant RHASH_WHIRLPOOL => 0x200;
 use constant RHASH_RIPEMD160 => 0x400;
-use constant RHASH_GOST      => 0x800;
-use constant RHASH_GOST_CRYPTOPRO => 0x1000;
+use constant RHASH_GOST94    => 0x800;
+use constant RHASH_GOST94_CRYPTOPRO => 0x1000;
 use constant RHASH_HAS160    => 0x2000;
-use constant RHASH_SNEFRU128 => 0x4000;
-use constant RHASH_SNEFRU256 => 0x8000;
+use constant RHASH_GOST12_256 => 0x4000;
+use constant RHASH_GOST12_512 => 0x8000;
 use constant RHASH_SHA224    => 0x10000;
 use constant RHASH_SHA256    => 0x20000;
 use constant RHASH_SHA384    => 0x40000;
@@ -55,7 +57,9 @@ use constant RHASH_SHA3_256  => 0x0800000;
 use constant RHASH_SHA3_384  => 0x1000000;
 use constant RHASH_SHA3_512  => 0x2000000;
 use constant RHASH_CRC32C    => 0x4000000;
-use constant RHASH_ALL       => 0x7FFFFFF;
+use constant RHASH_SNEFRU128 => 0x8000000;
+use constant RHASH_SNEFRU256 => 0x10000000;
+use constant RHASH_ALL       => 0x1FFFFFFF;
 
 ##############################################################################
 # Rhash class methods
@@ -261,8 +265,8 @@ binary format or as a magnet link.
 =head1 SUPPORTED ALGORITHMS
 
 The module supports the following hashing algorithms:
-CRC32,  MD4, MD5,  SHA1, SHA256, SHA512, SHA3,
-AICH, ED2K, Tiger,  DC++ TTH,  BitTorrent BTIH, GOST R 34.11-94, RIPEMD-160,
+CRC32, CRC32C, MD4, MD5, SHA1, SHA256, SHA512, SHA3, AICH, ED2K, Tiger,
+DC++ TTH, GOST R 34.11-94, GOST R 34.11-2012, BitTorrent BTIH, RIPEMD-160,
 HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
 
 =head1 CONSTRUCTOR
@@ -286,11 +290,11 @@ The $hash_id parameter can be union (via bitwise OR) of any of the following bit
   RHASH_AICH,
   RHASH_WHIRLPOOL,
   RHASH_RIPEMD160,
-  RHASH_GOST,
-  RHASH_GOST_CRYPTOPRO,
+  RHASH_GOST94,
+  RHASH_GOST94_CRYPTOPRO,
+  RHASH_GOST12_256,
+  RHASH_GOST12_512
   RHASH_HAS160,
-  RHASH_SNEFRU128,
-  RHASH_SNEFRU256,
   RHASH_SHA224,
   RHASH_SHA256,
   RHASH_SHA384,
@@ -300,7 +304,9 @@ The $hash_id parameter can be union (via bitwise OR) of any of the following bit
   RHASH_SHA3_384,
   RHASH_SHA3_512,
   RHASH_EDONR256,
-  RHASH_EDONR512
+  RHASH_EDONR512,
+  RHASH_SNEFRU128,
+  RHASH_SNEFRU256
 
 Also the RHASH_ALL bit mask is the union of all listed bit-flags.
 So the object created via Crypt::Rhash->new(RHASH_ALL) calculates all

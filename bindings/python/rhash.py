@@ -24,14 +24,15 @@ hash_for_msg(message, hash_id)
 hash_for_file(filename, hash_id)
 magnet_for_file(filename, hash_ids)
 
-Here  hash_id  is one of the constants CRC32, MD4, MD5, SHA1,
-TIGER, TTH, BTIH, ED2K,  AICH,  WHIRLPOOL,  RIPEMD160,  GOST,
-GOST_CRYPTOPRO, HAS160, SNEFRU128, SNEFRU256, SHA224, SHA256,
-SHA384,  SHA512,   SHA3_224,  SHA3_256,  SHA3_384,  SHA3_512,
-EDONR256 or EDONR512.  The first  two functions  will  return
-the  default text  representation of  the message digest they
-compute.  The latter will return magnet  link  for the  file.
-In this function  you can  OR-combine  several hash_ids, like
+Here  hash_id  is one of the constants CRC32, CRC32C, MD4, MD5,
+SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL, RIPEMD160,
+GOST94, GOST94_CRYPTOPRO, GOST12_256, GOST12_512, HAS160,
+SHA224, SHA256, SHA384, SHA512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
+EDONR256, EDONR512, SNEFRU128, SNEFRU256.
+The first  two functions  will  return the  default text representation
+of the message digest they compute.  The latter will return the
+magnet link  for the  file. In this function  you can OR-combine
+several hash_ids, like
 
 >>> print magnet_for_file('rhash.py', CRC32 | MD5)
 magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:
@@ -68,11 +69,11 @@ hashes computed by the RHash object.
 
 # public API
 __all__ = [
-    'ALL', 'CRC32', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
-    'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST',
-    'GOST_CRYPTOPRO', 'HAS160', 'SNEFRU128', 'SNEFRU256',
+    'ALL', 'CRC32', 'CRC3C', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
+    'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST94',
+    'GOST94_CRYPTOPRO', 'GOST12_256', 'GOST12_512', 'HAS160',
     'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
-    'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512',
+    'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512', 'SNEFRU128', 'SNEFRU256',
     'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
 import sys
@@ -142,11 +143,11 @@ ED2K = 0x80
 AICH = 0x100
 WHIRLPOOL = 0x200
 RIPEMD160 = 0x400
-GOST = 0x800
-GOST_CRYPTOPRO = 0x1000
+GOST94 = 0x800
+GOST94_CRYPTOPRO = 0x1000
 HAS160 = 0x2000
-SNEFRU128 = 0x4000
-SNEFRU256 = 0x8000
+GOST12_256 = 0x4000
+GOST12_512 = 0x8000
 SHA224 = 0x10000
 SHA256 = 0x20000
 SHA384 = 0x40000
@@ -157,7 +158,10 @@ SHA3_224 = 0x0400000
 SHA3_256 = 0x0800000
 SHA3_384 = 0x1000000
 SHA3_512 = 0x2000000
-ALL = SHA3_512*2 - 1
+CRC32C   = 0x4000000
+SNEFRU128 = 0x08000000
+SNEFRU256 = 0x10000000
+ALL = SNEFRU256*2 - 1
 
 
 #rhash_print values

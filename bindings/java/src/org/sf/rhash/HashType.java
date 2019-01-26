@@ -18,9 +18,9 @@
 package org.sf.rhash;
 
 /**
- * Type of hashing algorithm.
- * Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
- * DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
+ * Type of hashing algorithm. Supported algorithms are CRC32, CRC32C,
+ * MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH, BitTorrent BTIH,
+ * AICH, EDonkey 2000 hash, GOST R 34.11-94, GOST R 34.11-2012,
  * RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
  */
 public enum HashType {
@@ -47,14 +47,14 @@ public enum HashType {
 	/** RIPEMD-160 hash. */
 	RIPEMD160(1 << 10),
 	/** GOST R 34.11-94. */
-	GOST(1 << 11),
-	GOST_CRYPTOPRO(1 << 12),
+	GOST94(1 << 11),
+	GOST94_CRYPTOPRO(1 << 12),
 	/** HAS-160 hash. */
 	HAS160(1 << 13),
-	/** Snefru-128 hash. */
-	SNEFRU128(1 << 14),
-	/** Snefru-256 hash. */
-	SNEFRU256(1 << 15),
+	/** GOST R 34.11-2012 - 256 bit. */
+	GOST12_256(1 << 14),
+	/** GOST R 34.11-2012 - 512 bit. */
+	GOST12_512(1 << 15),
 	/** SHA-224 hash. */
 	SHA224(1 << 16),
 	/** SHA-256 hash. */
@@ -75,24 +75,30 @@ public enum HashType {
 	SHA3_384(1 << 24),
 	/** SHA3-512 hash. */
 	SHA3_512(1 << 25);
+	/** CRC32C checksum. */
+	CRC32C(1 << 26),
+	/** Snefru-128 hash. */
+	SNEFRU128(1 << 27),
+	/** Snefru-256 hash. */
+	SNEFRU256(1 << 28),
 
 	/** hash_id for the native API */
-    private int hashId;
+	private int hashId;
 
-    /**
-     * Construct HashType for specified native hash_id
-     * @param hashId hash identifier for native API
-     */
-    private HashType(int hashId) {
-        this.hashId = hashId;
-    }
+	/**
+	 * Construct HashType for specified native hash_id
+	 * @param hashId hash identifier for native API
+	 */
+	private HashType(int hashId) {
+		this.hashId = hashId;
+	}
 
 	/**
 	 * Returns hash_id for the native API.
-     * @return hash identifier
-     */
+	 * @return hash identifier
+	 */
 	int hashId() {
-	    return hashId;
+		return hashId;
 	}
 
 	/**

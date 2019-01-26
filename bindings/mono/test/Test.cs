@@ -25,6 +25,7 @@ class Test {
 	
 		Dictionary<HashType,string> hashes = new Dictionary<HashType,string>();
 		hashes.Add(HashType.CRC32,     "261dafe6");
+		hashes.Add(HashType.CRC32C,    "3c95f7e7");
 		hashes.Add(HashType.MD4,       "b1a45cdad19cb02482323fac9cea9b9f");
 		hashes.Add(HashType.MD5,       "d577273ff885c3f84dadb8578bb41399");
 		hashes.Add(HashType.SHA1,      "2672275fe0c456fb671e4f417fb2f9892c7573ba");
@@ -38,8 +39,10 @@ class Test {
 		hashes.Add(HashType.AICH,      "ezzcox7ayrlpwzy6j5ax7mxzrewhk452");
 		hashes.Add(HashType.ED2K,      "b1a45cdad19cb02482323fac9cea9b9f");
 		hashes.Add(HashType.WHIRLPOOL, "0e8ce019c9d5185d2103a4ff015ec92587da9b22e77ad34f2eddbba9705b3602bc6ede67f5b5e4dd225e7762208ea54895b26c39fc550914d6eca9604b724d11");
-		hashes.Add(HashType.GOST,      "0aaaf17200323d024437837d6f6f6384a4a108474cff03cd349ac12776713f5f");
-		hashes.Add(HashType.GOST_CRYPTOPRO, "2ed45a995ffdd7a2e5d9ab212c91cec5c65448e6a0840749a00f326ccb0c936d");
+		hashes.Add(HashType.GOST94,    "0aaaf17200323d024437837d6f6f6384a4a108474cff03cd349ac12776713f5f");
+		hashes.Add(HashType.GOST94_CRYPTOPRO, "2ed45a995ffdd7a2e5d9ab212c91cec5c65448e6a0840749a00f326ccb0c936d");
+		hashes.Add(HashType.GOST12_256, "8ca8bf4245043db42d3c34f4d7d7391d10cfad5f897ca0001c98ffcf56b00a5d");
+		hashes.Add(HashType.GOST12_512, "4d46d8ea693092d367d3ba45ea0ae5bd8e58fdbda4c32dcf48489d754e9dae4e992c4db22fcdaf625a8b05af68acc08c40d011180dfec5ba58e3ebc5b21c94ac");
 		hashes.Add(HashType.RIPEMD160, "ead888178685c5d3a0400befba9188e4da3d5144");
 		hashes.Add(HashType.HAS160,    "c7589afd23462e76703b1f7a031010eec70180d4");
 		hashes.Add(HashType.SNEFRU128, "d559a2b62f6f44111324f85208723707");
@@ -75,27 +78,27 @@ class Test {
 		}
 		Console.WriteLine("{0} tests / {1} failed\n", hashes.Count, errcount2);
 		
-        Console.WriteLine("\nTests: magnet links");
-        int errcount3 = 0;
+		Console.WriteLine("\nTests: magnet links");
+		int errcount3 = 0;
 		{
-	        // magnet by static method
-    	    string mustbe = "magnet:?xl=6&dn=12345.txt&xt=urn:crc32:261dafe6&xt=urn:md5:d577273ff885c3f84dadb8578bb41399";
-        	string got = Hasher.GetMagnetFor("12345.txt", (uint)HashType.CRC32 | (uint)HashType.MD5);
-	        if (!got.Equals(mustbe)) {
-    	        Console.WriteLine("Magnet by static method test failed: expected '{0}', got '{1}'\n", mustbe, got);
-        	    errcount3++;
-	        }
-    	    // magnet with null argument
-	        Hasher hasher = new Hasher((uint)HashType.CRC32 | (uint)HashType.MD5);
-	        hasher.UpdateFile("12345.txt").Finish();
-	        mustbe = "magnet:?xl=6&xt=urn:crc32:261dafe6";
-	        got = hasher.GetMagnet(null, (uint)HashType.CRC32 | (uint)HashType.AICH);
-	        if (!got.Equals(mustbe)) {
-	            Console.WriteLine("Magnet with null argument test failed: expected '{0}', got '{1}'\n", mustbe, got);
-	            errcount3++;
-	        }
+			// magnet by static method
+			string mustbe = "magnet:?xl=6&dn=12345.txt&xt=urn:crc32:261dafe6&xt=urn:md5:d577273ff885c3f84dadb8578bb41399";
+			string got = Hasher.GetMagnetFor("12345.txt", (uint)HashType.CRC32 | (uint)HashType.MD5);
+			if (!got.Equals(mustbe)) {
+				Console.WriteLine("Magnet by static method test failed: expected '{0}', got '{1}'\n", mustbe, got);
+				errcount3++;
+			}
+			// magnet with null argument
+			Hasher hasher = new Hasher((uint)HashType.CRC32 | (uint)HashType.MD5);
+			hasher.UpdateFile("12345.txt").Finish();
+			mustbe = "magnet:?xl=6&xt=urn:crc32:261dafe6";
+			got = hasher.GetMagnet(null, (uint)HashType.CRC32 | (uint)HashType.AICH);
+			if (!got.Equals(mustbe)) {
+				Console.WriteLine("Magnet with null argument test failed: expected '{0}', got '{1}'\n", mustbe, got);
+				errcount3++;
+			}
 		}
-        Console.WriteLine("{0} tests / {1} failed\n", 2, errcount3);
+		Console.WriteLine("{0} tests / {1} failed\n", 2, errcount3);
 
 		System.Environment.ExitCode = errcount1 + errcount2 + errcount3;
 	}

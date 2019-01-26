@@ -233,7 +233,7 @@ print_item* parse_percent_item(const char** str)
 	static const char *short_hash = "CMHTGWRAE";
 	static const char *short_other = "Llpfus";
 	static const unsigned hash_ids[] = {
-		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST94,
+		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
@@ -516,7 +516,7 @@ void init_hash_info_table(void)
 {
 	unsigned bit;
 	unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
-		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST94 | OPT_ED2K_LINK;
+		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
 	char* short_opt = "cmhteawrgl";
 	print_hash_info *info = hash_info_table;
 	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
@@ -534,12 +534,12 @@ void init_hash_info_table(void)
 			*(short_opt++) : 0);
 
 		info->name = (bit & RHASH_ALL_HASHES ? rhash_get_name(bit) : "ED2K-LINK");
-		assert(strlen(info->name) < 15);
+		assert(strlen(info->name) < 19);
 		p = info->name;
 		d = info->short_name;
-		e = info->short_name + 15; /* buffer overflow protection */
+		e = info->short_name + 19; /* buffer overflow protection */
 
-		if (memcmp(info->name, "SHA", 3) == 0) {
+		if (memcmp(info->name, "SHA", 3) == 0 || memcmp(info->name, "GOST", 4) == 0) {
 			strcpy(d, p);
 			for (; *d && d < e; d++) {
 				if ('A' <= *d && *d <= 'Z') {

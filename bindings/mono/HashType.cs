@@ -49,14 +49,13 @@ namespace RHash {
 		/* RIPEMD-160 hash. */
 		RIPEMD160 = 1 << 10,
 		/* GOST R 34.11-94. */
-		GOST = 1 << 11,
-		GOST_CRYPTOPRO = 1 << 12,
+		GOST94 = 1 << 11,
+		GOST94_CRYPTOPRO = 1 << 12,
 		/* HAS-160 hash. */
 		HAS160 = 1 << 13,
-		/* Snefru-128 hash. */
-		SNEFRU128 = 1 << 14,
-		/* Snefru-256 hash. */
-		SNEFRU256 = 1 << 15,
+		/* GOST R 34.11-2012. */
+		GOST12_256 = 1 << 14,
+		GOST12_512 = 1 << 15,
 		/* SHA-224 hash. */
 		SHA224 = 1 << 16,
 		/* SHA-256 hash. */
@@ -76,6 +75,12 @@ namespace RHash {
 		/** SHA3-384 hash. */
 		SHA3_384 = 1 << 24,
 		/** SHA3-512 hash. */
-		SHA3_512 = 1 << 25
+		SHA3_512 = 1 << 25,
+		/* CRC32C checksum. */
+		CRC32C = 1 << 26,
+		/* Snefru-128 hash. */
+		SNEFRU128 = 1 << 27,
+		/* Snefru-256 hash. */
+		SNEFRU256 = 1 << 28
 	}
 }

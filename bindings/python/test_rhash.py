@@ -27,6 +27,7 @@ class TestRHash(unittest.TestCase):
         ctx.update('a')
         ctx.finish()
         self.assertEqual('e8b7be43', ctx.hash(rhash.CRC32))
+        self.assertEqual('c1d04330', ctx.hash(rhash.CRC32C))
         self.assertEqual('bde52cb31de33e46245e05fbdbd6fb24', ctx.hash(rhash.MD4))
         self.assertEqual('0cc175b9c0f1b6a831c399e269772661', ctx.hash(rhash.MD5))
         self.assertEqual(
@@ -46,10 +47,16 @@ class TestRHash(unittest.TestCase):
             '0bdc9d2d256b3ee9daae347be6f4dc835a467ffe', ctx.hash(rhash.RIPEMD160))
         self.assertEqual(
             'd42c539e367c66e9c88a801f6649349c21871b4344c6a573f849fdce62f314dd',
-            ctx.hash(rhash.GOST))
+            ctx.hash(rhash.GOST94))
         self.assertEqual(
             'e74c52dd282183bf37af0079c9f78055715a103f17e3133ceff1aacf2f403011',
-            ctx.hash(rhash.GOST_CRYPTOPRO))
+            ctx.hash(rhash.GOST94_CRYPTOPRO))
+        self.assertEqual(
+            'ba31099b9cc84ec2a671e9313572378920a705b363b031a1cb4fc03e01ce8df3',
+            ctx.hash(rhash.GOST12_256))
+        self.assertEqual(
+            '8b2a40ecab7b7496bc4cc0f773595452baf658849b495acc3ba017206810efb00420ccd73fb3297e0f7890941b84ac4a8bc27e3c95e1f97c094609e2136abb7e',
+            ctx.hash(rhash.GOST12_512))
         self.assertEqual(
             '4872bcbc4cd0f0a9dc7c2f7045e5b43b6c830db8',
             ctx.hash(rhash.HAS160))

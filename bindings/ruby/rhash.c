@@ -319,6 +319,8 @@ end");
 	
 	/** CRC32 checksum. */
 	rb_define_const(cRHash, "CRC32",     INT2FIX(RHASH_CRC32));
+	/** CRC32C checksum. */
+	rb_define_const(cRHash, "CRC32C",    INT2FIX(RHASH_CRC32C));
 	/** MD4 hash. */
 	rb_define_const(cRHash, "MD4",       INT2FIX(RHASH_MD4));
 	/** MD5 hash. */
@@ -340,15 +342,15 @@ end");
 	/** RIPEMD-160 hash. */
 	rb_define_const(cRHash, "RIPEMD160", INT2FIX(RHASH_RIPEMD160));
 	/** GOST R 34.11-94. */
-	rb_define_const(cRHash, "GOST",      INT2FIX(RHASH_GOST));
-	/** GOST R 34.11-94. */
-	rb_define_const(cRHash, "GOST_CRYPTOPRO", INT2FIX(RHASH_GOST_CRYPTOPRO));
+	rb_define_const(cRHash, "GOST94",      INT2FIX(RHASH_GOST94));
+	/** GOST R 34.11-94 - CryptoPro. */
+	rb_define_const(cRHash, "GOST94_CRYPTOPRO", INT2FIX(RHASH_GOST94_CRYPTOPRO));
+	/** GOST R 34.11-2012 - 256-bit. */
+	rb_define_const(cRHash, "GOST12_256",  INT2FIX(RHASH_GOST12_256));
+	/** GOST R 34.11-2012 - 512 bit. */
+	rb_define_const(cRHash, "GOST12_512",  INT2FIX(RHASH_GOST12_512));
 	/** HAS-160 hash. */
 	rb_define_const(cRHash, "HAS160",    INT2FIX(RHASH_HAS160));
-	/** Snefru-128 hash. */
-	rb_define_const(cRHash, "SNEFRU128", INT2FIX(RHASH_SNEFRU128));
-	/** Snefru-256 hash. */
-	rb_define_const(cRHash, "SNEFRU256", INT2FIX(RHASH_SNEFRU256));
 	/** SHA-224 hash. */
 	rb_define_const(cRHash, "SHA224",    INT2FIX(RHASH_SHA224));
 	/** SHA-256 hash. */
@@ -362,13 +364,17 @@ end");
 	/** EDON-R 512. */
 	rb_define_const(cRHash, "EDONR512",  INT2FIX(RHASH_EDONR512));
 	/** SHA3-224 hash. */
-	rb_define_const(cRHash, "SHA3_224",    INT2FIX(RHASH_SHA3_224));
+	rb_define_const(cRHash, "SHA3_224",  INT2FIX(RHASH_SHA3_224));
 	/** SHA3-256 hash. */
-	rb_define_const(cRHash, "SHA3_256",    INT2FIX(RHASH_SHA3_256));
+	rb_define_const(cRHash, "SHA3_256",  INT2FIX(RHASH_SHA3_256));
 	/** SHA3-384 hash. */
-	rb_define_const(cRHash, "SHA3_384",    INT2FIX(RHASH_SHA3_384));
+	rb_define_const(cRHash, "SHA3_384",  INT2FIX(RHASH_SHA3_384));
 	/** SHA3-512 hash. */
-	rb_define_const(cRHash, "SHA3_512",    INT2FIX(RHASH_SHA3_512));
+	rb_define_const(cRHash, "SHA3_512",  INT2FIX(RHASH_SHA3_512));
+	/** Snefru-128 hash. */
+	rb_define_const(cRHash, "SNEFRU128", INT2FIX(RHASH_SNEFRU128));
+	/** Snefru-256 hash. */
+	rb_define_const(cRHash, "SNEFRU256", INT2FIX(RHASH_SNEFRU256));
 	/** Create RHash with this parameter to compute hashes for all available algorithms. */
 	rb_define_const(cRHash, "ALL",       INT2FIX(RHASH_ALL_HASHES));
 }

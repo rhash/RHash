@@ -3,8 +3,8 @@ Crypt::Rhash module allows to compute various hash sums and magnet links.
 
 The following hash sums are supported: CRC32, MD4, MD5, SHA1,
 SHA256, SHA512, SHA3, Tiger, TTH, Torrent BTIH, AICH, ED2K,
-GOST R 34.11-94, RIPEMD-160, HAS-160, EDON-R 256/512, WHIRLPOOL
-and SNEFRU.
+GOST R 34.11-94, GOST R 34.11-2012, RIPEMD-160, HAS-160,
+EDON-R 256/512, WHIRLPOOL and SNEFRU.
 
 BUILDING THE MODULE
 -------------------
