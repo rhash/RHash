@@ -1,4 +1,4 @@
-/* gost.c - an implementation of GOST Hash Function
+/* gost94.c - an implementation of GOST Hash Function
  * based on the Russian Standard GOST R 34.11-94.
  * See also RFC 4357.
  *
@@ -18,10 +18,10 @@
 
 #include <string.h>
 #include "byte_order.h"
-#include "gost.h"
+#include "gost94.h"
 
-extern unsigned rhash_gost_sbox[4][256];
-extern unsigned rhash_gost_sbox_cryptpro[4][256];
+extern unsigned rhash_gost94_sbox[4][256];
+extern unsigned rhash_gost94_sbox_cryptpro[4][256];
 
 /**
  * Initialize algorithm context before calculaing hash
@@ -29,9 +29,9 @@ extern unsigned rhash_gost_sbox_cryptpro[4][256];
  *
  * @param ctx context to initialize
  */
-void rhash_gost_init(gost_ctx *ctx)
+void rhash_gost94_init(gost94_ctx *ctx)
 {
-	memset(ctx, 0, sizeof(gost_ctx));
+	memset(ctx, 0, sizeof(gost94_ctx));
 }
 
 /**
@@ -39,9 +39,9 @@ void rhash_gost_init(gost_ctx *ctx)
  *
  * @param ctx context to initialize
  */
-void rhash_gost_cryptopro_init(gost_ctx *ctx)
+void rhash_gost94_cryptopro_init(gost94_ctx *ctx)
 {
-	rhash_gost_init(ctx);
+	rhash_gost94_init(ctx);
 	ctx->cryptpro = 1;
 }
 
@@ -57,7 +57,7 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
  *  blocks.
  */
 #ifndef USE_GCC_ASM_IA32
-# define GOST_ENCRYPT_ROUND(key1, key2, sbox) \
+# define GOST94_ENCRYPT_ROUND(key1, key2, sbox) \
 	tmp = (key1) + r; \
 	l ^= (sbox)[tmp & 0xff] ^ ((sbox) + 256)[(tmp >> 8) & 0xff] ^ \
 		((sbox) + 512)[(tmp >> 16) & 0xff] ^ ((sbox) + 768)[tmp >> 24]; \
@@ -66,29 +66,29 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
 		((sbox) + 512)[(tmp >> 16) & 0xff] ^ ((sbox) + 768)[tmp >> 24];
 
 /* encrypt a block with the given key */
-# define GOST_ENCRYPT(result, i, key, hash, sbox) \
+# define GOST94_ENCRYPT(result, i, key, hash, sbox) \
 	r = hash[i], l = hash[i + 1]; \
-	GOST_ENCRYPT_ROUND(key[0], key[1], sbox) \
-	GOST_ENCRYPT_ROUND(key[2], key[3], sbox) \
-	GOST_ENCRYPT_ROUND(key[4], key[5], sbox) \
-	GOST_ENCRYPT_ROUND(key[6], key[7], sbox) \
-	GOST_ENCRYPT_ROUND(key[0], key[1], sbox) \
-	GOST_ENCRYPT_ROUND(key[2], key[3], sbox) \
-	GOST_ENCRYPT_ROUND(key[4], key[5], sbox) \
-	GOST_ENCRYPT_ROUND(key[6], key[7], sbox) \
-	GOST_ENCRYPT_ROUND(key[0], key[1], sbox) \
-	GOST_ENCRYPT_ROUND(key[2], key[3], sbox) \
-	GOST_ENCRYPT_ROUND(key[4], key[5], sbox) \
-	GOST_ENCRYPT_ROUND(key[6], key[7], sbox) \
-	GOST_ENCRYPT_ROUND(key[7], key[6], sbox) \
-	GOST_ENCRYPT_ROUND(key[5], key[4], sbox) \
-	GOST_ENCRYPT_ROUND(key[3], key[2], sbox) \
-	GOST_ENCRYPT_ROUND(key[1], key[0], sbox) \
+	GOST94_ENCRYPT_ROUND(key[0], key[1], sbox) \
+	GOST94_ENCRYPT_ROUND(key[2], key[3], sbox) \
+	GOST94_ENCRYPT_ROUND(key[4], key[5], sbox) \
+	GOST94_ENCRYPT_ROUND(key[6], key[7], sbox) \
+	GOST94_ENCRYPT_ROUND(key[0], key[1], sbox) \
+	GOST94_ENCRYPT_ROUND(key[2], key[3], sbox) \
+	GOST94_ENCRYPT_ROUND(key[4], key[5], sbox) \
+	GOST94_ENCRYPT_ROUND(key[6], key[7], sbox) \
+	GOST94_ENCRYPT_ROUND(key[0], key[1], sbox) \
+	GOST94_ENCRYPT_ROUND(key[2], key[3], sbox) \
+	GOST94_ENCRYPT_ROUND(key[4], key[5], sbox) \
+	GOST94_ENCRYPT_ROUND(key[6], key[7], sbox) \
+	GOST94_ENCRYPT_ROUND(key[7], key[6], sbox) \
+	GOST94_ENCRYPT_ROUND(key[5], key[4], sbox) \
+	GOST94_ENCRYPT_ROUND(key[3], key[2], sbox) \
+	GOST94_ENCRYPT_ROUND(key[1], key[0], sbox) \
 	result[i] = l, result[i + 1] = r;
 
 #else /* USE_GCC_ASM_IA32 */
 
-/* a faster x86 version of GOST_ENCRYPT() */
+/* a faster x86 version of GOST94_ENCRYPT() */
 /* it supposes edi=r, esi=l, edx=sbox ; */
 # define ENC_ROUND_ASMx86(key, reg1, reg2) \
 	"movl %" #key ", %%eax\n\t" \
@@ -104,7 +104,7 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
 	"xorl 3072(%%edx, %%eax, 4), %%" #reg2 "\n\t"
 
 # define ENC_ASM(key1, key2) ENC_ROUND_ASMx86(key1, edi, esi) ENC_ROUND_ASMx86(key2, esi, edi)
-# define GOST_ENCRYPT_GCC_ASM_X86() \
+# define GOST94_ENCRYPT_GCC_ASM_X86() \
 	ENC_ASM( 5,  6) ENC_ASM( 7,  8) ENC_ASM( 9, 10) ENC_ASM(11, 12) \
 	ENC_ASM( 5,  6) ENC_ASM( 7,  8) ENC_ASM( 9, 10) ENC_ASM(11, 12) \
 	ENC_ASM( 5,  6) ENC_ASM( 7,  8) ENC_ASM( 9, 10) ENC_ASM(11, 12) \
@@ -117,11 +117,11 @@ void rhash_gost_cryptopro_init(gost_ctx *ctx)
  * @param hash intermediate message hash
  * @param block the message block to process
  */
-static void rhash_gost_block_compress(gost_ctx *ctx, const unsigned* block)
+static void rhash_gost94_block_compress(gost94_ctx *ctx, const unsigned* block)
 {
 	unsigned i;
 	unsigned key[8], u[8], v[8], w[8], s[8];
-	unsigned *sbox = (ctx->cryptpro ? (unsigned*)rhash_gost_sbox_cryptpro : (unsigned*)rhash_gost_sbox);
+	unsigned *sbox = (ctx->cryptpro ? (unsigned*)rhash_gost94_sbox_cryptpro : (unsigned*)rhash_gost94_sbox);
 
 	/* u := hash, v := <256-bit message block> */
 	memcpy(u, ctx->hash, sizeof(u));
@@ -149,12 +149,12 @@ static void rhash_gost_block_compress(gost_ctx *ctx, const unsigned* block)
 #ifndef USE_GCC_ASM_IA32
 		{
 			unsigned l, r, tmp;
-			GOST_ENCRYPT(s, i, key, ctx->hash, sbox);
+			GOST94_ENCRYPT(s, i, key, ctx->hash, sbox);
 		}
 #else /* USE_GCC_ASM_IA32 */
 		__asm __volatile(
 			"movl %%ebx, %13\n\t"
-			GOST_ENCRYPT_GCC_ASM_X86() /* optimized for x86 Intel Core 2 */
+			GOST94_ENCRYPT_GCC_ASM_X86() /* optimized for x86 Intel Core 2 */
 			"movl %13, %%ebx\n\t"
 			: "=S" (s[i]), "=D" (s[i + 1]) /* 0,1: s[i]=esi, s[i + 1]=edi */
 			: "d" (sbox), "D" (ctx->hash[i]), "S" (ctx->hash[i + 1]), /* 2,3,4: edx=sbox,edi=r,esi=l */
@@ -272,12 +272,12 @@ static void rhash_gost_block_compress(gost_ctx *ctx, const unsigned* block)
  * It updates 256-bit check sum as follows:
  *    *(uint256_t)(ctx->sum) += *(uint256_t*)block;
  * and then updates intermediate hash value ctx->hash
- * by calling rhash_gost_block_compress().
+ * by calling rhash_gost94_block_compress().
  *
  * @param ctx algorithm context
  * @param block the 256-bit message block to process
  */
-static void rhash_gost_compute_sum_and_hash(gost_ctx * ctx, const unsigned* block)
+static void rhash_gost94_compute_sum_and_hash(gost94_ctx * ctx, const unsigned* block)
 {
 #if IS_LITTLE_ENDIAN
 # define block_le block
@@ -333,7 +333,7 @@ static void rhash_gost_compute_sum_and_hash(gost_ctx * ctx, const unsigned* bloc
 #endif /* USE_GCC_ASM_IA32 */
 
 	/* update message hash */
-	rhash_gost_block_compress(ctx, block_le);
+	rhash_gost94_block_compress(ctx, block_le);
 }
 
 /**
@@ -344,23 +344,23 @@ static void rhash_gost_compute_sum_and_hash(gost_ctx * ctx, const unsigned* bloc
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_gost_update(gost_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_gost94_update(gost94_ctx *ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 31;
 	ctx->length += size;
 
 	/* fill partial block */
 	if (index) {
-		unsigned left = gost_block_size - index;
+		unsigned left = gost94_block_size - index;
 		memcpy(ctx->message + index, msg, (size < left ? size : left));
 		if (size < left) return;
 
 		/* process partial block */
-		rhash_gost_compute_sum_and_hash(ctx, (unsigned*)ctx->message);
+		rhash_gost94_compute_sum_and_hash(ctx, (unsigned*)ctx->message);
 		msg += left;
 		size -= left;
 	}
-	while (size >= gost_block_size) {
+	while (size >= gost94_block_size) {
 		unsigned* aligned_message_block;
 #if (defined(__GNUC__) && defined(CPU_X64))
 		if (IS_ALIGNED_64(msg)) {
@@ -371,13 +371,13 @@ void rhash_gost_update(gost_ctx *ctx, const unsigned char* msg, size_t size)
 			on little-endian CPU without copying it */
 			aligned_message_block = (unsigned*)msg;
 		} else {
-			memcpy(ctx->message, msg, gost_block_size);
+			memcpy(ctx->message, msg, gost94_block_size);
 			aligned_message_block = (unsigned*)ctx->message;
 		}
 
-		rhash_gost_compute_sum_and_hash(ctx, aligned_message_block);
-		msg += gost_block_size;
-		size -= gost_block_size;
+		rhash_gost94_compute_sum_and_hash(ctx, aligned_message_block);
+		msg += gost94_block_size;
+		size -= gost94_block_size;
 	}
 	if (size) {
 		/* save leftovers */
@@ -391,7 +391,7 @@ void rhash_gost_update(gost_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_gost_final(gost_ctx *ctx, unsigned char result[32])
+void rhash_gost94_final(gost94_ctx *ctx, unsigned char result[32])
 {
 	unsigned  index = (unsigned)ctx->length & 31;
 	unsigned* msg32 = (unsigned*)ctx->message;
@@ -399,7 +399,7 @@ void rhash_gost_final(gost_ctx *ctx, unsigned char result[32])
 	/* pad the last block with zeroes and hash it */
 	if (index > 0) {
 		memset(ctx->message + index, 0, 32 - index);
-		rhash_gost_compute_sum_and_hash(ctx, msg32);
+		rhash_gost94_compute_sum_and_hash(ctx, msg32);
 	}
 
 	/* hash the message length and the sum */
@@ -407,16 +407,16 @@ void rhash_gost_final(gost_ctx *ctx, unsigned char result[32])
 	msg32[1] = (unsigned)(ctx->length >> 29);
 	memset(msg32 + 2, 0, sizeof(unsigned)*6);
 
-	rhash_gost_block_compress(ctx, msg32);
-	rhash_gost_block_compress(ctx, ctx->sum);
+	rhash_gost94_block_compress(ctx, msg32);
+	rhash_gost94_block_compress(ctx, ctx->sum);
 
 	/* convert hash state to result bytes */
-	le32_copy(result, 0, ctx->hash, gost_hash_length);
+	le32_copy(result, 0, ctx->hash, gost94_hash_length);
 }
 
-#ifdef GENERATE_GOST_LOOKUP_TABLE
-unsigned rhash_gost_sbox[4][256];
-unsigned rhash_gost_sbox_cryptpro[4][256];
+#ifdef GENERATE_GOST94_LOOKUP_TABLE
+unsigned rhash_gost94_sbox[4][256];
+unsigned rhash_gost94_sbox_cryptpro[4][256];
 
 /**
  * Calculate a lookup table from S-Boxes.
@@ -425,7 +425,7 @@ unsigned rhash_gost_sbox_cryptpro[4][256];
  * @param out pointer to the lookup table to fill
  * @param src pointer to eight S-Boxes to fill the table from
  */
-static void rhash_gost_fill_sbox(unsigned out[4][256], const unsigned char src[8][16])
+static void rhash_gost94_fill_sbox(unsigned out[4][256], const unsigned char src[8][16])
 {
 	int a, b, i;
 	unsigned long ax, bx, cx, dx;
@@ -451,7 +451,7 @@ static void rhash_gost_fill_sbox(unsigned out[4][256], const unsigned char src[8
  * them at rine-time can save a little space in the exutable file
  * in trade of consuming some time at pogram start.
  */
-void rhash_gost_init_table(void)
+void rhash_gost94_init_table(void)
 {
 	/* Test parameters set. Eight 4-bit S-Boxes defined by GOST R 34.10-94
 	 * standard for testing the hash function.
@@ -480,14 +480,14 @@ void rhash_gost_init_table(void)
 		{  1,  3, 10,  9,  5, 11,  4, 15,  8,  6,  7, 14, 13,  0,  2, 12 }
 	};
 
-	rhash_gost_fill_sbox(rhash_gost_sbox, sbox);
-	rhash_gost_fill_sbox(rhash_gost_sbox_cryptpro, sbox_cryptpro);
+	rhash_gost94_fill_sbox(rhash_gost94_sbox, sbox);
+	rhash_gost94_fill_sbox(rhash_gost94_sbox_cryptpro, sbox_cryptpro);
 }
 
-#else /* GENERATE_GOST_LOOKUP_TABLE */
+#else /* GENERATE_GOST94_LOOKUP_TABLE */
 
 /* pre-initialized GOST lookup tables based on rotated S-Box */
-unsigned rhash_gost_sbox[4][256] = {
+unsigned rhash_gost94_sbox[4][256] = {
 	{
 		0x72000, 0x75000, 0x74800, 0x71000, 0x76800,
 		0x74000, 0x70000, 0x77000, 0x73000, 0x75800,
@@ -690,7 +690,7 @@ unsigned rhash_gost_sbox[4][256] = {
 };
 
 /* pre-initialized GOST lookup tables based on rotated S-Box */
-unsigned rhash_gost_sbox_cryptpro[4][256] = {
+unsigned rhash_gost94_sbox_cryptpro[4][256] = {
 	{
 		0x2d000, 0x2a000, 0x2a800, 0x2b000, 0x2c000,
 		0x28800, 0x29800, 0x2b800, 0x2e800, 0x2e000,
@@ -879,5 +879,4 @@ unsigned rhash_gost_sbox_cryptpro[4][256] = {
 	}
 };
 
-
-#endif /* GENERATE_GOST_LOOKUP_TABLE */
+#endif /* GENERATE_GOST94_LOOKUP_TABLE */

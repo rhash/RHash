@@ -179,12 +179,12 @@ const char* ripemd_tests[] = {
 
 /*
 * Two important test-cases (some libraries calculate them incorrectly):
-* GOST( <100000 characters of 'a'> ) = 5C00CCC2734CDD3332D3D4749576E3C1A7DBAF0E7EA74E9FA602413C90A129FA
-* GOST( <128 characters of 'U'> ) = 53A3A3ED25180CEF0C1D85A074273E551C25660A87062A52D926A9E8FE5733A4
+* GOST94( <100000 characters of 'a'> ) = 5C00CCC2734CDD3332D3D4749576E3C1A7DBAF0E7EA74E9FA602413C90A129FA
+* GOST94( <128 characters of 'U'> ) = 53A3A3ED25180CEF0C1D85A074273E551C25660A87062A52D926A9E8FE5733A4
 */
 
 /* test vectors from internet, verified by OpenSSL and some other programs */
-const char* gost_tests[] = {
+const char* gost94_tests[] = {
 	"", "CE85B99CC46752FFFEE35CAB9A7B0278ABB4C2D2055CFF685AF4912C49490F8D",
 	"a", "D42C539E367C66E9C88A801F6649349C21871B4344C6A573F849FDCE62F314DD",
 	"abc", "F3134348C44FB1B2A277729E2285EBB5CB5E0F29C975BC753B70497C06A4D51D",
@@ -201,7 +201,7 @@ const char* gost_tests[] = {
 };
 
 /* tested with openssl */
-const char* gost_cryptopro_tests[] = {
+const char* gost94_cryptopro_tests[] = {
 	"", "981E5F3CA30C841487830F84FB433E13AC1101569B9C13584AC483234CD656C0",
 	"a", "E74C52DD282183BF37AF0079C9F78055715A103F17E3133CEFF1AACF2F403011",
 	"abc", "B285056DBF18D7392D7677369524DD14747459ED8143997E163B2986F92FD42C",
@@ -483,8 +483,8 @@ struct test_vectors_t short_test_vectors[] = {
 	{ RHASH_AICH, aich_tests },
 	{ RHASH_WHIRLPOOL, whirlpool_tests },
 	{ RHASH_RIPEMD160, ripemd_tests },
-	{ RHASH_GOST, gost_tests },
-	{ RHASH_GOST_CRYPTOPRO, gost_cryptopro_tests },
+	{ RHASH_GOST, gost94_tests },
+	{ RHASH_GOST_CRYPTOPRO, gost94_cryptopro_tests },
 	{ RHASH_HAS160, has160_tests },
 	{ RHASH_SNEFRU128, snefru128_tests },
 	{ RHASH_SNEFRU256, snefru256_tests },
