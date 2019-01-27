@@ -22,7 +22,7 @@ typedef char opt_tchar;
  * Options bit flags and constants.
  */
 enum {
-	OPT_ED2K_LINK = 0x10000000,
+	OPT_ED2K_LINK = 0x80000000,
 
 	/* program modes */
 	MODE_CHECK     = 0x1,

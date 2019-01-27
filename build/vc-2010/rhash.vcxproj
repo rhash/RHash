@@ -231,7 +231,7 @@
     <ClCompile Include="..\..\librhash\crc32.c" />
     <ClCompile Include="..\..\librhash\ed2k.c" />
     <ClCompile Include="..\..\librhash\edonr.c" />
-    <ClCompile Include="..\..\librhash\gost.c" />
+    <ClCompile Include="..\..\librhash\gost94.c" />
     <ClCompile Include="..\..\librhash\has160.c" />
     <ClCompile Include="..\..\librhash\hex.c" />
     <ClCompile Include="..\..\librhash\md4.c" />
@@ -273,7 +273,7 @@
     <ClInclude Include="..\..\librhash\byte_order.h" />
     <ClInclude Include="..\..\librhash\crc32.h" />
     <ClInclude Include="..\..\librhash\ed2k.h" />
-    <ClInclude Include="..\..\librhash\gost.h" />
+    <ClInclude Include="..\..\librhash\gost94.h" />
     <ClInclude Include="..\..\librhash\has160.h" />
     <ClInclude Include="..\..\librhash\hex.h" />
     <ClInclude Include="..\..\librhash\md4.h" />

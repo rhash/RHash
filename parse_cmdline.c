@@ -71,8 +71,8 @@ static void print_help(void)
 	print_help_line("  -E, --ed2k    ", _("Calculate eDonkey hash sum.\n"));
 	print_help_line("  -L, --ed2k-link  ", _("Calculate and print eDonkey link.\n"));
 	print_help_line("      --tiger   ", _("Calculate Tiger hash sum.\n"));
-	print_help_line("  -G, --gost    ", _("Calculate GOST R 34.11-94 hash.\n"));
-	print_help_line("      --gost-cryptopro ", _("CryptoPro version of the GOST R 34.11-94 hash.\n"));
+	print_help_line("  -G, --gost94  ", _("Calculate GOST R 34.11-94 hash.\n"));
+	print_help_line("      --gost94-cryptopro ", _("CryptoPro version of the GOST R 34.11-94 hash.\n"));
 	print_help_line("      --ripemd160  ", _("Calculate RIPEMD-160 hash.\n"));
 	print_help_line("      --has160  ", _("Calculate HAS-160 hash.\n"));
 	print_help_line("      --edonr256, --edonr512  ", _("Calculate EDON-R 256/512 hash.\n"));
@@ -361,8 +361,11 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "btih",   &opt.sum_flags, RHASH_BTIH },
 	{ F_UFLG, 'E',   0, "ed2k",   &opt.sum_flags, RHASH_ED2K },
 	{ F_UFLG, 'A',   0, "aich",   &opt.sum_flags, RHASH_AICH },
-	{ F_UFLG, 'G',   0, "gost",   &opt.sum_flags, RHASH_GOST },
-	{ F_UFLG,   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST_CRYPTOPRO },
+	{ F_UFLG, 'G',   0, "gost94",   &opt.sum_flags, RHASH_GOST94 },
+	{ F_UFLG,   0,   0, "gost94-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
+        /* legacy: the following two gost options are left for compatibility */
+	{ F_UFLG,   0,   0, "gost",   &opt.sum_flags, RHASH_GOST94 },
+	{ F_UFLG,   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
 	{ F_UFLG, 'W',   0, "whirlpool", &opt.sum_flags, RHASH_WHIRLPOOL },
 	{ F_UFLG,   0,   0, "ripemd160", &opt.sum_flags, RHASH_RIPEMD160 },
 	{ F_UFLG,   0,   0, "has160",    &opt.sum_flags, RHASH_HAS160 },
@@ -957,8 +960,8 @@ static void set_default_sums_flags(const char* progName)
 	if (strstr(buf, "tth"))   res |= RHASH_TTH;
 	if (strstr(buf, "btih"))  res |= RHASH_BTIH;
 	if (strstr(buf, "aich"))  res |= RHASH_AICH;
-	if (strstr(buf, "gost-cryptopro"))  res |= RHASH_GOST_CRYPTOPRO;
-	else if (strstr(buf, "gost"))  res |= RHASH_GOST;
+	if (strstr(buf, "gost94-cryptopro"))  res |= RHASH_GOST94_CRYPTOPRO;
+	else if (strstr(buf, "gost94"))  res |= RHASH_GOST94;
 	if (strstr(buf, "has160"))  res |= RHASH_HAS160;
 	if (strstr(buf, "ripemd160"))  res |= RHASH_RIPEMD160;
 	if (strstr(buf, "whirlpool"))  res |= RHASH_WHIRLPOOL;

@@ -1,8 +1,8 @@
-/* gost94.c - an implementation of GOST Hash Function
- * based on the Russian Standard GOST R 34.11-94.
+/* gost94.c - an implementation of the GOST R 34.11-94 hash function,
+ * the deprecated Russian cryptographic standard.
  * See also RFC 4357.
  *
- * Copyright: 2009-2012 Aleksey Kravchenko <rhash.admin@gmail.com>
+ * Copyright: 2009 Aleksey Kravchenko <rhash.admin@gmail.com>
  *
  * Permission is hereby granted,  free of charge,  to any person  obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -16,9 +16,15 @@
  * or FITNESS FOR A PARTICULAR PURPOSE.  Use this program  at  your own risk!
  */
 
+#include "gost94.h"
 #include <string.h>
 #include "byte_order.h"
-#include "gost94.h"
+
+#if defined(__GNUC__) && defined(CPU_IA32) && !defined(__clang__) && !defined(RHASH_NO_ASM)
+# define USE_GCC_ASM_IA32
+#elif defined(__GNUC__) && defined(CPU_X64) && !defined(RHASH_NO_ASM)
+# define USE_GCC_ASM_X64
+#endif
 
 extern unsigned rhash_gost94_sbox[4][256];
 extern unsigned rhash_gost94_sbox_cryptpro[4][256];
@@ -44,12 +50,6 @@ void rhash_gost94_cryptopro_init(gost94_ctx *ctx)
 	rhash_gost94_init(ctx);
 	ctx->cryptpro = 1;
 }
-
-#if defined(__GNUC__) && defined(CPU_IA32) && !defined(__clang__) && !defined(RHASH_NO_ASM)
-# define USE_GCC_ASM_IA32
-#elif defined(__GNUC__) && defined(CPU_X64) && !defined(RHASH_NO_ASM)
-# define USE_GCC_ASM_X64
-#endif
 
 /*
  *  A macro that performs a full encryption round of GOST 28147-89.
@@ -415,6 +415,7 @@ void rhash_gost94_final(gost94_ctx *ctx, unsigned char result[32])
 }
 
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
+ALIGN_ATTR(64)
 unsigned rhash_gost94_sbox[4][256];
 unsigned rhash_gost94_sbox_cryptpro[4][256];
 
@@ -487,6 +488,7 @@ void rhash_gost94_init_table(void)
 #else /* GENERATE_GOST94_LOOKUP_TABLE */
 
 /* pre-initialized GOST lookup tables based on rotated S-Box */
+ALIGN_ATTR(64)
 unsigned rhash_gost94_sbox[4][256] = {
 	{
 		0x72000, 0x75000, 0x74800, 0x71000, 0x76800,

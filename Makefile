@@ -14,9 +14,9 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/rhash_timing.c librhash/rhash_timing.h \
   librhash/aich.c librhash/aich.h librhash/crc32.c librhash/crc32.h \
   librhash/ed2k.c librhash/ed2k.h librhash/edonr.c librhash/edonr.h \
-  librhash/gost94.c librhash/gost94.h librhash/has160.c librhash/has160.h \
-  librhash/hex.c librhash/hex.h librhash/md4.c librhash/md4.h \
-  librhash/md5.c librhash/md5.h librhash/ripemd-160.c librhash/ripemd-160.h \
+  librhash/gost94.c librhash/gost94.h \
+  librhash/has160.c librhash/has160.h librhash/hex.c librhash/hex.h librhash/md4.c \
+  librhash/md4.h librhash/md5.c librhash/md5.h librhash/ripemd-160.c librhash/ripemd-160.h \
   librhash/sha1.c librhash/sha1.h librhash/sha3.c librhash/sha3.h \
   librhash/sha256.c librhash/sha256.h librhash/sha512.c librhash/sha512.h \
   librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h \

@@ -233,7 +233,7 @@ print_item* parse_percent_item(const char** str)
 	static const char *short_hash = "CMHTGWRAE";
 	static const char *short_other = "Llpfus";
 	static const unsigned hash_ids[] = {
-		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST,
+		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST94,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
@@ -431,7 +431,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
 				| (list->flags & PRINT_FLAG_BASE64 ? RHPR_BASE64 : 0)
 				| (list->flags & PRINT_FLAG_HEX ? RHPR_HEX : 0);
-			if ((hash_id == RHASH_GOST || hash_id == RHASH_GOST_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
+			if ((hash_id == RHASH_GOST94 || hash_id == RHASH_GOST94_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
 				print_flags |= RHPR_REVERSE;
 
 			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
@@ -516,14 +516,14 @@ void init_hash_info_table(void)
 {
 	unsigned bit;
 	unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
-		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST | OPT_ED2K_LINK;
+		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST94 | OPT_ED2K_LINK;
 	char* short_opt = "cmhteawrgl";
 	print_hash_info *info = hash_info_table;
 	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
 
-	for (bit = 1; bit <= fullmask; bit = bit << 1) {
+	for (bit = 1; bit && bit <= fullmask; bit = bit << 1) {
 		const char *p;
 		char *e, *d;
 
@@ -607,7 +607,7 @@ void init_printf_format(strbuf_t* out)
 	}
 
 	/* loop by hashes */
-	for (bit = 1 << index; bit <= opt.sum_flags; bit = bit << 1, index++) {
+	for (bit = 1 << index; bit && bit <= opt.sum_flags; bit = bit << 1, index++) {
 		const char *p;
 		print_hash_info *info;
 

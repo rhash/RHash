@@ -694,7 +694,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 			}
 			hash_orig = hashes->data + hv->offset;
 
-			if ((hid & (RHASH_GOST | RHASH_GOST_CRYPTOPRO)) != 0) {
+			if ((hid & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)) != 0) {
 				if (fr_hex_cmp(hash_orig, hash_str, hv->length) != 0) continue;
 			} else {
 				if (memcmp(hash_orig, hash_str, hv->length) != 0) continue;
