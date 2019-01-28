@@ -1,4 +1,4 @@
-use Test::More tests => 27;
+use Test::More tests => 29;
 use Crypt::Rhash;
 
 #########################
