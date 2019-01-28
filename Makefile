@@ -5,9 +5,10 @@ HEADERS = calc_sums.h hash_print.h common_func.h hash_update.h file.h file_mask.
 SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file.c file_mask.c file_set.c find_file.c hash_check.c output.c parse_cmdline.c rhash_main.c win_utils.c
 OBJECTS = $(SOURCES:.c=.o)
 WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
-OTHER_FILES = configure Makefile ChangeLog INSTALL.md COPYING README \
-  dist/rhash.spec.in dist/rhash.1 dist/rhash.1.win.sed \
-  tests/test_rhash.sh tests/test1K.data win32/vc-2010/rhash.vcxproj
+OTHER_FILES = configure Makefile ChangeLog INSTALL.md COPYING README.md \
+  build/vc-2010/rhash.vcxproj dist/rhash.spec.in dist/rhash.1 dist/rhash.1.win.sed \
+  docs/CONTRIBUTING.md docs/LIBRHASH.md librhash/Doxyfile po/rhash.pot \
+  tests/test_rhash.sh tests/test1K.data
 LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
   librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
@@ -229,7 +230,7 @@ dist/rhash.1.txt: dist/rhash.1
 	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
 
 permissions:
-	find . dist librhash po win32 win32/vc-2010 -maxdepth 1 -type f -exec chmod -x '{}' \;
+	find . build dist docs librhash po tests -maxdepth 1 -type f -exec chmod -x '{}' \;
 	chmod +x configure tests/test_rhash.sh
 
 copy-dist: $(ALL_FILES) permissions
