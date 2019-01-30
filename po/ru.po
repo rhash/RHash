@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2018-12-22 21:41+0300\n"
+"POT-Creation-Date: 2019-01-30 03:00+0300\n"
 "PO-Revision-Date: 2018-09-08 22:02+0000\n"
 "Last-Translator: Kravchenko Aleksey <rhash.admin@gmail.com>\n"
 "Language-Team: Russian <rhash.admin@gmail.com>\n"
@@ -167,7 +167,7 @@ msgstr "Всего %.3f с, %4.2f Мбайт/с\n"
 msgid "Calculated in %.3f sec, %4.2f MBps\n"
 msgstr "Считалось %.3f с, %4.2f Мбайт/с\n"
 
-#: parse_cmdline.c:54
+#: parse_cmdline.c:58
 #, c-format
 msgid ""
 "%s\n"
@@ -180,278 +180,230 @@ msgstr ""
 "       %s --printf=<форматирующая строка> [ФАЙЛ | -]...\n"
 "\n"
 
-#: parse_cmdline.c:57
+#: parse_cmdline.c:62
 msgid "Options:\n"
 msgstr "Опции:\n"
 
-#: parse_cmdline.c:59
+#: parse_cmdline.c:63
 msgid "Print program version and exit.\n"
 msgstr "Вывести версию программы и выйти.\n"
 
-#: parse_cmdline.c:60
+#: parse_cmdline.c:64
 msgid "Print this help screen.\n"
 msgstr "Вывести эту справку.\n"
 
-#: parse_cmdline.c:61
-msgid "Calculate CRC32 hash sum.\n"
-msgstr "Вычислить хэш-сумму CRC32.\n"
-
-#: parse_cmdline.c:62
-msgid "Calculate CRC32C hash sum.\n"
-msgstr "Вычислить хэш-сумму CRC32C.\n"
-
-#: parse_cmdline.c:63
-msgid "Calculate MD4   hash sum.\n"
-msgstr "Вычислить хэш-сумму MD4.\n"
-
-#: parse_cmdline.c:64
-msgid "Calculate MD5   hash sum.\n"
-msgstr "Вычислить хэш-сумму MD5.\n"
-
-#: parse_cmdline.c:65
-msgid "Calculate SHA1  hash sum.\n"
-msgstr "Вычислить хэш-сумму SHA1.\n"
-
+#. TRANSLATORS: format string for a help line, like: "Calculate SHA1 hash sum.\n"
 #: parse_cmdline.c:66
-msgid "Calculate SHA2 hash sum.\n"
-msgstr "Вычислить указанную хэш-сумму SHA2.\n"
+#, c-format
+msgid "Calculate %s hash sum.\n"
+msgstr "Вычислить хэш-сумму %s.\n"
 
-#: parse_cmdline.c:67
-msgid "Calculate SHA3 hash sum.\n"
-msgstr "Вычислить указанную хэш-сумму SHA3.\n"
-
-#: parse_cmdline.c:68
-msgid "Calculate TTH sum.\n"
-msgstr "Вычислить хэш-сумму TTH sum.\n"
-
-#: parse_cmdline.c:69
-msgid "Calculate BitTorrent InfoHash.\n"
-msgstr "Вычислить хэш-сумму BitTorrent InfoHash.\n"
-
-#: parse_cmdline.c:70
-msgid "Calculate AICH hash.\n"
-msgstr "Вычислить хэш-сумму AICH hash.\n"
-
-#: parse_cmdline.c:71
-msgid "Calculate eDonkey hash sum.\n"
-msgstr "Вычислить хэш-сумму eDonkey.\n"
-
-#: parse_cmdline.c:72
+#: parse_cmdline.c:78
 msgid "Calculate and print eDonkey link.\n"
 msgstr "Вычислить хэш-сумму и вывести ссылку eDonkey.\n"
 
-#: parse_cmdline.c:73
-msgid "Calculate Tiger hash sum.\n"
-msgstr "Вычислить хэш-сумму Tiger.\n"
-
-#: parse_cmdline.c:74
-msgid "Calculate GOST R 34.11-94 hash.\n"
-msgstr "Вычислить хэш-сумму GOST R 34.11-94.\n"
-
-#: parse_cmdline.c:75
-msgid "CryptoPro version of the GOST R 34.11-94 hash.\n"
-msgstr "Вычислить CryptoPro версию хэша GOST R 34.11-94.\n"
-
-#: parse_cmdline.c:76
-msgid "Calculate RIPEMD-160 hash.\n"
-msgstr "Вычислить хэш-сумму RIPEMD-160.\n"
-
-#: parse_cmdline.c:77
-msgid "Calculate HAS-160 hash.\n"
-msgstr "Вычислить хэш-сумму HAS-160.\n"
-
-#: parse_cmdline.c:78
-msgid "Calculate EDON-R 256/512 hash.\n"
-msgstr "Вычислить хэш-сумму EDON-R 256/512.\n"
-
-#: parse_cmdline.c:79
-msgid "Calculate SNEFRU-128/256 hash.\n"
-msgstr "Вычислить хэш-сумму SNEFRU-128/256.\n"
-
 #: parse_cmdline.c:80
+msgid "GOST R 34.11-2012, 256 bit"
+msgstr "ГОСТ R 34.11-2012, 256 бит"
+
+#: parse_cmdline.c:81
+msgid "GOST R 34.11-2012, 512 bit"
+msgstr "ГОСТ R 34.11-2012, 512 бит"
+
+#. TRANSLATORS: This hash function name should be translated to Russian only
+#: parse_cmdline.c:83
+msgid "GOST R 34.11-94"
+msgstr "ГОСТ R 34.11-94"
+
+#. TRANSLATORS: This hash function name should be translated to Russian only
+#: parse_cmdline.c:85
+msgid "GOST R 34.11-94 CryptoPro"
+msgstr "ГОСТ R 34.11-94 КриптоПро"
+
+#: parse_cmdline.c:90
 msgid "Calculate all supported hashes.\n"
 msgstr "Вычислить все поддерживаемые хэш-суммы.\n"
 
-#: parse_cmdline.c:81
+#: parse_cmdline.c:91
 msgid "Check hash files specified by command line.\n"
 msgstr "Проверить хэш-файлы, указанные в командной строке.\n"
 
-#: parse_cmdline.c:82
+#: parse_cmdline.c:92
 msgid "Update hash files specified by command line.\n"
 msgstr "Обновить хэш-файлы, указанные в командной строке.\n"
 
-#: parse_cmdline.c:83
+#: parse_cmdline.c:93
 msgid "Rename files by inserting crc32 sum into name.\n"
 msgstr "Переименовать файлы, вставляя в имя хэш CRC32.\n"
 
-#: parse_cmdline.c:84
+#: parse_cmdline.c:94
 msgid "Verify files by crc32 sum embedded in their names.\n"
 msgstr "Проверить файлы по хэшу CRC32 в имени файла.\n"
 
-#: parse_cmdline.c:85
+#: parse_cmdline.c:95
 msgid "List the names of supported hashes, one per line.\n"
 msgstr "Напечатать имена всех поддерживаемых хэшей, по одному в строчку.\n"
 
-#: parse_cmdline.c:86
+#: parse_cmdline.c:96
 msgid "Benchmark selected algorithm.\n"
 msgstr "Запустить тест производительности выбранного алгоритма.\n"
 
-#: parse_cmdline.c:87
+#: parse_cmdline.c:97
 msgid "Be verbose.\n"
 msgstr "Включить подробный вывод.\n"
 
-#: parse_cmdline.c:88
+#: parse_cmdline.c:98
 msgid "Process directories recursively.\n"
 msgstr "Обрабатывать директории рекурсивно.\n"
 
-#: parse_cmdline.c:89
+#: parse_cmdline.c:99
 msgid "Process a list of files.\n"
 msgstr "Обработать список файлов.\n"
 
-#: parse_cmdline.c:90
+#: parse_cmdline.c:100
 msgid "Process the text message.\n"
 msgstr "Обработать текстовое сообщение.\n"
 
-#: parse_cmdline.c:91
+#: parse_cmdline.c:101
 msgid "Don't print OK messages for successfully verified files.\n"
 msgstr "Не печатать строки «Успех» для удачно проверенных файлов.\n"
 
-#: parse_cmdline.c:92
+#: parse_cmdline.c:102
 msgid "Ignore case of filenames when updating hash files.\n"
 msgstr "Обновляя файлы, не учитывать регистр в именах файлов.\n"
 
-#: parse_cmdline.c:93
+#: parse_cmdline.c:103
 msgid "Show percents, while calculating or checking hashes.\n"
 msgstr "Показывать проценты, при вычислении и проверке хэш-сумм.\n"
 
-#: parse_cmdline.c:94
+#: parse_cmdline.c:104
 msgid "Output per-file and total processing speed.\n"
 msgstr "Выводить скорость обработки каждого файла.\n"
 
-#: parse_cmdline.c:95
+#: parse_cmdline.c:105
 msgid "Descend at most <n> levels of directories.\n"
 msgstr "Спускаться не более чем на <n> уровней директорий.\n"
 
-#: parse_cmdline.c:97
+#: parse_cmdline.c:107
 msgid "List hash functions to be calculated using OpenSSL.\n"
 msgstr ""
 "Указать список хэш-функций, которые надо вычислять используя OpenSSL.\n"
 
-#: parse_cmdline.c:98
+#: parse_cmdline.c:108
 msgid "File to output calculation or checking results.\n"
 msgstr "Файл для вывода результатов вычисления и проверки хэш-сумм.\n"
 
-#: parse_cmdline.c:99
+#: parse_cmdline.c:109
 msgid "File to log errors and verbose information.\n"
 msgstr "Файл для вывода ошибок и подробной информации.\n"
 
-#: parse_cmdline.c:100
+#: parse_cmdline.c:110
 msgid "Print hash sums, using SFV format (default).\n"
 msgstr "Печатать хэш суммы в SFV формате (по-умолчанию).\n"
 
-#: parse_cmdline.c:101
+#: parse_cmdline.c:111
 msgid "Print hash sums, using BSD-like format.\n"
 msgstr "Печатать хэш суммы в BSD-like формате.\n"
 
-#: parse_cmdline.c:102
+#: parse_cmdline.c:112
 msgid "Print hash sums, using simple format.\n"
 msgstr "Печатать хэш суммы в «простом» формате.\n"
 
-#: parse_cmdline.c:103
+#: parse_cmdline.c:113
 msgid "Print hash sums  as magnet links.\n"
 msgstr "Печатать хэш суммы в виде magnet-ссылок.\n"
 
-#: parse_cmdline.c:104
+#: parse_cmdline.c:114
 msgid "Create torrent files.\n"
 msgstr "Создавать torrent-файлы.\n"
 
-#: parse_cmdline.c:106
+#: parse_cmdline.c:116
 msgid "Use Windows codepage for output (Windows only).\n"
 msgstr "Выводить в кодовой странице Windows (только в Windows).\n"
 
-#: parse_cmdline.c:108
+#: parse_cmdline.c:118
 msgid "Load a printf-like template from the <file>\n"
 msgstr "Загрузить форматирующий шаблон из файла\n"
 
-#: parse_cmdline.c:110
-msgid ""
-"Format and print hash sums.\n"
-"                See the RHash manual for details.\n"
-msgstr ""
-"Задать формат вывода хэш сумм.\n"
-"                См. подробности в файле помощи RHash.\n"
+#: parse_cmdline.c:119
+msgid "Format and print hash sums.\n"
+msgstr "Задать формат вывода хэш сумм.\n"
 
-#: parse_cmdline.c:213
+#: parse_cmdline.c:120
+msgid "See the RHash manual for details.\n"
+msgstr "См. подробности в файле помощи RHash.\n"
+
+#: parse_cmdline.c:223
 #, c-format
 msgid "openssl option doesn't support '%s' hash\n"
 msgstr "опция openssl не поддерживает хэш «%s»\n"
 
-#: parse_cmdline.c:218
+#: parse_cmdline.c:228
 msgid "compiled without openssl support\n"
 msgstr "скомпилровано без поддержки openssl\n"
 
 #. TRANSLATORS: Keep it secret ;)
-#: parse_cmdline.c:238
+#: parse_cmdline.c:248
 msgid "Purrr..."
 msgstr "Муррр..."
 
-#: parse_cmdline.c:253
+#: parse_cmdline.c:263
 #, c-format
 msgid "maxdepth parameter is not a number: %s\n"
 msgstr "параметр опции maxdepth не число: %s\n"
 
-#: parse_cmdline.c:270
+#: parse_cmdline.c:280
 #, c-format
 msgid "bt-piece-length parameter is not a number: %s\n"
 msgstr "параметр опции bt-piece-length не число: %s\n"
 
-#: parse_cmdline.c:291
+#: parse_cmdline.c:301
 msgid "wrong path-separator, use '//' instead of '/' on MSYS\n"
 msgstr "неверный разделитель пути, используйте '//' вместо '/' на MSYS\n"
 
-#: parse_cmdline.c:295
+#: parse_cmdline.c:305
 #, c-format
 msgid "path-separator is not '/' or '\\': %s\n"
 msgstr "неверный разделитель пути к файлу: %s\n"
 
-#: parse_cmdline.c:441
+#: parse_cmdline.c:456
 #, c-format
 msgid "unknown option: %s\n"
 msgstr "неизвестная опция «%s»\n"
 
-#: parse_cmdline.c:469 parse_cmdline.c:842
+#: parse_cmdline.c:484 parse_cmdline.c:857
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr "для опции «%s» требуется аргумент\n"
 
-#: parse_cmdline.c:640
+#: parse_cmdline.c:655
 #, c-format
 msgid "%s: can't parse line \"%s\"\n"
 msgstr "%s: не удалось разобрать строку «%s»\n"
 
-#: parse_cmdline.c:653
+#: parse_cmdline.c:668
 #, c-format
 msgid "%s: unknown option \"%s\"\n"
 msgstr "%s: неизвестная опция «%s»\n"
 
-#: parse_cmdline.c:783
+#: parse_cmdline.c:798
 msgid "CommandLineToArgvW failed\n"
 msgstr "сбой CommandLineToArgvW\n"
 
-#: parse_cmdline.c:1009
+#: parse_cmdline.c:1026
 #, c-format
 msgid "Config file: %s\n"
 msgstr "Файл конфигурации: %s\n"
 
-#: parse_cmdline.c:1009
+#: parse_cmdline.c:1026
 msgid "None"
 msgstr "отсутствует"
 
-#: parse_cmdline.c:1017
+#: parse_cmdline.c:1034
 msgid "incompatible program modes\n"
 msgstr "несовместимые режимы работы программы\n"
 
-#: parse_cmdline.c:1022
+#: parse_cmdline.c:1039
 msgid "too many formatting options\n"
 msgstr "слишком много опций форматирования\n"
 

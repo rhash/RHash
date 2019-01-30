@@ -38,9 +38,12 @@ static void print_version(void)
 	rsh_exit(0);
 }
 
-static void print_help_line(const char* option, const char* text)
+static void print_help_line(const char* option, const char* format, ...)
 {
-	rsh_fprintf(rhash_data.out, "%s%s", option, text);
+	va_list args;
+	va_start(args, format);
+	rsh_fprintf(rhash_data.out, "%s", option);
+	rsh_vfprintf(rhash_data.out, format, args);
 }
 
 /**
@@ -48,37 +51,42 @@ static void print_help_line(const char* option, const char* text)
  */
 static void print_help(void)
 {
+	const char* hash_sum_format;
 	assert(rhash_data.out != NULL);
 
 	/* print program version and usage */
 	rsh_fprintf(rhash_data.out, _("%s\n"
 		"Usage: %s [OPTION...] [FILE | -]...\n"
 		"       %s --printf=<format string> [FILE | -]...\n\n"), get_full_program_version(), CMD_FILENAME, CMD_FILENAME);
-	rsh_fprintf(rhash_data.out, _("Options:\n"));
 
+	rsh_fprintf(rhash_data.out, _("Options:\n"));
 	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
 	print_help_line("  -h, --help    ", _("Print this help screen.\n"));
-	print_help_line("  -C, --crc32   ", _("Calculate CRC32 hash sum.\n"));
-	print_help_line("      --crc32c  ", _("Calculate CRC32C hash sum.\n"));
-	print_help_line("      --md4     ", _("Calculate MD4   hash sum.\n"));
-	print_help_line("  -M, --md5     ", _("Calculate MD5   hash sum.\n"));
-	print_help_line("  -H, --sha1    ", _("Calculate SHA1  hash sum.\n"));
-	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", _("Calculate SHA2 hash sum.\n"));
-	print_help_line("      --sha3-224, --sha3-256, --sha3-384, --sha3-512 ", _("Calculate SHA3 hash sum.\n"));
-	print_help_line("  -T, --tth     ", _("Calculate TTH sum.\n"));
-	print_help_line("      --btih    ", _("Calculate BitTorrent InfoHash.\n"));
-	print_help_line("  -A, --aich    ", _("Calculate AICH hash.\n"));
-	print_help_line("  -E, --ed2k    ", _("Calculate eDonkey hash sum.\n"));
+	/* TRANSLATORS: format string for a help line, like: "Calculate SHA1 hash sum.\n" */
+	hash_sum_format = _("Calculate %s hash sum.\n");
+	print_help_line("  -C, --crc32   ", hash_sum_format, "CRC32");
+	print_help_line("      --crc32c  ", hash_sum_format, "CRC32C");
+	print_help_line("      --md4     ", hash_sum_format, "MD4");
+	print_help_line("  -M, --md5     ", hash_sum_format, "MD5");
+	print_help_line("  -H, --sha1    ", hash_sum_format, "SHA1");
+	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", hash_sum_format, "SHA2");
+	print_help_line("      --sha3-224, --sha3-256, --sha3-384, --sha3-512 ", hash_sum_format, "SHA3");
+	print_help_line("  -T, --tth     ", hash_sum_format, "TTH");
+	print_help_line("      --btih    ", hash_sum_format, "BitTorrent InfoHash");
+	print_help_line("  -A, --aich    ", hash_sum_format, "AICH");
+	print_help_line("  -E, --ed2k    ", hash_sum_format, "eDonkey");
 	print_help_line("  -L, --ed2k-link  ", _("Calculate and print eDonkey link.\n"));
-	print_help_line("      --tiger   ", _("Calculate Tiger hash sum.\n"));
-	print_help_line("  -G, --gost12-256 ", _("Calculate GOST R 34.11-2012 hash.\n"));
-	print_help_line("      --gost12-512 ", _("Calculate GOST R 34.11-2012 hash.\n"));
-	print_help_line("      --gost94  ", _("Calculate GOST R 34.11-94 hash.\n"));
-	print_help_line("      --gost94-cryptopro ", _("CryptoPro version of the GOST R 34.11-94 hash.\n"));
-	print_help_line("      --ripemd160  ", _("Calculate RIPEMD-160 hash.\n"));
-	print_help_line("      --has160  ", _("Calculate HAS-160 hash.\n"));
-	print_help_line("      --edonr256, --edonr512  ", _("Calculate EDON-R 256/512 hash.\n"));
-	print_help_line("      --snefru128, --snefru256  ", _("Calculate SNEFRU-128/256 hash.\n"));
+	print_help_line("      --tiger   ", hash_sum_format, "Tiger");
+	print_help_line("  -G, --gost12-256 ", hash_sum_format, _("GOST R 34.11-2012, 256 bit"));
+	print_help_line("      --gost12-512 ", hash_sum_format, _("GOST R 34.11-2012, 512 bit"));
+	/* TRANSLATORS: This hash function name should be translated to Russian only */
+	print_help_line("      --gost94  ", hash_sum_format, _("GOST R 34.11-94"));
+	/* TRANSLATORS: This hash function name should be translated to Russian only */
+	print_help_line("      --gost94-cryptopro ", hash_sum_format, _("GOST R 34.11-94 CryptoPro"));
+	print_help_line("      --ripemd160  ", hash_sum_format, "RIPEMD-160");
+	print_help_line("      --has160  ", hash_sum_format, "HAS-160");
+	print_help_line("      --edonr256, --edonr512  ", hash_sum_format, "EDON-R 256/512");
+	print_help_line("      --snefru128, --snefru256  ", hash_sum_format, "SNEFRU-128/256");
 	print_help_line("  -a, --all     ", _("Calculate all supported hashes.\n"));
 	print_help_line("  -c, --check   ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update  ", _("Update hash files specified by command line.\n"));
@@ -108,8 +116,8 @@ static void print_help(void)
 	print_help_line("      --ansi    ", _("Use Windows codepage for output (Windows only).\n"));
 #endif
 	print_help_line("      --template=<file> ", _("Load a printf-like template from the <file>\n"));
-	print_help_line("  -p, --printf=<format string>  ",
-		_("Format and print hash sums.\n                See the RHash manual for details.\n"));
+	print_help_line("  -p, --printf=<format string>  ", _("Format and print hash sums.\n"));
+	print_help_line("                ", _("See the RHash manual for details.\n"));
 	rsh_exit(0);
 }
 
