@@ -2,12 +2,12 @@
 # insert encoding options before sfv
 /^\.IP "\\-\\-sfv"/ {
 i\
-.IP "\\-\\-ansi"\
-Use Windows codepage for output.\
-.IP "\\-\\-oem"\
-Use DOS (OEM) codepage for output.\
 .IP "\\-\\-utf8"\
-Use UTF\\-8 codepage for output.
+Use UTF\\-8 encoding for output.\
+.IP "\\-\\-win"\
+Use Windows codepage for output.\
+.IP "\\-\\-dos"\
+Use DOS (OEM) codepage for output.
 }
 
 / looks for a config file/ {

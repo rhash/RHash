@@ -113,7 +113,9 @@ static void print_help(void)
 	print_help_line("  -g, --magnet  ", _("Print hash sums  as magnet links.\n"));
 	print_help_line("      --torrent ", _("Create torrent files.\n"));
 #ifdef _WIN32
-	print_help_line("      --ansi    ", _("Use Windows codepage for output (Windows only).\n"));
+	print_help_line("      --utf8    ", _("Use UTF-8 encoding for output (Windows only).\n"));
+	print_help_line("      --win     ", _("Use Windows codepage for output (Windows only).\n"));
+	print_help_line("      --dos     ", _("Use DOS codepage for output (Windows only).\n"));
 #endif
 	print_help_line("      --template=<file> ", _("Load a printf-like template from the <file>\n"));
 	print_help_line("  -p, --printf=<format string>  ", _("Format and print hash sums.\n"));
@@ -375,7 +377,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "gost12-512",   &opt.sum_flags, RHASH_GOST12_512 },
 	{ F_UFLG,   0,   0, "gost94",   &opt.sum_flags, RHASH_GOST94 },
 	{ F_UFLG,   0,   0, "gost94-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
-        /* legacy: the following two gost options are left for compatibility */
+	/* legacy: the following two gost options are left for compatibility */
 	{ F_UFLG,   0,   0, "gost",   &opt.sum_flags, RHASH_GOST94 },
 	{ F_UFLG,   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
 	{ F_UFLG, 'W',   0, "whirlpool", &opt.sum_flags, RHASH_WHIRLPOOL },
@@ -428,6 +430,9 @@ cmdline_opt_t cmdline_opt[] =
 
 #ifdef _WIN32 /* code pages (windows only) */
 	{ F_UENC,   0,   0, "utf8", &opt.flags, OPT_UTF8 },
+	{ F_UENC,   0,   0, "win",  &opt.flags, OPT_ANSI },
+	{ F_UENC,   0,   0, "dos",  &opt.flags, OPT_OEM },
+	/* legacy: the following two options are left for compatibility */
 	{ F_UENC,   0,   0, "ansi", &opt.flags, OPT_ANSI },
 	{ F_UENC,   0,   0, "oem",  &opt.flags, OPT_OEM },
 #endif

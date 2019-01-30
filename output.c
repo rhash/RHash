@@ -476,7 +476,8 @@ void print_check_stats(void)
 		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
 		rsh_fprintf(rhash_data.out, _("Everything OK\n"));
 	} else {
-		rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"), rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
+		rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"),
+			rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
 	}
 	fflush(rhash_data.out);
 }

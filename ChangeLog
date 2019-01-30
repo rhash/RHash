@@ -1,3 +1,6 @@
+Wed Jan 30 2019 Aleksey
+	* rename Windows encoding options: --ansi to --win, --oem to --dos
+
 Mon Jan 28 2019 Aleksey
 	* support GOST R 34.11-2012 hash function
 	* changed the short option `-G' to be alias of --gost12-256

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2019-01-30 03:00+0300\n"
+"POT-Creation-Date: 2019-01-30 04:03+0300\n"
 "PO-Revision-Date: 2018-03-14 21:31+0000\n"
 "Last-Translator: Joel Pickett <jlkpcktt@gmail.com>\n"
 "Language-Team: English (Australia) <en_AU@li.org>\n"
@@ -316,92 +316,100 @@ msgid "Create torrent files.\n"
 msgstr "Create torrent files.\n"
 
 #: parse_cmdline.c:116
+msgid "Use UTF-8 encoding for output (Windows only).\n"
+msgstr "Use UTF-8 encoding for output (Windows only).\n"
+
+#: parse_cmdline.c:117
 msgid "Use Windows codepage for output (Windows only).\n"
 msgstr "Use Windows codepage for output (Windows only).\n"
 
 #: parse_cmdline.c:118
+msgid "Use DOS codepage for output (Windows only).\n"
+msgstr "Use DOS codepage for output (Windows only).\n"
+
+#: parse_cmdline.c:120
 msgid "Load a printf-like template from the <file>\n"
 msgstr "Load a printf-like template from the <file>\n"
 
-#: parse_cmdline.c:119
+#: parse_cmdline.c:121
 msgid "Format and print hash sums.\n"
 msgstr "Format and print hash sums.\n"
 
-#: parse_cmdline.c:120
+#: parse_cmdline.c:122
 msgid "See the RHash manual for details.\n"
 msgstr "See the RHash manual for details.\n"
 
-#: parse_cmdline.c:223
+#: parse_cmdline.c:225
 #, c-format
 msgid "openssl option doesn't support '%s' hash\n"
 msgstr "openssl option doesn't support '%s' hash\n"
 
-#: parse_cmdline.c:228
+#: parse_cmdline.c:230
 msgid "compiled without openssl support\n"
 msgstr "compiled without openssl support\n"
 
 #. TRANSLATORS: Keep it secret ;)
-#: parse_cmdline.c:248
+#: parse_cmdline.c:250
 msgid "Purrr..."
 msgstr "Purrr..."
 
-#: parse_cmdline.c:263
+#: parse_cmdline.c:265
 #, c-format
 msgid "maxdepth parameter is not a number: %s\n"
 msgstr "maxdepth parameter is not a number: %s\n"
 
-#: parse_cmdline.c:280
+#: parse_cmdline.c:282
 #, c-format
 msgid "bt-piece-length parameter is not a number: %s\n"
 msgstr "bt-piece-length parameter is not a number: %s\n"
 
-#: parse_cmdline.c:301
+#: parse_cmdline.c:303
 msgid "wrong path-separator, use '//' instead of '/' on MSYS\n"
 msgstr "wrong path-separator, use '//' instead of '/' on MSYS\n"
 
-#: parse_cmdline.c:305
+#: parse_cmdline.c:307
 #, c-format
 msgid "path-separator is not '/' or '\\': %s\n"
 msgstr "path-separator is not '/' or '\\': %s\n"
 
-#: parse_cmdline.c:456
+#: parse_cmdline.c:461
 #, c-format
 msgid "unknown option: %s\n"
 msgstr "unknown option: %s\n"
 
-#: parse_cmdline.c:484 parse_cmdline.c:857
+#: parse_cmdline.c:489 parse_cmdline.c:862
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr "argument is required for option %s\n"
 
-#: parse_cmdline.c:655
+#: parse_cmdline.c:660
 #, c-format
 msgid "%s: can't parse line \"%s\"\n"
 msgstr "%s: can't parse line \"%s\"\n"
 
-#: parse_cmdline.c:668
+#: parse_cmdline.c:673
 #, c-format
 msgid "%s: unknown option \"%s\"\n"
 msgstr "%s: unknown option \"%s\"\n"
 
-#: parse_cmdline.c:798
+#: parse_cmdline.c:803
 msgid "CommandLineToArgvW failed\n"
 msgstr "CommandLineToArgvW failed\n"
 
-#: parse_cmdline.c:1026
+#: parse_cmdline.c:1031
 #, c-format
 msgid "Config file: %s\n"
 msgstr "Config file: %s\n"
 
-#: parse_cmdline.c:1026
+#: parse_cmdline.c:1031
 msgid "None"
 msgstr "None"
 
-#: parse_cmdline.c:1034
+#: parse_cmdline.c:1039
 msgid "incompatible program modes\n"
 msgstr "incompatible program modes\n"
 
-#: parse_cmdline.c:1039
+#: parse_cmdline.c:1044
 msgid "too many formatting options\n"
 msgstr "too many formatting options\n"
 

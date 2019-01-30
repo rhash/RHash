@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2019-01-30 03:00+0300\n"
+"POT-Creation-Date: 2019-01-30 04:03+0300\n"
 "PO-Revision-Date: 2017-07-17 02:10+0000\n"
 "Last-Translator: svens <snevnez@yahoo.co.uk>\n"
 "Language-Team: Romanian <ro@li.org>\n"
@@ -316,92 +316,100 @@ msgid "Create torrent files.\n"
 msgstr ""
 
 #: parse_cmdline.c:116
+msgid "Use UTF-8 encoding for output (Windows only).\n"
+msgstr ""
+
+#: parse_cmdline.c:117
 msgid "Use Windows codepage for output (Windows only).\n"
 msgstr ""
 
 #: parse_cmdline.c:118
-msgid "Load a printf-like template from the <file>\n"
-msgstr ""
-
-#: parse_cmdline.c:119
-msgid "Format and print hash sums.\n"
+msgid "Use DOS codepage for output (Windows only).\n"
 msgstr ""
 
 #: parse_cmdline.c:120
+msgid "Load a printf-like template from the <file>\n"
+msgstr ""
+
+#: parse_cmdline.c:121
+msgid "Format and print hash sums.\n"
+msgstr ""
+
+#: parse_cmdline.c:122
 msgid "See the RHash manual for details.\n"
 msgstr ""
 
-#: parse_cmdline.c:223
+#: parse_cmdline.c:225
 #, c-format
 msgid "openssl option doesn't support '%s' hash\n"
 msgstr "opțiunea openssl nu suporta hash-ul '%s'\n"
 
-#: parse_cmdline.c:228
+#: parse_cmdline.c:230
 msgid "compiled without openssl support\n"
 msgstr "compilat fără suport openssl\n"
 
 #. TRANSLATORS: Keep it secret ;)
-#: parse_cmdline.c:248
+#: parse_cmdline.c:250
 msgid "Purrr..."
 msgstr "Tors..."
 
-#: parse_cmdline.c:263
+#: parse_cmdline.c:265
 #, c-format
 msgid "maxdepth parameter is not a number: %s\n"
 msgstr "parametrul maxdepth nu este un număr: %s\n"
 
-#: parse_cmdline.c:280
+#: parse_cmdline.c:282
 #, c-format
 msgid "bt-piece-length parameter is not a number: %s\n"
 msgstr "parametrul bt-piece-length nu este un număr: %s\n"
 
-#: parse_cmdline.c:301
+#: parse_cmdline.c:303
 msgid "wrong path-separator, use '//' instead of '/' on MSYS\n"
 msgstr "separator de cale incorect, folosește '//' în loc de '/' în MSYS\n"
 
-#: parse_cmdline.c:305
+#: parse_cmdline.c:307
 #, c-format
 msgid "path-separator is not '/' or '\\': %s\n"
 msgstr "separatorul de cale nu este '/' sau '\\': %s\n"
 
-#: parse_cmdline.c:456
+#: parse_cmdline.c:461
 #, c-format
 msgid "unknown option: %s\n"
 msgstr "opțiune necunoscută : %s\n"
 
-#: parse_cmdline.c:484 parse_cmdline.c:857
+#: parse_cmdline.c:489 parse_cmdline.c:862
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr "argumentul este necesar pentru opțiunea %s\n"
 
-#: parse_cmdline.c:655
+#: parse_cmdline.c:660
 #, c-format
 msgid "%s: can't parse line \"%s\"\n"
 msgstr "%s: nu pot analiza linia \"%s\"\n"
 
-#: parse_cmdline.c:668
+#: parse_cmdline.c:673
 #, c-format
 msgid "%s: unknown option \"%s\"\n"
 msgstr "%s: opțiune necunoscută \"%s\"\n"
 
-#: parse_cmdline.c:798
+#: parse_cmdline.c:803
 msgid "CommandLineToArgvW failed\n"
 msgstr "CommandLineToArgvW eșuat\n"
 
-#: parse_cmdline.c:1026
+#: parse_cmdline.c:1031
 #, c-format
 msgid "Config file: %s\n"
 msgstr "Fișier config: %s\n"
 
-#: parse_cmdline.c:1026
+#: parse_cmdline.c:1031
 msgid "None"
 msgstr "Nici unul"
 
-#: parse_cmdline.c:1034
+#: parse_cmdline.c:1039
 msgid "incompatible program modes\n"
 msgstr "moduri ale programului incompatibile\n"
 
-#: parse_cmdline.c:1039
+#: parse_cmdline.c:1044
 msgid "too many formatting options\n"
 msgstr "prea multe opțiuni de formatare\n"
 
