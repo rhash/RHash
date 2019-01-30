@@ -32,6 +32,7 @@ LIBRHASH_PC = dist/librhash.pc
 RHASH_NAME     = rhash
 RHASH_BINARY   = rhash$(EXEC_EXT)
 CONFDIR_MACRO  = -DSYSCONFDIR=\"$(SYSCONFDIR)\"
+TEST_OPTIONS   =
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
 INSTALL_PROGRAM = $(INSTALL) -m 755
@@ -136,14 +137,17 @@ test-lib-shared: $(LIBRHASH_SHARED)
 test-libs: $(LIBRHASH_STATIC) $(LIBRHASH_SHARED)
 	+cd librhash && $(MAKE) test-static test-shared
 
+test-full:
+	+$(MAKE) TEST_OPTIONS=--full test
+
 test: test-$(BUILD_TYPE)
 test-static: $(RHASH_STATIC)
 	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh ./$(RHASH_STATIC)
+	tests/test_rhash.sh $(TEST_OPTIONS) ./$(RHASH_STATIC)
 
 test-shared: $(RHASH_SHARED)
 	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh --shared ./$(RHASH_SHARED)
+	tests/test_rhash.sh --shared $(TEST_OPTIONS) ./$(RHASH_SHARED)
 
 print-info: lib-$(BUILD_TYPE)
 	+cd librhash && $(MAKE) print-info
@@ -326,7 +330,7 @@ uninstall-gmo:
 	done
 
 .PHONY: all build-shared build-static lib-shared lib-static clean clean-bindings distclean clean-local \
-	test test-shared test-static test-lib test-libs test-lib-shared test-lib-static \
+	test test-shared test-static test-full test-lib test-libs test-lib-shared test-lib-static \
 	install build-install-binary install-binary install-lib-shared install-lib-static \
 	install-lib-headers install-lib-so-link install-conf install-data install-gmo install-man \
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
