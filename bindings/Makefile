@@ -18,6 +18,7 @@ configure: $(patsubst %, configure-%, $(filter perl ruby php, $(BINDINGS)))
 build: $(patsubst %, build-%, $(BINDINGS))
 test: $(patsubst %, test-%, $(BINDINGS))
 install: $(patsubst %, install-%, $(filter perl ruby php, $(BINDINGS)))
+distclean: $(patsubst %, clean-%, $(BINDINGS))
 
 configure-perl: perl/Makefile
 configure-ruby: ruby/Makefile
@@ -109,10 +110,15 @@ cpan:
 	tar -czf $(PERL_PKG).tar.gz --owner=root:0 --group=root:0 $(PERL_PKG)/
 	rm -rf $(PERL_PKG)/
 
-distclean:
+clean-java:
 	+$(MAKE) -C java distclean
+clean-mono:
 	+$(MAKE) -C mono clean
+clean-ruby:
 	+[ ! -f ruby/Makefile ] || $(MAKE) -C ruby distclean
+clean-perl:
 	+[ ! -f perl/Makefile ] || $(MAKE) -C perl distclean
+clean-php:
 	[ ! -f php/configure ] || (cd php && phpize --clean)
+clean-python:
 	rm -f python/*.pyc
