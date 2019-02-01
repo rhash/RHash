@@ -75,7 +75,7 @@ OS_METHOD(WHIRLPOOL);
 #else
 /* for load-time linking */
 #  define CALL_FINAL(name, result, ctx) name##_Final(result, ctx)
-#  define HASH_INFO_METHODS(name) (pinit_t)name##_Init, (pupdate_t)name##_Update, wrap##name##_Final, 0
+#  define HASH_INFO_METHODS(name) (pinit_t)(void(*)(void))name##_Init, (pupdate_t)(void(*)(void))name##_Update, wrap##name##_Final, 0
 #endif
 
 
@@ -137,19 +137,17 @@ rhash_hash_info rhash_openssl_methods[] = {
 rhash_hash_info rhash_openssl_hash_info[RHASH_HASH_COUNT];
 
 #ifdef OPENSSL_RUNTIME
+
 #if (defined(_WIN32) || defined(__CYGWIN__)) /* __CYGWIN__ is also defined in MSYS */
-#define LOAD_ADDR(n, name) \
-	p##name##_final = (os_fin_t)GetProcAddress(handle, #name "_Final"); \
-	rhash_openssl_methods[n].update = (pupdate_t)GetProcAddress(handle, #name "_Update"); \
-	rhash_openssl_methods[n].init = (rhash_openssl_methods[n].update && p##name##_final ? \
-		(pinit_t)GetProcAddress(handle, #name "_Init") : 0);
+# define GET_DLSYM(name) (void(*)(void))GetProcAddress(handle, name)
 #else  /* _WIN32 */
-#define LOAD_ADDR(n, name) \
-	p##name##_final = (os_fin_t)dlsym(handle, #name "_Final"); \
-	rhash_openssl_methods[n].update = (pupdate_t)dlsym(handle, #name "_Update"); \
-	rhash_openssl_methods[n].init = (rhash_openssl_methods[n].update && p##name##_final ? \
-		(pinit_t)dlsym(handle, #name "_Init") : 0);
+# define GET_DLSYM(name) dlsym(handle, name)
 #endif /* _WIN32 */
+#define LOAD_ADDR(n, name) \
+	p##name##_final = (os_fin_t)GET_DLSYM(#name "_Final"); \
+	rhash_openssl_methods[n].update = (pupdate_t)GET_DLSYM(#name "_Update"); \
+	rhash_openssl_methods[n].init = (rhash_openssl_methods[n].update && p##name##_final ? \
+		(pinit_t)GET_DLSYM(#name "_Init") : 0);
 
 /**
  * Load OpenSSL DLL at runtime, store pointers to functions of all
@@ -174,11 +172,17 @@ static int load_openssl_runtime(void)
  #endif
 	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
-	void* handle = dlopen("libcrypto.so", RTLD_NOW);
-	if (!handle) handle = dlopen("libcrypto.so.1.1", RTLD_NOW);
-	if (!handle) handle = dlopen("libcrypto.so.1.0.2", RTLD_NOW);
-	if (!handle) handle = dlopen("libcrypto.so.1.0.0", RTLD_NOW);
-	if (!handle) handle = dlopen("libcrypto.so.0.9.8", RTLD_NOW);
+	static const char* libNames[] = {
+		"libcrypto.so",
+		"libcrypto.so.1.1",
+		"libcrypto.so.1.0.2",
+		"libcrypto.so.1.0.0",
+		"libcrypto.so.0.9.8",
+	};
+	void* handle = 0;
+	size_t i;
+	for (i = 0; !handle && i < (sizeof(libNames)/sizeof(*libNames)); i++)
+		handle = dlopen(libNames[i], RTLD_NOW);
 #endif
 
 	if (handle == NULL) return 0; /* could not load OpenSSL */
