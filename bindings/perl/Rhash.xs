@@ -18,9 +18,9 @@ void verify_single_bit_hash_id(unsigned hash_id, CV* cv)
 	const char *func_name;
 
 	if(0 == (hash_id & RHASH_ALL_HASHES)) {
-		error = "%s: unknown hash hash_id = %d";
+		error = "%s: unsupported hash_id = 0x%x";
 	} else if(0 != (hash_id & (hash_id - 1))) {
-		error = "%s: hash_id is not a single bit: %d";
+		error = "%s: hash_id is not a single bit: 0x%x";
 	} else {
 		return; /* success */
 	}

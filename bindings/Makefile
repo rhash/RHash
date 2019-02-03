@@ -6,10 +6,11 @@ PREFIX = /usr/local
 RUBY ?= ruby
 PYTHON ?= python
 PERL ?= perl
-CP = cp -l --parents
-PERL_OPTIMIZE = -O2 -g -Wall
+PERL_LIBRHASH_TYPE ?= auto
+PERL_OPTIMIZE ?= -O2 -g -Wall
 ARCHIVE_GZIP = rhash-bindings-$(VERSION)-src.tar.gz
 COPYDIR = rhash-bindings-$(VERSION)
+CP = cp -l --parents
 
 all: configure build test
 clean: distclean
@@ -25,7 +26,7 @@ configure-ruby: ruby/Makefile
 configure-php: php/Makefile
 
 perl/Makefile: perl/Makefile.PL
-	cd perl && USE_SYSTEM_LIBRHASH=1 $(PERL) Makefile.PL INSTALLDIRS=vendor
+	cd perl && LIBRHASH="$(PERL_LIBRHASH_TYPE)" $(PERL) Makefile.PL INSTALLDIRS=vendor
 
 php/Makefile: php/config.m4
 	cd php && phpize && ./configure --with-rhash

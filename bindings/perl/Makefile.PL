@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Cwd;
 use ExtUtils::MakeMaker;
 use File::Copy;
 
@@ -7,17 +8,41 @@ my $libs  = '';
 my $inc   = '';
 my $obj   = '';
 my $clean = '';
-my $local_librhash_dir = 'librhash';
-my $has_builtin_librhash = (-f $local_librhash_dir . '/rhash.h');
+my $inc_dir = undef;
+my $lib_dir = undef;
+my $rh_builtin_dir = 'librhash';
+my $rh_local_dir   = getcwd() . '/../../librhash';
+my $rh_type = $ENV{'LIBRHASH'} || 'auto';
+my $custom_inc = $ENV{'LIBRHASH_INC'} || '';
+my $custom_ld  = $ENV{'LIBRHASH_LD'}  || '';
 
-# set the location of LibRHash headers and the linking flags
-$inc = $ENV{'LIBRHASH_INC'} if defined($ENV{'LIBRHASH_INC'});
-if(defined($ENV{'LIBRHASH_LD'}) && $ENV{'LIBRHASH_LD'} =~ /-L/) {
-	$libs = $ENV{'LIBRHASH_LD'} . ' ' . $libs;
+sub has_librhash {
+	return (-f $_[0] . '/rhash.h');
 }
 
-# use a system-wide librhash
-$libs = '-lrhash' if (defined($ENV{'USE_SYSTEM_LIBRHASH'}) || ($libs eq '' && !$has_builtin_librhash));
+if ($rh_type eq 'auto')
+{
+	$rh_type = ($custom_ld =~ /-L/ ? 'custom' :
+		has_librhash($rh_builtin_dir) ? 'builtin' :
+		has_librhash($rh_local_dir) ? 'local' : 'system' );
+	print "Selected librhash type: $rh_type\n";
+}
+if ($rh_type ne 'custom')
+{
+	$inc_dir = ($rh_type eq 'builtin' ? $rh_builtin_dir :
+		$rh_type eq 'local' ? $rh_local_dir :
+		$rh_type eq 'system' ? '' : die("Unknown type LIBRHASH='$rh_type'"));
+	$lib_dir = $inc_dir if $rh_type ne 'builtin';
+	!$inc_dir || -d $inc_dir || die "Not a directory: '$inc_dir'";
+	!$inc_dir || has_librhash($inc_dir) || die "No librhash headers at: '$inc_dir'";
+	$inc  = "-I$inc_dir" if $inc_dir;
+	$libs = "-L$lib_dir" if $lib_dir;
+	$libs .= ' -lrhash'  if $rh_type ne 'builtin';
+} else {
+	# set custom compile and linking flags
+	$inc = $custom_inc;
+	$libs = $custom_ld;
+}
 
 # copy and rename *.c files by prepending underscore '_'
 sub copy_c_files($) {
@@ -39,11 +64,9 @@ sub copy_c_files($) {
 	return @result;
 }
 
-if($inc eq '' && $libs eq '' && $has_builtin_librhash) {
-	# use the local version of librhash
-	print "Using builtin LibRHash\n";
-	$inc = '-I' . $local_librhash_dir;
-	my @c_files = copy_c_files($local_librhash_dir);
+if($rh_type eq 'builtin') {
+	# using sources of the builtin librhash
+	my @c_files = copy_c_files($rh_builtin_dir);
 	$clean = join(' ', @c_files);
 	$obj = join(' ', map { s/\.c$/\$(OBJ_EXT)/; $_ } @c_files) . ' ';
 }
