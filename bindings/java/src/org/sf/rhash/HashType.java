@@ -74,13 +74,13 @@ public enum HashType {
 	/** SHA3-384 hash. */
 	SHA3_384(1 << 24),
 	/** SHA3-512 hash. */
-	SHA3_512(1 << 25);
+	SHA3_512(1 << 25),
 	/** CRC32C checksum. */
 	CRC32C(1 << 26),
 	/** Snefru-128 hash. */
 	SNEFRU128(1 << 27),
 	/** Snefru-256 hash. */
-	SNEFRU256(1 << 28),
+	SNEFRU256(1 << 28);
 
 	/** hash_id for the native API */
 	private int hashId;
