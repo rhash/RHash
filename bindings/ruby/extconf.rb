@@ -1,7 +1,7 @@
 require 'mkmf'
 
 if ENV['LIBRHASH_INC']
-    $CFLAGS  += ENV['LIBRHASH_INC']
+    $CFLAGS += ' ' + ENV['LIBRHASH_INC']
 else
     have_header('rhash.h')
 end
