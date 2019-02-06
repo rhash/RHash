@@ -89,10 +89,11 @@ static VALUE rh_reset(VALUE self) {
 }
 
 static VALUE rh_print(VALUE self, VALUE type, int flags) {
+	int len;
 	char buf[130];
 	rhash ctx;
 	Data_Get_Struct(self, struct rhash_context, ctx);
-	int len = rhash_print(buf, ctx, type == Qnil ? 0 : FIX2INT(type), flags);
+	len = rhash_print(buf, ctx, type == Qnil ? 0 : FIX2INT(type), flags);
 	return rb_str_new(buf, len);
 }
 
@@ -229,14 +230,16 @@ static VALUE rh_init(int argc, VALUE *argv, VALUE self) {
  * Parameters should be constants defined in this class.
  */
 VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
+	rhash ctx;
+	VALUE newobj;
 	int flags = 0, i;
 	for (i=0; i<argc; i++) {
 		flags |= FIX2INT(argv[i]);
 	}
 	if (!flags) flags = RHASH_ALL_HASHES;
-	rhash ctx = rhash_init(flags);
+	ctx = rhash_init(flags);
 	rhash_set_autofinal(ctx, 0);
-	VALUE newobj = Data_Wrap_Struct(clz, NULL, rh_free, ctx);
+	newobj = Data_Wrap_Struct(clz, NULL, rh_free, ctx);
 	rb_obj_call_init(newobj, argc, argv);
 	return newobj;
 }
