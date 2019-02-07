@@ -16,18 +16,23 @@
 # FOR A PARTICULAR PURPOSE. Use it at your own risk!
 
 
-CC = gcc
-CFLAGS = -g -O2
-LDFLAGS =
-LIBRHASH_INC =
-LIBRHASH_LD  =
+CC ?= gcc
+JAVAC ?= javac
+CFLAGS ?= -g -O2
+LDFLAGS ?=
+LIBRHASH_INC ?=
+LIBRHASH_LD  ?=
 ALLLDFLAGS = $(LDFLAGS) -lrhash $(LIBRHASH_LD)
 ALLCFLAGS = $(CFLAGS) $(LIBRHASH_INC) -fPIC
 
 #Platform dependent
-JNI_CFLAGS = -I/usr/lib/jvm/default-java/include
-LIB_PREFIX = lib
-LIB_SUFFIX = .so
+JAVAC_PATH = $(shell readlink -f $(shell which $(JAVAC)))
+JDK_HOME ?=$(realpath $(dir $(JAVAC_PATH))/..)
+JNI_CFLAGS1 = $(shell test -d "$(JDK_HOME)/include" && echo -I$(JDK_HOME)/include)
+JNI_CFLAGS2 = $(shell test -d "$(JDK_HOME)/include/linux" && echo -I$(JDK_HOME)/include/linux)
+JNI_CFLAGS ?= $(JNI_CFLAGS1) $(JNI_CFLAGS2)
+LIB_PREFIX ?= lib
+LIB_SUFFIX ?= .so
 
 OBJECTS = bindings.o digest.o
 LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)

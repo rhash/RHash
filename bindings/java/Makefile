@@ -27,15 +27,15 @@ VERSION = $(shell sed -ne 's/^version=\(.*\)/\1/p' ../version.properties)
 
 JAVASRC_DIR = src
 CSRC_DIR    = native
-DEST_DIR    = dist
+DEST_DIR    ?= dist
 CLASSES_DIR = classes
 JAVADOC_DIR = javadoc
 TEST_DIR    = test
 
 JAVA_FILES := $(shell find $(JAVASRC_DIR) -name '*.java')
-JNI_FILES := $(shell find $(CSRC_DIR) -name '*.c' -o -name '*.h')
-LIB_PREFIX = lib
-LIB_SUFFIX = .so
+JNI_FILES  := $(shell find $(CSRC_DIR) -name '*.c' -o -name '*.h')
+LIB_PREFIX ?= lib
+LIB_SUFFIX ?= .so
 JNI_LIBRARY = $(LIB_PREFIX)rhash-jni$(LIB_SUFFIX)
 JARFILE = $(DEST_DIR)/rhash-$(VERSION).jar
 JAVADOC_FILE = $(DEST_DIR)/rhash-$(VERSION)-javadoc.zip
