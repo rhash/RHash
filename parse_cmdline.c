@@ -993,6 +993,7 @@ static void set_default_sums_flags(const char* progName)
 	else if (strstr(buf, "ed2k")) res |= RHASH_ED2K;
 
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
+	if (strstr(buf, "bsd") && opt.fmt == 0) opt.fmt = FMT_BSD;
 	if (strstr(buf, "magnet") && opt.fmt == 0) opt.fmt = FMT_MAGNET;
 
 	free(buf);
