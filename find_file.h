@@ -15,6 +15,7 @@ extern "C" {
 #define FIND_SKIP_DIRS 4
 #define FIND_LOG_ERRORS 8
 #define FIND_CANCEL 16
+#define FIND_HASH_LINK_TARGET 32
 
 /**
  * Options for file search.

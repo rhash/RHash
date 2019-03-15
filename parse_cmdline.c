@@ -405,6 +405,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_TFNC, 'm',   0, "message", add_special_file, FILE_IFDATA },
 	{ F_TFNC,   0,   0, "file-list", add_special_file, FILE_IFLIST },
 	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
+	{ F_UFLG,   0,   0, "hash-link",  &opt.flags, OPT_HASH_LINK },
 	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },

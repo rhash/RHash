@@ -291,6 +291,7 @@ int main(int argc, char *argv[])
 
 	opt.search_data->options = FIND_SKIP_DIRS;
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
+	opt.search_data->options |= (opt.flags & OPT_HASH_LINK ? FIND_HASH_LINK_TARGET : 0);
 	opt.search_data->call_back = find_file_callback;
 
 	if ((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {

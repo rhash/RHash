@@ -1,4 +1,4 @@
-/* find_file.c - functions for recursive scan of directories. */
+/* find_file.c - functions for recursive scan of directories.  -*- mode: c; eval: (c-guess-buffer); -*- */
 
 #include <assert.h>
 #include <errno.h>
@@ -38,11 +38,18 @@ file_search_data* file_search_data_new(void)
 	return data;
 }
 
-static void file_search_add_special_file(file_search_data* search_data, unsigned file_mode, tstr_t str)
+/* allocate and fill out a file struct.  The caller must free. */
+static file_t *file_search_create_special_file(unsigned file_mode, tstr_t str, char *filename)
 {
-	file_t file;
-	char* filename = (file_mode & FILE_IFSTDIN ? "(stdin)" : "(message)");
+	file_t *file;
 	char* ext_data = 0;
+
+	file = (file_t *) rsh_malloc(sizeof(*file));
+	if (file == NULL)
+	{
+		return NULL;
+	}
+
 	if (file_mode & FILE_IFDATA)
 	{
 #ifdef _WIN32
@@ -54,13 +61,24 @@ static void file_search_add_special_file(file_search_data* search_data, unsigned
 		ext_data = rsh_strdup(str);
 #endif
 	}
-	file_init(&file, filename, file_mode);
+	file_init(file, filename, file_mode);
 	if (file_mode & FILE_IFDATA)
 	{
-		file.data = ext_data;
-		file.size = strlen(ext_data);
+		file->data = ext_data;
+		file->size = strlen(ext_data);
 	}
-	add_root_file(search_data, &file);
+	return file;
+}
+
+static void file_search_add_special_file(file_search_data* search_data, unsigned file_mode, tstr_t str)
+{
+	char* filename = (file_mode & FILE_IFSTDIN ? "(stdin)" : "(message)");
+	file_t *file = file_search_create_special_file(file_mode, str, filename);
+	if (file != NULL) 
+	{
+		add_root_file(search_data, file);
+	}
+	free(file);
 }
 
 void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mode)
@@ -223,6 +241,8 @@ void scan_files(file_search_data* data)
 	size_t i;
 	size_t count = data->root_files.size;
 	int skip_symlinked_dirs = (data->options & FIND_FOLLOW_SYMLINKS ? 0 : FUseLstat);
+	/* should we do this at this level ????? */
+	int hash_targets = (data->options & FIND_HASH_LINK_TARGET ? 0 : FUseLstat);
 
 	for (i = 0; i < count && !(data->options & FIND_CANCEL); i++)
 	{
@@ -248,7 +268,9 @@ void scan_files(file_search_data* data)
 		{
 			/* silently skip symlinks to directories if required */
 			if (skip_symlinked_dirs && FILE_ISLNK(file))
+			{
 				continue;
+			}
 
 			if (data->max_depth != 0)
 			{
@@ -259,6 +281,22 @@ void scan_files(file_search_data* data)
 				errno = EISDIR;
 				log_file_t_error(file);
 			}
+		}
+		else if (hash_targets && FILE_ISLNK(file))
+		{
+			size_t size = file->size + 1;
+			char *linkdata = (char *)alloca(size); // allocates on stack no-free, can't fail.
+			char *filename = file->path;
+			linkdata[size-1] = 0;
+			if (readlink(filename, linkdata, size))
+			{
+				// dups the data, so it takes responsibility for freeing it.
+				file_t *newfile = file_search_create_special_file(FILE_IFDATA, linkdata, filename);
+				data->call_back(newfile, data->call_back_data);
+				file_cleanup(newfile);
+				free(newfile);
+			}
+			continue;
 		}
 		else
 		{
@@ -476,6 +514,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			if (!file.path)
 				continue;
 			res  = file_stat(&file, fstat_flags);
+
 			if (res >= 0)
 			{
 				/* process the file or directory */
@@ -488,10 +527,29 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 					/* handle file by callback function */
 					res = data->call_back(&file, data->call_back_data);
 				}
-
+				/* if it's a symlink and we are hashing the target,
+				   handle that here. */
+				if (FILE_ISLNK(&file) && (options & FIND_HASH_LINK_TARGET))
+				{
+					size_t size = file.size + 1;
+					char *linkdata = (char *)alloca(size); // allocates on stack no-free, can't fail.
+					char *filename = file.path;
+					linkdata[size-1] = 0;
+					if (readlink(filename, linkdata, size) >= 0)
+					{
+						// dups the data, so it takes responsibility for freeing it.
+						file_t *newfile = file_search_create_special_file(FILE_IFDATA |
+												  FILE_OPT_DONT_FREE_PATH,
+												  linkdata,
+												  filename);
+						res = data->call_back(newfile, data->call_back_data);
+						file_cleanup(newfile);
+						free(newfile);
+					}
+				} 
 				/* check if file is a directory and we need to walk it, */
 				/* but don't go deeper than max_depth */
-				if (FILE_ISDIR(&file) && res && level < max_depth &&
+				else if (FILE_ISDIR(&file) && res && level < max_depth &&
 					((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file)))
 				{
 					/* add the directory name to the dirs_stack */
