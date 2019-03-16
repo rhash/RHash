@@ -46,7 +46,8 @@ enum {
 	PRINT_BASENAME,
 	PRINT_URLNAME,
 	PRINT_SIZE,
-	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_MTIME, /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_MDATETIME
 };
 
 /* parse a token following a percent sign '%' */
@@ -205,6 +206,9 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned *fla
 	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
+	} else if (length == 9 && memcmp(buf, "mdatetime", 9) == 0) {
+		*flags = PRINT_MDATETIME;
+		return 0;
 	}
 
 	for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
@@ -270,7 +274,7 @@ print_item* parse_percent_item(const char** str)
 		if (*p == '}') {
 			hash_id = printf_name_to_id(format, (int)(p - (format)), &modifier_flags);
 			format--;
-			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_MTIME) {
+			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_MTIME || modifier_flags == PRINT_MDATETIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -402,6 +406,37 @@ static void print_time64(FILE *out, uint64_t time)
 }
 
 /**
+* Print time formatted as YYYY-MM-DD hh:mm:ss to a file stream.
+*
+* @param out the stream to print the time to
+* @param time the time to print
+*/
+static void print_datetime(FILE *out, time_t time)
+{
+	struct tm *t = localtime(&time);
+	static struct tm zero_tm;
+	if (t == NULL) {
+		/* if a strange day, then print `00:00.00 1900-01-00' */
+		t = &zero_tm;
+		t->tm_hour = t->tm_min = t->tm_sec =
+			t->tm_year = t->tm_mon = t->tm_mday = 0;
+	}
+	rsh_fprintf(out, "%4u-%02u-%02u %02u:%02u:%02u", (1900 + t->tm_year), 
+        t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+}
+
+/**
+* Print time formatted as YYYY-MM-DD hh:mm:ss to a file stream.
+*
+* @param out the stream to print the time to
+* @param time the time to print
+*/
+static void print_datetime64(FILE *out, uint64_t time)
+{
+	print_datetime(out, (time_t)time);
+}
+
+/**
  * Print formatted file information to given output stream.
  *
  * @param out the stream to print information to
@@ -471,6 +506,9 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
 				print_time64(out, info->file->mtime);
+				break;
+			case PRINT_MDATETIME: /* the last-modified tine of the filename in ansi datetime format*/
+				print_datetime64(out, info->file->mtime);
 				break;
 			case PRINT_SIZE: /* file size */
 				fprintI64(out, info->size, list->width, (list->flags & PRINT_FLAG_PAD_WITH_ZERO));
