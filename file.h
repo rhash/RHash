@@ -99,11 +99,11 @@ FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
 
 int file_rename(file_t* from, file_t* to);
 int file_move_to_bak(file_t* file);
+int file_is_readable(file_t* file);
 
 #ifdef _WIN32
 void file_tinit(file_t* file, ctpath_t tpath, int finit_flags);
 const char* file_cpath(file_t* file);
-int file_is_write_locked(file_t* file);
 #else
 # define file_tinit(file, tpath, finit_flags) file_init(file, tpath, finit_flags)
 # define file_cpath(file) ((const char*)(file)->path)

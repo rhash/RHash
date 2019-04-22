@@ -122,7 +122,7 @@ static int calc_sums(struct file_info *info)
 
 		if (!FILE_ISDATA(info->file)) {
 			fd = file_fopen(info->file, FOpenRead | FOpenBin);
-			/* quietly skip files exclusively opened by another process */
+			/* quietly skip unreadble files */
 			if (!fd)
 				return -1;
 		}

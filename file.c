@@ -452,40 +452,52 @@ int file_move_to_bak(file_t* file)
 
 #ifdef _WIN32
 /**
- * Check if the given file can't be opened with exclusive write access.
+ * Check if the specified path points to a readable file.
  *
- * @param file the file
- * @return 1 if the file is locked and can't be exclusively opened, 0 otherwise
+ * @param wpath file path
+ * @param is_readable pointer to the result, it is set to 1, if the file is readable, to 0 otherwise
+ * @return 1 if the file with such path exists, 0 otherwise
  */
-static int can_not_open_exclusive(wchar_t* wpath)
+static int wpath_is_readable(wchar_t* wpath, int* is_readable)
 {
-	int fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYWR, 0);
-	if (fd < 0) return 1;
-	_close(fd);
-	return 0;
-}
-
-/**
- * Check if given file is write-locked, i.e. can not be opened
- * with exclusive write access.
- *
- * @param file the file
- * @return 1 if file can't be opened, 0 otherwise
- */
-int file_is_write_locked(file_t* file)
-{
-	int i, res = 0;
-	if (file->wpath)
-		return can_not_open_exclusive(file->wpath);
-	for (i = 0; i < 2 && !res; i++) {
-		file->wpath = c2w_long_path(file->path, i);
-		if(file->wpath && can_not_open_exclusive(file->wpath)) return 1;
-		free(file->wpath);
-	}
-	file->wpath = NULL;
-	return 0;
+	/* note: using _wsopen, since _waccess doesn't check permissions */
+	int fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYNO);
+	*is_readable = (fd >= 0);
+	if (fd >= 0) {
+		_close(fd);
+		return 1;
+	} 
+	return (errno == EACCES);
 }
 #endif
+
+/**
+ * Check if the given file can't be opened for reading.
+ *
+ * @param file the file
+ * @return 1 if the file can be opened for reading, 0 otherwise
+ */
+int file_is_readable(file_t* file)
+{
+#ifdef _WIN32
+	int i, is_readable;
+	if (file->wpath) {
+		(void)wpath_is_readable(file->wpath, &is_readable);
+		return is_readable;
+	}
+	for (i = 0; i < 2; i++) {
+		wchar_t* wpath = c2w_long_path(file->path, i);
+		if(wpath && wpath_is_readable(wpath, &is_readable)) {
+			file->wpath = wpath;
+			return is_readable;
+		}
+		free(wpath);
+	}
+	return 0;
+#else
+	return (access(file->path, R_OK) == 0);
+#endif
+}
 
 
 /*=========================================================================
