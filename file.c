@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include "file.h"
 #include "common_func.h"
+#include "platform.h"
 #include "win_utils.h"
 
 #if defined( _WIN32) || defined(__CYGWIN__)

@@ -6,10 +6,6 @@
 #include <stdio.h>
 #include <wchar.h> /* for wchar_t */
 
-#if _MSC_VER > 1300
-# include "platform.h"
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
