@@ -400,6 +400,7 @@ else
       mingw32*) TARGET_OS=MINGW32 ;;
       wine) TARGET_OS=Wine ;;
       darwin*) TARGET_OS=Darwin ;;
+      cygwin*) TARGET_OS=CYGWIN ;;
     esac
   }
   TARGET_OS="UNKNOWN"
