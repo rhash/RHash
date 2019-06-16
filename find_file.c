@@ -47,7 +47,7 @@ static void file_search_add_special_file(file_search_data* search_data, unsigned
 	{
 #ifdef _WIN32
 		ext_data = wcs_to_utf8(str);
-		/* we assume that conversion alwais succeed and the following condition is never met */
+		/* we assume that conversion always succeeds and the following condition is never met */
 		if (!ext_data)
 			return;
 #else
@@ -150,10 +150,11 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 		else
 		{
 			/* report error on the specified wildcard */
-			char * cpath = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, NULL);
+			file_t file;
+			file_tinit(&file, path, FILE_OPT_DONT_FREE_PATH);
 			set_errno_from_last_file_error();
-			log_file_error(cpath);
-			free(cpath);
+			log_file_t_error(&file);
+			file_cleanup(&file);
 			data->errors_count++;
 		}
 	}

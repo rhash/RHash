@@ -25,6 +25,16 @@
 struct percents_output_info_t *percents_output = NULL;
 
 /**
+ * Print message prefix before printing an error/warning message.
+ *
+ * @return the number of characters printed, -1 on error
+ */
+static int print_log_prefix(void)
+{
+	return rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+}
+
+/**
  * Print a formatted message to the program log, and flush the log stream.
  *
  * @param format print a formatted message to the program log
@@ -49,40 +59,34 @@ void log_msg(const char* format, ...)
 }
 
 /**
- * Print an error to the program log.
+ * Print formatted file path to the specified stream.
  *
- * @param format print a formatted message to the program log
+ * @param out the stream to write to
+ * @param format the format string
+ * @param file the file, which path will be formatted
+ * @return the number of characters printed, -1 on error
  */
-void log_error(const char* format, ...)
+int fprintf_file_t(FILE* out, const char* format, struct file_t* file)
 {
-	va_list ap;
-	va_start(ap, format);
-	rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
-	log_va_msg(format, ap);
+#ifdef _WIN32
+	if (!FILE_TPATH(file) || !win_is_console_stream(out))
+		return rsh_fprintf(out, format, file_cpath(file));
+#endif
+	return rsh_fprintf_targ(out, format, FILE_TPATH(file));
 }
 
 /**
- * Print an error to the program log.
+ * Print a formatted message, where a single %s substring is replaced with a filepath, and flush the log stream.
+ * This function aims to correctly process utf8 conversion on windows.
+ * Note: on windows the format string must be in utf8 encoding.
  *
- * @param filepath the path to file caused the error
+ * @param format the format string of a formatted message
+ * @param file the file, which path will be formatted
  */
-void log_warning(const char* format, ...)
+void log_file_t_msg(const char* format, struct file_t* file)
 {
-	va_list ap;
-	va_start(ap, format);
-	rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
-	log_va_msg(format, ap);
-}
-
-/**
- * Print file error to the program log.
- *
- * @param filepath path to the file, which caused the error
- */
-void log_file_error(const char* filepath)
-{
-	if (!filepath) filepath = "(null)";
-	log_error("%s: %s\n", filepath, strerror(errno));
+	fprintf_file_t(rhash_data.log, format, file);
+	fflush(rhash_data.log);
 }
 
 /**
@@ -92,7 +96,37 @@ void log_file_error(const char* filepath)
  */
 void log_file_t_error(struct file_t* file)
 {
-	log_file_error(file_cpath(file));
+	int file_error = errno;
+	print_log_prefix();
+	fprintf_file_t(rhash_data.log, "%s", file);
+	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_error));
+	fflush(rhash_data.log);
+}
+
+/**
+ * Print a formatted error message to the program log.
+ *
+ * @param format the format string
+ */
+void log_error(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	print_log_prefix();
+	log_va_msg(format, ap);
+}
+
+/**
+ * Print a formatted warning message to the program log.
+ *
+ * @param format the format string
+ */
+void log_warning(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	print_log_prefix();
+	log_va_msg(format, ap);
 }
 
 /**
@@ -192,7 +226,7 @@ static void print_verbose_error(struct file_info *info)
 static void print_check_result(struct file_info *info, int print_name, int print_result)
 {
 	if (print_name) {
-		rsh_fprintf(rhash_data.out, "%-51s ", info->print_path);
+		fprintf_file_t(rhash_data.out, "%-51s ", info->file);
 	}
 	if (print_result) {
 		if (info->error == -1) {
@@ -427,12 +461,30 @@ struct percents_output_info_t p_perc = {
 	p_init_percents, p_update_percents, p_finish_percents, "digits"
 };
 
-static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path)
+/**
+ * Initialize given output stream.
+ *
+ * @param p_stream the stream to initialize.
+ * @param stream_path the path to the log file, or NULL, to use the default stream
+ * @param default_stream the default stream value, for the case of invalid stream_path
+ */
+static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path, FILE* default_stream)
 {
-	if (stream_path && !(*p_stream = rsh_tfopen(stream_path, RSH_T("w"))) ) {
-		log_file_error(t2c(stream_path));
+	file_t file;
+	FILE* result;
+	/* set to the default stream, to enable error reporting via log_file_t_error() */
+	*p_stream = default_stream;
+	if (!stream_path)
+		return;
+	file_tinit(&file, stream_path, FILE_OPT_DONT_FREE_PATH);
+	result = file_fopen(&file, FOpenWrite);
+	if (!result) {
+		log_file_t_error(&file);
+		file_cleanup(&file);
 		rsh_exit(2);
 	}
+	*p_stream = result;
+	file_cleanup(&file);
 }
 
 /**
@@ -440,11 +492,8 @@ static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path)
  */
 void setup_output(void)
 {
-	rhash_data.out = stdout;
-	rhash_data.log = stderr;
-
-	setup_log_stream(&rhash_data.log, opt.log);
-	setup_log_stream(&rhash_data.out, opt.output);
+	setup_log_stream(&rhash_data.log, opt.log, stderr);
+	setup_log_stream(&rhash_data.out, opt.output, stdout);
 }
 
 void setup_percents(void)

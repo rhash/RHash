@@ -319,6 +319,25 @@ static void restore_cursor(void)
 }
 
 /**
+ * Hide console cursor.
+ */
+void hide_cursor(void)
+{
+	CONSOLE_CURSOR_INFO cci;
+	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
+	if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
+	{
+		/* store current cursor size and visibility flag */
+		rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
+
+		/* now hide cursor */
+		cci.bVisible = 0;
+		SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
+		rsh_install_exit_handler(restore_cursor);
+	}
+}
+
+/**
  * Prepare console on program initialization: change console font codepage
  * according to program options and hide cursor.
  */
@@ -352,20 +371,16 @@ void setup_console(void)
 	}
 }
 
-void hide_cursor(void)
+/**
+ * Check if the given stream is connected to console.
+ *
+ * @param stream the stream to check
+ * @return 1 if the stream is connected to console, 0 otherwise
+ */
+int win_is_console_stream(FILE* stream)
 {
-	CONSOLE_CURSOR_INFO cci;
-	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
-	if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
-	{
-		/* store current cursor size and visibility flag */
-		rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
-
-		/* now hide cursor */
-		cci.bVisible = 0;
-		SetConsoleCursorInfo(hOut, &cci); /* hide cursor */
-		rsh_install_exit_handler(restore_cursor);
-	}
+	return ((stream == stdout && (rhash_data.output_flags & 1))
+		|| (stream == stderr && (rhash_data.output_flags & 2)));
 }
 
 /**
@@ -441,33 +456,51 @@ void setup_locale_dir(void)
 }
 #endif /* USE_GETTEXT */
 
+#define USE_CSTR_ARGS 0
+#define USE_WSTR_ARGS 1
+
 /**
  * Print formatted data to the specified file descriptor,
  * handling proper printing UTF-8 strings to Windows console.
  *
  * @param out file descriptor
  * @param format data format string
- * @param args list of arguments 
+ * @param str_type wide/c-string type of string arguments
+ * @param args list of arguments
+ * @return the number of characters printed, -1 on error
  */
-int win_vfprintf(FILE* out, const char* format, va_list args)
+static int win_vfprintf_encoded(FILE* out, const char* format, int str_type, va_list args)
 {
-	if ((out != stdout || !(rhash_data.output_flags & 1))
-		&& (out != stderr || !(rhash_data.output_flags & 2)))
-		return vfprintf(out, format, args);
+	if (!win_is_console_stream(out))
 	{
-		/* because of using a static buffer, this function
-                 * can be used only from a single-thread program */
-		static char buffer[8192];
-		wchar_t *wstr = NULL;
-		int res = vsnprintf(buffer, 8192, format, args);
-		if (res < 0 || res >= 8192)
+		int res;
+		char* actual_format = (char*)format;
+		if (str_type != USE_CSTR_ARGS)
 		{
-			errno = EINVAL;
-			return -1;
+			char* p;
+			actual_format = rsh_strdup(format);
+			for (p = actual_format; *p; p++)
+				if (*p == '%' && *(++p) == 's')
+					*p = 'S';
 		}
-		wstr = cstr_to_wchar(buffer, CP_UTF8);
-		res = fwprintf(out, L"%s", wstr);
-		free(wstr);
+		res = vfprintf(out, actual_format, args);
+		if (actual_format != format)
+			free(actual_format);
+		return res;
+	}
+	else
+	{
+		int res;
+		wchar_t* wformat = cstr_to_wchar(format, CP_UTF8);
+		if (wformat && str_type == USE_CSTR_ARGS)
+		{
+			wchar_t* p;
+			for (p = wformat; *p; p++)
+				if (*p == L'%' && *(++p) == L's')
+					*p = L'S';
+		}
+		res = vfwprintf(out, (wformat ? wformat : L"[UTF8 conversion error]\n"), args);
+		free(wformat);
 		return res;
 	}
 }
@@ -478,14 +511,53 @@ int win_vfprintf(FILE* out, const char* format, va_list args)
  *
  * @param out file descriptor
  * @param format data format string
+ * @param args list of arguments
+ * @return the number of characters printed, -1 on error
+ */
+int win_vfprintf(FILE* out, const char* format, va_list args)
+{
+	return win_vfprintf_encoded(out, format, USE_CSTR_ARGS, args);
+}
+
+/**
+ * Print formatted data to the specified file descriptor,
+ * handling proper printing UTF-8 strings to Windows console.
+ *
+ * @param out file descriptor
+ * @param format data format string
+ * @return the number of characters printed, -1 on error
  */
 int win_fprintf(FILE* out, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	return win_vfprintf(out, format, args);
+	return win_vfprintf_encoded(out, format, USE_CSTR_ARGS, args);
 }
 
+/**
+ * Print formatted data to the specified file descriptor,
+ * handling proper printing UTF-8 strings to Windows console.
+ *
+ * @param out file descriptor
+ * @param format data format string
+ * @return the number of characters printed, -1 on error
+ */
+int win_fprintf_warg(FILE* out, const char* format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	return win_vfprintf_encoded(out, format, USE_WSTR_ARGS, args);
+}
+
+/**
+ * Write a buffer to a stream.
+ *
+ * @param ptr pointer to the buffer to write
+ * @param size size of an items in the buffer
+ * @param count the number of items to write
+ * @param out the stream to write to
+ * @return the number of items written, -1 on error
+ */
 size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out)
 {
 	if ((out != stdout || !(rhash_data.output_flags & 1))

@@ -74,10 +74,12 @@ const char* get_bt_program_name(void);
 
 #ifdef _WIN32
 # define rsh_fprintf win_fprintf
+# define rsh_fprintf_targ win_fprintf_warg
 # define rsh_vfprintf win_vfprintf
 # define rsh_fwrite win_fwrite
 #else
 # define rsh_fprintf fprintf
+# define rsh_fprintf_targ fprintf
 # define rsh_vfprintf vfprintf
 # define rsh_fwrite fwrite
 #endif

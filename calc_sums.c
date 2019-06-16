@@ -338,7 +338,8 @@ int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 	if (fd && text->length == fwrite(text->str, 1, text->length, fd) &&
 			!ferror(fd) && !fflush(fd))
 	{
-		log_msg(_("%s saved\n"), file_cpath(torrent_file));
+		/* TRANSLATORS: this message is printed when a torrent file is saved */
+		log_file_t_msg(_("%s saved\n"), torrent_file);
 	} else {
 		log_file_t_error(torrent_file);
 		res = -1;
@@ -503,7 +504,6 @@ int check_hash_file(file_t* file, int chdir)
 	FILE *fd;
 	char buf[4096];
 	size_t pos;
-	const char *ralign;
 	timedelta_t timer;
 	struct file_info info;
 	const char* hash_file_path = file->path;
@@ -546,17 +546,20 @@ int check_hash_file(file_t* file, int chdir)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
+	/* open file / prepare file descriptor */
 	if (FILE_ISSTDIN(file)) {
 		fd = stdin;
 	} else if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
-		log_file_error(hash_file_path);
+		log_file_t_error(file);
 		return -1;
 	}
 
-	pos = strlen(hash_file_path)+16;
-	ralign = str_set(buf, '-', (pos < 80 ? 80 - (int)pos : 2));
-	rsh_fprintf(rhash_data.out, _("\n--( Verifying %s )%s\n"), hash_file_path, ralign);
-	fflush(rhash_data.out);
+	{
+		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file);
+		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
+		rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', tail_dash_len));
+		fflush(rhash_data.out);
+	}
 	rsh_timer_start(&timer);
 
 	/* mark the directory part of the path, by setting the pos index */

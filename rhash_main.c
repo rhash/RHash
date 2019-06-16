@@ -51,7 +51,7 @@ static int must_skip_file(file_t* file)
  * @param file the file to process
  * @param preprocess non-zero when preprocessing files, zero for actual processing.
  */
-static int find_file_callback(file_t* file, int preprocess)
+static int scan_files_callback(file_t* file, int preprocess)
 {
 	int res = 0;
 	assert(!FILE_ISDIR(file));
@@ -166,7 +166,7 @@ static int load_printf_template(void)
 
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
-			log_msg(_("%s: template file is too big\n"), file_cpath(&file));
+			log_file_t_msg(_("%s: template file is too big\n"), &file);
 			error = 1;
 		}
 	}
@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 
 	opt.search_data->options = FIND_SKIP_DIRS;
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
-	opt.search_data->call_back = find_file_callback;
+	opt.search_data->call_back = scan_files_callback;
 
 	if ((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
 		print_sfv_banner(rhash_data.out);

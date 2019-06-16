@@ -3,6 +3,7 @@
 #define OUTPUT_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +33,12 @@ extern struct percents_output_info_t *percents_output;
 void setup_output(void);
 void setup_percents(void);
 
+int fprintf_file_t(FILE* out, const char* format, struct file_t* file);
 void log_msg(const char* format, ...);
 void log_error(const char* format, ...);
 void log_warning(const char* format, ...);
-void log_file_error(const char* filepath);
 void log_file_t_error(struct file_t* file);
+void log_file_t_msg(const char* format, struct file_t* file);
 void report_interrupted(void);
 void print_check_stats(void);
 
