@@ -326,31 +326,27 @@ int file_stat(file_t* file, int fstat_flags)
 	return -1;
 #else
 	struct stat st;
-	int res = 0;
 	file->size  = 0;
 	file->mtime = 0;
 	file->mode  &= (FILE_OPT_DONT_FREE_PATH | FILE_IFROOT | FILE_IFSTDIN);
 
-	if ((fstat_flags & FUseLstat) != 0) {
-		if (lstat(file->path, &st) < 0) return -1;
+	if (stat(file->path, &st))
+		return -1;
+	file->size  = st.st_size;
+	file->mtime = st.st_mtime;
+
+	if (S_ISDIR(st.st_mode)) {
+		file->mode |= FILE_IFDIR;
+	} else if (S_ISREG(st.st_mode)) {
+		/* it's a regular file or a symlink pointing to a regular file */
+		file->mode |= FILE_IFREG;
+	}
+
+	if ((fstat_flags & FUseLstat) && lstat(file->path, &st) == 0) {
 		if (S_ISLNK(st.st_mode))
 			file->mode |= FILE_IFLNK; /* it's a symlink */
 	}
-	else
-		res = stat(file->path, &st);
-
-	if (res == 0) {
-		file->size  = st.st_size;
-		file->mtime = st.st_mtime;
-
-		if (S_ISDIR(st.st_mode)) {
-			file->mode |= FILE_IFDIR;
-		} else if (S_ISREG(st.st_mode)) {
-			/* it's a regular file or a symlink pointing to a regular file */
-			file->mode |= FILE_IFREG;
-		}
-	}
-	return res;
+	return 0;
 #endif
 }
 
