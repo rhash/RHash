@@ -241,7 +241,7 @@ void scan_files(file_search_data* data)
 			}
 			while (file_list_read(&list))
 			{
-				data->call_back(&list.current_file, data->call_back_data);
+				data->callback(&list.current_file, data->callback_data);
 			}
 			file_list_close(&list);
 		}
@@ -264,7 +264,7 @@ void scan_files(file_search_data* data)
 		else
 		{
 			/* process a regular file or a dash '-' path */
-			data->call_back(file, data->call_back_data);
+			data->callback(file, data->callback_data);
 		}
 	}
 }
@@ -382,7 +382,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	/* check if we should descend into the root directory */
 	if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == 0)
 	{
-		if (!data->call_back(start_dir, data->call_back_data))
+		if (!data->callback(start_dir, data->callback_data))
 			return 0;
 	}
 
@@ -449,7 +449,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			res = file_stat(&file, fstat_flags);
 
 			/* check if we should skip the directory */
-			if (res < 0 || !data->call_back(&file, data->call_back_data))
+			if (res < 0 || !data->callback(&file, data->callback_data))
 			{
 				if (res < 0 && (options & FIND_LOG_ERRORS))
 					data->errors_count++;
@@ -487,7 +487,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 				else if (FILE_ISREG(&file))
 				{
 					/* handle file by callback function */
-					res = data->call_back(&file, data->call_back_data);
+					res = data->callback(&file, data->callback_data);
 				}
 
 				/* check if file is a directory and we need to walk it, */

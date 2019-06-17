@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
 
 	opt.search_data->options = FIND_SKIP_DIRS;
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
-	opt.search_data->call_back = scan_files_callback;
+	opt.search_data->callback = scan_files_callback;
 
 	if ((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
 		print_sfv_banner(rhash_data.out);
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 	/* preprocess files */
 	if (sfv || opt.bt_batch_file) {
 		/* note: errors are not reported on preprocessing */
-		opt.search_data->call_back_data = 1;
+		opt.search_data->callback_data = 1;
 		scan_files(opt.search_data);
 
 		fflush(rhash_data.out);
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 
 	/* process files */
 	opt.search_data->options |= FIND_LOG_ERRORS;
-	opt.search_data->call_back_data = 0;
+	opt.search_data->callback_data = 0;
 	scan_files(opt.search_data);
 
 	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {

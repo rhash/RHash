@@ -24,8 +24,8 @@ typedef struct file_search_data
 	int options;
 	int max_depth;
 	blocks_vector_t root_files;
-	int (*call_back)(file_t* file, int data);
-	int call_back_data;
+	int (*callback)(file_t* file, int data);
+	int callback_data;
 	int errors_count;
 } file_search_data;
 
