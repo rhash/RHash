@@ -570,8 +570,9 @@ void init_printf_format(strbuf_t* out)
 	const char* fmt, *tail = 0;
 	unsigned bit, index = 0;
 	int uppercase;
+	unsigned need_modifier = 0;
 	char up_flag;
-	unsigned force_base32_mask = 0;
+	char fmt_modifier = 'b';
 
 	if (!opt.fmt) {
 		/* print SFV header for CRC32 or if no hash sums options specified */
@@ -583,20 +584,20 @@ void init_printf_format(strbuf_t* out)
 
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
-	if (opt.sum_flags & OPT_ED2K_LINK) {
+	if ((opt.sum_flags & OPT_ED2K_LINK) != 0) {
 		rsh_str_append_n(out, "%l", 2);
 		out->str[1] &= up_flag;
 		return;
 	}
-
-	if (opt.sum_flags == 0) return;
+	if (opt.sum_flags == 0)
+		return;
 
 	if (opt.fmt == FMT_BSD) {
 		fmt = "\003(%p) = \001\\n";
 	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=%{urlname}");
 		fmt = "&xt=urn:\002:\001";
-		force_base32_mask = (RHASH_SHA1 | RHASH_BTIH);
+		need_modifier = (RHASH_SHA1 | RHASH_BTIH);
 		tail = "\\n";
 	} else if (opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
 		fmt = "\001  %p\\n";
@@ -605,13 +606,19 @@ void init_printf_format(strbuf_t* out)
 		fmt = (opt.fmt == FMT_SFV ? " \001" : "  \001");
 		tail = "\\n";
 	}
+	if ((opt.flags & OPT_FMT_MODIFIERS) != 0)
+	{
+		need_modifier = 0xffffffff;
+		fmt_modifier = (opt.flags & OPT_HEX ? 'x' : opt.flags & OPT_BASE32 ? 'b' : 'B');
+	}
 
 	/* loop by hashes */
 	for (bit = 1 << index; bit && bit <= opt.sum_flags; bit = bit << 1, index++) {
 		const char *p;
 		print_hash_info *info;
 
-		if ((bit & opt.sum_flags) == 0) continue;
+		if ((bit & opt.sum_flags) == 0)
+			continue;
 		p = fmt;
 		info = &hash_info_table[index];
 
@@ -620,15 +627,17 @@ void init_printf_format(strbuf_t* out)
 
 		for (;;) {
 			int i;
-			while (*p >= 0x20) out->str[out->len++] = *(p++);
-			if (*p == 0) break;
+			while (*p >= 0x20)
+				out->str[out->len++] = *(p++);
+			if (*p == 0)
+				break;
 			switch ((int)*(p++)) {
 				case 1:
 					out->str[out->len++] = '%';
-					if ( (bit & force_base32_mask) != 0 ) {
-						out->str[out->len++] = 'b';
-					}
-					if (info->short_char) out->str[out->len++] = info->short_char & up_flag;
+					if ( (bit & need_modifier) != 0 )
+						out->str[out->len++] = fmt_modifier;
+					if (info->short_char)
+						out->str[out->len++] = info->short_char & up_flag;
 					else {
 						char *letter;
 						out->str[out->len++] = '{';
@@ -644,14 +653,14 @@ void init_printf_format(strbuf_t* out)
 				case 3:
 					rsh_str_append(out, info->name);
 					i = (int)strlen(info->name);
-					for (i = (i < 5 ? 6 - i : 1); i > 0; i--) out->str[out->len++] = ' ';
+					for (i = (i < 5 ? 6 - i : 1); i > 0; i--)
+						out->str[out->len++] = ' ';
 					break;
 			}
 		}
 	}
-	if (tail) {
+	if (tail)
 		rsh_str_append(out, tail);
-	}
 	out->str[out->len] = '\0';
 }
 

@@ -1,4 +1,7 @@
-Mon 17 Jun 2019
+Tue 25 Jun 2019 Aleksey
+	* add formatting options: --hex, --base32, -b/--base64
+
+Mon 17 Jun 2019 Aleksey
 	* Bugfix: properly handle symlinks on the command line
 
 Mon 04 Feb 2019 Aleksey

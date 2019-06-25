@@ -111,6 +111,10 @@ static void print_help(void)
 	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));
 	print_help_line("      --bsd     ", _("Print hash sums, using BSD-like format.\n"));
 	print_help_line("      --simple  ", _("Print hash sums, using simple format.\n"));
+	print_help_line("      --hex  ", _("Print hash sums in hexadecimal format.\n"));
+	print_help_line("      --base32", _("Print hash sums in Base32 format.\n"));
+	print_help_line("  -b, --base64", _("Print hash sums in Base64 format.\n"));
+
 	print_help_line("  -g, --magnet  ", _("Print hash sums  as magnet links.\n"));
 	print_help_line("      --torrent ", _("Create torrent files.\n"));
 #ifdef _WIN32
@@ -427,6 +431,9 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFNC,   0,   0, "bt-announce", bt_announce, 0 },
 	{ F_TSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
+	{ F_UFLG,   0,   0, "hex", &opt.flags, OPT_HEX },
+	{ F_UFLG,   0,   0, "base32", &opt.flags, OPT_BASE32 },
+	{ F_UFLG, 'b',   0, "base64", &opt.flags, OPT_BASE64 },
 	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
 
 #ifdef _WIN32 /* code pages (windows only) */
@@ -908,8 +915,11 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		if (!opt.sum_flags) opt.sum_flags = conf_opt.sum_flags;
 	}
 
-	if (!opt.mode)  opt.mode = conf_opt.mode;
-	opt.flags |= conf_opt.flags; /* copy all non-sum options */
+	if (!opt.mode)
+		opt.mode = conf_opt.mode;
+	if (!(opt.flags & OPT_FMT_MODIFIERS))
+		opt.flags |= conf_opt.flags & OPT_FMT_MODIFIERS;
+	opt.flags |= conf_opt.flags & ~OPT_FMT_MODIFIERS; /* copy the rest of options */
 
 	if (opt.files_accept == 0)  {
 		opt.files_accept = conf_opt.files_accept;
@@ -1020,35 +1030,54 @@ void options_destroy(struct options_t* o)
 	file_search_data_free(o->search_data);
 }
 
+enum {
+	ChkMode,
+	ChkFmt
+};
+
+/**
+ * Ensure that the specified bit_mask has only one bit set.
+ * Report error and exit the program on fail.
+ *
+ * @param what what to check
+ * @param bit_mask the bit_mask to check
+ */
+static void check_compatibility(int what, unsigned bit_mask)
+{
+	if ((bit_mask & (bit_mask - 1)) == 0)
+		return;
+	die(what == ChkMode ?
+		_("incompatible program modes\n") :
+		_("incompatible formatting options\n"));
+}
+
 /**
  * Check that options do not conflict with each other.
  * Also make some final options processing steps.
  */
 static void make_final_options_checks(void)
 {
-	unsigned ff; /* formatting flags */
+	unsigned ext_format_bits = (opt.printf_str ? 0x100 : 0) | (opt.template_file ? 0x200 : 0);
 
 	if ((opt.flags & OPT_VERBOSE) && conf_opt.config_file) {
 		/* note that the first log_msg call shall be made after setup_output() */
 		log_msg(_("Config file: %s\n"), (conf_opt.config_file ? conf_opt.config_file : _("None")));
 	}
 
-	if (opt.bt_batch_file) opt.mode |= MODE_TORRENT;
-	if (opt.mode & MODE_TORRENT) opt.sum_flags |= RHASH_BTIH;
+	if (opt.bt_batch_file)
+		opt.mode |= MODE_TORRENT;
+	if (opt.mode & MODE_TORRENT)
+		opt.sum_flags |= RHASH_BTIH;
 
-	/* check that no more than one program mode specified */
-	if (opt.mode & (opt.mode - 1)) {
-		die(_("incompatible program modes\n"));
-	}
+	/* check options compatibility for program mode and output format */
+	check_compatibility(ChkMode, opt.mode);
+	check_compatibility(ChkFmt, (opt.fmt | ext_format_bits));
+	check_compatibility(ChkFmt, ((opt.flags & OPT_FMT_MODIFIERS) | ext_format_bits));
 
-	ff = (opt.printf_str ? 1 : 0) | (opt.template_file ? 2 : 0) | (opt.fmt ? 4 : 0);
-	if ((opt.fmt & (opt.fmt - 1)) || (ff & (ff - 1))) {
-		die(_("too many formatting options\n"));
-	}
-
-	if (!opt.crc_accept) opt.crc_accept = file_mask_new_from_list(".sfv");
-
-	if (opt.openssl_mask) rhash_set_openssl_mask(opt.openssl_mask);
+	if (!opt.crc_accept)
+		opt.crc_accept = file_mask_new_from_list(".sfv");
+	if (opt.openssl_mask)
+		rhash_set_openssl_mask(opt.openssl_mask);
 }
 
 static struct parsed_cmd_line_t cmd_line;
