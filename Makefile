@@ -31,7 +31,6 @@ SPECFILE    = dist/rhash.spec
 LIBRHASH_PC = dist/librhash.pc
 RHASH_NAME     = rhash
 RHASH_BINARY   = rhash$(EXEC_EXT)
-CONFDIR_MACRO  = -DSYSCONFDIR=\"$(SYSCONFDIR)\"
 TEST_OPTIONS   =
 RPMTOP  = rpms
 RPMDIRS = SOURCES SPECS BUILD SRPMS RPMS
@@ -209,7 +208,7 @@ output.o: output.c platform.h output.h calc_sums.h common_func.h \
 parse_cmdline.o: parse_cmdline.c parse_cmdline.h common_func.h \
  file_mask.h find_file.h file.h hash_print.h output.h rhash_main.h \
  win_utils.h librhash/rhash.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(CONFCFLAGS) $< -o $@
 
 rhash_main.o: rhash_main.c rhash_main.h calc_sums.h common_func.h \
  hash_check.h file_mask.h find_file.h file.h hash_print.h hash_update.h \

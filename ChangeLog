@@ -1,3 +1,6 @@
+Wed 26 Jun 2019 Aleksey
+	* Bugfix: --sysconfdir was ignored while searching for config on Linux
+
 Tue 25 Jun 2019 Aleksey
 	* support verification of base64-formated hash sums
 	* add formatting options: --hex, --base32, -b/--base64
