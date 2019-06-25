@@ -12,9 +12,12 @@
 #include "librhash/rhash.h"
 
 /* hash conversion macros and functions */
-#define HEX2DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
+#define HEX_TO_DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
 #define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
-#define BASE32_LENGTH(bytes) (((bytes) * 8 + 4) / 5)
+#define BASE32_LENGTH(bits) (((bits) + 4) / 5)
+#define BASE64_LENGTH(bits)  (((bits) + 5) / 6)
+#define BASE32_BIT_SIZE(length) (((length) * 5) & ~7)
+#define BASE64_BIT_SIZE(length) (((length) * 6) & ~7)
 
 /**
  * Convert a hexadecimal string to a string of bytes.
@@ -27,13 +30,13 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 {
 	/* parse the highest hexadecimal digit */
 	if ((len & 1) != 0) {
-		*(bin++) = HEX2DIGIT(*(str++));
+		*(bin++) = HEX_TO_DIGIT(*(str++));
 		len--;
 	}
 
 	/* parse the rest - an even-sized hexadecimal string */
 	for (; len >= 2; len -= 2, str += 2) {
-		*(bin++) = (HEX2DIGIT(str[0]) << 4) | HEX2DIGIT(str[1]);
+		*(bin++) = (HEX_TO_DIGIT(str[0]) << 4) | HEX_TO_DIGIT(str[1]);
 	}
 }
 
@@ -52,10 +55,10 @@ static void urldecode(char *buffer)
 				buffer++; /* interpret '%%' as single '%' */
 			} else if (IS_HEX(*buffer)) {
 				/* decode character from the %<hex-digit><hex-digit> form */
-				int ch = HEX2DIGIT(*buffer);
+				int ch = HEX_TO_DIGIT(*buffer);
 				buffer++;
 				if (IS_HEX(*buffer)) {
-					ch = (ch << 4) | HEX2DIGIT(*buffer);
+					ch = (ch << 4) | HEX_TO_DIGIT(*buffer);
 					buffer++;
 				}
 				*wpos = (char)ch;
@@ -74,17 +77,17 @@ static void urldecode(char *buffer)
  */
 static void process_backslashes(char* path)
 {
-  for (;*path;path++) {
-    if (*path == '\\') *path = '/';
-  }
+	for (; *path; path++) {
+		if (*path == '\\')
+			*path = '/';
+	}
 }
 #else /* _WIN32 */
 #define process_backslashes(path)
 #endif /* _WIN32 */
 
-
 /* convert a hash flag to index */
-#if __GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4) /* GCC < 3.4 */
+#if __GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
 # define get_ctz(x) __builtin_ctz(x)
 #else
 
@@ -133,11 +136,12 @@ static unsigned hash_check_mask_by_digest_size(int digest_size)
 	static unsigned mask[10] = { 0,0,0,0,0,0,0,0,0,0 };
 	int code;
 	if (mask[9] == 0) {
-		unsigned hid;
-		for (hid = 1; hid <= RHASH_ALL_HASHES; hid <<= 1) {
-			code = code_digest_size(rhash_get_digest_size(hid));
+		unsigned hash_id;
+		for (hash_id = 1; hash_id <= RHASH_ALL_HASHES; hash_id <<= 1) {
+			code = code_digest_size(rhash_get_digest_size(hash_id));
 			assert(0 <= code && code <= 7);
-			if (code >= 0) mask[code] |= hid;
+			if (code >= 0)
+				mask[code] |= hash_id;
 		}
 		mask[9] = 1;
 	}
@@ -145,19 +149,32 @@ static unsigned hash_check_mask_by_digest_size(int digest_size)
 	return (code >= 0 ? mask[code] : 0);
 }
 
-#define HV_BIN 0
-#define HV_HEX 1
-#define HV_B32 2
+enum FmtBitFlags {
+  FmtHex   = 1,
+  FmtBase32LoweCase = 2,
+  FmtBase32UpperCase = 4,
+  FmtBase64   = 8,
+  FmtBase32 = (FmtBase32LoweCase | FmtBase32UpperCase),
+  FmtAll   = (FmtHex | FmtBase32 | FmtBase64)
+};
 
 /**
  * Test if a character is a hexadecimal/base32 digit.
  *
  * @param c the character to test
- * @return result of the test, a combination of flags HV_HEX and HV_B32
+ * @return a combination of Fmt* bits
  */
 static int test_hash_char(char c)
 {
-	return (IS_HEX(c) ? HV_HEX : 0) | (IS_BASE32(c) ? HV_B32 : 0);
+	static unsigned char char_bits[80] = {
+		
+		8, 0, 0, 0, 8, 9, 9, 15, 15, 15, 15, 15, 15, 9, 9, 0, 0, 0, 0, 0,
+		0, 0, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+		12, 12, 12, 12, 12, 12, 12, 12, 0, 0, 0, 0, 0, 0, 11, 11, 11, 11, 11, 11,
+		10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
+	};
+	c -= '+';
+	return ((unsigned)c <= 80 ? char_bits[(unsigned)c] : 0);
 }
 
 /**
@@ -166,28 +183,60 @@ static int test_hash_char(char c)
  * @param ptr the pointer to start scanning from
  * @param end pointer to scan to
  * @param p_len pointer to a number to store length of detected hash string
- * @return type of detected hash as combination of HV_HEX and HV_B32 flags
+ * @return type of detected hash as combination of Fmt* flags
  */
 static int detect_hash_type(char **ptr, char *end, int *p_len)
 {
-	int len = 0;
-	int char_type = 0, next_type = (HV_HEX | HV_B32);
+	char* p = *ptr;
+	size_t len = 0;
+	size_t eq_num = 0;
+	int char_type = 0;
+	int next_type = FmtAll;
 
-	if (*ptr < end) {
+	if (p < end) {
 		/* search forward (but no more then 129 symbols) */
-		if ((end - *ptr) >= 129) end = *ptr + 129;
-		for (; (next_type &= test_hash_char(**ptr)) && *ptr <= end; len++, (*ptr)++) {
+		if ((end - p) >= 129) end = p + 129;
+		for (; p <= end && (next_type &= test_hash_char(*p)); len++, p++)
 			char_type = next_type;
+		if ((char_type & FmtBase64) && *p == '=')
+		{
+			char_type = FmtBase64;
+			for (; *p == '=' && p <= end; eq_num++, p++);
 		}
 	} else {
 		/* search backward (but no more then 129 symbols) */
-		if ((*ptr-end) >= 129) end = *ptr - 129;
-		for (; (next_type &= test_hash_char((*ptr)[-1])) && *ptr >= end; len++, (*ptr)--) {
+		if ((p - end) >= 129) end = p - 129;
+		for (; p >= end && p[-1] == '='; eq_num++, p--)
+			char_type = FmtBase64;
+		for (; p >= end && (next_type &= test_hash_char(p[-1])); len++, p--)
 			char_type = next_type;
-		}
 	}
-	*p_len = len;
+	if ((char_type & FmtBase64) != 0)
+	{
+		size_t hash_len = (len * 6) & ~7;
+		if (eq_num > 3 || ((len + eq_num) & 3) || len != (hash_len + 5) / 6)
+			char_type &= ~FmtBase64;
+	}
+	*ptr = p;
+	*p_len = (int)len;
 	return char_type;
+}
+
+/**
+ * Check if a hash with of the specified bit length is supported by the program.
+ *
+ * @param length the bit length of a binary string
+ * @return 1 if a hash of the specified bit length is supported, 0 otherwise 
+ */
+static int is_acceptable_bit_length(int length)
+{
+	if ((length & 31) == 0 && length <= 512)
+	{
+		int pow = get_ctz(length >> 5);
+		int code = ((length >> (pow + 6)) << 3) | pow;
+		return (code < 32 && ((1 << code) & 0x101061d));
+	}
+	return 0;
 }
 
 /**
@@ -205,17 +254,14 @@ static unsigned char test_hash_string(char **ptr, char *end, int *p_len)
 	int char_type = detect_hash_type(ptr, end, &len);
 	unsigned char hash_type = 0;
 
-	if ((char_type & HV_HEX) && (len & 7) == 0 && len <= 256) {
-		int pow = get_ctz(len >> 3);
-		int code = ((len >> (pow + 4)) << 3) | pow;
-		if (code < 32 && ((1 << code) & 0x101061d)) hash_type |= HV_HEX;
-	}
-	if ((char_type & HV_B32) && (len == 32 || len == 39)) {
-		hash_type |= HV_B32;
-	}
-	if (hash_type != 0) {
+	if ((char_type & FmtHex) && is_acceptable_bit_length(len * 4))
+		hash_type |= FmtHex;
+	if ((char_type & FmtBase32) && is_acceptable_bit_length(BASE32_BIT_SIZE(len)))
+		hash_type |= FmtBase32;
+	if ((char_type & FmtBase64) && is_acceptable_bit_length(BASE64_BIT_SIZE(len)))
+		hash_type |= FmtBase64;
+	if (hash_type != 0)
 		*p_len = len;
-	}
 	return hash_type;
 }
 
@@ -275,7 +321,7 @@ static int hash_check_find_str(hc_search *search, const char* format)
 		int i, len = 0;
 		uint64_t file_size;
 
-		if (backward) {
+		if (backward) { 
 			for (; fend[-1] >= '-' && format < fend; fend--, len++);
 			if (len == 0) --fend;
 			search_str = fend;
@@ -311,7 +357,7 @@ static int hash_check_find_str(hc_search *search, const char* format)
 			for (i = 0; i < RHASH_HASH_COUNT; i++) {
 				if (strcmp(buf, hash_info_table[i].name) == 0) {
 					search->expected_hash_id = 1 << i;
-					search->hash_type = (HV_HEX | HV_B32);
+					search->hash_type = FmtAll;
 					break;
 				}
 			}
@@ -328,10 +374,15 @@ static int hash_check_find_str(hc_search *search, const char* format)
 			if (!hv.format) return 0;
 			if (*search_str == '\3') {
 				/* verify hash type */
-				int dlen = rhash_get_digest_size(search->expected_hash_id);
+				int bit_length = rhash_get_digest_size(search->expected_hash_id) * 8;
 				hv.format &= search->hash_type;
-				if ((!(hv.format & HV_HEX) || len != (dlen * 2)) &&
-					(!(hv.format & HV_B32) || len != BASE32_LENGTH(dlen)))
+				if ((len * 4) != bit_length)
+					hv.format &= ~FmtHex;
+				if (len != BASE32_LENGTH(bit_length))
+					hv.format &= ~FmtBase32;
+				if (len != BASE64_LENGTH(bit_length))
+					hv.format &= ~FmtBase64;
+				if (!hv.format)
 					return 0;
 				hv.hash_id = search->expected_hash_id;
 			} else hv.hash_id = 0;
@@ -372,7 +423,8 @@ static int hash_check_find_str(hc_search *search, const char* format)
 			backward = 1; /* switch to parsing string backward */
 			break;
 		default:
-			if ((backward ? *(--end) : *(begin++)) != *search_str) return 0;
+			if ((backward ? *(--end) : *(begin++)) != *search_str)
+				return 0;
 		}
 	}
 
@@ -481,7 +533,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 
 					hs.begin = hf_end + 1;
 					hs.expected_hash_id = 1 << i;
-					hs.hash_type = (HV_HEX | HV_B32);
+					hs.hash_type = (FmtHex | FmtBase32);
 					if (!hash_check_find_str(&hs, "\3")) bad = 1;
 					if (hs.begin != param_end) bad = 1;
 					break;
@@ -496,7 +548,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	} else if (strncmp(line, "ed2k://|file|", 13) == 0) {
 		hs.begin += 13;
 		hs.expected_hash_id = RHASH_ED2K;
-		hs.hash_type = HV_HEX;
+		hs.hash_type = FmtHex;
 		if (hash_check_find_str(&hs, "\4|\5|\3|")) {
 			url_name = hs.url_name;
 			url_length = hs.url_length;
@@ -504,14 +556,15 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 
 		/* try to parse optional AICH hash */
 		hs.expected_hash_id = RHASH_AICH;
-		hs.hash_type = (HV_HEX | HV_B32); /* AICH is usually base32-encoded*/
+		hs.hash_type = (FmtHex | FmtBase32); /* AICH is usually base32-encoded*/
 		hash_check_find_str(&hs, "h=\3|");
 	} else {
 		if (hash_check_find_str(&hs, "\1 ( $ ) = \3")) {
 			/* BSD-formatted line has been processed */
 		} else if (hash_check_find_str(&hs, "$\6\2")) {
 			while (hash_check_find_str(&hs, "$\6\2"));
-			if (hashes->hashes_num > 1) reversed = 1;
+			if (hashes->hashes_num > 1)
+				reversed = 1;
 		} else if (hash_check_find_str(&hs, "\2\7")) {
 			if (hs.begin == hs.end) {
 				/* the line contains no file path, only a single hash */
@@ -519,11 +572,13 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 			} else {
 				while (hash_check_find_str(&hs, "\2\6"));
 				/* drop an asterisk before filename if present */
-				if (*hs.begin == '*') hs.begin++;
+				if (*hs.begin == '*')
+					hs.begin++;
 			}
 		} else bad = 1;
 
-		if (hs.begin >= hs.end && !single_hash) bad = 1;
+		if (hs.begin >= hs.end && !single_hash)
+			bad = 1;
 	}
 
 	if (bad) {
@@ -559,55 +614,62 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	for (i = 0; i < hashes->hashes_num; i++) {
 		hash_value *hv = &hashes->hashes[i];
 		char *hash_str = hashes->data + hv->offset;
+		hash_str[hv->length] = '\0'; /* terminate the hash string */
 
 		if (hv->hash_id == 0) {
 			/* calculate hash mask */
 			unsigned mask = 0;
-			if (hv->format & HV_HEX) {
+			if (hv->format & FmtHex) {
 				mask |= hash_check_mask_by_digest_size(hv->length >> 1);
 			}
-			if (hv->format & HV_B32) {
+			if (hv->format & FmtBase32) {
 				assert(((hv->length * 5 / 8) & 3) == 0);
-				mask |= hash_check_mask_by_digest_size(hv->length * 5 / 8);
+				mask |= hash_check_mask_by_digest_size(BASE32_BIT_SIZE(hv->length) / 8);
+			}
+			if (hv->format & FmtBase64) {
+				mask |= hash_check_mask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
 			}
 			assert(mask != 0);
-			if ((mask & opt.sum_flags) != 0) mask &= opt.sum_flags;
+			if ((mask & opt.sum_flags) != 0)
+				mask &= opt.sum_flags;
 			hv->hash_id = mask;
 		}
 		hashes->hash_mask |= hv->hash_id;
-
-		/* change the hash string to be upper-case */
-		for (j = 0; j < (int)hv->length; j++) {
-			if (hash_str[j] >= 'a') hash_str[j] &= ~0x20;
-		}
-		hash_str[j] = '\0'; /* terminate the hash string */
 	}
-
 	return 1;
 }
 
-/**
- * Forward and reverse hex string compare. Compares two hexadecimal strings
- * using forward and reversed byte order. The function is used to compare
- * GOST hashes which can be reversed, because byte order of
- * an output string is not specified by GOST standard.
- * The function acts almost the same way as memcmp, but always returns
- * 1 for unmatched strings.
- *
- * @param mem1 the first byte string
- * @param mem2 the second byte string
- * @param size the length of byte strings to much
- * @return 0 if strings are matched, 1 otherwise.
- */
-static int fr_hex_cmp(const void* mem1, const void* mem2, size_t size)
-{
-	const char *p1, *p2, *pe;
-	if (memcmp(mem1, mem2, size) == 0) return 0;
-	if ((size & 1) != 0) return 1; /* support only even size */
+enum {
+	CompareHashCaseSensitive = 1,
+	CompareHashReversed = 2
+};
 
-	p1 = (const char*)mem1, p2 = ((const char*)mem2) + size - 2;
-	for (pe = ((const char*)mem1) + size / 2; p1 < pe; p1 += 2, p2 -= 2) {
-		if (p1[0] != p2[0] || p1[1] != p2[1]) return 1;
+/**
+ * Compare two hash strings. For base64 encoding, the case-sensitive comparasion is done.
+ * For hexadecimal or base32 encodings, the case-insensitive match occurs.
+ * For the GOST94 hash, the additional reversed case-insensitive match is done.
+ *
+ * @param calculated_hash the calculated hash, for the hex/base32 the hash is an upper-case string.
+ * @param expected a hash value from a hash file to match against
+ * @param length length of the hash strings
+ * @param comparision_mode 0, CompareHashCaseSensitive or CompareHashReversed comparision mode
+ */
+static int is_hash_string_equal(const char* calculated_hash, const char* expected, size_t length, int comparision_mode)
+{
+	if (comparision_mode == CompareHashCaseSensitive)
+		return (memcmp(calculated_hash, expected, length) == 0);
+	{
+		/* case-insensitive comparision of a hexadecimal or a base32 hash */
+		size_t i = 0;
+		for (; i < length && (calculated_hash[i] == (expected[i] >= 'a' ? expected[i] & ~0x20 : expected[i])); i++);
+		if (i == length)
+			return 1;
+	}
+	if (comparision_mode == CompareHashReversed) {
+		/* case-insensitive comparision of reversed gost hash */
+		size_t i = 0, last = length - 1;
+		for (; i < length && (calculated_hash[last - (i ^ 1)] == (expected[i] >= 'a' ? expected[i] & ~0x20 : expected[i])); i++);
+		return (i == length);
 	}
 	return 0;
 }
@@ -639,10 +701,11 @@ unsigned get_crc32(struct rhash_context* ctx)
 int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 {
 	unsigned unverified_mask;
-	unsigned hid;
+	unsigned hash_id;
 	unsigned printed;
-	char hex[132], b32[104];
+	char hex[132], base32[104], base64[88];
 	int j;
+	int comparision_mode;
 
 	/* verify file size, if present */
 	if ((hashes->flags & HC_HAS_FILESIZE) != 0 && hashes->file_size != ctx->msg_size)
@@ -658,58 +721,72 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 
 	unverified_mask = (1 << hashes->hashes_num) - 1;
 
-	for (hid = 1; hid <= RHASH_ALL_HASHES; hid <<= 1) {
-		if ((hashes->hash_mask & hid) == 0) continue;
+	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES; hash_id <<= 1) {
+		if ((hashes->hash_mask & hash_id) == 0)
+			continue;
 		printed = 0;
 
 		for (j = 0; j < hashes->hashes_num; j++) {
 			hash_value *hv = &hashes->hashes[j];
-			char *hash_str, *hash_orig;
-			int dgst_size;
+			char *calculated_hash, *expected_hash;
+			int bit_length;
 
 			/* skip already verified hashes and hashes with different digest size */
-			if (!(unverified_mask & (1 << j)) || !(hv->hash_id & hid)) continue;
-			dgst_size = rhash_get_digest_size(hid);
-			if (hv->length == (dgst_size * 2)) {
-				assert(hv->format & HV_HEX);
+			if (!(unverified_mask & (1 << j)) || !(hv->hash_id & hash_id))
+				continue;
+			comparision_mode = 0;
+			bit_length = rhash_get_digest_size(hash_id) * 8;
+			if ((hv->length * 4) == bit_length) {
+				assert(hv->format & FmtHex);
 				assert(hv->length <= 128);
 
 				/* print hexadecimal value, if not printed yet */
-				if ((printed & HV_HEX) == 0) {
-					rhash_print(hex, ctx, hid, RHPR_HEX | RHPR_UPPERCASE);
-					printed |= HV_HEX;
+				if ((printed & FmtHex) == 0) {
+					rhash_print(hex, ctx, hash_id, RHPR_HEX | RHPR_UPPERCASE);
+					printed |= FmtHex;
 				}
-				hash_str = hex;
-			} else {
-				assert(hv->format & HV_B32);
-				assert(hv->length == BASE32_LENGTH(dgst_size));
+				calculated_hash = hex;
+				if ((hash_id & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)) != 0)
+					comparision_mode = CompareHashReversed;
+			} else if (hv->length == BASE32_LENGTH(bit_length)) {
+				assert(hv->format & FmtBase32);
 				assert(hv->length <= 103);
 
 				/* print base32 value, if not printed yet */
-				if ((printed & HV_B32) == 0) {
-					rhash_print(b32, ctx, hid, RHPR_BASE32 | RHPR_UPPERCASE);
-					printed |= HV_B32;
+				if ((printed & FmtBase32) == 0) {
+					rhash_print(base32, ctx, hash_id, RHPR_BASE32 | RHPR_UPPERCASE);
+					printed |= FmtBase32;
 				}
-				hash_str = b32;
-			}
-			hash_orig = hashes->data + hv->offset;
-
-			if ((hid & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)) != 0) {
-				if (fr_hex_cmp(hash_orig, hash_str, hv->length) != 0) continue;
+				calculated_hash = base32;
 			} else {
-				if (memcmp(hash_orig, hash_str, hv->length) != 0) continue;
+				assert(hv->format & FmtBase64);
+				assert(hv->length == BASE64_LENGTH(bit_length));
+				assert(hv->length <= 86);
+
+				/* print base32 value, if not printed yet */
+				if ((printed & FmtBase64) == 0) {
+					rhash_print(base64, ctx, hash_id, RHPR_BASE64);
+					printed |= FmtBase64;
+				}
+				calculated_hash = base64;
+				comparision_mode = CompareHashCaseSensitive;
 			}
+			expected_hash = hashes->data + hv->offset;
+			if (!is_hash_string_equal(calculated_hash, expected_hash, hv->length, comparision_mode))
+				continue;
 
 			unverified_mask &= ~(1 << j); /* the j-th hash verified */
-			hashes->found_hash_ids |= hid;
+			hashes->found_hash_ids |= hash_id;
 
-			/* end loop if all hashes were successfully verified */
-			if (unverified_mask == 0) goto hc_verify_exit;
+			/* end the loop if all hashes were successfully verified */
+			if (unverified_mask == 0)
+				goto hc_verify_exit;
 		}
 	}
 
 hc_verify_exit: /* we use label/goto to jump out of two nested loops  */
 	hashes->wrong_hashes = unverified_mask;
-	if (unverified_mask != 0) hashes->flags |= HC_WRONG_HASHES;
+	if (unverified_mask != 0)
+		hashes->flags |= HC_WRONG_HASHES;
 	return !HC_FAILED(hashes->flags);
 }

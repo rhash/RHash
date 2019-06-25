@@ -1,4 +1,5 @@
 Tue 25 Jun 2019 Aleksey
+	* support verification of base64-formated hash sums
 	* add formatting options: --hex, --base32, -b/--base64
 
 Mon 17 Jun 2019 Aleksey
