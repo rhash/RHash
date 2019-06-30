@@ -19,6 +19,12 @@
 #define BASE32_BIT_SIZE(length) (((length) * 5) & ~7)
 #define BASE64_BIT_SIZE(length) (((length) * 6) & ~7)
 
+/* pack a character sequence into single unsigned */
+#define THREEC2U(c1, c2, c3) (((unsigned)(c1) << 16) | \
+	((unsigned)(c2) << 8) | (unsigned)(c3))
+#define FOURC2U(c1, c2, c3, c4) (((unsigned)(c1) << 24) | \
+	((unsigned)(c2) << 16) | ((unsigned)(c3) << 8) | (unsigned)(c4))
+
 /**
  * Convert a hexadecimal string to a string of bytes.
  *
@@ -167,7 +173,6 @@ enum FmtBitFlags {
 static int test_hash_char(char c)
 {
 	static unsigned char char_bits[80] = {
-		
 		8, 0, 0, 0, 8, 9, 9, 15, 15, 15, 15, 15, 15, 9, 9, 0, 0, 0, 0, 0,
 		0, 0, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
 		12, 12, 12, 12, 12, 12, 12, 12, 0, 0, 0, 0, 0, 0, 11, 11, 11, 11, 11, 11,
@@ -226,7 +231,7 @@ static int detect_hash_type(char **ptr, char *end, int *p_len)
  * Check if a hash with of the specified bit length is supported by the program.
  *
  * @param length the bit length of a binary string
- * @return 1 if a hash of the specified bit length is supported, 0 otherwise 
+ * @return 1 if a hash of the specified bit length is supported, 0 otherwise
  */
 static int is_acceptable_bit_length(int length)
 {
@@ -266,9 +271,80 @@ static unsigned char test_hash_string(char **ptr, char *end, int *p_len)
 }
 
 /**
+ * Detect a hash-function by name.
+ *
+ * @param name an uppercase string, a possible name of a hash-function
+ * @param length length of the name string
+ * @return id of hash function if found, zero otherwise
+ */
+static unsigned detect_hash_id(const char* name, unsigned length)
+{
+#define code2mask_size (18 * 2)
+	static unsigned code2mask[code2mask_size] = {
+		FOURC2U('A', 'I', 'C', 'H'), RHASH_AICH,
+		FOURC2U('B', 'T', 'I', 'H'), RHASH_BTIH,
+		FOURC2U('C', 'R', 'C', '3'), (RHASH_CRC32 | RHASH_CRC32C),
+		FOURC2U('E', 'D', '2', 'K'), RHASH_ED2K,
+		FOURC2U('E', 'D', 'O', 'N'), (RHASH_EDONR256 | RHASH_EDONR512),
+		FOURC2U('G', 'O', 'S', 'T'),
+			(RHASH_GOST12_256 | RHASH_GOST12_512 | RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO),
+		FOURC2U('H', 'A', 'S', '1'), RHASH_HAS160,
+		FOURC2U('M', 'D', '4', 0),   RHASH_MD4,
+		FOURC2U('M', 'D', '5', 0),   RHASH_MD5,
+		FOURC2U('R', 'I', 'P', 'E'), RHASH_RIPEMD160,
+		FOURC2U('S', 'H', 'A', '1'), RHASH_SHA1,
+		FOURC2U('S', 'H', 'A', '2'), (RHASH_SHA224 | RHASH_SHA256),
+		FOURC2U('S', 'H', 'A', '3'),
+			(RHASH_SHA384 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512),
+		FOURC2U('S', 'H', 'A', '5'), RHASH_SHA512,
+		FOURC2U('S', 'N', 'E', 'F'), (RHASH_SNEFRU128 | RHASH_SNEFRU256),
+		FOURC2U('T', 'I', 'G', 'E'), RHASH_TIGER,
+		FOURC2U('T', 'T', 'H', 0),   RHASH_TTH,
+		FOURC2U('W', 'H', 'I', 'R'), RHASH_WHIRLPOOL
+	};
+	unsigned code, i, hash_mask, hash_id;
+	char ch;
+	if (length < 3) return 0;
+	ch = (name[3] != '-' ? name[3] : name[4]);
+	code = FOURC2U(name[0], name[1], name[2], ch);
+	for (i = 0; code2mask[i] != code; i += 2)
+		if (i >= (code2mask_size - 2)) return 0;
+	hash_mask = code2mask[i + 1];
+	i = get_ctz(hash_mask);
+	if (length <= 4)
+	{
+		assert((hash_mask & (hash_mask - 1)) == 0);
+		return (length == strlen(hash_info_table[i].name) ? hash_mask : 0);
+	}
+	/* look for the hash_id in the hash_mask */
+	for (hash_id = 1 << i; hash_id && hash_id <= hash_mask; i++, hash_id <<= 1)
+	{
+		const char *a, *b;
+		if ((hash_id & hash_mask) == 0) continue;
+		assert(length > 4 && strlen(hash_info_table[i].name) > 4);
+		/* check the name tail, start from name[3] to detect names like "SHA-1" or "SHA256" */
+		for (a = hash_info_table[i].name + 3, b = name + 3; *a; a++, b++)
+		{
+			if (*a == *b) continue;
+			if (*a == '-')
+				b--;
+			else if (*b == '-')
+				a--;
+			else
+				break;
+		}
+		if (!*a && !*b) return hash_id;
+	}
+	return 0;
+}
+
+/**
  * Detect ASCII-7 white spaces (not including Unicode whitespaces).
  * Note that isspace() is locale specific and detect Unicode spaces,
  * like U+00A0.
+ *
+ * @param ch character to check
+ * @return non-zero if ch is space, zero otherwise
  */
 static int rhash_isspace(char ch)
 {
@@ -318,10 +394,10 @@ static int hash_check_find_str(hc_search *search, const char* format)
 
 	while (format < fend) {
 		const char *search_str;
-		int i, len = 0;
+		int len = 0;
 		uint64_t file_size;
 
-		if (backward) { 
+		if (backward) {
 			for (; fend[-1] >= '-' && format < fend; fend--, len++);
 			if (len == 0) --fend;
 			search_str = fend;
@@ -348,19 +424,11 @@ static int hash_check_find_str(hc_search *search, const char* format)
 				if (len >= 20) return 0; /* limit name length */
 				buf[len] = toupper(begin[len]);
 			}
-			begin += len;
-			if (len == 0) return 0; /* not alpha-numeric sequence */
 			buf[len] = '\0';
-			search->expected_hash_id = 0;
-
-			 /* find hash_id by a hash function name */
-			for (i = 0; i < RHASH_HASH_COUNT; i++) {
-				if (strcmp(buf, hash_info_table[i].name) == 0) {
-					search->expected_hash_id = 1 << i;
-					search->hash_type = FmtAll;
-					break;
-				}
-			}
+			search->expected_hash_id = detect_hash_id(buf, len);
+			if (!search->expected_hash_id) return 0;
+			search->hash_type = FmtAll;
+			begin += len;
 			break;
 		case '\2':
 		case '\3':
@@ -437,12 +505,6 @@ static int hash_check_find_str(hc_search *search, const char* format)
 	return 1;
 }
 
-/* macros used by hash_check_parse_line() */
-#define THREEC2U(c1, c2, c3) (((unsigned)(c1) << 16) | \
-	((unsigned)(c2) << 8) | (unsigned)(c3))
-#define FOURC2U(c1, c2, c3, c4) (((unsigned)(c1) << 24) | \
-	((unsigned)(c2) << 16) | ((unsigned)(c3) << 8) | (unsigned)(c4))
-
 /**
  * Parse a line of a hash-file. This function accepts five formats.
  * <ul>
@@ -513,15 +575,15 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 
 					/* test for the "urn:" string */
 					if ((hs.begin += 4) >= hf_end) return 0;
-					if (FOURC2U('u', 'r', 'n', ':') != FOURC2U(hs.begin[-4],
-						hs.begin[-3], hs.begin[-2], hs.begin[-1])) return 0;
-
+					if (FOURC2U(hs.begin[-4], hs.begin[-3], hs.begin[-2], hs.begin[-1]) !=
+							FOURC2U('u', 'r', 'n', ':'))
+						return 0;
 					/* find hash by its magnet link specific URN name  */
 					for (i = 0; i < RHASH_HASH_COUNT; i++) {
 						const char* urn = rhash_get_magnet_name(1 << i);
 						size_t len = hf_end - hs.begin;
-						if (strncmp(hs.begin, urn, len) == 0 &&
-							urn[len] == '\0') break;
+						if (strncmp(hs.begin, urn, len) == 0 && urn[len] == '\0')
+							break;
 					}
 					if (i >= RHASH_HASH_COUNT) {
 						if (opt.flags & OPT_VERBOSE) {
