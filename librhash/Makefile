@@ -66,9 +66,9 @@ aich.o: aich.c byte_order.h ustd.h algorithms.h rhash.h aich.h sha1.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 algorithms.o: algorithms.c byte_order.h ustd.h rhash.h algorithms.h \
- aich.h sha1.h crc32.h ed2k.h md4.h edonr.h gost12.h gost94.h has160.h md5.h \
- ripemd-160.h snefru.h sha256.h sha512.h sha3.h tiger.h torrent.h tth.h \
- whirlpool.h
+ aich.h sha1.h crc32.h ed2k.h md4.h edonr.h gost12.h gost94.h has160.h \
+ md5.h ripemd-160.h snefru.h sha256.h sha512.h sha3.h tiger.h torrent.h \
+ tth.h whirlpool.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 byte_order.o: byte_order.c byte_order.h ustd.h
@@ -83,10 +83,10 @@ ed2k.o: ed2k.c ed2k.h md4.h ustd.h
 edonr.o: edonr.c byte_order.h ustd.h edonr.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-gost94.o: gost94.c byte_order.h ustd.h gost94.h
+gost12.o: gost12.c gost12.h ustd.h byte_order.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-gost12.o: gost12.c byte_order.h ustd.h gost12.h
+gost94.o: gost94.c gost94.h ustd.h byte_order.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 has160.o: has160.c byte_order.h ustd.h has160.h

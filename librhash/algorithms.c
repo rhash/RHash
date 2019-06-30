@@ -170,9 +170,8 @@ void rhash_init_algorithms(unsigned mask)
 const rhash_info* rhash_info_by_id(unsigned hash_id)
 {
 	hash_id &= RHASH_ALL_HASHES;
-	/* check that only one bit is set */
-	if (hash_id != (hash_id & -(int)hash_id)) return NULL;
-	/* note: alternative condition is (hash_id == 0 || (hash_id & (hash_id - 1)) != 0) */
+	/* check that one and only one bit is set */
+	if (!hash_id || (hash_id & (hash_id - 1)) != 0) return NULL;
 	return rhash_info_table[rhash_ctz(hash_id)].info;
 }
 

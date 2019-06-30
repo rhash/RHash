@@ -13,6 +13,7 @@
 #include "calc_sums.h"
 #include "common_func.h"
 #include "file.h"
+#include "output.h"
 #include "parse_cmdline.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
@@ -522,6 +523,9 @@ void init_hash_info_table(void)
 	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
+	/* check consistency with librhash */
+	if (RHASH_HASH_COUNT != rhash_count())
+		log_warning("old, incompatible version of librhash is loaded\n");
 
 	for (bit = 1; bit && bit <= fullmask; bit = bit << 1) {
 		const char *p;
