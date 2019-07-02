@@ -420,7 +420,7 @@ static int hash_check_find_str(hc_search *search, const char* format)
 		case '\1': /* parse hash function name */
 			/* the name should contain alphanumeric or '-' symbols, but */
 			/* actually the loop shall stop at characters [:& \(\t] */
-			for (; (begin[len] <= '9' ? begin[len] >= '0' || begin[len]=='-' : begin[len] >= 'A'); len++) {
+			for (; (begin[len] <= '9' ? begin[len] >= '0' || begin[len] == '-' : begin[len] >= 'A'); len++) {
 				if (len >= 20) return 0; /* limit name length */
 				buf[len] = toupper(begin[len]);
 			}
@@ -532,7 +532,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	int i, j;
 
 	/* return if EOL not found at the end of the line */
-	if ( line[0]=='\0' || (le[-1] != '\n' && check_eol) ) return 0;
+	if (line[0] == '\0' || (le[-1] != '\n' && check_eol)) return 0;
 
 	/* note: not using str_tim because 'le' is re-used below */
 

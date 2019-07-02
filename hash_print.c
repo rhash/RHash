@@ -93,7 +93,7 @@ static char parse_escaped_char(const char **pformat)
 			if ( IS_HEX(**pformat) ) {
 				int ch;
 				ch = (**pformat <= '9' ? **pformat & 15 : (**pformat + 9) & 15);
-				(*pformat) ++;
+				(*pformat)++;
 				if (IS_HEX(**pformat)) {
 					/* read the second digit */
 					ch = 16 * ch + (**pformat <= '9' ? **pformat & 15 : (**pformat + 9) & 15);
@@ -196,7 +196,7 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned *fla
 	print_hash_info *info = hash_info_table;
 	unsigned bit;
 
-	if (length > (sizeof(buf)-1)) return 0;
+	if (length > (sizeof(buf) - 1)) return 0;
 	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
 
 	/* check for old '%{urlname}' directive for compatibility */
@@ -329,7 +329,7 @@ static void fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
 	char* buf = (char*)rsh_malloc( len + 1 );
 	char* dst = buf;
 
-	assert(info->sums_flags & (RHASH_ED2K|RHASH_AICH));
+	assert(info->sums_flags & (RHASH_ED2K | RHASH_AICH));
 	assert(info->rctx);
 
 	strcpy(dst, "ed2k://|file|");
@@ -365,41 +365,34 @@ static void fprintI64(FILE* out, uint64_t filesize, int width, int zero_pad)
 	int len = int_len(filesize);
 	sprintI64(buf, filesize, width);
 	if (len < width && zero_pad) {
-		memset(buf, '0', width-len);
+		memset(buf, '0', width - len);
 	}
 	rsh_fprintf(out, "%s", buf);
 	free(buf);
 }
 
 /**
-* Print time formatted as hh:mm.ss YYYY-MM-DD to a file stream.
+* Print time formatted as 'YYYY-MM-DD hh:mm:ss' to a file stream.
 *
 * @param out the stream to print the time to
 * @param time the time to print
+* @param sfv_format if =1, then change time format to 'hh:mm.ss YYYY-MM-DD'
 */
-static void print_time(FILE *out, time_t time)
+static void print_time64(FILE *out, uint64_t time64, int sfv_format)
 {
+	time_t time = (time_t)time64;
 	struct tm *t = localtime(&time);
+	char* format = (sfv_format ? "%4$02u:%5$02u.%6$02u %1$4u-%2$02u-%3$02u" :
+		"%4u-%02u-%02u %02u:%02u:%02u");
 	static struct tm zero_tm;
-	if (t == NULL) {
-		/* if a strange day, then print `00:00.00 1900-01-00' */
+	if (!t) {
+		/* if got a strange day, then print the date '1900-01-00 00:00:00' */
 		t = &zero_tm;
 		t->tm_hour = t->tm_min = t->tm_sec =
 			t->tm_year = t->tm_mon = t->tm_mday = 0;
 	}
-	rsh_fprintf(out, "%02u:%02u.%02u %4u-%02u-%02u", t->tm_hour, t->tm_min,
-		t->tm_sec, (1900 + t->tm_year), t->tm_mon + 1, t->tm_mday);
-}
-
-/**
-* Print time formatted as hh:mm.ss YYYY-MM-DD to a file stream.
-*
-* @param out the stream to print the time to
-* @param time the time to print
-*/
-static void print_time64(FILE *out, uint64_t time)
-{
-	print_time(out, (time_t)time);
+	rsh_fprintf(out, format, (1900 + t->tm_year), t->tm_mon + 1, t->tm_mday,
+		t->tm_hour, t->tm_min, t->tm_sec);
 }
 
 /**
@@ -412,7 +405,7 @@ static void print_time64(FILE *out, uint64_t time)
 void print_line(FILE* out, print_item* list, struct file_info *info)
 {
 	const char* basename = get_basename(info->print_path), *tmp;
-	char *url = NULL, *ed2k_url = NULL;
+	char *url = NULL;
 	char buffer[130];
 #ifdef _WIN32
 	/* switch to binary mode to correctly output binary hashes */
@@ -471,7 +464,7 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 				rsh_fprintf(out, "%s", url);
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
-				print_time64(out, info->file->mtime);
+				print_time64(out, info->file->mtime, 0);
 				break;
 			case PRINT_SIZE: /* file size */
 				fprintI64(out, info->size, list->width, (list->flags & PRINT_FLAG_PAD_WITH_ZERO));
@@ -482,7 +475,6 @@ void print_line(FILE* out, print_item* list, struct file_info *info)
 		}
 	}
 	free(url);
-	free(ed2k_url);
 	fflush(out);
 #ifdef _WIN32
 	if (old_mode >= 0)
@@ -694,7 +686,7 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 
 	sprintI64(buf, file->size, 12);
 	rsh_fprintf(out, "; %s  ", buf);
-	print_time64(out, file->mtime);
+	print_time64(out, file->mtime, 1);
 	rsh_fprintf(out, " %s\n", printpath);
 	return 0;
 }

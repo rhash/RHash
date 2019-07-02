@@ -1,3 +1,6 @@
+Tue 02 Jul 2019 Aleksey
+	* change %{mtime} format to 'YYYY-MM-DD hh:mm:ss'
+ 
 Wed 26 Jun 2019 Aleksey
 	* Bugfix: --sysconfdir was ignored while searching for config on Linux
 
