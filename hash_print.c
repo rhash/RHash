@@ -382,17 +382,24 @@ static void print_time64(FILE *out, uint64_t time64, int sfv_format)
 {
 	time_t time = (time_t)time64;
 	struct tm *t = localtime(&time);
-	char* format = (sfv_format ? "%4$02u:%5$02u.%6$02u %1$4u-%2$02u-%3$02u" :
+	char* format = (sfv_format ? "%02u:%02u.%02u %4u-%02u-%02u" :
 		"%4u-%02u-%02u %02u:%02u:%02u");
-	static struct tm zero_tm;
-	if (!t) {
+	int date_index = (sfv_format ? 3 : 0);
+	unsigned d[6];
+	if (!!t) {
+		d[date_index + 0] = t->tm_year + 1900;
+		d[date_index + 1] = t->tm_mon + 1;
+		d[date_index + 2] = t->tm_mday;
+		d[3 - date_index] = t->tm_hour;
+		d[4 - date_index] = t->tm_min;
+		d[5 - date_index] = t->tm_sec;
+	} else {
 		/* if got a strange day, then print the date '1900-01-00 00:00:00' */
-		t = &zero_tm;
-		t->tm_hour = t->tm_min = t->tm_sec =
-			t->tm_year = t->tm_mon = t->tm_mday = 0;
+		d[0] = d[1] = d[2] = d[3] = d[4] = d[5] = 0;
+		d[date_index + 0] = 1900;
+		d[date_index + 1] = 1;
 	}
-	rsh_fprintf(out, format, (1900 + t->tm_year), t->tm_mon + 1, t->tm_mday,
-		t->tm_hour, t->tm_min, t->tm_sec);
+	rsh_fprintf(out, format, d[0], d[1], d[2], d[3], d[4], d[5]);
 }
 
 /**

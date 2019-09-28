@@ -19,6 +19,7 @@
 
 #ifdef _WIN32
 # include <windows.h>
+# include <io.h> /* for isatty */
 #endif
 
 /* global pointer to the selected method of percents output */

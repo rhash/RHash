@@ -99,8 +99,9 @@ extern "C" {
 #define I64(x) x##ULL
 #endif
 
-
-#ifndef __STRICT_ANSI__
+#if defined(_MSC_VER)
+#define RHASH_INLINE __inline
+#elif defined(__GNUC__) && !defined(__STRICT_ANSI__)
 #define RHASH_INLINE inline
 #elif defined(__GNUC__)
 #define RHASH_INLINE __inline__

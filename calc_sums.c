@@ -134,7 +134,7 @@ static int calc_sums(struct file_info *info)
 
 	/* read and hash file content */
 	if (FILE_ISDATA(info->file))
-		res = rhash_update(info->rctx, info->file->data, info->file->size);
+		res = rhash_update(info->rctx, info->file->data, (size_t)info->file->size);
 	else {
 		if (percents_output->update != 0) {
 			rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
@@ -143,7 +143,7 @@ static int calc_sums(struct file_info *info)
 	}
 	if (res != -1 && !opt.bt_batch_file)
 		rhash_final(info->rctx, 0); /* finalize hashing */
-	
+
 	/* store really processed data size */
 	info->size = info->rctx->msg_size - info->msg_offset;
 	rhash_data.total_size += info->size;
@@ -329,7 +329,7 @@ int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 		log_file_t_error(torrent_file);
 		return -1;
 	}
-	
+
 	/* make backup copy of the existing torrent file */
 	file_move_to_bak(torrent_file);
 
@@ -359,7 +359,7 @@ static void save_torrent(struct file_info* info)
 	/* append .torrent extension to the file path */
 	file_t torrent_file;
 	file_path_append(&torrent_file, info->file, ".torrent");
-	save_torrent_to(&torrent_file, info->rctx);	
+	save_torrent_to(&torrent_file, info->rctx);
 	file_cleanup(&torrent_file);
 }
 
@@ -383,7 +383,7 @@ int calculate_and_print_sums(FILE* out, file_t* file, const char *print_path)
 	file_info_set_print_path(&info, print_path);
 	info.size = file->size; /* total size, in bytes */
 	info.sums_flags = opt.sum_flags;
-	
+
 	/* skip directories */
 	if (FILE_ISDIR(file))
 		return 0;
@@ -578,7 +578,7 @@ int check_hash_file(file_t* file, int chdir)
 		/* skip unicode BOM */
 		if (line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF)
 			line += 3;
-		
+
 		if (*line == 0)
 			continue; /* skip empty lines */
 
