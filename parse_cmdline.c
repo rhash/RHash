@@ -101,7 +101,7 @@ static void print_help(void)
 	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
 	print_help_line("      --skip-ok ", _("Don't print OK messages for successfully verified files.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
-	print_help_line("      --percents   ", _("Show percents, while calculating or checking hashes.\n"));
+	print_help_line("  -P, --percents   ", _("Show percents, while calculating or checking hashes.\n"));
 	print_help_line("      --speed   ", _("Output per-file and total processing speed.\n"));
 	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
 	if (rhash_is_openssl_supported())
@@ -413,7 +413,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },
 	{ F_UFLG, 'i',   0, "ignore-case", &opt.flags, OPT_IGNORE_CASE },
-	{ F_UENC,   0,   0, "percents", &opt.flags, OPT_PERCENTS },
+	{ F_UENC, 'P',   0, "percents", &opt.flags, OPT_PERCENTS },
 	{ F_UFLG,   0,   0, "speed",  &opt.flags, OPT_SPEED },
 	{ F_UFLG, 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
 	{ F_CSTR,   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },
@@ -613,7 +613,7 @@ static const char* find_conf_file(void)
 		}
 		free(path);
 	}
-	
+
 	/* check for ${PROGRAM_DIR}\rhashrc */
 	if (rhash_data.program_dir && (dir1 = w2c(rhash_data.program_dir))) {
 		path = make_path(dir1, CONFIG_FILENAME);

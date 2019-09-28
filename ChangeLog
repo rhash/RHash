@@ -1,6 +1,9 @@
+Sun 29 Sep 2019 Aleksey
+	* make short option '-P' to be an alias for --percents
+
 Tue 02 Jul 2019 Aleksey
 	* change %{mtime} format to 'YYYY-MM-DD hh:mm:ss'
- 
+
 Wed 26 Jun 2019 Aleksey
 	* Bugfix: --sysconfdir was ignored while searching for config on Linux
 
@@ -43,7 +46,7 @@ Sun Mar 11 2018 And Sch
 
 Sun Feb 18 2018 Aleksey
 	* Bugfix: fix --follow option
-
+	
 Mon Jan 29 2018 J. Peter Mugaas
 	* better MSYS and CygWin support
 
@@ -706,7 +709,7 @@ Sun Jan 22 2006 Aleksey
 
 Sat Jan 14 2006 Aleksey
 	* Bugfix: console windows version now uses OEM (DOS) character set for output
-	
+
 	* === Version 0.7 ===
 	* some fixes in sfv format output
 
