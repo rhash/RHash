@@ -434,22 +434,22 @@ void setup_locale_dir(void)
 	char *locale_dir;
 	DWORD buf_size;
 	DWORD res;
-	
+
 	if (!rhash_data.program_dir) return;
 	buf_size = GetShortPathNameW(rhash_data.program_dir, NULL, 0);
 	if (!buf_size) return;
-	
+
 	short_dir = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
 	res = GetShortPathNameW(rhash_data.program_dir, short_dir, buf_size);
 	if (res > 0 && res < buf_size)
 		program_dir = w2c(short_dir);
 	free(short_dir);
 	if (!program_dir) return;
-	
+
 	locale_dir = make_path(program_dir, "locale");
 	free(program_dir);
 	if (!locale_dir) return;
-	
+
 	if (is_directory(locale_dir))
 		bindtextdomain(TEXT_DOMAIN, locale_dir);
 	free(locale_dir);

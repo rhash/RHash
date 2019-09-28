@@ -37,7 +37,7 @@ static unsigned calculate_crc_soft(unsigned crcinit, unsigned table[8][256], con
 	/* process not aligned message head */
 	for (; (3 & (msg - (unsigned char*)0)) && size > 0; msg++, size--)
 		crc = table[0][(crc & 0xFF) ^ *msg] ^ (crc >> 8);
-	
+
 	/* process aligned part */
 	for (current = (uint32_t*) msg; size >= 8; size -= 8)
 	{
@@ -52,7 +52,7 @@ static unsigned calculate_crc_soft(unsigned crcinit, unsigned table[8][256], con
 			table[1][GET_BYTE(two, 16)] ^
 			table[0][GET_BYTE(two, 24)];
 	}
-	
+
 	/* process trailing bytes */
 	for (msg = (unsigned char*) current; size; size--)
 		crc = table[0][(crc & 0xFF) ^ *msg++] ^ (crc >> 8);

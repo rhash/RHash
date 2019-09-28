@@ -120,7 +120,7 @@ int are_paths_equal(ctpath_t a, ctpath_t b)
 	if (!a || !b) return 0;
 	if (a[0] == RSH_T('.') && IS_ANY_SLASH(a[1])) a += 2;
 	if (b[0] == RSH_T('.') && IS_ANY_SLASH(b[1])) b += 2;
-	
+
 	for (; *a; ++a, ++b) {
 		if (*a != *b && (!IS_ANY_SLASH(*b) || !IS_ANY_SLASH(*a))) {
 			/* paths are different */
@@ -463,7 +463,7 @@ static int wpath_is_readable(wchar_t* wpath, int* is_readable)
 	if (fd >= 0) {
 		_close(fd);
 		return 1;
-	} 
+	}
 	return (errno == EACCES);
 }
 #endif

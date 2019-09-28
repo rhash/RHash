@@ -15,7 +15,7 @@ strings. Supported message digests include CRC32, CRC32C, MD4, MD5, SHA1,
 SHA256, SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-*,
 RIPEMD\-160, HAS\-160, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
 
-The program can create and verify Magnet links 
+The program can create and verify Magnet links
 and eDonkey ed2k:// links, see \-\-magnet and \-\-ed2k\-link options.
 
 A dash string parameter `\-' is interpreted as stdin file.
@@ -91,13 +91,13 @@ eDonkey link: calculate and print eDonkey link.
 .IP "\-W, \-\-whirlpool"
 Whirlpool: calculate and print Whirlpool hash sum.
 .IP "\-G, \-\-gost12-256"
-GOST\-2012: calculate and print 256-bit GOST R 34.11\-2012 hash, 
+GOST\-2012: calculate and print 256-bit GOST R 34.11\-2012 hash,
 the Russian GOST standard hash function.
 .IP "\-\-gost12-512"
-GOST\-2012: calculate and print 512-bit GOST R 34.11\-2012 hash, 
+GOST\-2012: calculate and print 512-bit GOST R 34.11\-2012 hash,
 the Russian GOST standard hash function.
 .IP "\-\-gost94"
-GOST\-94: calculate and print GOST R 34.11\-94 hash, 
+GOST\-94: calculate and print GOST R 34.11\-94 hash,
 the deprecated Russian standard hash function.
 .IP "\-\-gost94\-cryptopro"
 GOST\-94\-CRYPTOPRO: calculate and print CryptoPro version of
@@ -140,7 +140,7 @@ Print per\-file and the total processing speed.
 .IP "\-e, \-\-embed\-crc"
 Rename files by inserting crc32 sum into name.
 .IP "\-\-embed\-crc\-delimiter=<delimiter>"
-Insert specified <delimiter> before a crc sum in the \-\-embed\-crc mode, 
+Insert specified <delimiter> before a crc sum in the \-\-embed\-crc mode,
 default is white space. The <delimiter> can be a character or empty string.
 .IP "\-\-path\-separator=<separator>"
 Use specified path separator to display paths.
@@ -151,8 +151,8 @@ Set a comma\(hydelimited list of extensions of the files to exclude from process
 .IP "\-t, \-\-crc\-accept=<list>"
 Set a comma\(hydelimited list of extensions of the hash files to verify.
 .IP "\-\-maxdepth=<levels>"
-Descend at most <levels> (a non\(hynegative integer) levels of directories below 
-the command line arguments. `\-\-maxdepth 0' means only apply the tests and 
+Descend at most <levels> (a non\(hynegative integer) levels of directories below
+the command line arguments. `\-\-maxdepth 0' means only apply the tests and
 actions to the command line arguments.
 .IP "\-o, \-\-output=<file\-path>"
 Set the file to output calculated hashes and verification results to.
@@ -174,7 +174,7 @@ the file\-path. The option \-r <directory> can be useful in this mode.
 .IP "\-\-bt\-private"
 Generate BTIH for a private BitTorrent tracker.
 .IP "\-\-bt\-piece\-length"
-Set the 
+Set the
 .I "piece length"
 value for torrent file.
 .IP "\-\-bt\-announce=<announce\-url>"
@@ -194,7 +194,7 @@ so they will not look like options anymore.
 
 .SH OUTPUT FORMAT OPTIONS
 .IP "\-\-sfv"
-Print hash sums in the SFV (Simple File Verification) output format (default). 
+Print hash sums in the SFV (Simple File Verification) output format (default).
 But unlike common SFV file, not only CRC32, but any hash sums specified
 by options can be printed.
 .IP "\-g, \-\-magnet"
@@ -218,10 +218,10 @@ Print hash sums in lower case.
 .IP "\-\-template=<file>"
 Read printf\(hylike template from given <file>. See the \-\-printf option.
 .IP "\-p, \-\-printf=<format>"
-Format: print 
+Format: print
 .I format
-string the standard output, interpreting `\e' 
-escapes and `%' directives. The escapes and directives are: 
+string the standard output, interpreting `\e'
+escapes and `%' directives. The escapes and directives are:
 .RS
 .IP \en
 Newline.
@@ -253,9 +253,9 @@ File's size in bytes.
 .IP %{mtime}
 File's last modification time.
 .IP "%a or %A"
-AICH hash sum. 
+AICH hash sum.
 .IP "%c or %C"
-CRC32 hash sum. 
+CRC32 hash sum.
 Use %c for lowercase and %C for uppercase characters.
 .IP "%g or %G"
 GOST R 34.11\-94 hash.
@@ -291,7 +291,7 @@ RHash looks for a config file
 at $XDG_CONFIG_HOME/rhash/rhashrc, $HOME/.rhashrc and /etc/rhashrc.
 
 The config file consists of lines formatted as
-.RS 
+.RS
 variable = value
 .RE
 
@@ -321,6 +321,5 @@ Aleksey Kravchenko <rhash.admin@gmail.com>
 .BR ed2k_hash (1)
 .SH BUGS
 Bug reports are welcome!
-Send them by email 
-or post to the SourceForge Bug Tracking System
-.I http://sourceforge.net/projects/rhash/
+Post them to the GitHub issues page
+.I https://github.com/rhash/RHash/issues
