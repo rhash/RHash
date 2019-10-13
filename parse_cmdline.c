@@ -1,18 +1,6 @@
 /* parse_cmdline.c - parsing of command line options */
 
-#include <assert.h>
-#include <locale.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef _WIN32
-# include <windows.h> /* for SetFileApisToOEM(), CharToOem() */
-#endif
-
 #include "parse_cmdline.h"
-#include "common_func.h"
-#include "file.h"
 #include "file_mask.h"
 #include "find_file.h"
 #include "hash_print.h"
@@ -20,6 +8,15 @@
 #include "rhash_main.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
+#include <assert.h>
+#include <locale.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+# include <windows.h> /* for CommandLineToArgvW(), GetCommandLineW(), ... */
+#endif
 
 typedef struct options_t options_t;
 struct options_t conf_opt; /* config file parsed options */
@@ -178,12 +175,12 @@ static void add_file_suffix(options_t *o, char* accept_string, unsigned type)
 }
 
 /**
-* Process --bt_announce option.
-*
-* @param o pointer to the options structure
-* @param announce_url the url to parse
-* @param unused a tottaly unused parameter
-*/
+ * Process --bt_announce option.
+ *
+ * @param o pointer to the options structure
+ * @param announce_url the url to parse
+ * @param unused a tottaly unused parameter
+ */
 static void bt_announce(options_t *o, char* announce_url, unsigned unused)
 {
 	(void)unused;

@@ -14,17 +14,15 @@
 # define _(str) (str)
 #endif /* USE_GETTEXT */
 
+#include <stddef.h> /* for wchar_t */
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h> /* for time_t */
-#include <stddef.h> /* for wchar_t */
-
 #if !defined( _WIN32) && !defined(__CYGWIN__)
 # include <sys/time.h> /* for timeval */
 #elif _MSC_VER > 1300
 # include "platform.h"
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +40,10 @@ char* str_set(char* buf, int ch, int size);
 char* str_append(const char* orig, const char* append);
 size_t strlen_utf8_c(const char *str);
 
+/* check if character starts a commentary in the program config file */
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
+/* test line for UTF8 mark: 0xEF, 0xBB, 0xBF */
+#define STARTS_WITH_UTF8_BOM(line) ((line)[0] == '\357' && (line)[1] == '\273' && (line)[2] == '\277')
 
 #ifdef _WIN32
 typedef wchar_t rsh_tchar;
@@ -71,7 +72,7 @@ typedef const rsh_tchar* ctstr_t;
 const char* get_version_string(void);
 const char* get_bt_program_name(void);
 
-
+/* printf functions */
 #ifdef _WIN32
 # define rsh_fprintf win_fprintf
 # define rsh_fprintf_targ win_fprintf_warg
@@ -84,8 +85,9 @@ const char* get_bt_program_name(void);
 # define rsh_fwrite fwrite
 #endif
 
+#define PRINTF_RES(res) ((res) < 0 ? res : 0)
 
-/* time data and functions */
+/* time delta and timer functions */
 
 /* portable timer definition */
 #if defined( _WIN32) || defined(__CYGWIN__)

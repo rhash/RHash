@@ -1,11 +1,9 @@
 /* file_mask.c - matching file against a list of file masks */
+#include "file_mask.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "file_mask.h"
-#include "common_func.h"
 
 /**
  * Convert the given string to lower-case then put it into

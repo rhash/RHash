@@ -1,5 +1,9 @@
 /* common_func.c - functions used almost everywhere */
 
+#include "common_func.h"
+#include "parse_cmdline.h"
+#include "version.h"
+#include "win_utils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -11,11 +15,6 @@
 #if defined( _WIN32) || defined(__CYGWIN__)
 # include <windows.h>
 #endif
-
-#include "common_func.h"
-#include "parse_cmdline.h"
-#include "version.h"
-#include "win_utils.h"
 
 /*=========================================================================
  * String functions
@@ -214,8 +213,8 @@ size_t strlen_utf8_c(const char *str)
 }
 
 /*=========================================================================
-* Program version information
-*=========================================================================*/
+ * Program version information
+ *=========================================================================*/
 
 const char* get_version_string(void)
 {
@@ -298,10 +297,10 @@ struct rhash_exit_handlers_t
 } rhash_exit_handlers = { 0, { 0 } };
 
 /**
-* Install a handler to be called on program exit.
-*
-* @param handler the hadler to add
-*/
+ * Install a handler to be called on program exit.
+ *
+ * @param handler the hadler to add
+ */
 void rsh_install_exit_handler(exit_handler_t handler)
 {
 	if (rhash_exit_handlers.handlers_count >= (sizeof(rhash_exit_handlers.handlers) / sizeof(rhash_exit_handlers.handlers[0])))
@@ -314,8 +313,8 @@ void rsh_install_exit_handler(exit_handler_t handler)
 }
 
 /**
-* Remove the last installed exit handler.
-*/
+ * Remove the last installed exit handler.
+ */
 void rsh_remove_exit_handler(void)
 {
 	if (rhash_exit_handlers.handlers_count == 0)
@@ -327,10 +326,10 @@ void rsh_remove_exit_handler(void)
 }
 
 /**
-* Call all installed exit handlers, starting from the latest one, and exit the program.
-*
-* @param code the program exit code
-*/
+ * Call all installed exit handlers, starting from the latest one, and exit the program.
+ *
+ * @param code the program exit code
+ */
 void rsh_exit(int code)
 {
 	while (rhash_exit_handlers.handlers_count > 0)

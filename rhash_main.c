@@ -5,24 +5,21 @@
  * ED2K, GOST and many other.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h> /* free() */
-#include <signal.h>
-#include <locale.h>
-#include <assert.h>
-
 #include "rhash_main.h"
 #include "calc_sums.h"
-#include "common_func.h"
 #include "file_mask.h"
 #include "find_file.h"
 #include "hash_print.h"
 #include "hash_update.h"
-#include "parse_cmdline.h"
 #include "output.h"
+#include "parse_cmdline.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
+#include <assert.h>
+#include <locale.h>
+#include <signal.h>
+#include <stdlib.h> /* free() */
+#include <string.h>
 
 
 struct rhash_t rhash_data;
@@ -57,17 +54,17 @@ static int scan_files_callback(file_t* file, int preprocess)
 	assert(!FILE_ISDIR(file));
 	assert(opt.search_data);
 
-	if (rhash_data.interrupted) {
+	if (rhash_data.stop_flags) {
 		opt.search_data->options |= FIND_CANCEL;
 		return 0;
 	}
 
 	if (preprocess) {
-		if (FILE_ISDATA(file) || !file_mask_match(opt.files_accept, file->path) ||
-			(opt.files_exclude && file_mask_match(opt.files_exclude, file->path)) ||
-			must_skip_file(file)) {
+		if (FILE_ISDATA(file) ||
+				!file_mask_match(opt.files_accept, file->path) ||
+				(opt.files_exclude && file_mask_match(opt.files_exclude, file->path)) ||
+				must_skip_file(file))
 			return 0;
-		}
 
 		if (opt.fmt & FMT_SFV) {
 			print_sfv_header_line(rhash_data.out, file, 0);
@@ -107,14 +104,20 @@ static int scan_files_callback(file_t* file, int preprocess)
 			const char* print_path = file->path;
 			if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
 				print_path += 2;
-			res = calculate_and_print_sums(rhash_data.out, file, print_path);
-			if (rhash_data.interrupted)
+			res = calculate_and_print_sums(rhash_data.out, &rhash_data.out_file, file, print_path);
+			if (rhash_data.stop_flags) {
+				opt.search_data->options |= FIND_CANCEL;
 				return 0;
+			}
 			rhash_data.processed++;
 		}
 	}
-	if (res < 0)
-		rhash_data.error_flag = 1;
+	if (res < -1) {
+		rhash_data.stop_flags |= FatalErrorFlag;
+		opt.search_data->options |= FIND_CANCEL;
+		return 0;
+	} else if (res < 0)
+		rhash_data.non_fatal_error = 1;
 	return 1;
 }
 
@@ -130,7 +133,7 @@ void (*prev_sigint_handler)(int) = NULL;
 static void ctrl_c_handler(int signum)
 {
 	(void)signum;
-	rhash_data.interrupted = 1;
+	rhash_data.stop_flags |= InterruptedFlag;
 	if (rhash_data.rctx) {
 		rhash_cancel(rhash_data.rctx);
 	}
@@ -194,6 +197,8 @@ void rhash_destroy(struct rhash_t* ptr)
 	if (ptr->rctx) rhash_free(ptr->rctx);
 	if (ptr->out) fclose(ptr->out);
 	if (ptr->log) fclose(ptr->log);
+	file_cleanup(&ptr->out_file);
+	file_cleanup(&ptr->log_file);
 #ifdef _WIN32
 	if (ptr->program_dir) free(ptr->program_dir);
 #endif
@@ -252,7 +257,7 @@ int main(int argc, char *argv[])
 			rsh_fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
 		}
 		run_benchmark(opt.sum_flags, flags);
-		exit_code = (rhash_data.interrupted ? 3 : 0);
+		exit_code = (rhash_data.stop_flags ? 3 : 0);
 		rsh_exit(exit_code);
 	}
 
@@ -319,30 +324,28 @@ int main(int argc, char *argv[])
 		print_check_stats();
 	}
 
-	if (!rhash_data.interrupted) {
+	if (!rhash_data.stop_flags) {
 		if (opt.bt_batch_file && rhash_data.rctx) {
 			file_t batch_torrent_file;
 			file_tinit(&batch_torrent_file, opt.bt_batch_file, FILE_OPT_DONT_FREE_PATH);
 
 			rhash_final(rhash_data.rctx, 0);
-			save_torrent_to(&batch_torrent_file, rhash_data.rctx);
+			if (save_torrent_to(&batch_torrent_file, rhash_data.rctx) < 0)
+				rhash_data.stop_flags |= FatalErrorFlag;
+			file_cleanup(&batch_torrent_file);
 		}
 
-		if ((opt.flags & OPT_SPEED) &&
-			!(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
-			rhash_data.processed > 1)
-		{
+		if ((opt.flags & OPT_SPEED) && !(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
+				rhash_data.processed > 1) {
 			double time = rsh_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);
 		}
-	} else {
-		/* check if interruption was not reported yet */
-		if (rhash_data.interrupted == 1) report_interrupted();
-	}
+	} else
+		report_interrupted();
 
-	exit_code = (rhash_data.error_flag ? 1 :
-		opt.search_data->errors_count ? 2 :
-		rhash_data.interrupted ? 3 : 0);
+	exit_code = ((rhash_data.stop_flags & FatalErrorFlag) ? 2 :
+		(rhash_data.non_fatal_error || opt.search_data->errors_count) ? 1 :
+		(rhash_data.stop_flags & InterruptedFlag) ? 3 : 0);
 	rsh_exit(exit_code);
 	return 0; /* unreachable statement */
 }

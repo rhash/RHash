@@ -1,5 +1,15 @@
-/* hash_update.c - functions to update a crc file */
+/* hash_update.c - functions to update a hash file */
 
+#include "hash_update.h"
+#include "calc_sums.h"
+#include "file_mask.h"
+#include "file_set.h"
+#include "hash_print.h"
+#include "output.h"
+#include "parse_cmdline.h"
+#include "rhash_main.h"
+#include "win_utils.h"
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,19 +18,14 @@
 # include <dirent.h>
 #endif
 
-#include "calc_sums.h"
-#include "common_func.h"
-#include "file.h"
-#include "file_set.h"
-#include "file_mask.h"
-#include "hash_print.h"
-#include "hash_update.h"
-#include "output.h"
-#include "parse_cmdline.h"
-#include "rhash_main.h"
-#include "win_utils.h"
+enum UpdateFlagsBits
+{
+	IsEmptyFile = 1,
+	HasBom = 2,
+	ErrorOcurred = 4
+};
 
-/* first define some internal functions, implemented later in this file */
+/* define some internal functions, implemented later in this file */
 static int add_new_crc_entries(file_t* file, file_set *crc_entries);
 static int file_set_load_from_crc_file(file_set *set, file_t* file);
 static int fix_sfv_header(file_t* file);
@@ -68,47 +73,60 @@ int update_hash_file(file_t* file)
 }
 
 /**
- * Load a set of files from given crc file.
+ * Load a set of files from the specified hash file.
+ * In a case of fail, the error will be logged.
  *
  * @param set the file set to store loaded files
  * @param file the file containing hash sums to load
- * @return 0 on success, -1 on fail with error code in errno
+ * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
  */
 static int file_set_load_from_crc_file(file_set *set, file_t* file)
 {
-	FILE *fd;
-	int line_num;
+	int result = IsEmptyFile;
 	char buf[2048];
 	hash_check hc;
 
-	if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
-		/* if file not exist, it will be created */
-		return (errno == ENOENT ? 0 : -1);
+	FILE* fd = file_fopen(file, FOpenRead | FOpenBin);
+	if (!fd) {
+		/* if file does not exist, it will be created */
+		if (errno == ENOENT)
+			return IsEmptyFile;
+		log_file_t_error(file);
+		return -1;
 	}
-	for (line_num = 0; fgets(buf, 2048, fd); line_num++) {
+	while (!feof(fd) && fgets(buf, 2048, fd)) {
 		char* line = buf;
-
-		/* skip unicode BOM */
-		if (line_num == 0 && buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF) line += 3;
-
-		if (*line == 0) continue; /* skip empty lines */
-
+		if ((result && IsEmptyFile) != 0) {
+			/* skip unicode BOM */
+			if (STARTS_WITH_UTF8_BOM(line)) {
+				line += 3;
+				result |= HasBom;
+			}
+			if (*line == 0 && feof(fd))
+				break;
+			result &= ~IsEmptyFile;
+		}
+		if (*line == 0)
+			continue; /* skip empty lines */
 		if (is_binary_string(line)) {
-			log_error(_("skipping binary file %s\n"), file->path);
+			log_file_t_msg(_("is a binary file: %s\n"), file);
 			fclose(fd);
 			return -1;
 		}
-
-		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n') continue;
-
+		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
+			continue;
 		/* parse a hash file line */
 		if (hash_check_parse_line(line, &hc, !feof(fd))) {
-			/* store file info to the file set */
+			/* put file path into the file set */
 			if (hc.file_path) file_set_add_name(set, hc.file_path);
 		}
 	}
+	if (ferror(fd)) {
+		log_file_t_error(file);
+		result = -1;
+	}
 	fclose(fd);
-	return 0;
+	return result;
 }
 
 /**
@@ -116,12 +134,12 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
  * A specified directory path will be prepended to the path of added files,
  * if it is not a current directory.
  *
- * @param file the hash file to add the hash sums to
+ * @param hfile the hash file to add the hash sums to
  * @param dir_path the directory path to prepend
  * @param files_to_add the set of files to hash and add
  * @return 0 on success, -1 on error
  */
-static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add)
+static int add_sums_to_file(file_t* hfile, char* dir_path, file_set *files_to_add)
 {
 	FILE* fd;
 	unsigned i;
@@ -130,29 +148,29 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 	/* SFV banner will be printed only in SFV mode and only for empty crc files */
 	int print_banner = (opt.fmt == FMT_SFV);
 
-	file->size = 0;
-	if (file_stat(file, 0) == 0) {
-		if (print_banner && file->size > 0) print_banner = 0;
+	hfile->size = 0;
+	if (file_stat(hfile, 0) == 0) {
+		if (print_banner && hfile->size > 0) print_banner = 0;
 	}
 
 	/* open the hash file for writing */
-	if ( !(fd = file_fopen(file, FOpenRead | FOpenWrite) )) {
-		log_file_t_error(file);
+	if ( !(fd = file_fopen(hfile, FOpenRead | FOpenWrite) )) {
+		log_file_t_error(hfile);
 		return -1;
 	}
 	rhash_data.upd_fd = fd;
 
-	if (file->size > 0) {
+	if (hfile->size > 0) {
 		/* read the last character of the file to check if it is EOL */
 		if (fseek(fd, -1, SEEK_END) != 0) {
-			log_file_t_error(file);
+			log_file_t_error(hfile);
 			return -1;
 		}
 		ch = fgetc(fd);
 
 		/* somehow writing doesn't work without seeking */
 		if (fseek(fd, 0, SEEK_END) != 0) {
-			log_file_t_error(file);
+			log_file_t_error(hfile);
 			return -1;
 		}
 
@@ -185,17 +203,17 @@ static int add_sums_to_file(file_t* file, char* dir_path, file_set *files_to_add
 		file_stat(&file, 0);
 
 		/* print hash sums to the crc file */
-		calculate_and_print_sums(fd, &file, print_path);
+		calculate_and_print_sums(fd, hfile, &file, print_path);
 
 		file_cleanup(&file);
 
-		if (rhash_data.interrupted) {
+		if (rhash_data.stop_flags) {
 			fclose(fd);
 			return 0;
 		}
 	}
 	fclose(fd);
-	log_msg(_("Updated: %s\n"), file->path);
+	log_msg(_("Updated: %s\n"), hfile->path);
 	return 0;
 }
 
@@ -280,7 +298,7 @@ static int add_new_crc_entries(file_t* file, file_set *crc_entries)
 		/* calculate and write crc sums to the file */
 		res = add_sums_to_file(file, dir_path, files_to_add);
 
-		if (res == 0 && opt.fmt == FMT_SFV && !rhash_data.interrupted) {
+		if (res == 0 && opt.fmt == FMT_SFV && !rhash_data.stop_flags) {
 			/* move SFV header from the end of updated file to its head */
 			res = fix_sfv_header(file);
 		}
@@ -294,63 +312,75 @@ static int add_new_crc_entries(file_t* file, file_set *crc_entries)
 /**
  * Move all SFV header lines (i.e. all lines starting with a semicolon)
  * from the end of updated file to its head.
+ * In a case of fail, the error will be logged.
  *
  * @param file the hash file requiring fixing of its SFV header
+ * @return 0 on success, -1 on error
  */
 static int fix_sfv_header(file_t* file)
 {
 	FILE* in;
 	FILE* out;
-	char line[2048];
+	char buf[2048];
 	file_t new_file;
-	int err = 0;
-
-	if ( !(in = file_fopen(file, FOpenRead))) {
+	int result = 0;
+	int is_comment;
+	int print_comments;
+	/* open the hash file for reading */
+	in = file_fopen(file, FOpenRead);
+	if (!in) {
 		log_file_t_error(file);
 		return -1;
 	}
-
 	/* open a temporary file for writing */
 	file_path_append(&new_file, file, ".new");
-	if ( !(out = file_fopen(&new_file, FOpenWrite) )) {
+	out = file_fopen(&new_file, FOpenWrite);
+	if (!out) {
 		log_file_t_error(&new_file);
 		file_cleanup(&new_file);
 		fclose(in);
 		return -1;
 	}
-
-	/* The first, output all commented lines to the file header */
-	while (fgets(line, 2048, in)) {
-		if (*line == ';') {
-			if (fputs(line, out) < 0) break;
-		}
-	}
-	if (!ferror(out) && !ferror(in)) {
-		fseek(in, 0, SEEK_SET);
-		/* The second, output non-commented lines */
-		while (fgets(line, 2048, in)) {
-			if (*line != ';') {
-				if (fputs(line, out) < 0) break;
+	/* The first pass, prints commented lines to the destination file,
+	 * and the second pass, prints all other lines */
+	for (print_comments = 1;; print_comments = 0) {
+		while (fgets(buf, 2048, in)) {
+			char* line = buf;
+			/* skip BOM, unless it is on the first line */
+			if (STARTS_WITH_UTF8_BOM(line)) {
+				is_comment = (line[3] == ';');
+				if (ftell(out) != 0)
+					line += 3;
+			} else
+				is_comment = (line[0] == ';');
+			if (is_comment == print_comments) {
+				if (fputs(line, out) < 0)
+					break;
 			}
 		}
+		if (!print_comments || ferror(out) || ferror(in) || fseek(in, 0, SEEK_SET) != 0)
+			break;
 	}
 	if (ferror(in)) {
 		log_file_t_error(file);
-		err = 1;
+		result = -1;
 	}
-	if (ferror(out)) {
+	else if (ferror(out)) {
 		log_file_t_error(&new_file);
-		err = 1;
+		result = -1;
 	}
-
 	fclose(in);
-	fclose(out);
-
-	/* overwrite the hash file with a new one */
-	if (!err && file_rename(&new_file, file) < 0) {
+	if (fclose(out) < 0 && result == 0) {
+		log_file_t_error(&new_file);
+		result = -1;
+	}
+	/* overwrite the hash file with the new one */
+	if (result == 0 && file_rename(&new_file, file) < 0) {
+		/* TRANSLATORS: a file failed to be renamed */
 		log_error(_("can't move %s to %s: %s\n"),
 			new_file.path, file->path, strerror(errno));
+		result = -1;
 	}
 	file_cleanup(&new_file);
-	return (err ? -1 : 0);
+	return result;
 }

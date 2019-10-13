@@ -2,7 +2,6 @@
 #ifndef CALC_SUMS_H
 #define CALC_SUMS_H
 
-#include <stdint.h>
 #include "common_func.h"
 #include "file.h"
 #include "hash_check.h"
@@ -27,7 +26,7 @@ struct file_info {
 	double time;            /* file processing time in seconds */
 	struct file_t* file;    /* the file being processed */
 	struct rhash_context* rctx; /* state of hash algorithms */
-	int error;  /* -1 for i/o error, -2 for wrong sum, 0 on success */
+	int processing_result;  /* -1/-2 for i/o error, 0 on success, 1 on a hash mismatch */
 	char* allocated_ptr;
 
 	unsigned sums_flags; /* mask of ids of calculated hash functions */
@@ -38,7 +37,7 @@ void file_info_destroy(struct file_info*); /* free allocated memory */
 const char* file_info_get_utf8_print_path(struct file_info*);
 
 int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
-int calculate_and_print_sums(FILE* out, struct file_t* file, const char *print_path);
+int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const char *print_path);
 int check_hash_file(struct file_t* file, int chdir);
 int rename_file_by_embeding_crc32(struct file_info *info);
 

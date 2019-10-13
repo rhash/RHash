@@ -305,12 +305,18 @@ new_test "test exit code:             "
 rm -f none-existent.file
 test -f none-existent.file && print_failed .
 $rhash -H none-existent.file 2>/dev/null
-check "$?" "2" .
+check "$?" "1" .
 $rhash -c none-existent.file 2>/dev/null
-check "$?" "2" .
+check "$?" "1" .
 $rhash -H test1K.data >/dev/null
 check "$?" "0"
+UNREADABLE_FILE="$RHASH_TMP/test-unreadable.file"
+printf "" > "$UNREADABLE_FILE" && chmod a-w "$UNREADABLE_FILE"
+$rhash -o "$UNREADABLE_FILE" -H test1K.data 2>/dev/null
+check "$?" "2" .
+rm -f "$UNREADABLE_FILE"
 
+# check if any test failed
 if [ $fail_cnt -gt 0 ]; then
   echo "Failed $fail_cnt checks"
   exit 1 # some tests failed

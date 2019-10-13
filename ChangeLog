@@ -1,3 +1,6 @@
+Mon 14 Oct 2019 Aleksey
+	* exit on output errors with exit_code = 2
+
 Sun 29 Sep 2019 Aleksey
 	* make short option '-P' to be an alias for --percents
 

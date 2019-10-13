@@ -1,7 +1,7 @@
 /* win_utils.c - utility functions for Windows and CygWin */
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <windows.h>
 #include "win_utils.h"
+#include <windows.h>
 
 /**
  * Set process priority and affinity to use any CPU but the first one,
@@ -26,16 +26,14 @@ void set_benchmark_cpu_affinity(void)
 #ifdef _WIN32
 /* Windows-only (non-CygWin) functions */
 
+#include "parse_cmdline.h"
+#include "rhash_main.h"
 #include <share.h> /* for _SH_DENYWR */
 #include <fcntl.h> /* for _O_RDONLY, _O_BINARY */
 #include <io.h> /* for isatty */
 #include <assert.h>
 #include <errno.h>
 #include <locale.h>
-
-#include "file.h"
-#include "parse_cmdline.h"
-#include "rhash_main.h"
 
 /**
  * Convert a c-string to wide character string using given codepage

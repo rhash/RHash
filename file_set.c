@@ -1,10 +1,4 @@
 /* file_set.c - functions to manipulate a set of files */
-#include <assert.h>
-#include <ctype.h>  /* isspace */
-#include <stddef.h> /* ptrdiff_t */
-#include <stdlib.h> /* qsort */
-#include <string.h>
-
 #include "file_set.h"
 #include "common_func.h"
 #include "hash_print.h"
@@ -12,6 +6,11 @@
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "librhash/rhash.h"
+#include <assert.h>
+#include <ctype.h>  /* isspace */
+#include <stddef.h> /* ptrdiff_t */
+#include <stdlib.h> /* qsort */
+#include <string.h>
 
 /**
  * Generate a hash for a string.

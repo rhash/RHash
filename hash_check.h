@@ -49,7 +49,7 @@ typedef struct hash_check
 } hash_check;
 
 int hash_check_parse_line(char* line, hash_check* hashes, int check_eol);
-int hash_check_verify(hash_check* hashes, struct rhash_context* ctx);
+int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx);
 
 void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);
 void rhash_hex_to_byte(const char* str, unsigned char* bin, int len);

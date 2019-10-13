@@ -2,8 +2,6 @@
 #ifndef FILE_SET_H
 #define FILE_SET_H
 
-#include "calc_sums.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

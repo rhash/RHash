@@ -2,6 +2,7 @@
 #ifndef PARSE_CMD_LINE_H
 #define PARSE_CMD_LINE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -74,18 +75,18 @@ struct options_t
 	unsigned sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
-	unsigned openssl_mask;  /* bit-mask for enabled OpenSSL hash functions */
-	const char* config_file; /* config file path */
-	char* printf_str;        /* printf-like format */
+	unsigned openssl_mask;    /* bit-mask for enabled OpenSSL hash functions */
+	const char* config_file;  /* config file path */
+	char* printf_str;         /* printf-like format */
 	opt_tchar* template_file; /* printf-like template file path */
-	opt_tchar* output;       /* file to output calculation or checking results to */
-	opt_tchar* log;          /* file to log percents and other info to */
+	opt_tchar* output;        /* file to output calculation or checking results to */
+	opt_tchar* log;           /* file to log percents and other info to */
 	char* embed_crc_delimiter;
 	char  path_separator;
 	int   find_max_depth;
 	struct vector_t *files_accept; /* suffixes of files to process */
 	struct vector_t *files_exclude; /* suffixes of files to exclude from processing */
-	struct vector_t *crc_accept;   /* suffixes of crc files to verify or update */
+	struct vector_t *crc_accept;   /* suffixes of hash files to verify or update */
 	struct vector_t * bt_announce; /* BitTorrent announce URL */
 	size_t bt_piece_length; /* BitTorrent piece length */
 	opt_tchar*  bt_batch_file;   /* path to save a batch torrent to */

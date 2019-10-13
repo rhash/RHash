@@ -2,11 +2,16 @@
 #ifndef RHASH_MAIN_H
 #define RHASH_MAIN_H
 
-#include <stdint.h>
+#include "file.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+enum StopFlags {
+	InterruptedFlag = 1,
+	FatalErrorFlag = 2
+};
 
 /**
  * Runtime data.
@@ -15,6 +20,8 @@ struct rhash_t
 {
 	FILE *out;
 	FILE *log;
+	file_t out_file;
+	file_t log_file;
 	FILE *upd_fd; /* descriptor of a crc file to update */
 #ifdef _WIN32
 	wchar_t* program_dir;
@@ -23,10 +30,11 @@ struct rhash_t
 #endif
 
 	char*  printf_str;
-	struct print_item *print_list;
-	struct strbuf_t *template_text;
+	struct print_item* print_list;
+	struct strbuf_t* template_text;
 	struct rhash_context* rctx;
-	int interrupted; /* non-zero if program was interrupted */
+	unsigned stop_flags;
+	int non_fatal_error;
 
 	/* missed, ok and processed files statistics */
 	unsigned processed;
@@ -34,8 +42,6 @@ struct rhash_t
 	unsigned miss;
 	uint64_t total_size;
 	uint64_t batch_size;
-
-	int error_flag;     /* non-zero if any error occurred */
 };
 
 /** static variable, holding most of the runtime data */

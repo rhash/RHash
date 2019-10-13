@@ -1,21 +1,18 @@
 /* output.c - output of results, errors and percents */
 
+#include "output.h"
+#include "calc_sums.h"
+#include "parse_cmdline.h"
+#include "platform.h"
+#include "rhash_main.h"
+#include "win_utils.h"
+#include "librhash/rhash.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> /* exit() */
 #include <assert.h>
 #include <errno.h>
-
-#include "platform.h"
-#include "calc_sums.h"
-#include "common_func.h"
-#include "file.h"
-#include "output.h"
-#include "parse_cmdline.h"
-#include "rhash_main.h"
-#include "win_utils.h"
-#include "librhash/rhash.h"
 
 #ifdef _WIN32
 # include <windows.h>
@@ -97,10 +94,10 @@ void log_file_t_msg(const char* format, struct file_t* file)
  */
 void log_file_t_error(struct file_t* file)
 {
-	int file_error = errno;
+	int file_errno = errno;
 	print_log_prefix();
 	fprintf_file_t(rhash_data.log, "%s", file);
-	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_error));
+	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_errno));
 	fflush(rhash_data.log);
 }
 
@@ -130,14 +127,19 @@ void log_warning(const char* format, ...)
 	log_va_msg(format, ap);
 }
 
+/* global flag */
+int is_interrupted_reported = 0;
+
 /**
  * Log the message, that the program was interrupted.
  * The function should be called only once.
  */
 void report_interrupted(void)
 {
-	assert(rhash_data.interrupted == 1);
-	rhash_data.interrupted = 2;
+	assert(rhash_data.stop_flags != 0);
+	if (rhash_data.stop_flags != InterruptedFlag || is_interrupted_reported)
+		return;
+	is_interrupted_reported = 1;
 	log_msg(_("Interrupted by user...\n"));
 }
 
@@ -158,37 +160,43 @@ static struct percents_t percents;
 #define REPORT_FIRST_MASK (RHASH_MD5 | RHASH_SHA256 | RHASH_SHA512)
 
 /**
- * Print verbose error on hash sums mismatch.
+ * Print verbose error on a hash sum mismatch.
  *
  * @param info file information with path and its hash sums.
+ * @return 0 on success, -1 on error
  */
-static void print_verbose_error(struct file_info *info)
+static int print_verbose_hash_check_error(struct file_info *info)
 {
 	char actual[130], expected[130];
 	assert(HC_FAILED(info->hc.flags));
 
-	rsh_fprintf(rhash_data.out, _("ERROR"));
+	/* TRANSLATORS: printed in verbose mode on a hash sum mismatch */
+	if (rsh_fprintf(rhash_data.out, _("ERROR")) < 0)
+		return -1;
 
-	if (HC_WRONG_FILESIZE & info->hc.flags) {
+	if ((HC_WRONG_FILESIZE & info->hc.flags)) {
 		sprintI64(actual, info->rctx->msg_size, 0);
 		sprintI64(expected, info->hc.file_size, 0);
-		rsh_fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected);
+		if (rsh_fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected) < 0)
+			return -1;
 	}
 
 	if (HC_WRONG_EMBCRC32 & info->hc.flags) {
 		rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
-		rsh_fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected);
+		if (rsh_fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected) < 0)
+			return -1;
 	}
 
 	if (HC_WRONG_HASHES & info->hc.flags) {
-		int i;
 		unsigned reported = 0;
+		int i;
 		for (i = 0; i < info->hc.hashes_num; i++) {
 			hash_value *hv = &info->hc.hashes[i];
 			char *expected_hash = info->hc.data + hv->offset;
 			unsigned hid = hv->hash_id;
 			int pflags;
-			if ((info->hc.wrong_hashes & (1 << i)) == 0) continue;
+			if ((info->hc.wrong_hashes & (1 << i)) == 0)
+				continue;
 
 			assert(hid != 0);
 
@@ -197,7 +205,7 @@ static void print_verbose_error(struct file_info *info)
 				/* guess the hash id */
 				if (hid & opt.sum_flags) hid &= opt.sum_flags;
 				if (hid & ~info->hc.found_hash_ids) hid &= ~info->hc.found_hash_ids;
-				if (hid & ~reported) hid &= ~reported; /* avoiding repeating */
+				if (hid & ~reported) hid &= ~reported; /* avoid repeating */
 				if (hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
 				hid &= -(int)hid; /* take the lowest bit */
 			}
@@ -207,14 +215,14 @@ static void print_verbose_error(struct file_info *info)
 			pflags = (hv->length == (rhash_get_digest_size(hid) * 2) ?
 				(RHPR_HEX | RHPR_UPPERCASE) : (RHPR_BASE32 | RHPR_UPPERCASE));
 			rhash_print(actual, info->rctx, hid, pflags);
-			rsh_fprintf(rhash_data.out, _(", %s is %s should be %s"),
-				rhash_get_name(hid), actual, expected_hash);
+			/* TRANSLATORS: messages like "CRC32 is ABC12345 should be BCA54321" */
+			if (rsh_fprintf(rhash_data.out, _(", %s is %s should be %s"),
+					rhash_get_name(hid), actual, expected_hash) < 0)
+				return -1;
 		}
 	}
-
-	rsh_fprintf(rhash_data.out, "\n");
+	return PRINTF_RES(rsh_fprintf(rhash_data.out, "\n"));
 }
-
 
 /**
  * Print file path and result of its verification by hash.
@@ -223,26 +231,32 @@ static void print_verbose_error(struct file_info *info)
  * @param info pointer to the file-info structure
  * @param print_name set to non-zero to print file path
  * @param print_result set to non-zero to print hash verification result
+ * @return 0 on success, -1 on i/o error
  */
-static void print_check_result(struct file_info *info, int print_name, int print_result)
+static int print_check_result(struct file_info *info, int print_name, int print_result)
 {
+	int saved_errno = errno;
+	int res = 0;
 	if (print_name) {
-		fprintf_file_t(rhash_data.out, "%-51s ", info->file);
+		res = PRINTF_RES(fprintf_file_t(rhash_data.out, "%-51s ", info->file));
 	}
-	if (print_result) {
-		if (info->error == -1) {
+	if (print_result && res == 0) {
+		if (info->processing_result < 0) {
 			/* print error to stdout */
-			rsh_fprintf(rhash_data.out, "%s\n", strerror(errno));
+			res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s\n", strerror(saved_errno)));
 		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
-			/* TRANSLATORS: use at least 3 characters to overwrite "99%" */
-			rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ? _("OK \n") :
-				/* TRANSLATORS: ERR is short for 'error' */
-				_("ERR\n")) );
+			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ?
+				/* TRANSLATORS: printed when hash sums match, use at least 3 characters to overwrite "99%" */
+				("OK \n") :
+				/* TRANSLATORS: ERR (short for 'error') is printed on hash mismatch */
+				_("ERR\n"))));
 		} else {
-			print_verbose_error(info);
+			res = print_verbose_hash_check_error(info);
 		}
 	}
-	fflush(rhash_data.out);
+	if (fflush(rhash_data.out) < 0)
+		res = -1;
+	return res;
 }
 
 /**
@@ -251,18 +265,18 @@ static void print_check_result(struct file_info *info, int print_name, int print
  * @param info pointer to the file-info structure
  * @param init non-zero on initialization before hash calculation,
  *             and zero after hash calculation finished.
+ * @return 0 on success, -1 on i/o error
  */
-static void print_results_on_check(struct file_info *info, int init)
+static int print_results_on_check(struct file_info *info, int init)
 {
 	if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 		int print_name = (opt.flags & (OPT_PERCENTS | OPT_SKIP_OK) ? !init : init);
 
-		if (!init && (opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags)) {
-			return; /* skip OK message */
-		}
-
-		print_check_result(info, print_name, !init);
+		/* print result, but skip OK messages if required */
+		if (init || info->processing_result != 0 || !(opt.flags & OPT_SKIP_OK) || HC_FAILED(info->hc.flags))
+			return print_check_result(info, print_name, !init);
 	}
+	return 0;
 }
 
 /* functions to output file info without percents */
@@ -272,12 +286,11 @@ static void print_results_on_check(struct file_info *info, int init)
  * No information is printed in other modes.
  *
  * @param info pointer to the file-info structure
- * @return non-zero, indicating that the output method successfully initialized
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
 static int dummy_init_percents(struct file_info *info)
 {
-	print_results_on_check(info, 1);
-	return 1;
+	return print_results_on_check(info, 1);
 }
 
 /**
@@ -286,11 +299,12 @@ static int dummy_init_percents(struct file_info *info)
  *
  * @param info pointer to the file-info structure
  * @param process_res non-zero if error occurred while hashing/checking
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static void dummy_finish_percents(struct file_info *info, int process_res)
+static int dummy_finish_percents(struct file_info *info, int process_res)
 {
-	info->error = process_res;
-	print_results_on_check(info, 0);
+	info->processing_result = process_res;
+	return print_results_on_check(info, 0);
 }
 
 /* functions to output file info with simple multi-line wget-like percents */
@@ -299,16 +313,17 @@ static void dummy_finish_percents(struct file_info *info, int process_res)
  * Initialize dots percent mode.
  *
  * @param info pointer to the file-info structure
- * @return non-zero, indicating that the output method successfully initialized
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
 static int dots_init_percents(struct file_info *info)
 {
-	(void)info;
-	fflush(rhash_data.out);
+	int res = fflush(rhash_data.out);
 	fflush(rhash_data.log);
+	(void)info;
 	percents.points = 0;
-	print_results_on_check(info, 1);
-	return 1;
+	if (print_results_on_check(info, 1) < 0)
+		res = -1;
+	return res;
 }
 
 /**
@@ -317,16 +332,17 @@ static int dots_init_percents(struct file_info *info)
  *
  * @param info pointer to the file-info structure
  * @param process_res non-zero if error occurred while hashing/checking
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static void dots_finish_percents(struct file_info *info, int process_res)
+static int dots_finish_percents(struct file_info *info, int process_res)
 {
 	char buf[80];
-	info->error = process_res;
+	info->processing_result = process_res;
 
 	if ((percents.points % 74) != 0) {
 		log_msg("%s 100%%\n", str_set(buf, ' ', 74 - (percents.points%74) ));
 	}
-	print_results_on_check(info, 0);
+	return print_results_on_check(info, 0);
 }
 
 /**
@@ -368,25 +384,24 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
  * Initialize one-line percent mode.
  *
  * @param info pointer to the file-info structure
- * @return non-zero if the output method successfully initialized
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
 static int p_init_percents(struct file_info *info)
 {
+	int res = fflush(rhash_data.out);
+	fflush(rhash_data.log);
+
 	(void)info;
 	percents.points      = 0;
 	percents.same_output = 0;
 	percents.use_cursor  = 0;
 
-	fflush(rhash_data.out);
-	fflush(rhash_data.log);
-	assert(rhash_data.log == stderr);
-
-	/* note: this output differs from print_check_result() by file handle */
+	/* note: this output differs from print_check_result() by the file handle, so ingnoring errors */
 	rsh_fprintf(rhash_data.log, "%-51s ", info->print_path);
 
 	percents.same_output = (rhash_data.out == stdout && isatty(0));
 	percents.ticks = rhash_get_ticks();
-	return 1;
+	return res;
 }
 
 /**
@@ -433,22 +448,25 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
  *
  * @param info pointer to the file-info structure
  * @param process_res non-zero if error occurred while hashing/checking
+ * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static void p_finish_percents(struct file_info *info, int process_res)
+static int p_finish_percents(struct file_info *info, int process_res)
 {
 	int need_check_result;
 
 	need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
-		!((opt.flags & OPT_SKIP_OK) && errno == 0 && !HC_FAILED(info->hc.flags));
-	info->error = process_res;
+		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HC_FAILED(info->hc.flags));
+	info->processing_result = process_res;
 
 	if (percents.same_output && need_check_result) {
-		print_check_result(info, 0, 1);
+		return print_check_result(info, 0, 1);
 	} else {
 		rsh_fprintf(rhash_data.log, "100%%\n");
 		fflush(rhash_data.log);
-		if (need_check_result) print_check_result(info, 1, 1);
+		if (need_check_result)
+			return print_check_result(info, 1, 1);
 	}
+	return 0;
 }
 
 /* three methods of percents output */
@@ -469,23 +487,22 @@ struct percents_output_info_t p_perc = {
  * @param stream_path the path to the log file, or NULL, to use the default stream
  * @param default_stream the default stream value, for the case of invalid stream_path
  */
-static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path, FILE* default_stream)
+static void setup_log_stream(FILE **p_stream, file_t* file, const opt_tchar* stream_path, FILE* default_stream)
 {
-	file_t file;
 	FILE* result;
 	/* set to the default stream, to enable error reporting via log_file_t_error() */
 	*p_stream = default_stream;
-	if (!stream_path)
+	if (!stream_path) {
+		file_init(file, (default_stream == stdout ? "(stdout)" : "(stderr)"), FILE_IFSTDIN);
 		return;
-	file_tinit(&file, stream_path, FILE_OPT_DONT_FREE_PATH);
-	result = file_fopen(&file, FOpenWrite);
+	}
+	file_tinit(file, stream_path, FILE_OPT_DONT_FREE_PATH);
+	result = file_fopen(file, FOpenWrite);
 	if (!result) {
-		log_file_t_error(&file);
-		file_cleanup(&file);
+		log_file_t_error(file);
 		rsh_exit(2);
 	}
 	*p_stream = result;
-	file_cleanup(&file);
 }
 
 /**
@@ -493,8 +510,8 @@ static void setup_log_stream(FILE **p_stream, const opt_tchar* stream_path, FILE
  */
 void setup_output(void)
 {
-	setup_log_stream(&rhash_data.log, opt.log, stderr);
-	setup_log_stream(&rhash_data.out, opt.output, stdout);
+	setup_log_stream(&rhash_data.log, &rhash_data.log_file, opt.log, stderr);
+	setup_log_stream(&rhash_data.out, &rhash_data.out_file, opt.output, stdout);
 }
 
 void setup_percents(void)
@@ -518,7 +535,7 @@ void setup_percents(void)
 /* misc output functions */
 
 /**
- * Print total statistics of crc file checking.
+ * Print total statistics of hash file checking.
  */
 void print_check_stats(void)
 {

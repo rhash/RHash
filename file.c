@@ -7,15 +7,15 @@
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64
 
+#include "file.h"
+#include "common_func.h"
+#include "platform.h"
+#include "win_utils.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "file.h"
-#include "common_func.h"
-#include "platform.h"
-#include "win_utils.h"
 
 #if defined( _WIN32) || defined(__CYGWIN__)
 # include <windows.h>
@@ -552,7 +552,7 @@ int file_list_read(file_list_t* list)
 		char* line = buf;
 		char *buf_back = buf + sizeof(buf) - 1;
 		/* detect and skip BOM */
-		if (buf[0] == (char)0xEF && buf[1] == (char)0xBB && buf[2] == (char)0xBF && !(list->state & NotFirstLine))
+		if (STARTS_WITH_UTF8_BOM(buf) && !(list->state & NotFirstLine))
 			line += 3;
 		list->state |= NotFirstLine;
 		for (p = line; p < buf_back && *p && *p != '\r' && *p != '\n'; p++);

@@ -1,15 +1,14 @@
 /* hash_check.c - verification of hashes of files */
 
-#include <assert.h>
-#include <ctype.h>  /* isspace */
-#include <string.h>
-
 #include "hash_check.h"
-#include "hash_print.h"
 #include "common_func.h"
+#include "hash_print.h"
 #include "output.h"
 #include "parse_cmdline.h"
 #include "librhash/rhash.h"
+#include <assert.h>
+#include <ctype.h>  /* isspace */
+#include <string.h>
 
 /* hash conversion macros and functions */
 #define HEX_TO_DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
@@ -19,7 +18,7 @@
 #define BASE32_BIT_SIZE(length) (((length) * 5) & ~7)
 #define BASE64_BIT_SIZE(length) (((length) * 6) & ~7)
 
-/* pack a character sequence into single unsigned */
+/* pack a character sequence into a single unsigned integer */
 #define THREEC2U(c1, c2, c3) (((unsigned)(c1) << 16) | \
 	((unsigned)(c2) << 8) | (unsigned)(c3))
 #define FOURC2U(c1, c2, c3, c4) (((unsigned)(c1) << 24) | \
@@ -758,16 +757,15 @@ unsigned get_crc32(struct rhash_context* ctx)
  *
  * @param hashes 'original' parsed hash values, to verify against
  * @param ctx the rhash context containing calculated hash values
- * @return 1 on success, 0 on fail
+ * @return 1 on successfull verification, 0 on hash sums mismatch
  */
-int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
+int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 {
 	unsigned unverified_mask;
 	unsigned hash_id;
 	unsigned printed;
 	char hex[132], base32[104], base64[88];
 	int j;
-	int comparision_mode;
 
 	/* verify file size, if present */
 	if ((hashes->flags & HC_HAS_FILESIZE) != 0 && hashes->file_size != ctx->msg_size)
@@ -783,7 +781,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 
 	unverified_mask = (1 << hashes->hashes_num) - 1;
 
-	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES; hash_id <<= 1) {
+	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES && unverified_mask; hash_id <<= 1) {
 		if ((hashes->hash_mask & hash_id) == 0)
 			continue;
 		printed = 0;
@@ -792,6 +790,7 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 			hash_value *hv = &hashes->hashes[j];
 			char *calculated_hash, *expected_hash;
 			int bit_length;
+			int comparision_mode;
 
 			/* skip already verified hashes and hashes with different digest size */
 			if (!(unverified_mask & (1 << j)) || !(hv->hash_id & hash_id))
@@ -842,11 +841,10 @@ int hash_check_verify(hash_check* hashes, struct rhash_context* ctx)
 
 			/* end the loop if all hashes were successfully verified */
 			if (unverified_mask == 0)
-				goto hc_verify_exit;
+				break;
 		}
 	}
 
-hc_verify_exit: /* we use label/goto to jump out of two nested loops  */
 	hashes->wrong_hashes = unverified_mask;
 	if (unverified_mask != 0)
 		hashes->flags |= HC_WRONG_HASHES;

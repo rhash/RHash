@@ -1,16 +1,14 @@
 /* find_file.c - functions for recursive scan of directories. */
 
+#include "find_file.h"
+#include "output.h"
+#include "platform.h"
+#include "win_utils.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "platform.h"
-#include "find_file.h"
-#include "common_func.h"
-#include "output.h"
-#include "win_utils.h"
 
 #ifdef _WIN32
 # include <windows.h>
