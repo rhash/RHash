@@ -22,7 +22,6 @@ struct rhash_t
 	FILE *log;
 	file_t out_file;
 	file_t log_file;
-	FILE *upd_fd; /* descriptor of a crc file to update */
 #ifdef _WIN32
 	wchar_t* program_dir;
 	unsigned saved_cursor_size;
@@ -32,6 +31,7 @@ struct rhash_t
 	char*  printf_str;
 	struct print_item* print_list;
 	struct strbuf_t* template_text;
+	struct update_ctx* update_context;
 	struct rhash_context* rctx;
 	unsigned stop_flags;
 	int non_fatal_error;

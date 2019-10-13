@@ -87,7 +87,7 @@ static void print_help(void)
 	print_help_line("      --snefru128, --snefru256  ", hash_sum_format, "SNEFRU-128/256");
 	print_help_line("  -a, --all     ", _("Calculate all supported hashes.\n"));
 	print_help_line("  -c, --check   ", _("Check hash files specified by command line.\n"));
-	print_help_line("  -u, --update  ", _("Update hash files specified by command line.\n"));
+	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
 	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hashes, one per line.\n"));
@@ -348,7 +348,7 @@ cmdline_opt_t cmdline_opt[] =
 	/* program modes */
 	{ F_UFLG, 'c',   0, "check",  &opt.mode, MODE_CHECK },
 	{ F_UFLG, 'k',   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
-	{ F_UFLG, 'u',   0, "update", &opt.mode, MODE_UPDATE },
+	{ F_TSTR, 'u',   0, "update", &opt.update_file, 0 },
 	{ F_UFLG, 'B',   0, "benchmark", &opt.mode, MODE_BENCHMARK },
 	{ F_UFLG,   0,   0, "torrent", &opt.mode, MODE_TORRENT },
 	{ F_VFNC,   0,   0, "list-hashes", list_hashes, 0 },
@@ -912,8 +912,13 @@ static void apply_cmdline_options(struct parsed_cmd_line_t *cmd_line)
 		if (!opt.sum_flags) opt.sum_flags = conf_opt.sum_flags;
 	}
 
-	if (!opt.mode)
+	if (!opt.mode && !opt.update_file) {
 		opt.mode = conf_opt.mode;
+		opt.update_file = conf_opt.update_file;
+	}
+	if (opt.update_file)
+		opt.mode |= MODE_UPDATE;
+
 	if (!(opt.flags & OPT_FMT_MODIFIERS))
 		opt.flags |= conf_opt.flags & OPT_FMT_MODIFIERS;
 	opt.flags |= conf_opt.flags & ~OPT_FMT_MODIFIERS; /* copy the rest of options */

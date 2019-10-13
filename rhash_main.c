@@ -98,7 +98,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			res = check_hash_file(file, not_root);
 		} else if (opt.mode & MODE_UPDATE) {
-			res = update_hash_file(file);
+			res = update_ctx_update(rhash_data.update_context, file);
 		} else {
 			/* default mode: calculate hash */
 			const char* print_path = file->path;
@@ -194,6 +194,7 @@ void rhash_destroy(struct rhash_t* ptr)
 {
 	free_print_list(ptr->print_list);
 	rsh_str_free(ptr->template_text);
+	if (ptr->update_context) update_ctx_free(ptr->update_context);
 	if (ptr->rctx) rhash_free(ptr->rctx);
 	if (ptr->out) fclose(ptr->out);
 	if (ptr->log) fclose(ptr->log);
@@ -273,6 +274,15 @@ int main(int argc, char *argv[])
 	}
 	assert(opt.search_data != 0);
 
+	if (opt.update_file)
+	{
+		file_t upd_path;
+		file_tinit(&upd_path, opt.update_file, FILE_OPT_DONT_FREE_PATH);
+		rhash_data.update_context = update_ctx_new(&upd_path);
+		if (!rhash_data.update_context)
+			rsh_exit(0);
+	}
+
 	/* setup printf formatting string */
 	rhash_data.printf_str = opt.printf_str;
 
@@ -322,6 +332,11 @@ int main(int argc, char *argv[])
 
 	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		print_check_stats();
+	} else if ((opt.mode & MODE_UPDATE) != 0 && rhash_data.update_context) {
+		/* finalize hash file and check for errors */
+		if (update_ctx_free(rhash_data.update_context) < 0)
+				rhash_data.stop_flags |= FatalErrorFlag;
+		rhash_data.update_context = 0;
 	}
 
 	if (!rhash_data.stop_flags) {
@@ -342,6 +357,10 @@ int main(int argc, char *argv[])
 		}
 	} else
 		report_interrupted();
+
+	if (rhash_data.update_context && update_ctx_free(rhash_data.update_context) < 0)
+		rhash_data.stop_flags |= FatalErrorFlag;
+	rhash_data.update_context = 0;
 
 	exit_code = ((rhash_data.stop_flags & FatalErrorFlag) ? 2 :
 		(rhash_data.non_fatal_error || opt.search_data->errors_count) ? 1 :

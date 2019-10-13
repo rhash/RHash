@@ -81,6 +81,7 @@ struct options_t
 	opt_tchar* template_file; /* printf-like template file path */
 	opt_tchar* output;        /* file to output calculation or checking results to */
 	opt_tchar* log;           /* file to log percents and other info to */
+	opt_tchar* update_file;   /* hash file to update */
 	char* embed_crc_delimiter;
 	char  path_separator;
 	int   find_max_depth;
