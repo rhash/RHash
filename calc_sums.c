@@ -439,7 +439,6 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 			print_sfv_header_line(rhash_data.log, file, 0);
 			fflush(rhash_data.log);
 		}
-		file_cleanup(file);
 	}
 
 	if (rhash_data.print_list && res == 0) {
