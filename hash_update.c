@@ -29,9 +29,10 @@ typedef struct update_ctx
 
 enum UpdateFlagsBits
 {
-	IsEmptyFile = 1,
-	HasBom = 2,
-	ErrorOcurred = 4
+	DoesExist = 1,
+	IsEmptyFile = 2,
+	HasBom = 4,
+	ErrorOcurred = 8
 };
 
 /* define some internal functions, implemented later in this file */
@@ -136,9 +137,11 @@ int update_ctx_free(struct update_ctx* ctx)
  */
 static int open_and_prepare_hash_file(struct update_ctx* ctx)
 {
+	int open_mode = (ctx->flags & DoesExist ? FOpenRW : FOpenWrite) | FOpenBin;
 	assert(!ctx->fd);
-	/* open the hash file for writing */
-	if (!(ctx->fd = file_fopen(&ctx->file, FOpenRead | FOpenWrite)))
+	/* open the hash file for reading/writing or create it */
+	ctx->fd = file_fopen(&ctx->file, open_mode);
+	if (!ctx->fd)
 		return -1;
 	if (!(ctx->flags & IsEmptyFile)) {
 		int ch;
@@ -156,13 +159,13 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
 			if (rsh_fprintf(ctx->fd, "\n") < 0)
 				return -1;
 		}
-	}
-	/* SFV banner will be printed only in SFV mode and only for empty hash files */
-	else if (opt.fmt == FMT_SFV) {
+	} else {
 		/* skip BOM, if present */
 		if ((ctx->flags & HasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
 			return -1;
-		return print_sfv_banner(ctx->fd);
+		/* SFV banner will be printed only in SFV mode and only for empty hash files */
+		if (opt.fmt == FMT_SFV)
+			return print_sfv_banner(ctx->fd);
 	}
 	return 0;
 }
@@ -177,13 +180,13 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
  */
 static int file_set_load_from_crc_file(file_set *set, file_t* file)
 {
-	int result = IsEmptyFile;
+	int result = (DoesExist | IsEmptyFile);
 	char buf[2048];
 	hash_check hc;
 
 	FILE* fd = file_fopen(file, FOpenRead | FOpenBin);
 	if (!fd) {
-		/* if file does not exist, it will be created */
+		/* if file does not exist, it will be created later */
 		if (errno == ENOENT)
 			return IsEmptyFile;
 		log_file_t_error(file);

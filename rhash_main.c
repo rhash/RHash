@@ -38,7 +38,8 @@ static int must_skip_file(file_t* file)
 
 	/* check if the file path is the same as the output or the log file path */
 	return (opt.output && are_paths_equal(path, opt.output)) ||
-		(opt.log && are_paths_equal(path, opt.log));
+		(opt.log && are_paths_equal(path, opt.log)) ||
+		(opt.update_file && are_paths_equal(path, opt.update_file));
 }
 
 /**
@@ -76,7 +77,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 
 		if (!FILE_ISSPECIAL(file)) {
 			if (not_root) {
-				if ((opt.mode & (MODE_CHECK | MODE_UPDATE)) != 0) {
+				if ((opt.mode & MODE_CHECK) != 0) {
 					/* check and update modes use the crc_accept list */
 					if (!file_mask_match(opt.crc_accept, file->path)) {
 						return 0;
@@ -357,10 +358,6 @@ int main(int argc, char *argv[])
 		}
 	} else
 		report_interrupted();
-
-	if (rhash_data.update_context && update_ctx_free(rhash_data.update_context) < 0)
-		rhash_data.stop_flags |= FatalErrorFlag;
-	rhash_data.update_context = 0;
 
 	exit_code = ((rhash_data.stop_flags & FatalErrorFlag) ? 2 :
 		(rhash_data.non_fatal_error || opt.search_data->errors_count) ? 1 :
