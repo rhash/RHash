@@ -536,17 +536,20 @@ void setup_percents(void)
 
 /**
  * Print total statistics of hash file checking.
+ *
+ * @return 0 on success, -1 on i/o error with error code stored in errno
  */
-void print_check_stats(void)
+int print_check_stats(void)
 {
+	int res;
 	if (rhash_data.processed == rhash_data.ok) {
 		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
-		rsh_fprintf(rhash_data.out, _("Everything OK\n"));
+		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Everything OK\n")));
 	} else {
-		rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"),
-			rhash_data.processed-rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed);
+		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"),
+			rhash_data.processed - rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed));
 	}
-	fflush(rhash_data.out);
+	return (fflush(rhash_data.out) < 0 ? -1 : res);
 }
 
 /**

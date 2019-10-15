@@ -67,8 +67,9 @@ static int scan_files_callback(file_t* file, int preprocess)
 				must_skip_file(file))
 			return 0;
 
-		if (opt.fmt & FMT_SFV) {
-			print_sfv_header_line(rhash_data.out, file, 0);
+		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, file, 0) < 0) {
+			log_file_t_error(&rhash_data.out_file);
+			res = -2;
 		}
 
 		rhash_data.batch_size += file->size;
@@ -309,8 +310,10 @@ int main(int argc, char *argv[])
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->callback = scan_files_callback;
 
-	if ((sfv = (opt.fmt == FMT_SFV && !opt.mode))) {
-		print_sfv_banner(rhash_data.out);
+	sfv = (opt.fmt == FMT_SFV && !opt.mode);
+	if (sfv && print_sfv_banner(rhash_data.out) < 0) {
+		log_file_t_error(&rhash_data.out_file);
+		rhash_data.stop_flags |= FatalErrorFlag;
 	}
 
 	/* preprocess files */
@@ -319,8 +322,13 @@ int main(int argc, char *argv[])
 		opt.search_data->callback_data = 1;
 		scan_files(opt.search_data);
 
-		fflush(rhash_data.out);
+		if (fflush(rhash_data.out) < 0) {
+			log_file_t_error(&rhash_data.out_file);
+			rhash_data.stop_flags |= FatalErrorFlag;
+		}
 	}
+	if ((rhash_data.stop_flags & FatalErrorFlag) != 0)
+		rsh_exit(2);
 
 	/* measure total processing time */
 	rsh_timer_start(&timer);
@@ -332,7 +340,10 @@ int main(int argc, char *argv[])
 	scan_files(opt.search_data);
 
 	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
-		print_check_stats();
+		if (print_check_stats() < 0) {
+			log_file_t_error(&rhash_data.out_file);
+			rhash_data.stop_flags |= FatalErrorFlag;
+		}
 	} else if ((opt.mode & MODE_UPDATE) != 0 && rhash_data.update_context) {
 		/* finalize hash file and check for errors */
 		if (update_ctx_free(rhash_data.update_context) < 0)

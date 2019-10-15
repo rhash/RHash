@@ -247,7 +247,7 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32)
  * and placing it right before the file extension.
  *
  * @param info pointer to the data of the file to rename.
- * @return 0 on success, -1 on fail with error code in errno
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 int rename_file_by_embeding_crc32(struct file_info *info)
 {
@@ -395,6 +395,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 
 	/* initialize percents output */
 	if (init_percents(&info) < 0) {
+		log_file_t_error(&rhash_data.out_file);
 		free(info.full_path);
 		file_info_destroy(&info);
 		return -2;
@@ -476,8 +477,10 @@ static int verify_sums(struct file_info *info)
 	int res = 0;
 
 	/* initialize percents output */
-	if (init_percents(info) < 0)
+	if (init_percents(info) < 0) {
+		log_file_t_error(&rhash_data.out_file);
 		return -2;
+	}
 	rsh_timer_start(&timer);
 
 	if (calc_sums(info) < 0) {
@@ -512,6 +515,7 @@ static int verify_sums(struct file_info *info)
 /**
  * Check hash sums in a hash file.
  * Lines beginning with ';' and '#' are ignored.
+ * In a case of fail, the error will be logged.
  *
  * @param hash_file_path - the path of the file with hash sums to verify.
  * @param chdir - true if function should emulate chdir to directory of filepath before checking it.
@@ -542,11 +546,13 @@ int check_hash_file(file_t* file, int chdir)
 			info.hc.embedded_crc32 = crc32;
 
 			res = verify_sums(&info);
-			fflush(rhash_data.out);
-			if (!rhash_data.stop_flags) {
+			if (res >= -1 && fflush(rhash_data.out) < 0) {
+				log_file_t_error(&rhash_data.out_file);
+				res = -2;
+			} else if (!rhash_data.stop_flags) {
 				if (res >= 0)
 					rhash_data.ok++;
-				else if (res < 0 && errno == ENOENT)
+				else if (res == -1 && errno == ENOENT)
 					rhash_data.miss++;
 				rhash_data.processed++;
 			}
@@ -576,7 +582,10 @@ int check_hash_file(file_t* file, int chdir)
 		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file);
 		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
 		rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', tail_dash_len));
-		fflush(rhash_data.out);
+		if (ferror(rhash_data.out) || fflush(rhash_data.out) < 0) {
+			log_file_t_error(&rhash_data.out_file);
+			return -2;
+		}
 	}
 	rsh_timer_start(&timer);
 
@@ -655,13 +664,16 @@ int check_hash_file(file_t* file, int chdir)
 			/* verify hash sums of the file */
 			res = verify_sums(&info);
 
-			fflush(rhash_data.out);
+			if (res >= -1 && fflush(rhash_data.out) < 0) {
+				log_file_t_error(&rhash_data.out_file);
+				res = -2;
+			}
 			file_cleanup(&file_to_check);
 			file_info_destroy(&info);
 
-			if (rhash_data.stop_flags) {
+			if (rhash_data.stop_flags || res < -1) {
 				free(path_without_ext);
-				break;
+				break; /* stop on fatal error */
 			}
 
 			/* update statistics */
@@ -672,13 +684,14 @@ int check_hash_file(file_t* file, int chdir)
 			rhash_data.processed++;
 		}
 		free(path_without_ext);
-		if (res < -1)
-			break; /* stop on fatal error */
 	}
 	time = rsh_timer_stop(&timer);
 
-	rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80));
-	print_check_stats();
+	if (res >= -1 && (rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80)) < 0 ||
+			print_check_stats() < 0)) {
+		log_file_t_error(&rhash_data.out_file);
+		res = -2;
+	}
 
 	if (rhash_data.processed != rhash_data.ok)
 		rhash_data.non_fatal_error = 1;

@@ -40,7 +40,7 @@ void log_warning(const char* format, ...);
 void log_file_t_error(struct file_t* file);
 void log_file_t_msg(const char* format, struct file_t* file);
 void report_interrupted(void);
-void print_check_stats(void);
+int print_check_stats(void);
 
 void print_time_stats(double time, uint64_t size, int total);
 void print_file_time_stats(struct file_info* info);
