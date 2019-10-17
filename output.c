@@ -215,7 +215,7 @@ static int print_verbose_hash_check_error(struct file_info *info)
 			pflags = (hv->length == (rhash_get_digest_size(hid) * 2) ?
 				(RHPR_HEX | RHPR_UPPERCASE) : (RHPR_BASE32 | RHPR_UPPERCASE));
 			rhash_print(actual, info->rctx, hid, pflags);
-			/* TRANSLATORS: messages like "CRC32 is ABC12345 should be BCA54321" */
+			/* TRANSLATORS: print a message like "CRC32 is ABC12345 should be BCA54321" */
 			if (rsh_fprintf(rhash_data.out, _(", %s is %s should be %s"),
 					rhash_get_name(hid), actual, expected_hash) < 0)
 				return -1;
@@ -246,9 +246,9 @@ static int print_check_result(struct file_info *info, int print_name, int print_
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s\n", strerror(saved_errno)));
 		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ?
-				/* TRANSLATORS: printed when hash sums match, use at least 3 characters to overwrite "99%" */
-				("OK \n") :
-				/* TRANSLATORS: ERR (short for 'error') is printed on hash mismatch */
+				/* TRANSLATORS: printed when all hash sums match, use at least 3 characters to overwrite "99%" */
+				_("OK \n") :
+				/* TRANSLATORS: ERR (short for 'error') is printed on a hash sum mismatch */
 				_("ERR\n"))));
 		} else {
 			res = print_verbose_hash_check_error(info);

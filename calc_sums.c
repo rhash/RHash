@@ -337,7 +337,7 @@ int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 	if (fd && text->length == fwrite(text->str, 1, text->length, fd) &&
 			!ferror(fd) && fflush(fd) == 0)
 	{
-		/* TRANSLATORS: this message is printed when a torrent file is saved */
+		/* TRANSLATORS: printed when a torrent file is saved */
 		log_file_t_msg(_("%s saved\n"), torrent_file);
 	} else {
 		log_file_t_error(torrent_file);
@@ -560,6 +560,7 @@ int check_hash_file(file_t* file, int chdir)
 			free(info.full_path);
 			file_info_destroy(&info);
 		} else {
+			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
 			log_warning(_("file name doesn't contain a CRC32: %s\n"), hash_file_path);
 			return -1;
 		}

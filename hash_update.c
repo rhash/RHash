@@ -207,7 +207,7 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 		if (*line == 0)
 			continue; /* skip empty lines */
 		if (is_binary_string(line)) {
-			log_file_t_msg(_("is a binary file: %s\n"), file);
+			log_file_t_msg(_("skipping binary file %s\n"), file);
 			fclose(fd);
 			return -1;
 		}
@@ -294,7 +294,7 @@ static int fix_sfv_header(file_t* file)
 	}
 	/* overwrite the hash file with the new one */
 	if (result == 0 && file_rename(&new_file, file) < 0) {
-		/* TRANSLATORS: a file failed to be renamed */
+		/* TRANSLATORS: printed when a file rename failed */
 		log_error(_("can't move %s to %s: %s\n"),
 			new_file.path, file->path, strerror(errno));
 		result = -1;
