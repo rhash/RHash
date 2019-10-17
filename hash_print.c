@@ -600,7 +600,7 @@ void init_printf_format(strbuf_t* out)
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
 	if ((opt.sum_flags & OPT_ED2K_LINK) != 0) {
-		rsh_str_append_n(out, "%l", 2);
+		rsh_str_append_n(out, "%l\\n", 4);
 		out->str[1] &= up_flag;
 		return;
 	}
