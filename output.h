@@ -34,11 +34,13 @@ void setup_output(void);
 void setup_percents(void);
 
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file);
+
 void log_msg(const char* format, ...);
-void log_error(const char* format, ...);
+void log_msg_file_t(const char* format, struct file_t* file);
 void log_warning(const char* format, ...);
-void log_file_t_error(struct file_t* file);
-void log_file_t_msg(const char* format, struct file_t* file);
+void log_error(const char* format, ...);
+void log_error_file_t(struct file_t* file);
+void log_error_msg_file_t(const char* format, struct file_t* file);
 void report_interrupted(void);
 int print_check_stats(void);
 

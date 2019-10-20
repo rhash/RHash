@@ -151,7 +151,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 			file_t file;
 			file_tinit(&file, path, FILE_OPT_DONT_FREE_PATH);
 			set_errno_from_last_file_error();
-			log_file_t_error(&file);
+			log_error_file_t(&file);
 			file_cleanup(&file);
 			data->errors_count++;
 		}
@@ -172,7 +172,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 		file.wpath = path;
 		if (file_stat(&file, 0) < 0)
 		{
-			log_file_t_error(&file);
+			log_error_file_t(&file);
 			free(file.path);
 			data->errors_count++;
 			return;
@@ -188,7 +188,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	file_init(&file, path, 0);
 	if (file_stat(&file, FUseLstat) < 0)
 	{
-		log_file_t_error(&file);
+		log_error_file_t(&file);
 		file_cleanup(&file);
 		data->errors_count++;
 		return;
@@ -234,7 +234,7 @@ void scan_files(file_search_data* data)
 			file_list_t list;
 			if (file_list_open(&list, file) < 0)
 			{
-				log_file_t_error(file);
+				log_error_file_t(file);
 				continue;
 			}
 			while (file_list_read(&list))
@@ -256,7 +256,7 @@ void scan_files(file_search_data* data)
 			else if ((data->options & FIND_LOG_ERRORS) != 0)
 			{
 				errno = EISDIR;
-				log_file_t_error(file);
+				log_error_file_t(file);
 			}
 		}
 		else
@@ -451,6 +451,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			{
 				if (res < 0 && (options & FIND_LOG_ERRORS))
 					data->errors_count++;
+
 				file_cleanup(&file);
 				continue;
 			}
@@ -505,7 +506,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			else if (options & FIND_LOG_ERRORS)
 			{
 				/* report error only if FIND_LOG_ERRORS option is set */
-				log_file_t_error(&file);
+				log_error_file_t(&file);
 				data->errors_count++;
 			}
 			file_cleanup(&file);

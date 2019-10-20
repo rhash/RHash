@@ -68,7 +68,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 			return 0;
 
 		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, file, 0) < 0) {
-			log_file_t_error(&rhash_data.out_file);
+			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		}
 
@@ -158,7 +158,7 @@ static int load_printf_template(void)
 	fd = file_fopen(&file, FOpenRead | FOpenBin);
 	if (!fd)
 	{
-		log_file_t_error(&file);
+		log_error_file_t(&file);
 		file_cleanup(&file);
 		return 0;
 	}
@@ -171,13 +171,13 @@ static int load_printf_template(void)
 
 		rsh_str_append_n(rhash_data.template_text, buffer, len);
 		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
-			log_file_t_msg(_("%s: template file is too big\n"), &file);
+			log_msg_file_t(_("%s: template file is too big\n"), &file);
 			error = 1;
 		}
 	}
 
 	if (ferror(fd)) {
-		log_file_t_error(&file);
+		log_error_file_t(&file);
 		error = 1;
 	}
 
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 
 	sfv = (opt.fmt == FMT_SFV && !opt.mode);
 	if (sfv && print_sfv_banner(rhash_data.out) < 0) {
-		log_file_t_error(&rhash_data.out_file);
+		log_error_file_t(&rhash_data.out_file);
 		rhash_data.stop_flags |= FatalErrorFlag;
 	}
 
@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
 		scan_files(opt.search_data);
 
 		if (fflush(rhash_data.out) < 0) {
-			log_file_t_error(&rhash_data.out_file);
+			log_error_file_t(&rhash_data.out_file);
 			rhash_data.stop_flags |= FatalErrorFlag;
 		}
 	}
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 
 	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		if (print_check_stats() < 0) {
-			log_file_t_error(&rhash_data.out_file);
+			log_error_file_t(&rhash_data.out_file);
 			rhash_data.stop_flags |= FatalErrorFlag;
 		}
 	} else if ((opt.mode & MODE_UPDATE) != 0 && rhash_data.update_context) {

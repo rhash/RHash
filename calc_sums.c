@@ -325,7 +325,7 @@ int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 	const rhash_str* text = rhash_torrent_generate_content(rctx);
 	if (!text) {
 		errno = ENOMEM;
-		log_file_t_error(torrent_file);
+		log_error_file_t(torrent_file);
 		return -1;
 	}
 
@@ -338,9 +338,9 @@ int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
 			!ferror(fd) && fflush(fd) == 0)
 	{
 		/* TRANSLATORS: printed when a torrent file is saved */
-		log_file_t_msg(_("%s saved\n"), torrent_file);
+		log_msg_file_t(_("%s saved\n"), torrent_file);
 	} else {
-		log_file_t_error(torrent_file);
+		log_error_file_t(torrent_file);
 		res = -1;
 	}
 	if (fd)
@@ -395,7 +395,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 
 	/* initialize percents output */
 	if (init_percents(&info) < 0) {
-		log_file_t_error(&rhash_data.out_file);
+		log_error_file_t(&rhash_data.out_file);
 		free(info.full_path);
 		file_info_destroy(&info);
 		return -2;
@@ -406,7 +406,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 		/* calculate sums */
 		if (calc_sums(&info) < 0) {
 			/* print i/o error */
-			log_file_t_error(file);
+			log_error_file_t(file);
 			res = -1;
 		}
 		if (rhash_data.stop_flags) {
@@ -433,7 +433,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 	if ((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV && res == 0) {
 		/* updating SFV file: print SFV header line */
 		if (print_sfv_header_line(out, file, 0) < 0) {
-			log_file_t_error(out_file);
+			log_error_file_t(out_file);
 			res = -2;
 		}
 		if (opt.flags & OPT_VERBOSE) {
@@ -445,7 +445,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
 	if (rhash_data.print_list && res == 0) {
 		if (!opt.bt_batch_file) {
 			if (print_line(out, rhash_data.print_list, &info) < 0) {
-				log_file_t_error(out_file);
+				log_error_file_t(out_file);
 				res = -2;
 			}
 			/* print the calculated line to stderr/log-file if verbose */
@@ -478,7 +478,7 @@ static int verify_sums(struct file_info *info)
 
 	/* initialize percents output */
 	if (init_percents(info) < 0) {
-		log_file_t_error(&rhash_data.out_file);
+		log_error_file_t(&rhash_data.out_file);
 		return -2;
 	}
 	rsh_timer_start(&timer);
@@ -547,7 +547,7 @@ int check_hash_file(file_t* file, int chdir)
 
 			res = verify_sums(&info);
 			if (res >= -1 && fflush(rhash_data.out) < 0) {
-				log_file_t_error(&rhash_data.out_file);
+				log_error_file_t(&rhash_data.out_file);
 				res = -2;
 			} else if (!rhash_data.stop_flags) {
 				if (res >= 0)
@@ -575,7 +575,7 @@ int check_hash_file(file_t* file, int chdir)
 	if (FILE_ISSTDIN(file)) {
 		fd = stdin;
 	} else if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
-		log_file_t_error(file);
+		log_error_file_t(file);
 		return -1;
 	}
 
@@ -584,7 +584,7 @@ int check_hash_file(file_t* file, int chdir)
 		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
 		rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', tail_dash_len));
 		if (ferror(rhash_data.out) || fflush(rhash_data.out) < 0) {
-			log_file_t_error(&rhash_data.out_file);
+			log_error_file_t(&rhash_data.out_file);
 			return -2;
 		}
 	}
@@ -666,7 +666,7 @@ int check_hash_file(file_t* file, int chdir)
 			res = verify_sums(&info);
 
 			if (res >= -1 && fflush(rhash_data.out) < 0) {
-				log_file_t_error(&rhash_data.out_file);
+				log_error_file_t(&rhash_data.out_file);
 				res = -2;
 			}
 			file_cleanup(&file_to_check);
@@ -690,7 +690,7 @@ int check_hash_file(file_t* file, int chdir)
 
 	if (res >= -1 && (rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80)) < 0 ||
 			print_check_stats() < 0)) {
-		log_file_t_error(&rhash_data.out_file);
+		log_error_file_t(&rhash_data.out_file);
 		res = -2;
 	}
 

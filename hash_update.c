@@ -86,7 +86,7 @@ int update_ctx_update(struct update_ctx* ctx, file_t* file)
 		return 0;
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
-		log_file_t_error(&ctx->file);
+		log_error_file_t(&ctx->file);
 		ctx->flags |= ErrorOcurred;
 		return -2;
 	}
@@ -113,7 +113,7 @@ int update_ctx_free(struct update_ctx* ctx)
 	file_set_free(ctx->crc_entries);
 	if (ctx->fd) {
 		if (fclose(ctx->fd) < 0) {
-			log_file_t_error(&ctx->file);
+			log_error_file_t(&ctx->file);
 			res = -1;
 		} else if (!!(ctx->flags & ErrorOcurred)) {
 			res = -1;
@@ -121,7 +121,7 @@ int update_ctx_free(struct update_ctx* ctx)
 			if (opt.fmt == FMT_SFV)
 				res = fix_sfv_header(&ctx->file); /* finalize the hash file */
 			if (res == 0)
-				log_file_t_msg(_("Updated: %s\n"), &ctx->file);
+				log_msg_file_t(_("Updated: %s\n"), &ctx->file);
 		}
 	}
 	file_cleanup(&ctx->file);
@@ -189,7 +189,7 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 		/* if file does not exist, it will be created later */
 		if (errno == ENOENT)
 			return IsEmptyFile;
-		log_file_t_error(file);
+		log_error_file_t(file);
 		return -1;
 	}
 	while (!feof(fd) && fgets(buf, 2048, fd)) {
@@ -207,7 +207,7 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 		if (*line == 0)
 			continue; /* skip empty lines */
 		if (is_binary_string(line)) {
-			log_file_t_msg(_("skipping binary file %s\n"), file);
+			log_msg_file_t(_("skipping binary file %s\n"), file);
 			fclose(fd);
 			return -1;
 		}
@@ -220,7 +220,7 @@ static int file_set_load_from_crc_file(file_set *set, file_t* file)
 		}
 	}
 	if (ferror(fd)) {
-		log_file_t_error(file);
+		log_error_file_t(file);
 		result = -1;
 	}
 	fclose(fd);
@@ -247,14 +247,14 @@ static int fix_sfv_header(file_t* file)
 	/* open the hash file for reading */
 	in = file_fopen(file, FOpenRead);
 	if (!in) {
-		log_file_t_error(file);
+		log_error_file_t(file);
 		return -1;
 	}
 	/* open a temporary file for writing */
 	file_path_append(&new_file, file, ".new");
 	out = file_fopen(&new_file, FOpenWrite);
 	if (!out) {
-		log_file_t_error(&new_file);
+		log_error_file_t(&new_file);
 		file_cleanup(&new_file);
 		fclose(in);
 		return -1;
@@ -280,16 +280,16 @@ static int fix_sfv_header(file_t* file)
 			break;
 	}
 	if (ferror(in)) {
-		log_file_t_error(file);
+		log_error_file_t(file);
 		result = -1;
 	}
 	else if (ferror(out)) {
-		log_file_t_error(&new_file);
+		log_error_file_t(&new_file);
 		result = -1;
 	}
 	fclose(in);
 	if (fclose(out) < 0 && result == 0) {
-		log_file_t_error(&new_file);
+		log_error_file_t(&new_file);
 		result = -1;
 	}
 	/* overwrite the hash file with the new one */

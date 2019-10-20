@@ -81,24 +81,23 @@ int fprintf_file_t(FILE* out, const char* format, struct file_t* file)
  * @param format the format string of a formatted message
  * @param file the file, which path will be formatted
  */
-void log_file_t_msg(const char* format, struct file_t* file)
+void log_msg_file_t(const char* format, struct file_t* file)
 {
 	fprintf_file_t(rhash_data.log, format, file);
 	fflush(rhash_data.log);
 }
 
 /**
- * Print file error to the program log.
+ * Print a formatted warning message to the program log.
  *
- * @param file the file, caused the error
+ * @param format the format string
  */
-void log_file_t_error(struct file_t* file)
+void log_warning(const char* format, ...)
 {
-	int file_errno = errno;
+	va_list ap;
+	va_start(ap, format);
 	print_log_prefix();
-	fprintf_file_t(rhash_data.log, "%s", file);
-	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_errno));
-	fflush(rhash_data.log);
+	log_va_msg(format, ap);
 }
 
 /**
@@ -115,16 +114,29 @@ void log_error(const char* format, ...)
 }
 
 /**
- * Print a formatted warning message to the program log.
+ * Print file error to the program log.
  *
- * @param format the format string
+ * @param file the file, caused the error
  */
-void log_warning(const char* format, ...)
+void log_error_file_t(struct file_t* file)
 {
-	va_list ap;
-	va_start(ap, format);
+	int file_errno = errno;
 	print_log_prefix();
-	log_va_msg(format, ap);
+	fprintf_file_t(rhash_data.log, "%s", file);
+	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_errno));
+	fflush(rhash_data.log);
+}
+
+/**
+ * Print a formated error message with file path.
+ *
+ * @param file the file, caused the error
+ */
+void log_error_msg_file_t(const char* format, struct file_t* file)
+{
+	print_log_prefix();
+	fprintf_file_t(rhash_data.log, format, file);
+	fflush(rhash_data.log);
 }
 
 /* global flag */
@@ -150,7 +162,6 @@ void report_interrupted(void)
 struct percents_t
 {
 	int points;
-	int use_cursor;
 	int same_output;
 	unsigned ticks;
 };
@@ -319,7 +330,6 @@ static int dots_init_percents(struct file_info *info)
 {
 	int res = fflush(rhash_data.out);
 	fflush(rhash_data.log);
-	(void)info;
 	percents.points = 0;
 	if (print_results_on_check(info, 1) < 0)
 		res = -1;
@@ -391,10 +401,8 @@ static int p_init_percents(struct file_info *info)
 	int res = fflush(rhash_data.out);
 	fflush(rhash_data.log);
 
-	(void)info;
 	percents.points      = 0;
 	percents.same_output = 0;
-	percents.use_cursor  = 0;
 
 	/* note: this output differs from print_check_result() by the file handle, so ingnoring errors */
 	rsh_fprintf(rhash_data.log, "%-51s ", info->print_path);
@@ -414,7 +422,7 @@ static int p_init_percents(struct file_info *info)
  */
 static void p_update_percents(struct file_info *info, uint64_t offset)
 {
-	static const char rot[4] = {'-', '\\', '|', '/'};
+	static const char rotated_bar[4] = {'-', '\\', '|', '/'};
 	int perc = 0;
 	unsigned ticks;
 
@@ -427,14 +435,15 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
 
 	/* update percents no more than 20 times per second */
 	ticks = rhash_get_ticks(); /* clock ticks count in milliseconds */
-	if ((unsigned)(ticks - percents.ticks) < 50) return;
+	if ((unsigned)(ticks - percents.ticks) < 50)
+		return;
 
-	/* output percents or rotated bar */
+	/* output percents or a rotated bar */
 	if (info->size > 0) {
 		rsh_fprintf(rhash_data.log, "%u%%", perc);
 		percents.points = perc;
 	} else {
-		rsh_fprintf(rhash_data.log, "%c", rot[(percents.points++) & 3]);
+		rsh_fprintf(rhash_data.log, "%c", rotated_bar[(percents.points++) & 3]);
 	}
 
 	rsh_fprintf(rhash_data.log, "\r%-51s ", info->print_path);
@@ -452,9 +461,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
  */
 static int p_finish_percents(struct file_info *info, int process_res)
 {
-	int need_check_result;
-
-	need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
+	int need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
 		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HC_FAILED(info->hc.flags));
 	info->processing_result = process_res;
 
@@ -490,7 +497,7 @@ struct percents_output_info_t p_perc = {
 static void setup_log_stream(FILE **p_stream, file_t* file, const opt_tchar* stream_path, FILE* default_stream)
 {
 	FILE* result;
-	/* set to the default stream, to enable error reporting via log_file_t_error() */
+	/* set to the default stream, to enable error reporting via log_error_file_t() */
 	*p_stream = default_stream;
 	if (!stream_path) {
 		file_init(file, (default_stream == stdout ? "(stdout)" : "(stderr)"), FILE_IFSTDIN);
@@ -499,7 +506,7 @@ static void setup_log_stream(FILE **p_stream, file_t* file, const opt_tchar* str
 	file_tinit(file, stream_path, FILE_OPT_DONT_FREE_PATH);
 	result = file_fopen(file, FOpenWrite);
 	if (!result) {
-		log_file_t_error(file);
+		log_error_file_t(file);
 		rsh_exit(2);
 	}
 	*p_stream = result;
