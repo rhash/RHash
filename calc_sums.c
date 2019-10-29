@@ -25,7 +25,7 @@
  *
  * @param info the file data
  */
-static void init_btih_data(struct file_info *info)
+static void init_btih_data(struct file_info* info)
 {
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
 
@@ -56,7 +56,7 @@ static void init_btih_data(struct file_info *info)
  *
  * @param info the file data
  */
-static void re_init_rhash_context(struct file_info *info)
+static void re_init_rhash_context(struct file_info* info)
 {
 	if (rhash_data.rctx != 0) {
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
@@ -94,7 +94,7 @@ static void re_init_rhash_context(struct file_info *info)
  * @param info file data. The info->full_path can be "-" to denote stdin
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-static int calc_sums(struct file_info *info)
+static int calc_sums(struct file_info* info)
 {
 	FILE* fd = 0;
 	int res;
@@ -171,7 +171,7 @@ void file_info_destroy(struct file_info* info)
  */
 static void file_info_set_print_path(struct file_info* info, const char* print_path)
 {
-	char *p;
+	char* p;
 	char wrong_sep;
 
 	/* check if path separator was specified by command line options */
@@ -228,7 +228,7 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32)
 	/* search for the sum enclosed in brackets */
 	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
 		if ((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
-			const char *p = e + 8;
+			const char* p = e + 8;
 			for (; p > e && IS_HEX(*p); p--);
 			if (p == e) {
 				rhash_hex_to_byte(e + 1, raw, 8);
@@ -249,7 +249,7 @@ static int find_embedded_crc32(const char* filepath, unsigned* crc32)
  * @param info pointer to the data of the file to rename.
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int rename_file_by_embeding_crc32(struct file_info *info)
+int rename_file_by_embeding_crc32(struct file_info* info)
 {
 	size_t len = strlen(info->full_path);
 	const char* p = info->full_path + len;
@@ -284,7 +284,7 @@ int rename_file_by_embeding_crc32(struct file_info *info)
 	memcpy(new_path, info->full_path, p - info->full_path);
 	if (opt.embed_crc_delimiter && *opt.embed_crc_delimiter)
 		*(insertion_point++) = *opt.embed_crc_delimiter;
-	rhash_print(insertion_point+1, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
+	rhash_print(insertion_point + 1, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 	insertion_point[0] = '[';
 	insertion_point[9] = ']'; /* ']' overrides '\0' inserted by rhash_print_sum() */
 	strcpy(insertion_point + 10, p); /* append file extension */
@@ -376,7 +376,7 @@ static int save_torrent(struct file_info* info)
  * @param print_path the path to print
  * @return 0 on success, -1 on input error, -2 on results output error
  */
-int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const char *print_path)
+int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const char* print_path)
 {
 	struct file_info info;
 	timedelta_t timer;
@@ -471,7 +471,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const ch
  * @return 0 on success, 1 on hash sums mismatch,
  *     -1/-2 on input/output error
  */
-static int verify_sums(struct file_info *info)
+static int verify_sums(struct file_info* info)
 {
 	timedelta_t timer;
 	int res = 0;
@@ -523,7 +523,7 @@ static int verify_sums(struct file_info *info)
  */
 int check_hash_file(file_t* file, int chdir)
 {
-	FILE *fd;
+	FILE* fd;
 	char buf[4096];
 	size_t pos;
 	timedelta_t timer;
@@ -726,7 +726,7 @@ int check_hash_file(file_t* file, int chdir)
 static int benchmark_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
 {
 	int i;
-	struct rhash_context *context = rhash_init(hash_id);
+	struct rhash_context* context = rhash_init(hash_id);
 	if (!context)
 		return 0;
 

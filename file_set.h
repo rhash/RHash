@@ -25,11 +25,11 @@ typedef struct vector_t file_set;
 #define file_set_get(set, index) ((file_set_item*)((set)->array[index])) /* get i-th element */
 #define file_set_add(set, item) rsh_vector_add_ptr(set, item) /* add a file_set_item to file_set */
 
-void file_set_item_free(file_set_item *item);
-void file_set_add_name(file_set *set, const char* filename);
-void file_set_sort(file_set *set);
-void file_set_sort_by_path(file_set *set);
-int file_set_exist(file_set *set, const char* filename);
+void file_set_item_free(file_set_item* item);
+void file_set_add_name(file_set* set, const char* filename);
+void file_set_sort(file_set* set);
+void file_set_sort_by_path(file_set* set);
+int file_set_exist(file_set* set, const char* filename);
 
 #ifdef __cplusplus
 } /* extern "C" */

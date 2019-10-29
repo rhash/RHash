@@ -36,12 +36,12 @@ struct rhash_context;
  */
 typedef struct hash_check
 {
-	char *file_path; /* parsed file path */
+	char* file_path; /* parsed file path */
 	uint64_t file_size; /* parsed file size, e.g. from magnet link */
 	unsigned hash_mask; /* the mask of hash ids to verify against */
 	unsigned flags; /* bit flags */
 	unsigned embedded_crc32;  /* CRC32 embedded into filename */
-	char *data; /* the buffer with the current hash file line */
+	char* data; /* the buffer with the current hash file line */
 	unsigned found_hash_ids; /* bit mask for matched hash ids */
 	unsigned wrong_hashes;   /* bit mask for mismatched hashes */
 	int hashes_num; /* number of parsed hashes */

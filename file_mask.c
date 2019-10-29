@@ -38,7 +38,9 @@ file_mask_array* file_mask_new_from_list(const char* comma_separated_list)
  */
 void file_mask_add_list(file_mask_array* vect, const char* comma_separated_list)
 {
-	char *buf, *cur, *next;
+	char* buf;
+	char* cur;
+	char* next;
 	if (!comma_separated_list || !*comma_separated_list) {
 		return;
 	}

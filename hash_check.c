@@ -50,9 +50,9 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
  *
  * @param buffer the 0-terminated URL-encoded string
  */
-static void urldecode(char *buffer)
+static void urldecode(char* buffer)
 {
-	char *wpos = buffer; /* set writing position */
+	char* wpos = buffer; /* set writing position */
 	for (; *buffer; wpos++) {
 		*wpos = *(buffer++); /* copy non-escaped characters */
 		if (*wpos == '%') {
@@ -92,7 +92,7 @@ static void process_backslashes(char* path)
 #endif /* _WIN32 */
 
 /* convert a hash flag to index */
-#if __GNUC__ >= 4 || (__GNUC__ ==3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
+#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
 # define get_ctz(x) __builtin_ctz(x)
 #else
 
@@ -189,7 +189,7 @@ static int test_hash_char(char c)
  * @param p_len pointer to a number to store length of detected hash string
  * @return type of detected hash as combination of Fmt* flags
  */
-static int detect_hash_type(char **ptr, char *end, int *p_len)
+static int detect_hash_type(char** ptr, char* end, int* p_len)
 {
 	char* p = *ptr;
 	size_t len = 0;
@@ -252,7 +252,7 @@ static int is_acceptable_bit_length(int length)
  * @param p_len pointer to a number to store length of detected hash string
  * @return possible type of detected hash as algorithm RHASH id
  */
-static unsigned char test_hash_string(char **ptr, char *end, int *p_len)
+static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
 {
 	int len = 0;
 	int char_type = detect_hash_type(ptr, end, &len);
@@ -318,7 +318,8 @@ static unsigned detect_hash_id(const char* name, unsigned length)
 	/* look for the hash_id in the hash_mask */
 	for (hash_id = 1 << i; hash_id && hash_id <= hash_mask; i++, hash_id <<= 1)
 	{
-		const char *a, *b;
+		const char* a;
+		const char* b;
 		if ((hash_id & hash_mask) == 0) continue;
 		assert(length > 4 && strlen(hash_info_table[i].name) > 4);
 		/* check the name tail, start from name[3] to detect names like "SHA-1" or "SHA256" */
@@ -379,11 +380,11 @@ typedef struct hc_search
  * @param format the format string
  * @return 1 on success, 0 if couldn't find specified token(s)
  */
-static int hash_check_find_str(hc_search *search, const char* format)
+static int hash_check_find_str(hc_search* search, const char* format)
 {
 	int backward = 0;
 	char buf[20];
-	const char *fend = strchr(format, '\0');
+	const char* fend = strchr(format, '\0');
 	char* begin = search->begin;
 	char* end = search->end;
 	hash_check* hc = search->hc;
@@ -392,7 +393,7 @@ static int hash_check_find_str(hc_search *search, const char* format)
 	memset(&hv, 0, sizeof(hash_value));
 
 	while (format < fend) {
-		const char *search_str;
+		const char* search_str;
 		int len = 0;
 		uint64_t file_size;
 
@@ -673,8 +674,8 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 
 	/* post-process parsed hashes */
 	for (i = 0; i < hashes->hashes_num; i++) {
-		hash_value *hv = &hashes->hashes[i];
-		char *hash_str = hashes->data + hv->offset;
+		hash_value* hv = &hashes->hashes[i];
+		char* hash_str = hashes->data + hv->offset;
 		hash_str[hv->length] = '\0'; /* terminate the hash string */
 
 		if (hv->hash_id == 0) {
@@ -787,8 +788,9 @@ int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 		printed = 0;
 
 		for (j = 0; j < hashes->hashes_num; j++) {
-			hash_value *hv = &hashes->hashes[j];
-			char *calculated_hash, *expected_hash;
+			hash_value* hv = &hashes->hashes[j];
+			char* calculated_hash;
+			char* expected_hash;
 			int bit_length;
 			int comparision_mode;
 

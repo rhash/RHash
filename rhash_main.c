@@ -231,7 +231,7 @@ static void i18n_initialize(void)
  * @param argv program arguments
  * @return the program exit code, zero on success and 1 on error
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 	timedelta_t timer;
 	int exit_code;

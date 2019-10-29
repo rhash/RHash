@@ -29,16 +29,15 @@ extern "C" {
 #endif
 
 /* string function */
-void sprintI64(char *dst, uint64_t number, int max_width);
+void sprintI64(char* dst, uint64_t number, int max_width);
 int  int_len(uint64_t num);
 
-int  urlencode(char *dst, const char *name);
+int  urlencode(char* dst, const char* name);
 int  is_binary_string(const char* str);
 char* str_tolower(const char* str);
 char* str_trim(char* str);
 char* str_set(char* buf, int ch, int size);
-char* str_append(const char* orig, const char* append);
-size_t strlen_utf8_c(const char *str);
+size_t strlen_utf8_c(const char* str);
 
 /* check if character starts a commentary in the program config file */
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
@@ -48,11 +47,9 @@ size_t strlen_utf8_c(const char *str);
 #ifdef _WIN32
 typedef wchar_t rsh_tchar;
 # define RSH_T(str) L##str
-# define t2c(tstr) (w2c(tstr))
 #else
 typedef  char rsh_tchar;
 # define RSH_T(str) str
-# define t2c(tstr) (tstr)
 #endif /* _WIN32 */
 typedef rsh_tchar* tstr_t;
 typedef const rsh_tchar* ctstr_t;
@@ -147,7 +144,7 @@ extern void (*rsh_report_error)(const char* srcfile, int srcline, const char* fo
 /* vector functions */
 typedef struct vector_t
 {
-	void **array;
+	void** array;
 	size_t size;
 	size_t allocated;
 	void (*destructor)(void*);
@@ -157,7 +154,7 @@ vector_t* rsh_vector_new(void (*destructor)(void*));
 vector_t* rsh_vector_new_simple(void);
 void rsh_vector_free(vector_t* vect);
 void rsh_vector_destroy(vector_t* vect);
-void rsh_vector_add_ptr(vector_t* vect, void *item);
+void rsh_vector_add_ptr(vector_t* vect, void* item);
 void rsh_vector_add_empty(vector_t* vect, size_t item_size);
 #define rsh_vector_add_uint32(vect, item) { \
 	rsh_vector_add_empty(vect, item_size); \
@@ -208,9 +205,9 @@ typedef struct strbuf_t
 
 strbuf_t* rsh_str_new(void);
 void rsh_str_free(strbuf_t* buf);
-void rsh_str_ensure_size(strbuf_t *str, size_t new_size);
-void rsh_str_append_n(strbuf_t *str, const char* text, size_t len);
-void rsh_str_append(strbuf_t *str, const char* text);
+void rsh_str_ensure_size(strbuf_t* str, size_t new_size);
+void rsh_str_append_n(strbuf_t* str, const char* text, size_t len);
+void rsh_str_append(strbuf_t* str, const char* text);
 
 #define rsh_str_ensure_length(str, len) \
 	if ((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);

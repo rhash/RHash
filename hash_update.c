@@ -21,7 +21,7 @@
 typedef struct update_ctx
 {
 	FILE* fd;
-	char *cut_dir_path;
+	char* cut_dir_path;
 	file_t file;
 	file_set* crc_entries;
 	unsigned flags;
@@ -36,7 +36,7 @@ enum UpdateFlagsBits
 };
 
 /* define some internal functions, implemented later in this file */
-static int file_set_load_from_crc_file(file_set *set, file_t* file);
+static int file_set_load_from_crc_file(file_set* set, file_t* file);
 static int fix_sfv_header(file_t* file);
 static int open_and_prepare_hash_file(struct update_ctx* ctx);
 
@@ -178,7 +178,7 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
  * @param file the file containing hash sums to load
  * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
  */
-static int file_set_load_from_crc_file(file_set *set, file_t* file)
+static int file_set_load_from_crc_file(file_set* set, file_t* file)
 {
 	int result = (DoesExist | IsEmptyFile);
 	char buf[2048];

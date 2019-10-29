@@ -98,7 +98,7 @@ wchar_t* c2w_long_path(const char* str, int try_no)
 char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
 {
 	int size;
-	char *buf;
+	char* buf;
 	BOOL bUsedDefChar, *lpUsedDefaultChar;
 	if (codepage == -1) {
 		codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_OEM) ? CP_OEMCP : CP_ACP);
@@ -428,8 +428,8 @@ static int is_directory(const char* path)
 void setup_locale_dir(void)
 {
 	wchar_t* short_dir;
-	char *program_dir = NULL;
-	char *locale_dir;
+	char* program_dir = NULL;
+	char* locale_dir;
 	DWORD buf_size;
 	DWORD res;
 
@@ -556,7 +556,7 @@ int win_fprintf_warg(FILE* out, const char* format, ...)
  * @param out the stream to write to
  * @return the number of items written, -1 on error
  */
-size_t win_fwrite(const void *ptr, size_t size, size_t count, FILE *out)
+size_t win_fwrite(const void* ptr, size_t size, size_t count, FILE* out)
 {
 	if ((out != stdout || !(rhash_data.output_flags & 1))
 		&& (out != stderr || !(rhash_data.output_flags & 2)))

@@ -18,8 +18,8 @@ enum StopFlags {
  */
 struct rhash_t
 {
-	FILE *out;
-	FILE *log;
+	FILE* out;
+	FILE* log;
 	file_t out_file;
 	file_t log_file;
 #ifdef _WIN32

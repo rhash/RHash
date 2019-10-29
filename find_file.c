@@ -272,7 +272,7 @@ void scan_files(file_search_data* data)
  */
 typedef struct dir_entry
 {
-	struct dir_entry *next;
+	struct dir_entry* next;
 	char* filename;
 	unsigned type; /* a directory, symlink, etc. */
 } dir_entry;
@@ -285,7 +285,7 @@ typedef struct dir_entry
  * @param type type of dir_entry
  * @return allocated dir_entry
  */
-static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
+static dir_entry* dir_entry_new(dir_entry* next, char* filename, unsigned type)
 {
 	dir_entry* e = (dir_entry*)malloc(sizeof(dir_entry));
 	if (!e)
@@ -316,7 +316,7 @@ static dir_entry* dir_entry_new(dir_entry *next, char* filename, unsigned type)
  * @param type file type
  * @return pointer to the inserted dir_entry
  */
-static dir_entry* dir_entry_insert(dir_entry **at, char* filename, unsigned type)
+static dir_entry* dir_entry_insert(dir_entry** at, char* filename, unsigned type)
 {
 	dir_entry* e = dir_entry_new(*at, filename, type);
 	if (e)
@@ -356,7 +356,7 @@ typedef struct dir_iterator
  */
 static int dir_scan(file_t* start_dir, file_search_data* data)
 {
-	dir_entry *dirs_stack = NULL; /* root of the dir_list */
+	dir_entry* dirs_stack = NULL; /* root of the dir_list */
 	dir_iterator* it;
 	int level = 0;
 	int max_depth = data->max_depth;
@@ -397,10 +397,10 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 
 	while (!(data->options & FIND_CANCEL))
 	{
-		dir_entry **insert_at;
+		dir_entry** insert_at;
 		char* dir_path;
-		DIR *dp;
-		struct dirent *de;
+		DIR* dp;
+		struct dirent* de;
 
 		/* climb down from the tree */
 		while (--it[level].count < 0)

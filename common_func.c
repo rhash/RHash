@@ -28,11 +28,11 @@
  * @param number the 64-bit number to output
  * @param min_width the minimum width, the number must take
  */
-void sprintI64(char *dst, uint64_t number, int min_width)
+void sprintI64(char* dst, uint64_t number, int min_width)
 {
 	char buf[24]; /* internal buffer to output the number to */
 	size_t len;
-	char *p = buf + 23; /* start filling from the buffer end */
+	char* p = buf + 23; /* start filling from the buffer end */
 	*(p--) = 0; /* last symbol should be '\0' */
 	if (number == 0) {
 		*(p--) = '0';
@@ -46,7 +46,7 @@ void sprintI64(char *dst, uint64_t number, int min_width)
 		memset(dst, 0x20, min_width - len); /* fill by spaces */
 		dst += min_width - len;
 	}
-	memcpy(dst, p+1, len+1); /* copy the number to the output buffer */
+	memcpy(dst, p + 1, len + 1); /* copy the number to the output buffer */
 }
 
 /**
@@ -69,9 +69,9 @@ int int_len(uint64_t num)
  * @param dst  the buffer to receive two symbols of hex representation
  * @param byte the byte to decode
  * @param upper_case flag to print string in uppercase
- * @return pointer to the next char in buffer (dst+2)
+ * @return pointer to the next char in buffer (dst + 2)
  */
-static char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
+static char* print_hex_byte(char* dst, const unsigned char byte, int upper_case)
 {
 	const char add = (upper_case ? 'A' - 10 : 'a' - 10);
 	unsigned char c = (byte >> 4) & 15;
@@ -92,9 +92,9 @@ static char* print_hex_byte(char *dst, const unsigned char byte, int upper_case)
  * @param filename the file name
  * @return the length of the result string
  */
-int urlencode(char *dst, const char *name)
+int urlencode(char* dst, const char* name)
 {
-	const char *start;
+	const char* start;
 	if (!dst) {
 		int len;
 		for (len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
@@ -162,25 +162,6 @@ char* str_set(char* buf, int ch, int length)
 }
 
 /**
- * Concatenates two strings and returns allocated buffer with result.
- *
- * @param orig original string
- * @param append the string to append
- * @return the buffer
- */
-char* str_append(const char* orig, const char* append)
-{
-	size_t len1 = strlen(orig);
-	size_t len2 = strlen(append);
-	char* res = (char*)rsh_malloc(len1 + len2 + 1);
-
-	/* concatenate two strings */
-	memcpy(res, orig, len1);
-	memcpy(res + len1, append, len2 + 1);
-	return res;
-}
-
-/**
  * Check if a string is a binary string, which means the string contain
  * a character with ACII code below 0x20 other than '\r', '\n', '\t'.
  *
@@ -203,7 +184,7 @@ int is_binary_string(const char* str)
  * @param str the string to measure
  * @return number of utf8 characters in the string
  */
-size_t strlen_utf8_c(const char *str)
+size_t strlen_utf8_c(const char* str)
 {
 	size_t length = 0;
 	for (; *str; str++) {
@@ -515,7 +496,7 @@ void rsh_vector_destroy(vector_t* vect)
 	if (!vect) return;
 	if (vect->destructor) {
 		unsigned i;
-		for (i=0; i<vect->size; i++) vect->destructor(vect->array[i]);
+		for (i = 0; i < vect->size; i++) vect->destructor(vect->array[i]);
 	}
 	free(vect->array);
 	vect->size = vect->allocated = 0;
@@ -543,7 +524,7 @@ void rsh_vector_add_ptr(vector_t* vect, void* item)
 {
 	/* check if vect contains enough space for the next item */
 	if (vect->size >= vect->allocated) {
-		size_t size = (vect->allocated==0 ? 128 : vect->allocated * 2);
+		size_t size = (vect->allocated == 0 ? 128 : vect->allocated * 2);
 		vect->array = (void**)rsh_realloc(vect->array, size * sizeof(void*));
 		vect->allocated = size;
 	}
@@ -562,7 +543,7 @@ void rsh_vector_add_empty(struct vector_t* vect, size_t item_size)
 {
 	/* check if vect contains enough space for next item */
 	if (vect->size >= vect->allocated) {
-		size_t size = (vect->allocated==0 ? 128 : vect->allocated * 2);
+		size_t size = (vect->allocated == 0 ? 128 : vect->allocated * 2);
 		vect->array = (void**)rsh_realloc(vect->array, size * item_size);
 		vect->allocated = size;
 	}
@@ -602,7 +583,7 @@ void rsh_blocks_vector_destroy(blocks_vector_t* bvector)
  */
 strbuf_t* rsh_str_new(void)
 {
-	strbuf_t *res = (strbuf_t*)malloc(sizeof(strbuf_t));
+	strbuf_t* res = (strbuf_t*)malloc(sizeof(strbuf_t));
 	memset(res, 0, sizeof(strbuf_t));
 	return res;
 }
@@ -627,7 +608,7 @@ void rsh_str_free(strbuf_t* ptr)
  * @param str pointer to the string-buffer object
  * @param new_size number of bytes buffer must contain
  */
-void rsh_str_ensure_size(strbuf_t *str, size_t new_size)
+void rsh_str_ensure_size(strbuf_t* str, size_t new_size)
 {
 	if (new_size >= (size_t)str->allocated) {
 		if (new_size < 64) new_size = 64;
@@ -646,7 +627,7 @@ void rsh_str_ensure_size(strbuf_t *str, size_t new_size)
  * @param text the text to append
  * @param length number of character to append.
  */
-void rsh_str_append_n(strbuf_t *str, const char* text, size_t length)
+void rsh_str_append_n(strbuf_t* str, const char* text, size_t length)
 {
 	rsh_str_ensure_length(str, str->len + length + 1);
 	memcpy(str->str + str->len, text, length);
@@ -660,7 +641,7 @@ void rsh_str_append_n(strbuf_t *str, const char* text, size_t length)
  * @param str pointer to the string buffer
  * @param text the null-terminated string to append
  */
-void rsh_str_append(strbuf_t *str, const char* text)
+void rsh_str_append(strbuf_t* str, const char* text)
 {
 	rsh_str_append_n(str, text, strlen(text));
 }

@@ -58,7 +58,7 @@ static print_item* parse_percent_item(const char** str);
  * @param data optional string to store
  * @return allocated print_item
  */
-static print_item* new_print_item(unsigned flags, unsigned hash_id, const char *data)
+static print_item* new_print_item(unsigned flags, unsigned hash_id, const char* data)
 {
 	print_item* item = (print_item*)rsh_malloc(sizeof(print_item));
 	item->flags = flags;
@@ -76,7 +76,7 @@ static print_item* new_print_item(unsigned flags, unsigned hash_id, const char *
  *   is changed to point to the next symbol after parsed sequence
  * @return result character
  */
-static char parse_escaped_char(const char **pformat)
+static char parse_escaped_char(const char** pformat)
 {
 	const char* start = *pformat;
 	switch ( *((*pformat)++) ) {
@@ -121,10 +121,13 @@ static char parse_escaped_char(const char **pformat)
  *
  * @return a print_item list with parsed information
  */
-print_item* parse_print_string(const char* format, unsigned *sum_mask)
+print_item* parse_print_string(const char* format, unsigned* sum_mask)
 {
-	char *buf, *p;
-	print_item *list = NULL, **tail, *item = NULL;
+	char* buf;
+	char* p;
+	print_item* list = NULL;
+	print_item* item = NULL;
+	print_item** tail;
 
 	buf = p = (char*)rsh_malloc( strlen(format) + 1 );
 	tail = &list;
@@ -187,11 +190,11 @@ print_item* parse_print_string(const char* format, unsigned *sum_mask)
  * @param flags pointer to unsigned variable to receive print flags
  * @return directive id on success, 0 on fail
  */
-static unsigned printf_name_to_id(const char* name, size_t length, unsigned *flags)
+static unsigned printf_name_to_id(const char* name, size_t length, unsigned* flags)
 {
 	char buf[20];
 	size_t i;
-	print_hash_info *info = hash_info_table;
+	print_hash_info* info = hash_info_table;
 	unsigned bit;
 
 	if (length > (sizeof(buf) - 1)) return 0;
@@ -230,8 +233,8 @@ print_item* parse_percent_item(const char** str)
 	int pad_with_zero_bit = 0;
 	print_item* item = NULL;
 
-	static const char *short_hash = "CMHTGWRAE";
-	static const char *short_other = "Llpfus";
+	static const char* short_hash = "CMHTGWRAE";
+	static const char* short_other = "Llpfus";
 	static const unsigned hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
@@ -321,9 +324,9 @@ print_item* parse_percent_item(const char** str)
  * @param sums the file hash sums
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-static int fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
+static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 {
-	const char *filename = get_basename(file_info_get_utf8_print_path(info));
+	const char* filename = get_basename(file_info_get_utf8_print_path(info));
 	int upper_case = (print_type & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
 	int len = urlencode(NULL, filename) + int_len(info->size) + (info->sums_flags & RHASH_AICH ? 84 : 49);
 	char* buf = (char*)rsh_malloc( len + 1 );
@@ -364,7 +367,7 @@ static int fprint_ed2k_url(FILE* out, struct file_info *info, int print_type)
  */
 static int fprintI64(FILE* out, uint64_t u64, int width, int zero_pad)
 {
-	char *buf = (char*)rsh_malloc(width > 40 ? width + 1 : 41);
+	char* buf = (char*)rsh_malloc(width > 40 ? width + 1 : 41);
 	int len = int_len(u64);
 	int res;
 	sprintI64(buf, u64, width);
@@ -384,10 +387,10 @@ static int fprintI64(FILE* out, uint64_t u64, int width, int zero_pad)
  * @param sfv_format if =1, then change time format to 'hh:mm.ss YYYY-MM-DD'
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-static int print_time64(FILE *out, uint64_t time64, int sfv_format)
+static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 {
 	time_t time = (time_t)time64;
-	struct tm *t = localtime(&time);
+	struct tm* t = localtime(&time);
 	char* format = (sfv_format ? "%02u:%02u.%02u %4u-%02u-%02u" :
 		"%4u-%02u-%02u %02u:%02u:%02u");
 	int date_index = (sfv_format ? 3 : 0);
@@ -416,10 +419,11 @@ static int print_time64(FILE *out, uint64_t time64, int sfv_format)
  * @param info the file information
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_line(FILE* out, print_item* list, struct file_info *info)
+int print_line(FILE* out, print_item* list, struct file_info* info)
 {
-	const char* basename = get_basename(info->print_path), *tmp;
-	char *url = NULL;
+	const char* basename = get_basename(info->print_path);
+	const char* tmp;
+	char* url = NULL;
 	char buffer[130];
 	int res = 0;
 #ifdef _WIN32
@@ -530,7 +534,7 @@ void init_hash_info_table(void)
 	unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
 	char* short_opt = "cmhteawrgl";
-	print_hash_info *info = hash_info_table;
+	print_hash_info* info = hash_info_table;
 	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
@@ -539,8 +543,9 @@ void init_hash_info_table(void)
 		log_warning("old, incompatible version of librhash is loaded\n");
 
 	for (bit = 1; bit && bit <= fullmask; bit = bit << 1) {
-		const char *p;
-		char *e, *d;
+		const char* p;
+		char* e;
+		char* d;
 
 		if (!(bit & fullmask))
 			continue;
@@ -582,7 +587,8 @@ void init_hash_info_table(void)
  */
 void init_printf_format(strbuf_t* out)
 {
-	const char* fmt, *tail = 0;
+	const char* fmt;
+	const char* tail = 0;
 	unsigned bit, index = 0;
 	int uppercase;
 	unsigned need_modifier = 0;
@@ -629,8 +635,8 @@ void init_printf_format(strbuf_t* out)
 
 	/* loop by hashes */
 	for (bit = 1 << index; bit && bit <= opt.sum_flags; bit = bit << 1, index++) {
-		const char *p;
-		print_hash_info *info;
+		const char* p;
+		print_hash_info* info;
 
 		if ((bit & opt.sum_flags) == 0)
 			continue;
@@ -654,7 +660,7 @@ void init_printf_format(strbuf_t* out)
 					if (info->short_char)
 						out->str[out->len++] = info->short_char & up_flag;
 					else {
-						char *letter;
+						char* letter;
 						out->str[out->len++] = '{';
 						letter = out->str + out->len;
 						rsh_str_append(out, info->short_name);
@@ -721,7 +727,7 @@ int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
 int print_sfv_banner(FILE* out)
 {
 	time_t cur_time = time(NULL);
-	struct tm *t = localtime(&cur_time);
+	struct tm* t = localtime(&cur_time);
 	if (!t)
 		return 0;
 	if (rsh_fprintf(out,

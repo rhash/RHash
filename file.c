@@ -42,9 +42,9 @@ extern "C" {
  */
 const char* get_basename(const char* path)
 {
-	const char *p = path + strlen(path) - 1;
+	const char* p = path + strlen(path) - 1;
 	for (; p >= path && !IS_PATH_SEPARATOR(*p); p--);
-	return (p+1);
+	return (p + 1);
 }
 
 /**
@@ -56,13 +56,13 @@ const char* get_basename(const char* path)
  */
 char* get_dirname(const char* path)
 {
-	const char *p = path + strlen(path) - 1;
-	char *res;
+	const char* p = path + strlen(path) - 1;
+	char* res;
 	for (; p > path && !IS_PATH_SEPARATOR(*p); p--);
 	if ((p - path) > 1) {
-		res = (char*)rsh_malloc(p-path+1);
-		memcpy(res, path, p-path);
-		res[p-path] = 0;
+		res = (char*)rsh_malloc(p - path + 1);
+		memcpy(res, path, p - path);
+		res[p - path] = 0;
 		return res;
 	} else {
 		return rsh_strdup(".");
@@ -97,12 +97,12 @@ char* make_path(const char* dir_path, const char* filename)
 	strcpy(buf, dir_path);
 
 	/* separate directory from filename */
-	if (len > 0 && !IS_PATH_SEPARATOR(buf[len-1])) {
+	if (len > 0 && !IS_PATH_SEPARATOR(buf[len - 1])) {
 		buf[len++] = SYS_PATH_SEPARATOR;
 	}
 
 	/* append filename */
-	strcpy(buf+len, filename);
+	strcpy(buf + len, filename);
 	return buf;
 }
 
@@ -548,9 +548,9 @@ int file_list_read(file_list_t* list)
 	char buf[2048];
 	file_cleanup(&list->current_file);
 	while(fgets(buf, 2048, list->fd)) {
-		char *p;
+		char* p;
 		char* line = buf;
-		char *buf_back = buf + sizeof(buf) - 1;
+		char* buf_back = buf + sizeof(buf) - 1;
 		/* detect and skip BOM */
 		if (STARTS_WITH_UTF8_BOM(buf) && !(list->state & NotFirstLine))
 			line += 3;
@@ -590,7 +590,7 @@ WIN_DIR* win_opendir(const char* dir_path)
 
 	/* append '\*' to the dir_path */
 	size_t len = strlen(dir_path);
-	char *path = (char*)malloc(len + 3);
+	char* path = (char*)malloc(len + 3);
 	if (!path) return NULL; /* failed, malloc also set errno = ENOMEM */
 	strcpy(path, dir_path);
 	strcpy(path + len, "\\*");
@@ -642,7 +642,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 	WIN_DIR* d;
 
 	/* append '\*' to the dir_path */
-	wchar_t *wpath = make_pathw(dir_path, (size_t)-1, L"*");
+	wchar_t* wpath = make_pathw(dir_path, (size_t)-1, L"*");
 	d = (WIN_DIR*)rsh_malloc(sizeof(WIN_DIR));
 
 	d->hFind = FindFirstFileW(wpath, &d->findFileData);

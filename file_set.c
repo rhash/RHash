@@ -56,7 +56,7 @@ static int file_set_item_set_filepath(file_set_item* item, const char* filepath)
  */
 static file_set_item* file_set_item_new(const char* filepath)
 {
-	file_set_item *item = (file_set_item*)rsh_malloc(sizeof(file_set_item));
+	file_set_item* item = (file_set_item*)rsh_malloc(sizeof(file_set_item));
 	memset(item, 0, sizeof(file_set_item));
 
 	if (filepath) {
@@ -73,7 +73,7 @@ static file_set_item* file_set_item_new(const char* filepath)
  *
  * @param item the item to delete
  */
-void file_set_item_free(file_set_item *item)
+void file_set_item_free(file_set_item* item)
 {
 	if (item->search_filepath != item->filepath) {
 		free(item->search_filepath);
@@ -89,10 +89,10 @@ void file_set_item_free(file_set_item *item)
  * @param pp_rec2 the second item to compare
  * @return 0 if items are equal, -1 if pp_rec1 &lt; pp_rec2, 1 otherwise
  */
-static int crc_pp_rec_compare(const void *pp_rec1, const void *pp_rec2)
+static int crc_pp_rec_compare(const void* pp_rec1, const void* pp_rec2)
 {
-	const file_set_item *rec1 = *(file_set_item *const *)pp_rec1;
-	const file_set_item *rec2 = *(file_set_item *const *)pp_rec2;
+	const file_set_item* rec1 = *(file_set_item* const*)pp_rec1;
+	const file_set_item* rec2 = *(file_set_item* const*)pp_rec2;
 	if (rec1->hash != rec2->hash) return (rec1->hash < rec2->hash ? -1 : 1);
 	return strcmp(rec1->search_filepath, rec2->search_filepath);
 }
@@ -104,10 +104,10 @@ static int crc_pp_rec_compare(const void *pp_rec1, const void *pp_rec2)
  * @param rec2 pointer to the second file_set_item structure
  * @return 0 if files have the same filepath, and -1 or 1 (strcmp result) if not
  */
-static int path_compare(const void *rec1, const void *rec2)
+static int path_compare(const void* rec1, const void* rec2)
 {
-	return strcmp((*(file_set_item *const *)rec1)->filepath,
-		(*(file_set_item *const *)rec2)->filepath);
+	return strcmp((*(file_set_item* const*)rec1)->filepath,
+		(*(file_set_item* const*)rec2)->filepath);
 }
 
 /**
@@ -115,7 +115,7 @@ static int path_compare(const void *rec1, const void *rec2)
  *
  * @param set the file_set to sort
  */
-void file_set_sort(file_set *set)
+void file_set_sort(file_set* set)
 {
 	if (set->array) qsort(set->array, set->size, sizeof(file_set_item*), crc_pp_rec_compare);
 }
@@ -125,7 +125,7 @@ void file_set_sort(file_set *set)
  *
  * @param set the file-set to sort
  */
-void file_set_sort_by_path(file_set *set)
+void file_set_sort_by_path(file_set* set)
 {
 	qsort(set->array, set->size, sizeof(file_set_item*), path_compare);
 }
@@ -136,7 +136,7 @@ void file_set_sort_by_path(file_set *set)
  * @param set the file_set to add the item to
  * @param filepath the item file path
  */
-void file_set_add_name(file_set *set, const char* filepath)
+void file_set_add_name(file_set* set, const char* filepath)
 {
 	file_set_item* item = file_set_item_new(filepath);
 	if (item) file_set_add(set, item);
@@ -149,7 +149,7 @@ void file_set_add_name(file_set *set, const char* filepath)
  * @param filepath the file path to search for
  * @return 1 if filepath is found, 0 otherwise
  */
-int file_set_exist(file_set *set, const char* filepath)
+int file_set_exist(file_set* set, const char* filepath)
 {
 	int a, b, c;
 	int cmp, res = 0;
@@ -168,7 +168,7 @@ int file_set_exist(file_set *set, const char* filepath)
 
 	/* fast binary search */
 	for (a = -1, b = (int)set->size; (a + 1) < b;) {
-		file_set_item *item;
+		file_set_item* item;
 
 		c = (a + b) / 2;
 		assert(0 <= c && c < (int)set->size);

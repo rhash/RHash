@@ -20,7 +20,7 @@
 #endif
 
 /* global pointer to the selected method of percents output */
-struct percents_output_info_t *percents_output = NULL;
+struct percents_output_info_t* percents_output = NULL;
 
 /**
  * Print message prefix before printing an error/warning message.
@@ -176,7 +176,7 @@ static struct percents_t percents;
  * @param info file information with path and its hash sums.
  * @return 0 on success, -1 on error
  */
-static int print_verbose_hash_check_error(struct file_info *info)
+static int print_verbose_hash_check_error(struct file_info* info)
 {
 	char actual[130], expected[130];
 	assert(HC_FAILED(info->hc.flags));
@@ -202,8 +202,8 @@ static int print_verbose_hash_check_error(struct file_info *info)
 		unsigned reported = 0;
 		int i;
 		for (i = 0; i < info->hc.hashes_num; i++) {
-			hash_value *hv = &info->hc.hashes[i];
-			char *expected_hash = info->hc.data + hv->offset;
+			hash_value* hv = &info->hc.hashes[i];
+			char* expected_hash = info->hc.data + hv->offset;
 			unsigned hid = hv->hash_id;
 			int pflags;
 			if ((info->hc.wrong_hashes & (1 << i)) == 0)
@@ -244,7 +244,7 @@ static int print_verbose_hash_check_error(struct file_info *info)
  * @param print_result set to non-zero to print hash verification result
  * @return 0 on success, -1 on i/o error
  */
-static int print_check_result(struct file_info *info, int print_name, int print_result)
+static int print_check_result(struct file_info* info, int print_name, int print_result)
 {
 	int saved_errno = errno;
 	int res = 0;
@@ -278,7 +278,7 @@ static int print_check_result(struct file_info *info, int print_name, int print_
  *             and zero after hash calculation finished.
  * @return 0 on success, -1 on i/o error
  */
-static int print_results_on_check(struct file_info *info, int init)
+static int print_results_on_check(struct file_info* info, int init)
 {
 	if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 		int print_name = (opt.flags & (OPT_PERCENTS | OPT_SKIP_OK) ? !init : init);
@@ -299,7 +299,7 @@ static int print_results_on_check(struct file_info *info, int init)
  * @param info pointer to the file-info structure
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int dummy_init_percents(struct file_info *info)
+static int dummy_init_percents(struct file_info* info)
 {
 	return print_results_on_check(info, 1);
 }
@@ -312,7 +312,7 @@ static int dummy_init_percents(struct file_info *info)
  * @param process_res non-zero if error occurred while hashing/checking
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int dummy_finish_percents(struct file_info *info, int process_res)
+static int dummy_finish_percents(struct file_info* info, int process_res)
 {
 	info->processing_result = process_res;
 	return print_results_on_check(info, 0);
@@ -326,7 +326,7 @@ static int dummy_finish_percents(struct file_info *info, int process_res)
  * @param info pointer to the file-info structure
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int dots_init_percents(struct file_info *info)
+static int dots_init_percents(struct file_info* info)
 {
 	int res = fflush(rhash_data.out);
 	fflush(rhash_data.log);
@@ -344,7 +344,7 @@ static int dots_init_percents(struct file_info *info)
  * @param process_res non-zero if error occurred while hashing/checking
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int dots_finish_percents(struct file_info *info, int process_res)
+static int dots_finish_percents(struct file_info* info, int process_res)
 {
 	char buf[80];
 	info->processing_result = process_res;
@@ -361,7 +361,7 @@ static int dots_finish_percents(struct file_info *info, int process_res)
  * @param info pointer to the file-info structure
  * @param offset the number of hashed bytes
  */
-static void dots_update_percents(struct file_info *info, uint64_t offset)
+static void dots_update_percents(struct file_info* info, uint64_t offset)
 {
 	const int pt_size = 1024*1024; /* 1MiB */
 	offset -= info->msg_offset; /* get real file offset */
@@ -396,7 +396,7 @@ static void dots_update_percents(struct file_info *info, uint64_t offset)
  * @param info pointer to the file-info structure
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int p_init_percents(struct file_info *info)
+static int p_init_percents(struct file_info* info)
 {
 	int res = fflush(rhash_data.out);
 	fflush(rhash_data.log);
@@ -420,7 +420,7 @@ static int p_init_percents(struct file_info *info)
  * @param info pointer to the file-info structure
  * @param offset the number of hashed bytes
  */
-static void p_update_percents(struct file_info *info, uint64_t offset)
+static void p_update_percents(struct file_info* info, uint64_t offset)
 {
 	static const char rotated_bar[4] = {'-', '\\', '|', '/'};
 	int perc = 0;
@@ -459,7 +459,7 @@ static void p_update_percents(struct file_info *info, uint64_t offset)
  * @param process_res non-zero if error occurred while hashing/checking
  * @return 0 on success, -1 if output to rhash_data.out failed
  */
-static int p_finish_percents(struct file_info *info, int process_res)
+static int p_finish_percents(struct file_info* info, int process_res)
 {
 	int need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
 		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HC_FAILED(info->hc.flags));
@@ -494,7 +494,7 @@ struct percents_output_info_t p_perc = {
  * @param stream_path the path to the log file, or NULL, to use the default stream
  * @param default_stream the default stream value, for the case of invalid stream_path
  */
-static void setup_log_stream(FILE **p_stream, file_t* file, const opt_tchar* stream_path, FILE* default_stream)
+static void setup_log_stream(FILE** p_stream, file_t* file, const opt_tchar* stream_path, FILE* default_stream)
 {
 	FILE* result;
 	/* set to the default stream, to enable error reporting via log_error_file_t() */
@@ -554,7 +554,7 @@ int print_check_stats(void)
 		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Everything OK\n")));
 	} else {
 		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"),
-			rhash_data.processed - rhash_data.ok-rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed));
+			rhash_data.processed - rhash_data.ok - rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed));
 	}
 	return (fflush(rhash_data.out) < 0 ? -1 : res);
 }

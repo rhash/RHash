@@ -17,14 +17,14 @@ struct file_t;
  */
 struct percents_output_info_t
 {
-	int  (*init)(struct file_info *info);
-	void (*update)(struct file_info *info, uint64_t offset);
-	int  (*finish)(struct file_info *info, int process_res);
+	int  (*init)(struct file_info* info);
+	void (*update)(struct file_info* info, uint64_t offset);
+	int  (*finish)(struct file_info* info, int process_res);
 	const char* name;
 };
 
 /* pointer to the selected percents output method */
-extern struct percents_output_info_t *percents_output;
+extern struct percents_output_info_t* percents_output;
 #define init_percents(info)   percents_output->init(info)
 #define update_percents(info, offset) percents_output->update(info, offset)
 #define finish_percents(info, process_res) percents_output->finish(info, process_res)

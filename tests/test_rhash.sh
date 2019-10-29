@@ -55,7 +55,7 @@ if [ -n "$OPT_SHARED" -a -d "$UPPER_DIR/librhash" ]; then
 fi
 
 # run smoke test: test exit code of a simple command
-echo | $rhash --printf "" -
+$rhash --printf "" -m ""
 res=$?
 if [ $res -ne 0 ]; then
   if [ $res -eq 127 ]; then
@@ -105,13 +105,14 @@ print_failed() {
 
 # verify obtained value $1 against the expected value $2
 check() {
+#printf "test '%s' = '%s'", "$1" "$2"
   sub_test=$((sub_test+1))
   if [ "$1" = "$2" ]; then
     test "$3" = "." || echo "Ok"
   else
     print_failed "$3"
-    echo "obtained: \"$1\""
-    echo "expected: \"$2\""
+    printf "obtained: \"%s\"\n" "$1"
+    printf "expected: \"%s\"\n" "$2"
     fail_cnt=$((fail_cnt+1))
     return 1;
   fi
@@ -122,7 +123,7 @@ check() {
 match_line() {
   if echo "$1" | grep -vq "$2"; then
     printf "obtained: \"%s\"\n" "$1"
-    echo "regexp:  /$2/"
+    printf "regexp:  /%s/\n" "$2"
     fail_cnt=$((fail_cnt+1))
     return 1
   fi
@@ -134,8 +135,8 @@ match() {
   sub_test=$((sub_test+1))
   if echo "$1" | grep -vq "$2"; then
     print_failed "$3"
-    echo "obtained: \"$1\""
-    echo "regexp:  /$2/"
+    printf "obtained: \"%s\"\n" "$1"
+    printf "regexp:  /%s/\n" "$2"
     fail_cnt=$((fail_cnt+1))
     return 1;
   else
@@ -278,12 +279,11 @@ rm -rf test_dir/
 mkdir -p test_dir && touch test_dir/file.txt test_dir/file.bin
 # correctly handle MIGW posix path conversion
 echo "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
+# test also --path-separator option
 TEST_RESULT=$( $rhash -rC --simple --accept=.bin --path-separator=$SLASH test_dir )
 check "$TEST_RESULT" "00000000  test_dir/file.bin" .
 TEST_RESULT=$( $rhash -rC --simple --accept=.txt --path-separator=\\ test_dir )
 check "$TEST_RESULT" "00000000  test_dir\\file.txt" .
-# test --crc-accept and also --path-separator options
-# note: path-separator doesn't affect the following '( Verifying <filepath> )' message
 TEST_RESULT=$( $rhash -rc --crc-accept=.bin test_dir 2>/dev/null | sed -n '/Verifying/s/-//gp' )
 match "$TEST_RESULT" "( Verifying test_dir.file\\.bin )"
 rm -rf test_dir/
