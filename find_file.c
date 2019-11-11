@@ -2,6 +2,7 @@
 
 #include "find_file.h"
 #include "output.h"
+#include "parse_cmdline.h"
 #include "platform.h"
 #include "win_utils.h"
 #include <assert.h>
@@ -39,21 +40,21 @@ file_search_data* file_search_data_new(void)
 static void file_search_add_special_file(file_search_data* search_data, unsigned file_mode, tstr_t str)
 {
 	file_t file;
-	char* filename = (file_mode & FILE_IFSTDIN ? "(stdin)" : "(message)");
+	char* filename = (file_mode & FileIsStdin ? "(stdin)" : "(message)");
 	char* ext_data = 0;
-	if (file_mode & FILE_IFDATA)
+	if (file_mode & FileIsData)
 	{
 #ifdef _WIN32
-		ext_data = wcs_to_utf8(str);
-		/* we assume that conversion always succeeds and the following condition is never met */
+		ext_data = convert_wcs_to_str(str, ConvertToUtf8 | ConvertExact);
+		/* we assume that this conversion always succeeds and the following condition is never met */
 		if (!ext_data)
 			return;
 #else
 		ext_data = rsh_strdup(str);
 #endif
 	}
-	file_init(&file, filename, file_mode);
-	if (file_mode & FILE_IFDATA)
+	file_init_by_print_path(&file, NULL, filename, file_mode);
+	if (file_mode & FileIsData)
 	{
 		file.data = ext_data;
 		file.size = strlen(ext_data);
@@ -68,17 +69,18 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	wchar_t* p;
 #endif
 	file_t file;
-
-	file_mode &= (FILE_IFLIST | FILE_IFDATA);
+	file_mode &= (FileIsList | FileIsData);
 	assert((file_mode & (file_mode - 1)) == 0);
-	if ((file_mode & FILE_IFDATA) != 0)
+
+	file_mode |= FileIsRoot; /* mark the file as obtained from the command line */
+	if ((file_mode & FileIsData) != 0)
 	{
-		file_search_add_special_file(data, (FILE_IFROOT | FILE_IFDATA), path);
+		file_search_add_special_file(data, file_mode, path);
 		return;
 	}
 	if (IS_DASH_TSTR(path))
 	{
-		file_search_add_special_file(data, (FILE_IFROOT | FILE_IFSTDIN), NULL);
+		file_search_add_special_file(data, (FileIsRoot | FileIsStdin), NULL);
 		return;
 	}
 
@@ -111,35 +113,31 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 		{
 			do
 			{
-				int failed;
+				int res;
+				tpath_t filepath;
 				if (IS_CURRENT_OR_PARENT_DIRW(d.cFileName))
-					continue;
-				memset(&file, 0, sizeof(file));
-				file.wpath = make_pathw(parent, index + 1, d.cFileName);
-				if (!file.wpath)
 					continue;
 
 				/* skip directories unless we are in recursive mode */
 				if (data->max_depth == 0 && (d.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 					continue;
 
+				filepath = make_wpath(parent, index + 1, d.cFileName);
+				if (!filepath)
+					continue;
+				res = file_init(&file, filepath, file_mode | FileInitUpdatePrintPathLastSlash | FileInitRunFstat);
+				free(filepath);
+
 				/* convert file name */
-				file.path = wchar_to_cstr(file.wpath, WIN_DEFAULT_ENCODING, &failed);
-				if (!failed)
-					failed = (file_stat(&file, 0) < 0);
+				if (res == 0 && !(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0))
+					res = -1;
 
 				/* quietly skip unconvertible file names and nonexistent files */
-				if (!file.path || failed)
-				{
-					if (failed)
-						data->errors_count++;
-					free(file.path);
-					free(file.wpath);
+				if (res < 0) {
+					data->errors_count++;
+					file_cleanup(&file);
 					continue;
 				}
-
-				/* fill the file information */
-				file.mode |= FILE_IFROOT;
 				add_root_file(data, &file);
 			}
 			while (FindNextFileW(handle, &d));
@@ -148,8 +146,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 		else
 		{
 			/* report error on the specified wildcard */
-			file_t file;
-			file_tinit(&file, path, FILE_OPT_DONT_FREE_PATH);
+			file_init(&file, path, FileInitReusePath);
 			set_errno_from_last_file_error();
 			log_error_file_t(&file);
 			file_cleanup(&file);
@@ -158,42 +155,36 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	}
 	else
 	{
-		int failed;
-		memset(&file, 0, sizeof(file));
+		int res = file_init(&file, path, file_mode | FileInitRunFstat);
+		if (res == 0 && !(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0))
+			res = -1;
 
-		file.path = wchar_to_cstr(path, WIN_DEFAULT_ENCODING, &failed);
-		if (failed)
-		{
-			log_error(_("can't convert the file path to local encoding: %s\n"), file.path);
-			free(file.path);
+
+		if (!(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0)) {
+			log_error_msg_file_t(_("can't convert the file path to local encoding: %s\n"), &file);
+			file_cleanup(&file);
 			data->errors_count++;
 			return;
 		}
-		file.wpath = path;
-		if (file_stat(&file, 0) < 0)
-		{
+		if (file_stat(&file, 0) < 0) {
 			log_error_file_t(&file);
-			free(file.path);
+			file_cleanup(&file);
 			data->errors_count++;
 			return;
 		}
 
 		/* mark the file as obtained from the command line */
-		file.mode |= (file_mode | FILE_IFROOT);
-		file.wpath = rsh_wcsdup(path);
 		add_root_file(data, &file);
 	}
 #else
 	/* init the file and test for its existence */
-	file_init(&file, path, 0);
-	if (file_stat(&file, FUseLstat) < 0)
+	if (file_init(&file, path, file_mode | FileInitRunLstat) < 0)
 	{
 		log_error_file_t(&file);
 		file_cleanup(&file);
 		data->errors_count++;
 		return;
 	}
-	file.mode |= (FILE_IFROOT | file_mode);
 	add_root_file(data, &file);
 #endif /* _WIN32 */
 }
@@ -226,7 +217,7 @@ void scan_files(file_search_data* data)
 	for (i = 0; i < count && !(data->options & FIND_CANCEL); i++)
 	{
 		file_t* file = get_root_file(data, i);
-		assert(!!(file->mode & FILE_IFROOT));
+		assert(!!(file->mode & FileIsRoot));
 
 		/* check if file is a directory */
 		if (FILE_ISLIST(file))
@@ -273,7 +264,7 @@ void scan_files(file_search_data* data)
 typedef struct dir_entry
 {
 	struct dir_entry* next;
-	char* filename;
+	tstr_t filename;
 	unsigned type; /* a directory, symlink, etc. */
 } dir_entry;
 
@@ -285,14 +276,14 @@ typedef struct dir_entry
  * @param type type of dir_entry
  * @return allocated dir_entry
  */
-static dir_entry* dir_entry_new(dir_entry* next, char* filename, unsigned type)
+static dir_entry* dir_entry_new(dir_entry* next, tstr_t filename, unsigned type)
 {
 	dir_entry* e = (dir_entry*)malloc(sizeof(dir_entry));
 	if (!e)
 		return NULL;
 	if (filename)
 	{
-		e->filename = rsh_strdup(filename);
+		e->filename = rsh_tstrdup(filename);
 		if (!e->filename)
 		{
 			free(e);
@@ -316,7 +307,7 @@ static dir_entry* dir_entry_new(dir_entry* next, char* filename, unsigned type)
  * @param type file type
  * @return pointer to the inserted dir_entry
  */
-static dir_entry* dir_entry_insert(dir_entry** at, char* filename, unsigned type)
+static dir_entry* dir_entry_insert(dir_entry** at, tstr_t filename, unsigned type)
 {
 	dir_entry* e = dir_entry_new(*at, filename, type);
 	if (e)
@@ -343,7 +334,7 @@ static void dir_entry_drop_head(dir_entry** p)
 typedef struct dir_iterator
 {
 	int count;
-	char* dir_path;
+	tpath_t dir_path;
 } dir_iterator;
 #define MAX_DIRS_DEPTH 64
 
@@ -361,7 +352,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	int level = 0;
 	int max_depth = data->max_depth;
 	int options = data->options;
-	int fstat_flags = (data->options & FIND_FOLLOW_SYMLINKS ? 0 : FUseLstat);
+	int fstat_bit = (data->options & FIND_FOLLOW_SYMLINKS ? FileInitRunFstat : FileInitRunLstat);
 	file_t file;
 
 	if (max_depth < 0 || max_depth >= MAX_DIRS_DEPTH)
@@ -398,20 +389,19 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 	while (!(data->options & FIND_CANCEL))
 	{
 		dir_entry** insert_at;
-		char* dir_path;
+		tpath_t dir_path;
 		DIR* dp;
 		struct dirent* de;
 
-		/* climb down from the tree */
+		/* go down from the tree */
 		while (--it[level].count < 0)
 		{
 			/* do not need this dir_path anymore */
 			free(it[level].dir_path);
-
 			if (--level < 0)
 			{
 				/* walked the whole tree */
-				assert(!dirs_stack);
+				assert(dirs_stack == NULL);
 				free(it);
 				return 0;
 			}
@@ -422,15 +412,14 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		if (level)
 		{
 			assert(dirs_stack != NULL);
-			dir_path = make_path(it[level].dir_path, dirs_stack->filename);
+			dir_path = make_tpath(it[level].dir_path, dirs_stack->filename);
 			dir_entry_drop_head(&dirs_stack);
 		}
 		else
 		{
 			/* the first cycle: start from a root directory */
-			dir_path = rsh_strdup(start_dir->path);
+			dir_path = rsh_tstrdup(start_dir->real_path);
 		}
-
 		if (!dir_path)
 			continue;
 
@@ -442,16 +431,15 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 
 		if ((options & (FIND_WALK_DEPTH_FIRST | FIND_SKIP_DIRS)) == FIND_WALK_DEPTH_FIRST)
 		{
-			int res;
-			file_init(&file, dir_path, 1);
-			res = file_stat(&file, fstat_flags);
+			int res = file_init(&file, dir_path, FileIsDir | fstat_bit);
 
 			/* check if we should skip the directory */
 			if (res < 0 || !data->callback(&file, data->callback_data))
 			{
-				if (res < 0 && (options & FIND_LOG_ERRORS))
+				if (res < 0 && (options & FIND_LOG_ERRORS)) {
+					log_error_file_t(&file);
 					data->errors_count++;
-
+				}
 				file_cleanup(&file);
 				continue;
 			}
@@ -459,7 +447,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		file_cleanup(&file);
 
 		/* step into directory */
-		dp = opendir(dir_path);
+		dp = rsh_topendir(dir_path);
 		if (!dp)
 			continue;
 		insert_at = &dirs_stack;
@@ -467,15 +455,17 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		while ((de = readdir(dp)) != NULL)
 		{
 			int res;
+			tpath_t filepath;
 
 			/* skip the "." and ".." directories */
 			if (IS_CURRENT_OR_PARENT_DIR(de->d_name))
 				continue;
-			file.mode = 0;
-			file.path = make_path(dir_path, de->d_name);
-			if (!file.path)
+
+			filepath = make_tpath(dir_path, dirent_get_tname(de));
+			if (!filepath)
 				continue;
-			res  = file_stat(&file, fstat_flags);
+			res  = file_init(&file, filepath, FileInitRunFstat | FileInitUpdatePrintPathLastSlash);
+			free(filepath);
 			if (res >= 0)
 			{
 				/* process the file or directory */
@@ -495,7 +485,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 					((options & FIND_FOLLOW_SYMLINKS) || !FILE_ISLNK(&file)))
 				{
 					/* add the directory name to the dirs_stack */
-					if (dir_entry_insert(insert_at, de->d_name, file.mode))
+					if (dir_entry_insert(insert_at, dirent_get_tname(de), file.mode))
 					{
 						/* the directory name was successfully inserted */
 						insert_at = &((*insert_at)->next);
@@ -523,6 +513,5 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 		free(it[level--].dir_path);
 	}
 	free(it);
-	assert(file.path == 0);
 	return 0;
 }

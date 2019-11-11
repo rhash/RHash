@@ -2,11 +2,13 @@
 #ifndef FILE_MASK_H
 #define FILE_MASK_H
 
+#include "common_func.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "common_func.h"
+struct file_t;
 
 /* an array to store rules for file acceptance */
 typedef struct vector_t file_mask_array;
@@ -16,7 +18,7 @@ typedef struct vector_t file_mask_array;
 
 file_mask_array* file_mask_new_from_list(const char* comma_separated_list);
 void file_mask_add_list(file_mask_array* vect, const char* comma_separated_list);
-int file_mask_match(file_mask_array* vect, const char* name);
+int file_mask_match(file_mask_array* vect, struct file_t* file);
 
 #ifdef __cplusplus
 } /* extern "C" */

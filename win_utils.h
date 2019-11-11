@@ -15,25 +15,36 @@ void set_benchmark_cpu_affinity(void);
 #include "common_func.h"
 #include <stdarg.h>
 
-/* encoding conversion functions */
-wchar_t* c2w(const char* str, int try_no);
-wchar_t* c2w_long_path(const char* str, int try_no);
-char* w2c(const wchar_t* wstr);
-char* wcs_to_utf8(const wchar_t* wstr);
-char* str_to_utf8(const char* str);
-#define win_is_utf8() (opt.flags & OPT_UTF8)
-#define WIN_DEFAULT_ENCODING -1
-char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed);
+#define UNC_PREFIX_SIZE 4
+#define IS_UNC_PREFIX(p) ((p)[0] == L'\\' &&  (p)[1] == L'\\' && (p)[2] == L'?' &&  (p)[3] == L'\\')
 
-/* file functions */
+/* encoding conversion functions */
+enum ConversionBitFlags {
+	ConvertToPrimaryEncoding = 1,
+	ConvertToSecondaryEncoding = 2,
+	ConvertToUtf8 = 4,
+	ConvertToNative = 8,
+	ConvertPath = 16,
+	ConvertExact = 32,
+	ConvertUtf8ToWcs = ConvertToUtf8,
+	ConvertNativeToWcs = ConvertToNative,
+	ConvertEncodingMask = (ConvertToPrimaryEncoding | ConvertToSecondaryEncoding | ConvertToUtf8 | ConvertToNative)
+};
+wchar_t* convert_str_to_wcs(const char* str, unsigned flags);
+char* convert_wcs_to_str(const wchar_t* wstr, unsigned flags);
+char* convert_str_encoding(const char* str, unsigned flags);
+
+/* file helper functions */
 void set_errno_from_last_file_error(void);
-wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename);
 wchar_t* get_long_path_if_needed(const wchar_t* wpath);
 
-void setup_console(void);
-void hide_cursor(void);
+/* functions for program initialization */
 void init_program_dir(void);
+void setup_console(void);
 void setup_locale_dir(void);
+void hide_cursor(void);
+
+/* output-related functions */
 int win_is_console_stream(FILE* out);
 int win_fprintf(FILE*, const char* format, ...);
 int win_fprintf_warg(FILE*, const char* format, ...);

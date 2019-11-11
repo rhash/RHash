@@ -326,7 +326,7 @@ print_item* parse_percent_item(const char** str)
  */
 static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 {
-	const char* filename = get_basename(file_info_get_utf8_print_path(info));
+	const char* filename = file_get_print_path(info->file, FPathUtf8 | FPathBaseName | FPathNotNull);
 	int upper_case = (print_type & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
 	int len = urlencode(NULL, filename) + int_len(info->size) + (info->sums_flags & RHASH_AICH ? 84 : 49);
 	char* buf = (char*)rsh_malloc( len + 1 );
@@ -412,7 +412,7 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 }
 
 /**
- * Print formatted file information to given output stream.
+ * Print formatted file information to the given output stream.
  *
  * @param out the stream to print information to
  * @param list the format according to which information shall be printed
@@ -421,7 +421,6 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
  */
 int print_line(FILE* out, print_item* list, struct file_info* info)
 {
-	const char* basename = get_basename(info->print_path);
 	const char* tmp;
 	char* url = NULL;
 	char buffer[130];
@@ -471,14 +470,14 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 				break;
 #endif
 			case PRINT_FILEPATH:
-				res = PRINTF_RES(rsh_fprintf(out, "%s", info->print_path));
+				res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, 0));
 				break;
 			case PRINT_BASENAME: /* the filename without directory */
-				res = PRINTF_RES(rsh_fprintf(out, "%s", basename));
+				res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, OutBaseName));
 				break;
 			case PRINT_URLNAME: /* URL-encoded filename */
 				if (!url) {
-					tmp = get_basename(file_info_get_utf8_print_path(info));
+					tmp = file_get_print_path(info->file, FPathUtf8 | FPathBaseName | FPathNotNull);
 					url = (char*)rsh_malloc(urlencode(NULL, tmp) + 1);
 					urlencode(url, tmp);
 				}
@@ -696,25 +695,21 @@ void init_printf_format(strbuf_t* out)
  * @param file the file info to print
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_sfv_header_line(FILE* out, file_t* file, const char* printpath)
+int print_sfv_header_line(FILE* out, file_t* file)
 {
 	char buf[24];
 
-	/* skip stdin stream */
-	if ((file->mode & FILE_IFSTDIN) != 0)
+	/* skip stdin stream and message-texts passed by command-line */
+	if (FILE_ISSPECIAL(file))
 		return 0;
-	/* skip unreadable files */
+	/* silently skip unreadable files, the access error will be reported later */
 	if (!file_is_readable(file))
 		return 0;
-	if (!printpath)
-		printpath = file_cpath(file);
-	if (printpath[0] == '.' && IS_PATH_SEPARATOR(printpath[1]))
-		printpath += 2;
 	sprintI64(buf, file->size, 12);
 	if (rsh_fprintf(out, "; %s  ", buf) < 0)
 		return -1;
 	print_time64(out, file->mtime, 1);
-	return PRINTF_RES(rsh_fprintf(out, " %s\n", printpath));
+	return PRINTF_RES(fprintf_file_t(out, " %s\n", file, 0));
 }
 
 /**

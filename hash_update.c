@@ -60,7 +60,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 
 	ctx = (update_ctx*)rsh_malloc(sizeof(update_ctx));
 	memset(ctx, 0, sizeof(*ctx));
-	file_tinit(&(ctx->file), FILE_TPATH(update_file), 0);
+	file_clone(&(ctx->file), update_file);
 	ctx->crc_entries = crc_entries;
 	ctx->flags = (unsigned)update_flags;
 	return ctx;
@@ -76,13 +76,13 @@ struct update_ctx* update_ctx_new(file_t* update_file)
  */
 int update_ctx_update(struct update_ctx* ctx, file_t* file)
 {
-	int res = 0;
-	char* print_path = file->path;
-	if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
-		print_path += 2;
+	int res;
+	if ((ctx->flags & ErrorOcurred) != 0)
+		return -1;
 
 	/* skip files already present in the hash file */
-	if ((ctx->flags & ErrorOcurred) || file_set_exist(ctx->crc_entries, file->path))
+	if (file_set_exist(ctx->crc_entries,
+			file_get_print_path(file, (ctx->flags & HasBom ? FPathUtf8 : 0))))
 		return 0;
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
@@ -92,7 +92,7 @@ int update_ctx_update(struct update_ctx* ctx, file_t* file)
 	}
 
 	/* print hash sums to the hash file */
-	res = calculate_and_print_sums(ctx->fd, &ctx->file, file, print_path);
+	res = calculate_and_print_sums(ctx->fd, &ctx->file, file);
 	if (res < 0)
 		ctx->flags |= ErrorOcurred;
 	return res;
@@ -251,7 +251,7 @@ static int fix_sfv_header(file_t* file)
 		return -1;
 	}
 	/* open a temporary file for writing */
-	file_path_append(&new_file, file, ".new");
+	file_modify_path(&new_file, file, ".new", FModifyAppendSuffix);
 	out = file_fopen(&new_file, FOpenWrite);
 	if (!out) {
 		log_error_file_t(&new_file);
@@ -296,7 +296,8 @@ static int fix_sfv_header(file_t* file)
 	if (result == 0 && file_rename(&new_file, file) < 0) {
 		/* TRANSLATORS: printed when a file rename failed */
 		log_error(_("can't move %s to %s: %s\n"),
-			new_file.path, file->path, strerror(errno));
+			file_get_print_path(&new_file, FPathUtf8 | FPathNotNull),
+			file_get_print_path(file, FPathUtf8 | FPathNotNull), strerror(errno));
 		result = -1;
 	}
 	file_cleanup(&new_file);

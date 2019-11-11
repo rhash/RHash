@@ -34,12 +34,10 @@ struct rhash_t rhash_data;
  */
 static int must_skip_file(file_t* file)
 {
-	const rsh_tchar* path = FILE_TPATH(file);
-
 	/* check if the file path is the same as the output or the log file path */
-	return (opt.output && are_paths_equal(path, opt.output)) ||
-		(opt.log && are_paths_equal(path, opt.log)) ||
-		(opt.update_file && are_paths_equal(path, opt.update_file));
+	return (opt.output && are_paths_equal(file->real_path, &rhash_data.out_file)) ||
+		(opt.log && are_paths_equal(file->real_path, &rhash_data.log_file)) ||
+		(opt.update_file && are_paths_equal(file->real_path, &rhash_data.upd_file));
 }
 
 /**
@@ -62,30 +60,30 @@ static int scan_files_callback(file_t* file, int preprocess)
 
 	if (preprocess) {
 		if (FILE_ISDATA(file) ||
-				!file_mask_match(opt.files_accept, file->path) ||
-				(opt.files_exclude && file_mask_match(opt.files_exclude, file->path)) ||
+				!file_mask_match(opt.files_accept, file) ||
+				(opt.files_exclude && file_mask_match(opt.files_exclude, file)) ||
 				must_skip_file(file))
 			return 0;
 
-		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, file, 0) < 0) {
+		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, file) < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		}
 
 		rhash_data.batch_size += file->size;
 	} else {
-		int not_root = !(file->mode & FILE_IFROOT);
+		int not_root = !(file->mode & FileIsRoot);
 
 		if (!FILE_ISSPECIAL(file)) {
 			if (not_root) {
 				if ((opt.mode & MODE_CHECK) != 0) {
 					/* check and update modes use the crc_accept list */
-					if (!file_mask_match(opt.crc_accept, file->path)) {
+					if (!file_mask_match(opt.crc_accept, file)) {
 						return 0;
 					}
 				} else {
-					if (!file_mask_match(opt.files_accept, file->path) ||
-						(opt.files_exclude && file_mask_match(opt.files_exclude, file->path))) {
+					if (!file_mask_match(opt.files_accept, file) ||
+						(opt.files_exclude && file_mask_match(opt.files_exclude, file))) {
 						return 0;
 					}
 				}
@@ -93,7 +91,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 			if (must_skip_file(file))
 				return 0;
 		} else if (FILE_ISDATA(file) && (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED | MODE_UPDATE | MODE_TORRENT))) {
-			log_warning(_("skipping: %s\n"), file->path);
+			log_warning(_("skipping: %s\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull));
 			return 0;
 		}
 
@@ -103,10 +101,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 			res = update_ctx_update(rhash_data.update_context, file);
 		} else {
 			/* default mode: calculate hash */
-			const char* print_path = file->path;
-			if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
-				print_path += 2;
-			res = calculate_and_print_sums(rhash_data.out, &rhash_data.out_file, file, print_path);
+			res = calculate_and_print_sums(rhash_data.out, &rhash_data.out_file, file);
 			if (rhash_data.stop_flags) {
 				opt.search_data->options |= FIND_CANCEL;
 				return 0;
@@ -154,7 +149,7 @@ static int load_printf_template(void)
 	size_t len;
 	int error = 0;
 
-	file_tinit(&file, opt.template_file, FILE_OPT_DONT_FREE_PATH);
+	file_init(&file, opt.template_file, FileInitReusePath);
 	fd = file_fopen(&file, FOpenRead | FOpenBin);
 	if (!fd)
 	{
@@ -202,6 +197,7 @@ void rhash_destroy(struct rhash_t* ptr)
 	if (ptr->log) fclose(ptr->log);
 	file_cleanup(&ptr->out_file);
 	file_cleanup(&ptr->log_file);
+	file_cleanup(&ptr->upd_file);
 #ifdef _WIN32
 	if (ptr->program_dir) free(ptr->program_dir);
 #endif
@@ -278,9 +274,8 @@ int main(int argc, char* argv[])
 
 	if (opt.update_file)
 	{
-		file_t upd_path;
-		file_tinit(&upd_path, opt.update_file, FILE_OPT_DONT_FREE_PATH);
-		rhash_data.update_context = update_ctx_new(&upd_path);
+		file_init(&rhash_data.upd_file, opt.update_file, FileInitReusePath);
+		rhash_data.update_context = update_ctx_new(&rhash_data.upd_file);
 		if (!rhash_data.update_context)
 			rsh_exit(0);
 	}
@@ -354,7 +349,7 @@ int main(int argc, char* argv[])
 	if (!rhash_data.stop_flags) {
 		if (opt.bt_batch_file && rhash_data.rctx) {
 			file_t batch_torrent_file;
-			file_tinit(&batch_torrent_file, opt.bt_batch_file, FILE_OPT_DONT_FREE_PATH);
+			file_init(&batch_torrent_file, opt.bt_batch_file, FileInitReusePath);
 
 			rhash_final(rhash_data.rctx, 0);
 			if (save_torrent_to(&batch_torrent_file, rhash_data.rctx) < 0)

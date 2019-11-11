@@ -40,50 +40,20 @@ void set_benchmark_cpu_affinity(void)
  *
  * @param str the string to convert
  * @param codepage the codepage to use
- * @return converted string on success, NULL on fail
+ * @param exact_conversion non-zero to require exact encoding conversion, 0 otherwise
+ * @return converted string on success, NULL on fail  with error code stored in errno
  */
-static wchar_t* cstr_to_wchar(const char* str, int codepage)
+static wchar_t* cstr_to_wchar(const char* str, int codepage, int exact_conversion)
 {
-	wchar_t* buf;
-	int size = MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, str, -1, NULL, 0);
-	if (size == 0) return NULL; /* conversion failed */
-
-	buf = (wchar_t*)rsh_malloc(size * sizeof(wchar_t));
-	MultiByteToWideChar(codepage, 0, str, -1, buf, size);
-	return buf;
-}
-
-/**
- * Convert c-string to wide string using primary or secondary codepage.
- *
- * @param str the C-string to convert
- * @param try_no 0 for primary codepage, 1 for a secondary one
- * @return converted wide string on success, NULL on error
- */
-wchar_t* c2w(const char* str, int try_no)
-{
-	int is_utf = (try_no == (opt.flags & OPT_UTF8 ? 0 : 1));
-	int codepage = (is_utf ? CP_UTF8 : (opt.flags & OPT_OEM) ? CP_OEMCP : CP_ACP);
-	return cstr_to_wchar(str, codepage);
-}
-
-/**
- * Convert C-string path to a wide-string path, prepending a long path prefix
- * if it is needed to access the file.
- *
- * @param str the C-string to convert
- * @param try_no 0 for primary codepage, 1 for a secondary one
- * @return converted wide string on success, NULL on error
- */
-wchar_t* c2w_long_path(const char* str, int try_no)
-{
-	wchar_t* wstr = c2w(str, try_no);
-	wchar_t* long_path;
-	if (!wstr) return NULL;
-	long_path = get_long_path_if_needed(wstr);
-	if (!long_path) return wstr;
-	free(wstr);
-	return long_path;
+	DWORD flags = (exact_conversion ? MB_ERR_INVALID_CHARS : 0);
+	int size = MultiByteToWideChar(codepage, flags, str, -1, NULL, 0);
+	if (size != 0) {
+		wchar_t* buf = (wchar_t*)rsh_malloc(size * sizeof(wchar_t));
+		if (MultiByteToWideChar(codepage, flags, str, -1, buf, size) != 0)
+			return buf;
+	}
+	set_errno_from_last_file_error();
+	return NULL; /* conversion failed */
 }
 
 /**
@@ -92,76 +62,99 @@ wchar_t* c2w_long_path(const char* str, int try_no)
  *
  * @param wstr the wide string to convert
  * @param codepage the codepage to use
- * @param failed pointer to the flag, to on failed conversion, can be NULL
- * @return converted string on success, NULL on fail
+ * @param exact_conversion non-zero to require exact encoding conversion, 0 otherwise
+ * @return converted string on success, NULL on fail with error code stored in errno
  */
-char* wchar_to_cstr(const wchar_t* wstr, int codepage, int* failed)
+static char* wchar_to_cstr(const wchar_t* wstr, int codepage, int exact_conversion)
 {
 	int size;
-	char* buf;
-	BOOL bUsedDefChar, *lpUsedDefaultChar;
+	BOOL bUsedDefChar = FALSE;
+	BOOL* lpUsedDefaultChar = (exact_conversion && codepage != CP_UTF8 ? &bUsedDefChar : NULL);
 	if (codepage == -1) {
-		codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_OEM) ? CP_OEMCP : CP_ACP);
+		codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_ENC_DOS) ? CP_OEMCP : CP_ACP);
 	}
-	/* note: lpUsedDefaultChar must be NULL for CP_UTF8, otrherwise WideCharToMultiByte() will fail */
-	lpUsedDefaultChar = (failed && codepage != CP_UTF8 ? &bUsedDefChar : NULL);
-
-	size = WideCharToMultiByte(codepage, 0, wstr, -1, 0, 0, 0, 0);
-	if (size == 0) {
-		if (failed) *failed = 1;
-		return NULL; /* conversion failed */
+	size = WideCharToMultiByte(codepage, 0, wstr, -1, NULL, 0, 0, NULL);
+	/* size=0 is returned only on fail, cause even an empty string requires buffer size=1 */
+	if (size != 0) {
+		char* buf = (char*)rsh_malloc(size);
+		if (WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, lpUsedDefaultChar) != 0) {
+			if (!bUsedDefChar)
+				return buf;
+			free(buf);
+			errno = EILSEQ;
+			return NULL;
+		}
+		free(buf);
 	}
-	buf = (char*)rsh_malloc(size);
-	WideCharToMultiByte(codepage, 0, wstr, -1, buf, size, 0, lpUsedDefaultChar);
-	if (failed) *failed = (lpUsedDefaultChar && *lpUsedDefaultChar);
-	return buf;
+	set_errno_from_last_file_error();
+	return NULL;
 }
 
 /**
- * Convert wide string to multi-byte c-string using codepage specified
- * by command line options.
+ * Convert c-string to wide string using encoding and transformation specified by flags.
  *
- * @param wstr the wide string to convert
- * @return c-string on success, NULL on fail
+ * @param str the C-string to convert
+ * @param flags bit-mask containing the following bits: ConvertToPrimaryEncoding, ConvertToSecondaryEncoding,
+ *              ConvertToUtf8, ConvertToNative, ConvertPath, ConvertExact
+ * @return converted wide string on success, NULL on fail with error code stored in errno
  */
-char* w2c(const wchar_t* wstr)
+wchar_t* convert_str_to_wcs(const char* str, unsigned flags)
 {
-	return wchar_to_cstr(wstr, -1, NULL);
+	int is_utf8 = flags & (opt.flags & OPT_UTF8 ? (ConvertToUtf8 | ConvertToPrimaryEncoding) : (ConvertToUtf8 | ConvertToSecondaryEncoding));
+	int codepage = (is_utf8 ? CP_UTF8 : (opt.flags & OPT_ENC_DOS) ? CP_OEMCP : CP_ACP);
+	wchar_t* wstr = cstr_to_wchar(str, codepage, (flags & ConvertExact));
+	if (wstr && (flags & ConvertPath)) {
+		wchar_t* long_path = get_long_path_if_needed(wstr);
+		if (long_path) {
+			free(wstr);
+			return long_path;
+		}
+	}
+	return wstr;
 }
 
 /**
- * Convert wide string to utf8.
+ * Convert wide string to c-string using encoding and transformation specified by flags.
  *
- * @param wstr the wide string to convert
- * @return utf8-encoded c-string on success, NULL on fail
+ * @param str the C-string to convert
+ * @param flags bit-mask containing the following bits: ConvertToPrimaryEncoding, ConvertToSecondaryEncoding,
+ *              ConvertToUtf8, ConvertToNative, ConvertPath, ConvertExact
+ * @return converted wide string on success, NULL on fail with error code stored in errno
  */
-char* wcs_to_utf8(const wchar_t* wstr)
+char* convert_wcs_to_str(const wchar_t* wstr, unsigned flags)
 {
-	return wchar_to_cstr(wstr, CP_UTF8, NULL);
+	int is_utf8 = flags & (opt.flags & OPT_UTF8 ? (ConvertToUtf8 | ConvertToPrimaryEncoding) : (ConvertToUtf8 | ConvertToSecondaryEncoding));
+	int codepage = (is_utf8 ? CP_UTF8 : (opt.flags & OPT_ENC_DOS) ? CP_OEMCP : CP_ACP);
+	/* skip path UNC prefix, if found */
+	if ((flags & ConvertPath) && IS_UNC_PREFIX(wstr))
+		wstr += UNC_PREFIX_SIZE;
+	return wchar_to_cstr(wstr, codepage, (flags & ConvertExact));
 }
 
 /**
- * Convert given C-string from encoding specified by
- * command line options to utf8.
+ * Convert c-string encoding, the encoding is specified by flags.
  *
- * @param str the string to convert
- * @return converted string on success, NULL on fail
+ * @param str the C-string to convert
+ * @param flags bit-mask containing the following bits: ConvertToUtf8, ConvertToNative, ConvertExact
+ * @return converted wide string on success, NULL on fail with error code stored in errno
  */
-char* str_to_utf8(const char* str)
+char* convert_str_encoding(const char* str, unsigned flags)
 {
-	char* res;
-	wchar_t* buf;
-
-	assert((opt.flags & OPT_ENCODING) != 0);
-	if (opt.flags & OPT_UTF8) return rsh_strdup(str);
-
-	if ((buf = c2w(str, 0)) == NULL) return NULL;
-	res = wcs_to_utf8(buf);
-	free(buf);
-	return res;
+	int convert_from = (flags & ConvertToUtf8 ? ConvertNativeToWcs : ConvertUtf8ToWcs) | (flags & ConvertExact);
+	wchar_t* wstr;
+	assert((flags & ~(ConvertToUtf8 | ConvertToNative | ConvertExact)) == 0); /* disallow invalid flags */
+	if ((opt.flags & OPT_UTF8) || !(flags & (ConvertToUtf8 | ConvertToNative))) {
+		errno = EINVAL;
+		return NULL; /* error: no conversion needed */
+	}
+	wstr = convert_str_to_wcs(str, convert_from);
+	if (wstr) {
+		char* res = convert_wcs_to_str(wstr, flags);
+		free(wstr);
+		return res;
+	}
+	return NULL;
 }
-
-#define UNC_PREFIX_SIZE 4
 
 /**
  * Allocate a wide string containing long file path with UNC prefix,
@@ -173,18 +166,16 @@ char* str_to_utf8(const char* str)
  */
 wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 {
-	if (wcslen(wpath) > 200
-		&& (wpath[0] != L'\\' ||  wpath[1] != L'\\'
-		|| wpath[2] != L'?' ||  wpath[3] != L'\\'))
-	{
-		wchar_t* result;
+	if (!IS_UNC_PREFIX(wpath) && wcslen(wpath) > 200) {
 		DWORD size = GetFullPathNameW(wpath, 0, NULL, NULL);
-		if (!size) return NULL;
-		result = (wchar_t*)rsh_malloc((size + UNC_PREFIX_SIZE) * sizeof(wchar_t));
-		wcscpy(result, L"\\\\?\\");
-		size = GetFullPathNameW(wpath, size, result + UNC_PREFIX_SIZE, NULL);
-		if (size > 0) return result;
-		free(result);
+		if (size > 0) {
+			wchar_t* result = (wchar_t*)rsh_malloc((size + UNC_PREFIX_SIZE) * sizeof(wchar_t));
+			wcscpy(result, L"\\\\?\\");
+			size = GetFullPathNameW(wpath, size, result + UNC_PREFIX_SIZE, NULL);
+			if (size > 0)
+				return result;
+			free(result);
+		}
 	}
 	return NULL;
 }
@@ -194,7 +185,7 @@ wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 #define MAX_EACCES_RANGE ERROR_SHARING_BUFFER_EXCEEDED
 
 /**
- * Convert the GetLastError() value to the assignable to errno.
+ * Convert the GetLastError() value to errno-compatible code.
  *
  * @return errno-compatible error code
  */
@@ -231,10 +222,12 @@ static int convert_last_error_to_errno(void)
 	case ERROR_NOT_ENOUGH_MEMORY:
 	case ERROR_INVALID_BLOCK:
 	case ERROR_NOT_ENOUGH_QUOTA:
+	case ERROR_INSUFFICIENT_BUFFER:
 		return ENOMEM;
 	case ERROR_INVALID_ACCESS:
 	case ERROR_INVALID_DATA:
-	case  ERROR_INVALID_PARAMETER:
+	case ERROR_INVALID_PARAMETER:
+	case ERROR_INVALID_FLAGS:
 		return EINVAL;
 	case ERROR_BROKEN_PIPE:
 	case ERROR_NO_DATA:
@@ -245,6 +238,8 @@ static int convert_last_error_to_errno(void)
 		return EEXIST;
 	case ERROR_NESTING_NOT_ALLOWED:
 		return EAGAIN;
+	case ERROR_NO_UNICODE_TRANSLATION:
+		return EILSEQ;
 	}
 
 	/* try to detect error by range */
@@ -261,42 +256,6 @@ static int convert_last_error_to_errno(void)
 void set_errno_from_last_file_error(void)
 {
 	errno = convert_last_error_to_errno();
-}
-
-/**
- * Concatenate directory path with filename, unicode version.
- *
- * @param dir_path directory path
- * @param dir_len length of directory path in characters
- * @param filename the file name to append to the directory
- * @return concatenated path
- */
-wchar_t* make_pathw(const wchar_t* dir_path, size_t dir_len, wchar_t* filename)
-{
-	wchar_t* res;
-	size_t len;
-
-	if (dir_path == 0) dir_len = 0;
-	else {
-		/* remove leading path separators from filename */
-		while (IS_PATH_SEPARATOR_W(*filename)) filename++;
-
-		if (dir_len == (size_t)-1) dir_len = wcslen(dir_path);
-	}
-	len = wcslen(filename);
-
-	res = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
-	if (dir_len > 0) {
-		memcpy(res, dir_path, dir_len * sizeof(wchar_t));
-		if (res[dir_len - 1] != L'\\') {
-			/* append path separator to the directory */
-			res[dir_len++] = L'\\';
-		}
-	}
-
-	/* append filename */
-	memcpy(res + dir_len, filename, (len + 1) * sizeof(wchar_t));
-	return res;
 }
 
 /* functions to setup/restore console */
@@ -365,7 +324,7 @@ void setup_console(void)
 	}
 	else
 	{
-		setlocale(LC_CTYPE, opt.flags & OPT_OEM ? ".OCP" : ".ACP");
+		setlocale(LC_CTYPE, opt.flags & OPT_ENC_DOS ? ".OCP" : ".ACP");
 	}
 }
 
@@ -440,11 +399,11 @@ void setup_locale_dir(void)
 	short_dir = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
 	res = GetShortPathNameW(rhash_data.program_dir, short_dir, buf_size);
 	if (res > 0 && res < buf_size)
-		program_dir = w2c(short_dir);
+		program_dir = convert_wcs_to_str(short_dir, ConvertToPrimaryEncoding);
 	free(short_dir);
 	if (!program_dir) return;
 
-	locale_dir = make_path(program_dir, "locale");
+	locale_dir = make_path(program_dir, "locale", 0);
 	free(program_dir);
 	if (!locale_dir) return;
 
@@ -489,7 +448,7 @@ static int win_vfprintf_encoded(FILE* out, const char* format, int str_type, va_
 	else
 	{
 		int res;
-		wchar_t* wformat = cstr_to_wchar(format, CP_UTF8);
+		wchar_t* wformat = cstr_to_wchar(format, CP_UTF8, 0);
 		if (wformat && str_type == USE_CSTR_ARGS)
 		{
 			wchar_t* p;

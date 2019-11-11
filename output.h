@@ -33,7 +33,13 @@ extern struct percents_output_info_t* percents_output;
 void setup_output(void);
 void setup_percents(void);
 
-int fprintf_file_t(FILE* out, const char* format, struct file_t* file);
+enum FileOutputFlags {
+	OutDefaultFlags = 0x0,
+	OutForceUtf8 = 0x1,
+	OutBaseName = 0x2,
+	OutCountSymbols = 0x4
+};
+int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags);
 
 void log_msg(const char* format, ...);
 void log_msg_file_t(const char* format, struct file_t* file);

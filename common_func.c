@@ -161,6 +161,75 @@ char* str_set(char* buf, int ch, int length)
 	return buf;
 }
 
+#ifdef _WIN32
+/**
+ * Return wide-string obtained from the given source string by replacing its part with another string.
+ *
+ * @param src source wide-string
+ * @param start_pos starting position of the replacement
+ * @param end_pos ending position of the replacement
+ * @param replacement the replacement ASCII string (nullable), NULL is interpreted as empty string
+ * @return result of replacement, the resulting string is always allocated by malloc(),
+ *         and must be freed by caller
+ */
+wchar_t* wcs_replace_n(const wchar_t* src, size_t start_pos, size_t end_pos, const char* replacement)
+{
+	const size_t len1 = wcslen(src);
+	const size_t len2 = (replacement ? strlen(replacement) : 0);
+	size_t result_len;
+	size_t i;
+	wchar_t* result;
+	if (start_pos > len1)
+		start_pos = end_pos = len1;
+	else if (end_pos > len1)
+		end_pos = len1;
+	else if (start_pos > end_pos)
+		end_pos = start_pos;
+	result_len = len1 + len2 - (end_pos - start_pos);
+	result = (wchar_t*)rsh_malloc((result_len + 1) * sizeof(wchar_t));
+	memcpy(result, src, start_pos * sizeof(wchar_t));
+	for (i = 0; i < len2; i++)
+		result[start_pos + i] = (wchar_t)replacement[i];
+	if (end_pos < len1)
+		memcpy(result + start_pos + len2, src + end_pos, (len1 - end_pos) * sizeof(wchar_t));
+	result[result_len] = 0;
+	return result;
+}
+#endif
+
+/**
+ * Return string obtained from the given source string by replacing its part with another string.
+ *
+ * @param src source string
+ * @param start_pos starting position of the replacement
+ * @param end_pos ending position of the replacement
+ * @param replacement the replacement string (nullable), NULL is interpreted as empty string
+ * @return result of replacement, the resulting string is always allocated by malloc(),
+ *         and must be freed by caller
+ */
+char* str_replace_n(const char* src, size_t start_pos, size_t end_pos, const char* replacement)
+{
+	const size_t len1 = strlen(src);
+	const size_t len2 = (replacement ? strlen(replacement) : 0);
+	size_t result_len;
+	char* result;
+	if (start_pos > len1)
+		start_pos = end_pos = len1;
+	else if (end_pos > len1)
+		end_pos = len1;
+	else if (start_pos > end_pos)
+		end_pos = start_pos;
+	result_len = len1 + len2 - (end_pos - start_pos);
+	result = (char*)rsh_malloc(result_len + 1);
+	memcpy(result, src, start_pos);
+	if (len2 > 0)
+		memcpy(result + start_pos, replacement, len2);
+	if (end_pos < len1)
+		memcpy(result + start_pos + len2, src + end_pos, len1 - end_pos);
+	result[result_len] = 0;
+	return result;
+}
+
 /**
  * Check if a string is a binary string, which means the string contain
  * a character with ACII code below 0x20 other than '\r', '\n', '\t'.
@@ -184,7 +253,7 @@ int is_binary_string(const char* str)
  * @param str the string to measure
  * @return number of utf8 characters in the string
  */
-size_t strlen_utf8_c(const char* str)
+size_t count_utf8_symbols(const char* str)
 {
 	size_t length = 0;
 	for (; *str; str++) {

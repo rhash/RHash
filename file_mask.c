@@ -1,5 +1,6 @@
 /* file_mask.c - matching file against a list of file masks */
 #include "file_mask.h"
+#include "file.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,19 +55,22 @@ void file_mask_add_list(file_mask_array* vect, const char* comma_separated_list)
 }
 
 /**
- * Match a given name against a list of string trailers.
+ * Match a file path against a list of string trailers.
  * Usually used to match a filename against list of file extensions.
  *
  * @param vect the array of string trailers
- * @param name the name to match
+ * @param file the file path to match
  * @return 1 if matched, 0 otherwise
  */
-int file_mask_match(file_mask_array* vect, const char* name)
+int file_mask_match(file_mask_array* vect, struct file_t* file)
 {
 	unsigned i;
 	int res = 0;
 	size_t len, namelen;
+	const char* name = file_get_print_path(file, FPathUtf8);
 	char* buf;
+
+	if (!name) return 0;
 
 	/* all names should match against an empty array */
 	if (!vect || !vect->size) return 1;

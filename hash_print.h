@@ -47,7 +47,7 @@ void free_print_list(print_item* list);
 
 /* SFV format functions */
 int print_sfv_banner(FILE* out);
-int print_sfv_header_line(FILE* out, struct file_t* file, const char* printpath);
+int print_sfv_header_line(FILE* out, struct file_t* file);
 
 #ifdef __cplusplus
 } /* extern "C" */

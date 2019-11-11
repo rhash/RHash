@@ -9,6 +9,7 @@
 
 #include "file.h"
 #include "common_func.h"
+#include "parse_cmdline.h"
 #include "platform.h"
 #include "win_utils.h"
 #include <assert.h>
@@ -30,6 +31,22 @@
 extern "C" {
 #endif
 
+#define IS_ANY_SLASH(c) ((c) == '/' || (c) == '\\')
+#define IS_ANY_TSLASH(c) ((c) == RSH_T('/') || (c) == RSH_T('\\'))
+#define IS_DOT_STR(s) ((s)[0] == '.' && (s)[1] == 0)
+#define IS_DOT_TSTR(s) ((s)[0] == '.' && (s)[1] == 0)
+
+#ifdef _WIN32
+/* auxiliary function */
+static int str_is_ascii(const char* str)
+{
+	for (; *str; str++)
+		if ((unsigned char)*str >= 0x80)
+			return 0;
+	return 1;
+}
+#endif
+
 /*=========================================================================
  * Path functions
  *=========================================================================*/
@@ -40,95 +57,118 @@ extern "C" {
  * @param path file path
  * @return file name
  */
-const char* get_basename(const char* path)
+static const char* get_basename(const char* path)
 {
-	const char* p = path + strlen(path) - 1;
-	for (; p >= path && !IS_PATH_SEPARATOR(*p); p--);
+	const char* p;
+	if (!path)
+		return NULL;
+	for (p = path + strlen(path) - 1; p >= path && !IS_PATH_SEPARATOR(*p); p--);
 	return (p + 1);
 }
 
 /**
- * Return allocated buffer with the directory part of the path.
- * The buffer must be freed by calling free().
+ * Return filepath, obtained by concatinating a directory path and a sub-path.
  *
- * @param path file path
- * @return directory
+ * @param dir_path (nullable) directory path
+ * @param sub_path the filepath to append to the directory
+ * @param user_path_separator flag, 1 to use user-defined path separator,
+ *        0 to use system path separator
+ * @return concatinated file path
  */
-char* get_dirname(const char* path)
-{
-	const char* p = path + strlen(path) - 1;
-	char* res;
-	for (; p > path && !IS_PATH_SEPARATOR(*p); p--);
-	if ((p - path) > 1) {
-		res = (char*)rsh_malloc(p - path + 1);
-		memcpy(res, path, p - path);
-		res[p - path] = 0;
-		return res;
-	} else {
-		return rsh_strdup(".");
-	}
-}
-
-/**
- * Assemble a filepath from its directory and filename.
- *
- * @param dir_path directory path
- * @param filename the file name
- * @return assembled file path
- */
-char* make_path(const char* dir_path, const char* filename)
+char* make_path(const char* dir_path, const char* sub_path, int user_path_separator)
 {
 	char* buf;
-	size_t len;
-	assert(dir_path);
-	assert(filename);
-
-	/* remove leading path separators from filename */
-	while (IS_PATH_SEPARATOR(*filename)) filename++;
-
-	if (dir_path[0] == '.' && dir_path[1] == 0) {
-		/* do not extend filename for dir_path="." */
-		return rsh_strdup(filename);
+	size_t dir_len;
+	assert(sub_path);
+	if (sub_path[0] == '.' && IS_ANY_SLASH(sub_path[1]))
+		sub_path += 2;
+	if (!dir_path)
+		return rsh_strdup(sub_path);
+	/* remove leading path delimiters from sub_path */
+	for (; IS_ANY_SLASH(*sub_path); sub_path++);
+	if (dir_path[0] == 0 || IS_DOT_STR(dir_path)) {
+		/* do not extend sub_path for dir_path="." */
+		return rsh_strdup(sub_path);
 	}
-
+	/* remove trailing path delimiters from the directory path */
+	for (dir_len = strlen(dir_path); dir_len > 0 && IS_ANY_SLASH(dir_path[dir_len - 1]); dir_len--);
 	/* copy directory path */
-	len = strlen(dir_path);
-	buf = (char*)rsh_malloc(len + strlen(filename) + 2);
-	strcpy(buf, dir_path);
-
-	/* separate directory from filename */
-	if (len > 0 && !IS_PATH_SEPARATOR(buf[len - 1])) {
-		buf[len++] = SYS_PATH_SEPARATOR;
-	}
-
-	/* append filename */
-	strcpy(buf + len, filename);
+	buf = (char*)rsh_malloc(dir_len + strlen(sub_path) + 2);
+	memcpy(buf, dir_path, dir_len);
+	/* insert path separator */
+	buf[dir_len++] = (user_path_separator && opt.path_separator ? opt.path_separator : SYS_PATH_SEPARATOR);
+	strcpy(buf + dir_len, sub_path); /* append sub_path */
 	return buf;
 }
 
-#define IS_ANY_SLASH(c) ((c) == RSH_T('/') || (c) == RSH_T('\\'))
+#ifdef _WIN32
+/**
+ * Return wide-string filepath, obtained by concatinating a directory path and a sub-path.
+ *
+ * @param dir_path (nullable) directory path
+ * @param dir_len length of directory path in characters
+ * @param sub_path the filepath to append to the directory
+ * @return concatinated file path
+ */
+tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* sub_path)
+{
+	wchar_t* result;
+	wchar_t* long_path;
+	size_t len;
+	if (dir_path == 0 || IS_DOT_TSTR(dir_path))
+		dir_len = 0;
+	else {
+		if (IS_UNC_PREFIX(sub_path))
+			sub_path += UNC_PREFIX_SIZE;
+		if (sub_path[0] == L'.' && IS_PATH_SEPARATOR_W(sub_path[1]))
+			sub_path += 2;
+		/* remove leading path separators from sub_path */
+		for (; IS_PATH_SEPARATOR_W(*sub_path); sub_path++);
+		if (dir_len == (size_t)-1)
+			dir_len = wcslen(dir_path);
+	}
+	len = wcslen(sub_path);
+	result = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
+	if (dir_len > 0) {
+		memcpy(result, dir_path, dir_len * sizeof(wchar_t));
+		if (result[dir_len - 1] != L'\\' && sub_path[0]) {
+			/* append path separator to the directory */
+			result[dir_len++] = L'\\';
+		}
+	}
+	/* append sub_path */
+	memcpy(result + dir_len, sub_path, (len + 1) * sizeof(wchar_t));
+	long_path = get_long_path_if_needed(result);
+	if (!long_path)
+		return result;
+	free(result);
+	return long_path;
+}
+#endif /* _WIN32 */
 
 /**
  * Compare paths.
  *
- * @param a the first path
- * @param b the second path
+ * @param path the first path
+ * @param file the second path
  * @return 1 if paths a equal, 0 otherwise
  */
-int are_paths_equal(ctpath_t a, ctpath_t b)
+int are_paths_equal(ctpath_t path, file_t* file)
 {
-	if (!a || !b) return 0;
-	if (a[0] == RSH_T('.') && IS_ANY_SLASH(a[1])) a += 2;
-	if (b[0] == RSH_T('.') && IS_ANY_SLASH(b[1])) b += 2;
+	ctpath_t fpath;
+	if (!path || !file || !file->real_path) return 0;
+	fpath = file->real_path;
+	if (path[0] == RSH_T('.') && IS_ANY_TSLASH(path[1])) path += 2;
+	if (fpath[0] == RSH_T('.') && IS_ANY_TSLASH(fpath[1])) fpath += 2;
 
-	for (; *a; ++a, ++b) {
-		if (*a != *b && (!IS_ANY_SLASH(*b) || !IS_ANY_SLASH(*a))) {
+	for (; *path; ++path, ++fpath) {
+		if (*path != *fpath && (!IS_ANY_TSLASH(*path) || !IS_ANY_TSLASH(*fpath))) {
 			/* paths are different */
 			return 0;
 		}
 	}
 	/* check if both paths terminated */
-	return (*a == *b);
+	return (*path == *fpath);
 }
 
 /**
@@ -141,7 +181,7 @@ int is_regular_file(const char* path)
 {
 	int is_regular = 0;
 	file_t file;
-	file_init(&file, path, FILE_OPT_DONT_FREE_PATH);
+	file_init_by_print_path(&file, NULL, path, FileInitReusePath);
 	if (file_stat(&file, 0) >= 0) {
 		is_regular = FILE_ISREG(&file);
 	}
@@ -153,6 +193,17 @@ int is_regular_file(const char* path)
  * file_t functions
  *=========================================================================*/
 
+enum FileMemoryModeBits {
+	FileDontFreeRealPath = 0x1000,
+	FileDontFreePrintPath = 0x2000,
+	FileDontFreeNativePath = 0x4000,
+	FileMemoryModeMask = (FileDontFreeRealPath | FileDontFreePrintPath | FileDontFreeNativePath),
+	FileIsAsciiPrintPath = 0x10000,
+	FileDontUsePrintPath = 0x20000,
+	FileDontUseNativePath = 0x40000,
+	FileConversionMask = (FileIsAsciiPrintPath | FileDontUsePrintPath | FileDontUseNativePath)
+};
+
 /**
  * Initialize file_t structure, associating it with the given file path.
  *
@@ -160,50 +211,256 @@ int is_regular_file(const char* path)
  * @param path the file path
  * @param init_flags initialization flags
  */
-void file_init(file_t* file, const char* path, int init_flags)
+int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 {
 	memset(file, 0, sizeof(*file));
-	file->mode = (unsigned)init_flags;
-	if ((init_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
-		file->path = (char*)path;
-	} else {
-		file->path = rsh_strdup(path);
+	if (path[0] == RSH_T('.') && IS_ANY_TSLASH(path[1]))
+		path += 2;
+#if _WIN32
+	file->real_path = get_long_path_if_needed(path);
+	if (file->real_path)
+		file->mode = init_flags & FileMaskModeBits;
+	else
+#endif
+	{
+		if ((init_flags & FileInitReusePath) != 0) {
+			file->real_path = (tpath_t)path;
+			file->mode = (init_flags & FileMaskModeBits) | FileDontFreeRealPath;
+		} else {
+			file->real_path = rsh_tstrdup(path);
+			file->mode = init_flags & FileMaskModeBits;
+		}
 	}
+	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
+			file_stat(file, (init_flags & FileInitRunLstat)) < 0)
+		return -1;
+	if ((init_flags & FileInitUpdatePrintPathLastSlash) && opt.path_separator == ALIEN_PATH_SEPARATOR &&
+			!file_get_print_path(file, FPathUtf8 | FileInitUpdatePrintPathLastSlash))
+		return -1;
+	return 0;
 }
 
 #ifdef _WIN32
+static int file_statw(file_t* file);
+
 /**
- * Initialize file_t structure, associating it with the given file path.
+ * Detect path encoding, by trying file_statw() the file in available encodings.
+ * The order of encodings is detected by init_flags bit mask.
+ * On success detection file->real_path is allocated.
+ *
+ * @param file the file to store
+ * @param dir_path (nullable) directory path to prepend to printable path
+ * @param print_path printable path, which encoding shall be detected
+ * @param init_flags bit flags, helping to detect the encoding
+ * @return encoding on success, -1 on fail with error code stored in errno
+ */
+static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* print_path, unsigned init_flags)
+{
+	static unsigned encoding_flags[4] = { ConvertUtf8ToWcs | ConvertExact, ConvertNativeToWcs | ConvertExact,
+		ConvertUtf8ToWcs, ConvertNativeToWcs };
+	wchar_t* last_path = NULL;
+	unsigned convert_path = (dir_path ? 0 : ConvertPath);
+	int ascii = str_is_ascii(print_path);
+	int primary_path_index = ((opt.flags & OPT_UTF8) || (init_flags & FileInitUtf8PrintPath) || ascii ? 0 : 1);
+	int step = ((init_flags & FileInitUtf8PrintPath) || ascii ? 2 : 1);
+	int i;
+	assert(file && !file->real_path);
+	file->mode &= ~FileMaskStatBits;
+	if (!dir_path && ascii)
+		file->mode |= FileIsAsciiPrintPath;
+	/* detect encoding in two or four steps */
+	for (i = 0; i < 4; i += step) {
+		int path_index = i ^ primary_path_index;
+		wchar_t* path = convert_str_to_wcs(print_path, encoding_flags[path_index] | convert_path);
+		if (!path) {
+			if (!last_path)
+				continue;
+			file->real_path = last_path;
+			return 0;
+		}
+		if (dir_path) {
+			file->real_path = make_wpath(dir_path, (size_t)-1, path);
+			free(path);
+		} else
+			file->real_path = path;
+		if (i < 2) {
+			if (file_statw(file) == 0 || errno == EACCES) {
+				free(last_path);
+				return (i & 1);
+			}
+			if (i == 0) {
+				if (step == 2)
+					return 0;
+				last_path = file->real_path;
+				continue;
+			}
+			free(file->real_path);
+			file->real_path = last_path;
+			if(file->real_path)
+				return 0;
+		} else if (file->real_path) {
+			return (i & 1);
+		}
+		assert(last_path == NULL);
+	}
+	errno = EILSEQ;
+	return -1;
+}
+#endif
+
+/**
+ * Initialize file_t structure from a printable file path.
  *
  * @param file the file_t structure to initialize
- * @param tpath the file path
+ * @param prepend_dir the directory to prepend to the print_path, to construct the file path, can be NULL
+ * @param print_path the printable representation of the file path
  * @param init_flags initialization flags
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
-void file_tinit(file_t* file, ctpath_t tpath, int init_flags)
+int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print_path, unsigned init_flags)
 {
+	assert(print_path);
+	assert(!prepend_dir || prepend_dir->real_path);
 	memset(file, 0, sizeof(*file));
-	file->mode = (unsigned)init_flags & ~FILE_OPT_DONT_FREE_PATH;
-	if ((init_flags & FILE_OPT_DONT_FREE_PATH) != 0) {
-		file->wpath = (wchar_t*)tpath;
-		file->mode |= FILE_OPT_DONT_FREE_WPATH;
-	} else {
-		file->wpath = rsh_wcsdup(tpath);
+	file->mode = (init_flags & FileMaskModeBits);
+	if (init_flags & (FileIsStdStream | FileIsData)) {
+		file->print_path = print_path;
+		file->mode |= FileDontFreePrintPath | FileIsAsciiPrintPath;
+		return 0;
 	}
+	if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
+		print_path += 2;
+#ifdef _WIN32
+	{
+		const char** primary_path;
+		const char* dir_primary_path;
+		wchar_t* dir_path = (prepend_dir && !IS_DOT_TSTR(prepend_dir->real_path) ? prepend_dir->real_path : NULL);
+		int encoding = detect_path_encoding(file, dir_path, print_path, init_flags);
+		if (encoding < 0)
+			return -1;
+		if (encoding == 0) {
+			primary_path = &file->print_path;
+			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, FPathUtf8) : NULL);
+		} else {
+			primary_path = &file->native_path;
+			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, 0) : NULL);
+		}
+		if ((!dir_primary_path || IS_DOT_TSTR(dir_primary_path)) &&
+				(init_flags & (FileInitReusePath | FileInitUpdatePrintPathLastSlash)) == FileInitReusePath) {
+			*primary_path = print_path;
+			file->mode |= (encoding == 0 ? FileDontFreePrintPath : FileDontFreeNativePath);
+		} else {
+			file->print_path = make_path(dir_primary_path, print_path, 1);
+		}
+		return 0;
+	}
+#else
+	if (!prepend_dir || IS_DOT_STR(prepend_dir->real_path)) {
+		file_init(file, print_path, init_flags);
+	} else {
+		const char* path = make_path(prepend_dir->real_path, print_path, 0);
+		file_init(file, path, init_flags & ~FileInitReusePath);
+	}
+	if (!prepend_dir || IS_DOT_STR(prepend_dir->print_path) ||
+			(!prepend_dir->print_path && opt.path_separator != ALIEN_PATH_SEPARATOR)) {
+		if ((init_flags & FileInitReusePath) != 0) {
+			file->print_path = print_path;
+			file->mode |= FileDontFreePrintPath;
+		} else
+			file->print_path = rsh_strdup(print_path);
+	} else {
+		file->print_path = make_path(file_get_print_path(prepend_dir, 0), print_path, 1);
+	}
+#endif
+	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
+			file_stat(file, (init_flags & FileInitRunLstat)) < 0)
+		return -1;
+	return 0;
 }
 
 /**
- * Get the path of the file as a c-string.
- * On Windows lossy unicode conversion can be applied.
+ * Transform the given file path, according to passed flags.
+ *
+ * @param path the file path to transform
+ * @param flags bitmask containing FPathBaseName, FPathNotNull and FileInitUpdatePrintPathLastSlash bit flags
+ * @return transformed path
+ */
+static const char* handle_rest_of_path_flags(const char* path, unsigned flags)
+{
+	if (path == NULL)
+		return ((flags & FPathNotNull) ? (errno == EINVAL ? "(null)" : "(encoding error)") : NULL);
+	if ((flags & FileInitUpdatePrintPathLastSlash) != 0 && opt.path_separator) {
+		char* p = (char*)path - 1 + strlen(path);
+		for (; p >= path && !IS_ANY_SLASH(*p); p--);
+		if (p >= path)
+			*p = opt.path_separator;
+	}
+	return ((flags & FPathBaseName) && path ? get_basename(path) : path);
+}
+
+/**
+ * Get the print path of the file in utf8 or in a native encoding.
+ * Transformations specified by flags are applied.
+ * Encoding conversion on Windows can be lossy.
  *
  * @param file the file to get the path
- * @return the path of the file
+ * @param flags bitmask containing FPathUtf8, FPathBaseName, FPathNotNull
+ *              and FileInitUpdatePrintPathLastSlash bit flags
+ * @return transformed print path of the file. If FPathNotNull flag is not specified,
+ *         then NULL is returned on function fail with error code stored in errno.
+ *         If FPathNotNull flag is set, then error code is transformed to returned string.
  */
-const char* file_cpath(file_t* file)
+const char* file_get_print_path(file_t* file, unsigned flags)
 {
-	if (!file->path && file->wpath) file->path = w2c(file->wpath);
-	return file->path;
-}
+#ifdef _WIN32
+	unsigned convert_to;
+	unsigned dont_use_bit;
+	const char* secondary_path;
+	const char** primary_path = ((flags & FPathUtf8) || (file->mode & FileIsAsciiPrintPath) ? &file->print_path : &file->native_path);
+	if (*primary_path)
+		return handle_rest_of_path_flags(*primary_path, flags);
+	if (flags & FPathUtf8) {
+		convert_to = ConvertToUtf8;
+		dont_use_bit = FileDontUsePrintPath;
+		secondary_path = file->native_path;
+	} else {
+		convert_to = ConvertToNative;
+		dont_use_bit = FileDontUseNativePath;
+		secondary_path = file->print_path;
+	}
+	if (secondary_path) {
+		if ((file->mode & dont_use_bit) == 0) {
+			*primary_path = convert_str_encoding(secondary_path, convert_to);
+			if (!*primary_path)
+				file->mode |= dont_use_bit;
+		} else
+			errno = EILSEQ;
+		return handle_rest_of_path_flags(*primary_path, flags);
+	}
+	if (!file->real_path) {
+		errno = EINVAL;
+		return handle_rest_of_path_flags(NULL, flags);
+	}
+	*primary_path = convert_wcs_to_str(file->real_path, convert_to | ConvertPath);
+	if (!*primary_path)
+		return handle_rest_of_path_flags(NULL, flags);
+	if (str_is_ascii(*primary_path)) {
+		file->mode |= FileIsAsciiPrintPath;
+		if (primary_path != &file->print_path) {
+			file->print_path = *primary_path;
+			file->native_path = NULL;
+			primary_path = &file->print_path;
+		}
+	}
+	return handle_rest_of_path_flags(*primary_path, flags);
+#else
+	if (!file->print_path && !file->real_path)
+		errno = EINVAL;
+	if (!file->print_path && (flags & FileInitUpdatePrintPathLastSlash))
+		file->print_path = rsh_strdup(file->real_path);
+	return handle_rest_of_path_flags((file->print_path ? file->print_path : file->real_path), flags);
 #endif
+}
 
 /**
  * Free the memory allocated by the fields of the file_t structure.
@@ -212,14 +469,17 @@ const char* file_cpath(file_t* file)
  */
 void file_cleanup(file_t* file)
 {
-	if ((file->mode & FILE_OPT_DONT_FREE_PATH) == 0)
-		free(file->path);
-	file->path = NULL;
+	if (!(file->mode & FileDontFreeRealPath))
+		free(file->real_path);
+	file->real_path = NULL;
+	if (!(file->mode & FileDontFreePrintPath))
+		free((char*)file->print_path);
+	file->print_path = NULL;
 
 #ifdef _WIN32
-	if ((file->mode & FILE_OPT_DONT_FREE_WPATH) == 0)
-		free(file->wpath);
-	file->wpath = NULL;
+	if ((file->mode & FileDontFreeNativePath) == 0)
+		free((char*)file->native_path);
+	file->native_path = NULL;
 #endif /* _WIN32 */
 
 	free(file->data);
@@ -230,37 +490,139 @@ void file_cleanup(file_t* file)
 }
 
 /**
- * Append the specified suffix to the src file path.
+ * Clone existing file_t structure to another.
  *
- * @param dst result of appending
- * @param src the path to append the suffix to
- * @param suffix the suffix to append
+ * @param file the file_t structure to clone to
+ * @param orig_file the file to clone
  */
-void file_path_append(file_t* dst, const file_t* src, const char* suffix)
+void file_clone(file_t* file, const file_t* orig_file)
 {
-	size_t src_len;
-	size_t dst_len;
-	memset(dst, 0, sizeof(*dst));
+	memset(file, 0, sizeof(*file));
+	file->mode = orig_file->mode &  FileMaskModeBits;
+	if (orig_file->real_path)
+		file->real_path = rsh_tstrdup(orig_file->real_path);
+	if (orig_file->print_path)
+		file->print_path = rsh_strdup(orig_file->print_path);
 #ifdef _WIN32
-	if (src->wpath)
-	{
-		wchar_t* wsuffix = c2w(suffix, 0);
-		assert(wsuffix != 0);
-		src_len = wcslen(src->wpath);
-		dst_len = src_len + wcslen(wsuffix) + 1;
-		dst->wpath = (wchar_t*)rsh_malloc(dst_len * sizeof(wchar_t));
-		wcscpy(dst->wpath, src->wpath);
-		wcscpy(dst->wpath + src_len, wsuffix);
-		dst->path = w2c(dst->wpath); /* for legacy file handling */
-		return;
-	}
+	if (orig_file->native_path)
+		file->native_path = rsh_strdup(orig_file->native_path);
 #endif
-	assert(!!src->path);
-	src_len = strlen(src->path);
-	dst_len = src_len + strlen(suffix) + 1;
-	dst->path = (char*)rsh_malloc(dst_len);
-	strcpy(dst->path, src->path);
-	strcpy(dst->path + src_len, suffix);
+}
+
+/**
+ * Swap members of two file_t structures.
+ *
+ * @param first the first file
+ * @param second the second file
+ */
+void file_swap(file_t* first, file_t* second)
+{
+	file_t tmp;
+	memcpy(&tmp, first, sizeof(file_t));
+	memcpy(first, second, sizeof(file_t));
+	memcpy(second, &tmp, sizeof(file_t));
+}
+
+/**
+ * Get a modified file path.
+ *
+ * @param path the file path to modify
+ * @param str the string to insert into/append to the source file path
+ * @param operation the operation determinating how to modify the file path, can be one of the values
+ *                  FModifyAppendSuffix, FModifyInsertBeforeExtension, FModifyRemoveExtension, FModifyGetParentDir
+ * @return allocated and modified file path on success, NULL on fail
+ */
+static char* get_modified_path(const char* path, const char* str, int operation)
+{
+	size_t start_pos = (size_t)-1;
+	size_t end_pos = (size_t)-1;
+	if (!path)
+		return NULL;
+	if (operation != FModifyAppendSuffix) {
+		if (operation == FModifyGetParentDir) {
+			end_pos = strlen(path);
+			start_pos = (end_pos > 0 ? end_pos - 1 : 0);
+			for (; start_pos > 0 && !IS_ANY_SLASH(path[start_pos]); start_pos--);
+			for (; start_pos > 0 && IS_ANY_SLASH(path[start_pos]); start_pos--);
+			if (start_pos == 0)
+				return rsh_strdup(".");
+		} else {
+			char* point = strrchr(path, '.');
+			if (!point)
+				return NULL;
+			start_pos = point - path;
+			if (operation == FModifyInsertBeforeExtension)
+				end_pos = start_pos;
+		}
+	}
+	return str_replace_n(path, start_pos, end_pos, str);
+}
+
+#ifdef _WIN32
+/**
+ * Get a modified file path.
+ *
+ * @param path the file path to modify
+ * @param str the string to insert into/append to the source file path
+ * @param operation the operation determinating how to modify the file path, can be one of the values
+ *                  FModifyAppendSuffix, FModifyInsertBeforeExtension, FModifyRemoveExtension, FModifyGetParentDir
+ * @return allocated and modified file path on success, NULL on fail
+ */
+static tpath_t get_modified_tpath(ctpath_t path, const char* str, int operation)
+{
+	size_t start_pos = (size_t)-1;
+	size_t end_pos = (size_t)-1;
+	if (!path)
+		return NULL;
+	if (operation != FModifyAppendSuffix) {
+		if (operation == FModifyGetParentDir) {
+			end_pos = wcslen(path);
+			start_pos = (end_pos > 0 ? end_pos - 1 : 0);
+			for (; start_pos > 0 && !IS_ANY_TSLASH(path[start_pos]); start_pos--);
+			for (; start_pos > 0 && IS_ANY_TSLASH(path[start_pos]); start_pos--);
+			if (start_pos == 0)
+				return rsh_wcsdup(L".");
+		} else {
+			rsh_tchar* point = wcsrchr(path, L'.');
+			if (!point)
+				return NULL;
+			start_pos = point - path;
+			if (operation == FModifyInsertBeforeExtension)
+				end_pos = start_pos;
+		}
+	}
+	return wcs_replace_n(path, start_pos, end_pos, str);
+}
+#else
+# define get_modified_tpath get_modified_path
+#endif
+
+/**
+ * Initialize a (destination) file by modifying the path of another (source) file.
+ *
+ * @param dst destination file
+ * @param src source file
+ * @param str the string to insert into/append to the source file path
+ * @param operation the operation to do on src file, can be one of the values
+ *                  FModifyAppendSuffix, FModifyInsertBeforeExtension, FModifyRemoveExtension, FModifyGetParentDir
+ * @return 0 on success, -1 on fail
+ */
+int file_modify_path(file_t* dst, file_t* src, const char* str, int operation)
+{
+	if ((src->mode & (FileIsStdStream | FileIsData)) != 0)
+		return -1;
+	assert(operation == FModifyRemoveExtension || operation == FModifyGetParentDir || str);
+	assert(operation == FModifyAppendSuffix || operation == FModifyInsertBeforeExtension || !str);
+	memcpy(dst, src, sizeof(file_t));
+	dst->mode &= ~FileMemoryModeMask;
+	dst->print_path = NULL;
+	IF_WINDOWS(dst->native_path = NULL);
+	dst->real_path = get_modified_tpath(src->real_path, str, operation);
+	if (!dst->real_path)
+		return -1;
+	dst->print_path = get_modified_path(src->print_path, str, operation);
+	IF_WINDOWS(dst->native_path = get_modified_path(src->native_path, str, operation));
+	return 0;
 }
 
 #ifdef _WIN32
@@ -268,20 +630,20 @@ void file_path_append(file_t* dst, const file_t* src, const char* suffix)
  * Retrieve file information (type, size, mtime) into file_t fields.
  *
  * @param file the file information
- * @return 0 on success, -1 on error
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 static int file_statw(file_t* file)
 {
 	WIN32_FILE_ATTRIBUTE_DATA data;
-	wchar_t* long_path = get_long_path_if_needed(file->wpath);
+	wchar_t* long_path = get_long_path_if_needed(file->real_path);
 
 	/* read file attributes */
-	if (GetFileAttributesExW((long_path ? long_path : file->wpath), GetFileExInfoStandard, &data)) {
+	if (GetFileAttributesExW((long_path ? long_path : file->real_path), GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
-		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_IFDIR : FILE_IFREG);
+		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FileIsDir : FileIsReg);
 		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
-			file->mode |= FILE_IFLNK;
+			file->mode |= FileIsLnk;
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
@@ -301,62 +663,53 @@ static int file_statw(file_t* file)
  *
  * @param file the file information
  * @param fstat_flags bitmask consisting of FileStatModes bits
- * @return 0 on success, -1 on error
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 int file_stat(file_t* file, int fstat_flags)
 {
 #ifdef _WIN32
-	int i;
 	(void)fstat_flags; /* ignore on windows */
-
-	file->size  = 0;
-	file->mtime = 0;
-	file->mode &= (FILE_OPT_DONT_FREE_PATH | FILE_OPT_DONT_FREE_WPATH | FILE_IFROOT | FILE_IFSTDIN);
-	if (file->wpath)
-		return file_statw(file);
-
-	for (i = 0; i < 2; i++) {
-		file->wpath = c2w_long_path(file->path, i);
-		if (file->wpath == NULL) continue;
-		if (file_statw(file) == 0) return 0; /* success */
-		free(file->wpath);
-		file->wpath = NULL;
-	}
-	assert(errno != 0);
-	return -1;
 #else
 	struct stat st;
+#endif
 	file->size  = 0;
 	file->mtime = 0;
-	file->mode  &= (FILE_OPT_DONT_FREE_PATH | FILE_IFROOT | FILE_IFSTDIN);
-
-	if (stat(file->path, &st))
+	file->mode &= ~FileMaskStatBits;
+	if (FILE_ISDATA(file) || FILE_ISSTDSTREAM(file))
+		return 0;
+	else if (!file->real_path) {
+		errno = EINVAL;
+		return -1;
+	}
+#ifdef _WIN32
+	return file_statw(file);
+#else
+	if (stat(file->real_path, &st))
 		return -1;
 	file->size  = st.st_size;
 	file->mtime = st.st_mtime;
 
 	if (S_ISDIR(st.st_mode)) {
-		file->mode |= FILE_IFDIR;
+		file->mode |= FileIsDir;
 	} else if (S_ISREG(st.st_mode)) {
 		/* it's a regular file or a symlink pointing to a regular file */
-		file->mode |= FILE_IFREG;
+		file->mode |= FileIsReg;
 	}
 
-	if ((fstat_flags & FUseLstat) && lstat(file->path, &st) == 0) {
+	if ((fstat_flags & FUseLstat) && lstat(file->real_path, &st) == 0) {
 		if (S_ISLNK(st.st_mode))
-			file->mode |= FILE_IFLNK; /* it's a symlink */
+			file->mode |= FileIsLnk; /* it's a symlink */
 	}
 	return 0;
 #endif
 }
-
 
 /**
  * Open the file and return its decriptor.
  *
  * @param file the file information, including the path
  * @param fopen_flags bitmask consisting of FileFOpenModes bits
- * @return file descriptor on success, NULL on error
+ * @return file descriptor on success, NULL on fail with error code stored in errno
  */
 FILE* file_fopen(file_t* file, int fopen_flags)
 {
@@ -364,41 +717,14 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 		0, RSH_T("rb"), RSH_T("wb"), RSH_T("r+b") };
 	const file_tchar* mode = possible_modes[fopen_flags & FOpenMask];
 	assert((fopen_flags & FOpenRW) != 0);
-	assert((fopen_flags & FOpenRW) != 0);
-#ifdef _WIN32
-	if (!file->wpath)
-	{
-		int i;
-		FILE* fd = 0;
-		for (i = 0; i < 2; i++) {
-			file->wpath = c2w_long_path(file->path, i);
-			if (file->wpath == NULL) continue;
-			fd = _wfsopen(file->wpath, mode, _SH_DENYNO);
-			if (fd || errno != ENOENT) break;
-			free(file->wpath);
-			file->wpath = 0;
-		}
-		return fd;
+	if (!file->real_path) {
+		errno = EINVAL;
+		return NULL;
 	}
-	return _wfsopen(file->wpath, mode, _SH_DENYNO);
-#else
-	return fopen(file->path, mode);
-#endif
-}
-
-/**
- * Open file at the specified path and return its decriptor.
- *
- * @param tpath the file path
- * @param tmode the mode for file access
- * @return file descriptor on success, NULL on error
- */
-FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode)
-{
 #ifdef _WIN32
-	return _wfsopen(tpath, tmode, _SH_DENYNO);
+	return _wfsopen(file->real_path, mode, _SH_DENYNO);
 #else
-	return fopen(tpath, tmode);
+	return fopen(file->real_path, mode);
 #endif
 }
 
@@ -407,28 +733,28 @@ FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode)
  *
  * @param from the source file
  * @param to the destination path
- * @return 0 on success, -1 on error
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
-int file_rename(file_t* from, file_t* to)
+int file_rename(const file_t* from, const file_t* to)
 {
 #ifdef _WIN32
-	if (from->wpath && to->wpath)
-	{
-		/* Windows: file must be removed before overwriting it */
-		_wunlink(to->wpath);
-		return _wrename(from->wpath, to->wpath);
+	if (!from->real_path || !to->real_path) {
+		errno = EINVAL;
+		return -1;
 	}
-	assert(from->path && to->path);
-	unlink(to->path);
+	/* Windows: file must be removed before overwriting it */
+	_wunlink(to->real_path);
+	return _wrename(from->real_path, to->real_path);
+#else
+	return rename(from->real_path, to->real_path);
 #endif
-	return rename(from->path, to->path);
 }
 
 /**
  * Rename a given file to *.bak, if it exists.
  *
  * @param file the file to move
- * @return 0 on success, -1 on error and errno is set
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 int file_move_to_bak(file_t* file)
 {
@@ -436,7 +762,7 @@ int file_move_to_bak(file_t* file)
 		int res;
 		int save_errno;
 		file_t bak_file;
-		file_path_append(&bak_file, file, ".bak");
+		file_modify_path(&bak_file, file, ".bak", FModifyAppendSuffix);
 		res = file_rename(file, &bak_file);
 		save_errno = errno;
 		file_cleanup(&bak_file);
@@ -451,14 +777,14 @@ int file_move_to_bak(file_t* file)
 /**
  * Check if the specified path points to a readable file.
  *
- * @param wpath file path
+ * @param real_path file path
  * @param is_readable pointer to the result, it is set to 1, if the file is readable, to 0 otherwise
  * @return 1 if the file with such path exists, 0 otherwise
  */
-static int wpath_is_readable(wchar_t* wpath, int* is_readable)
+static int real_path_is_readable(wchar_t* real_path, int* is_readable)
 {
 	/* note: using _wsopen, since _waccess doesn't check permissions */
-	int fd = _wsopen(wpath, _O_RDONLY | _O_BINARY, _SH_DENYNO);
+	int fd = _wsopen(real_path, _O_RDONLY | _O_BINARY, _SH_DENYNO);
 	*is_readable = (fd >= 0);
 	if (fd >= 0) {
 		_close(fd);
@@ -477,22 +803,14 @@ static int wpath_is_readable(wchar_t* wpath, int* is_readable)
 int file_is_readable(file_t* file)
 {
 #ifdef _WIN32
-	int i, is_readable;
-	if (file->wpath) {
-		(void)wpath_is_readable(file->wpath, &is_readable);
+	if (file->real_path) {
+		int is_readable;
+		(void)real_path_is_readable(file->real_path, &is_readable);
 		return is_readable;
-	}
-	for (i = 0; i < 2; i++) {
-		wchar_t* wpath = c2w_long_path(file->path, i);
-		if(wpath && wpath_is_readable(wpath, &is_readable)) {
-			file->wpath = wpath;
-			return is_readable;
-		}
-		free(wpath);
 	}
 	return 0;
 #else
-	return (access(file->path, R_OK) == 0);
+	return (access(file->real_path, R_OK) == 0);
 #endif
 }
 
@@ -506,18 +824,17 @@ int file_is_readable(file_t* file)
  * using the file_list_read() function.
  *
  * @param list the file_list_t structure to initialize
- * @param file_path the file to open
- * @return 0 on success, -1 on error and set errno
+ * @param file the file to open
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
-int file_list_open(file_list_t* list, file_t* file_path)
+int file_list_open(file_list_t* list, file_t* file)
 {
 	memset(list, 0, sizeof(file_list_t));
-	if (!!(file_path->mode & FILE_IFSTDIN))
-	{
+	if (FILE_ISSTDIN(file)) {
 		list->fd = stdin;
 		return 0;
 	}
-	list->fd = file_fopen(file_path, FOpenRead | FOpenBin);
+	list->fd = file_fopen(file, FOpenRead | FOpenBin);
 	return (list->fd ? 0 : -1);
 }
 
@@ -534,7 +851,8 @@ void file_list_close(file_list_t* list)
 }
 
 enum FileListStateBits {
-	NotFirstLine = 1
+	NotFirstLine = 1,
+	FileListHasBom = FileInitUtf8PrintPath
 };
 
 /**
@@ -552,13 +870,18 @@ int file_list_read(file_list_t* list)
 		char* line = buf;
 		char* buf_back = buf + sizeof(buf) - 1;
 		/* detect and skip BOM */
-		if (STARTS_WITH_UTF8_BOM(buf) && !(list->state & NotFirstLine))
+		if (STARTS_WITH_UTF8_BOM(buf)) {
 			line += 3;
+			if (!(list->state & NotFirstLine))
+				list->state |= FileListHasBom;
+		}
 		list->state |= NotFirstLine;
 		for (p = line; p < buf_back && *p && *p != '\r' && *p != '\n'; p++);
 		*p = 0;
-		if (*line == '\0') continue; /* skip empty lines */
-		file_init(&list->current_file, line, 0);
+		if (*line == '\0')
+			continue; /* skip empty lines */
+		file_init_by_print_path(&list->current_file, NULL, line,
+			(list->state & FileInitUtf8PrintPath));
 		return 1;
 	}
 	return 0;
@@ -580,13 +903,12 @@ struct WIN_DIR_t
  * Open directory iterator for reading the directory content.
  *
  * @param dir_path directory path
- * @return pointer to directory stream. On error, NULL is returned,
- *         and errno is set appropriately.
+ * @return pointer to directory stream, NULL on fail with error code stored in errno
  */
 WIN_DIR* win_opendir(const char* dir_path)
 {
 	WIN_DIR* d;
-	wchar_t* wpath;
+	wchar_t* real_path;
 
 	/* append '\*' to the dir_path */
 	size_t len = strlen(dir_path);
@@ -602,16 +924,17 @@ WIN_DIR* win_opendir(const char* dir_path)
 	}
 	memset(d, 0, sizeof(WIN_DIR));
 
-	wpath = c2w_long_path(path, 0);
-	d->hFind = (wpath != NULL ?
-		FindFirstFileW(wpath, &d->findFileData) : INVALID_HANDLE_VALUE);
-	free(wpath);
+	real_path = convert_str_to_wcs(path, (ConvertToPrimaryEncoding | ConvertExact | ConvertPath));
+	d->hFind = (real_path != NULL ?
+		FindFirstFileW(real_path, &d->findFileData) : INVALID_HANDLE_VALUE);
+	free(real_path);
 
 	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_ACCESS_DENIED) {
-		wpath = c2w_long_path(path, 1); /* try to use secondary codepage */
-		if (wpath) {
-			d->hFind = FindFirstFileW(wpath, &d->findFileData);
-			free(wpath);
+		/* try the secondary codepage */
+		real_path = convert_str_to_wcs(path, (ConvertToSecondaryEncoding | ConvertExact | ConvertPath));
+		if (real_path) {
+			d->hFind = FindFirstFileW(real_path, &d->findFileData);
+			free(real_path);
 		}
 	}
 	free(path);
@@ -642,11 +965,11 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 	WIN_DIR* d;
 
 	/* append '\*' to the dir_path */
-	wchar_t* wpath = make_pathw(dir_path, (size_t)-1, L"*");
+	wchar_t* real_path = make_wpath(dir_path, (size_t)-1, L"*");
 	d = (WIN_DIR*)rsh_malloc(sizeof(WIN_DIR));
 
-	d->hFind = FindFirstFileW(wpath, &d->findFileData);
-	free(wpath);
+	d->hFind = FindFirstFileW(real_path, &d->findFileData);
+	free(real_path);
 	if (d->hFind == INVALID_HANDLE_VALUE && GetLastError() == ERROR_ACCESS_DENIED) {
 		free(d);
 		errno = EACCES;
@@ -682,7 +1005,6 @@ void win_closedir(WIN_DIR* d)
 struct win_dirent* win_readdir(WIN_DIR* d)
 {
 	char* filename;
-	int failed;
 
 	if (d->state == -1) return NULL;
 	if (d->dir.d_name != NULL) {
@@ -700,27 +1022,18 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 		}
 		d->state++;
 
-		if (d->findFileData.cFileName[0] == L'.' &&
-			(d->findFileData.cFileName[1] == 0 ||
-			(d->findFileData.cFileName[1] == L'.' &&
-			d->findFileData.cFileName[2] == 0))) {
-				/* simplified implementation, skips '.' and '..' names */
-				continue;
-		}
+		if (d->findFileData.cFileName[0] == L'.' && (d->findFileData.cFileName[1] == 0 ||
+				(d->findFileData.cFileName[1] == L'.' && d->findFileData.cFileName[2] == 0)))
+			continue; /* simplified implementation, skips '.' and '..' names */
 
-		d->dir.d_name = filename = wchar_to_cstr(d->findFileData.cFileName, WIN_DEFAULT_ENCODING, &failed);
-
-		if (filename && !failed) {
+		d->dir.d_name = filename = convert_wcs_to_str(d->findFileData.cFileName, (ConvertToPrimaryEncoding | ConvertExact));
+		if (filename) {
 			d->dir.d_wname = d->findFileData.cFileName;
 			d->dir.d_isdir = (0 != (d->findFileData.dwFileAttributes &
 				FILE_ATTRIBUTE_DIRECTORY));
 			return &d->dir;
 		}
-		/* quietly skip an invalid filename and repeat the search */
-		if (filename) {
-			free(filename);
-			d->dir.d_name = NULL;
-		}
+		/* quietly skip the file and repeat the search, if filename conversion failed */
 	}
 }
 #endif /* _WIN32 */

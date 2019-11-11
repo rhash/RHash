@@ -155,12 +155,12 @@ static unsigned hash_check_mask_by_digest_size(int digest_size)
 }
 
 enum FmtBitFlags {
-  FmtHex   = 1,
-  FmtBase32LoweCase = 2,
-  FmtBase32UpperCase = 4,
-  FmtBase64   = 8,
-  FmtBase32 = (FmtBase32LoweCase | FmtBase32UpperCase),
-  FmtAll   = (FmtHex | FmtBase32 | FmtBase64)
+	FmtHex   = 1,
+	FmtBase32LoweCase = 2,
+	FmtBase32UpperCase = 4,
+	FmtBase64   = 8,
+	FmtBase32 = (FmtBase32LoweCase | FmtBase32UpperCase),
+	FmtAll   = (FmtHex | FmtBase32 | FmtBase64)
 };
 
 /**

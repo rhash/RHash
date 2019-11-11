@@ -307,7 +307,7 @@ static void set_path_separator(options_t* o, char* sep, unsigned param)
 		o->path_separator = '/';
 #endif
 	} else {
-		log_error(_("path-separator is not '/' or '\\': %s\n"), sep);
+		log_error(_("path-separator is neither '/' nor '\\': %s\n"), sep);
 		rsh_exit(2);
 	}
 }
@@ -404,8 +404,8 @@ cmdline_opt_t cmdline_opt[] =
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
-	{ F_TFNC, 'm',   0, "message", add_special_file, FILE_IFDATA },
-	{ F_TFNC,   0,   0, "file-list", add_special_file, FILE_IFLIST },
+	{ F_TFNC, 'm',   0, "message", add_special_file, FileIsData },
+	{ F_TFNC,   0,   0, "file-list", add_special_file, FileIsList },
 	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
 	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
@@ -436,11 +436,11 @@ cmdline_opt_t cmdline_opt[] =
 
 #ifdef _WIN32 /* code pages (windows only) */
 	{ F_UENC,   0,   0, "utf8", &opt.flags, OPT_UTF8 },
-	{ F_UENC,   0,   0, "win",  &opt.flags, OPT_ANSI },
-	{ F_UENC,   0,   0, "dos",  &opt.flags, OPT_OEM },
+	{ F_UENC,   0,   0, "win",  &opt.flags, OPT_ENC_WIN },
+	{ F_UENC,   0,   0, "dos",  &opt.flags, OPT_ENC_DOS },
 	/* legacy: the following two options are left for compatibility */
-	{ F_UENC,   0,   0, "ansi", &opt.flags, OPT_ANSI },
-	{ F_UENC,   0,   0, "oem",  &opt.flags, OPT_OEM },
+	{ F_UENC,   0,   0, "ansi", &opt.flags, OPT_ENC_WIN },
+	{ F_UENC,   0,   0, "oem",  &opt.flags, OPT_ENC_DOS },
 #endif
 	{ 0,0,0,0,0,0 }
 };
@@ -503,10 +503,10 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 		}
 		else if (option_type == F_UFNC) {
 			/* convert from UTF-16 to UTF-8 */
-			value = wchar_to_cstr((wchar_t*)option->parameter, CP_UTF8, NULL);
+			value = convert_wcs_to_str((wchar_t*)option->parameter, ConvertToUtf8 | ConvertExact);
 		} else {
 			/* convert from UTF-16 */
-			value = w2c((wchar_t*)option->parameter);
+			value = convert_wcs_to_str((wchar_t*)option->parameter, ConvertToPrimaryEncoding);
 		}
 		rsh_vector_add_ptr(opt.mem, value);
 #else
@@ -562,8 +562,8 @@ static const char* find_conf_file(void)
 #ifndef _WIN32 /* Linux/Unix part */
 	/* first check for $XDG_CONFIG_HOME/rhash/rhashrc file */
 	if ( (dir1 = getenv("XDG_CONFIG_HOME")) ) {
-		dir1 = make_path(dir1, "rhash");
-		path = make_path(dir1, CONFIG_FILENAME);
+		dir1 = make_path(dir1, "rhash", 0);
+		path = make_path(dir1, CONFIG_FILENAME, 0);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -573,7 +573,7 @@ static const char* find_conf_file(void)
 	}
 	/* then check for $HOME/.rhashrc file */
 	if ( (dir1 = getenv("HOME")) ) {
-		path = make_path(dir1, ".rhashrc");
+		path = make_path(dir1, ".rhashrc", 0);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
 			return (conf_opt.config_file = path);
@@ -590,8 +590,8 @@ static const char* find_conf_file(void)
 
 	/* first check for the %APPDATA%\RHash\rhashrc config */
 	if ( (dir1 = getenv("APPDATA")) ) {
-		dir1 = make_path(dir1, "RHash");
-		path = make_path(dir1, CONFIG_FILENAME);
+		dir1 = make_path(dir1, "RHash", 0);
+		path = make_path(dir1, CONFIG_FILENAME, 0);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -603,8 +603,8 @@ static const char* find_conf_file(void)
 	/* then check for %HOMEDRIVE%%HOMEPATH%\rhashrc */
 	/* note that %USERPROFILE% is generally not a user home dir */
 	if ( (dir1 = getenv("HOMEDRIVE")) && (path = getenv("HOMEPATH"))) {
-		dir1 = make_path(dir1, path);
-		path = make_path(dir1, CONFIG_FILENAME);
+		dir1 = make_path(dir1, path, 0);
+		path = make_path(dir1, CONFIG_FILENAME, 0);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -614,8 +614,8 @@ static const char* find_conf_file(void)
 	}
 
 	/* check for ${PROGRAM_DIR}\rhashrc */
-	if (rhash_data.program_dir && (dir1 = w2c(rhash_data.program_dir))) {
-		path = make_path(dir1, CONFIG_FILENAME);
+	if (rhash_data.program_dir && (dir1 = convert_wcs_to_str(rhash_data.program_dir, ConvertToPrimaryEncoding))) {
+		path = make_path(dir1, CONFIG_FILENAME, 0);
 		free(dir1);
 		if (is_regular_file(path)) {
 			rsh_vector_add_ptr(opt.mem, path);
@@ -648,7 +648,7 @@ static int read_config(void)
 
 	if (!find_conf_file()) return 0;
 
-	file_init(&file, conf_opt.config_file, FILE_OPT_DONT_FREE_PATH);
+	file_init_by_print_path(&file, 0, conf_opt.config_file, 0);
 	fd = file_fopen(&file, FOpenRead);
 	file_cleanup(&file);
 	if (!fd) return -1;
@@ -746,7 +746,8 @@ static void parse_long_option(parsed_option_t* option, rsh_tchar*** parg)
 		length -= 2;
 	} else fail = 1;
 
-	if (fail) fail_on_unknow_option(w2c(**parg));
+	if (fail)
+		fail_on_unknow_option(convert_wcs_to_str(**parg, ConvertToUtf8));
 #else
 	option->name = **parg;
 	name =  **parg + 2; /* skip "--" */
@@ -852,7 +853,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 #ifdef _WIN32
 				if (((unsigned)*ptr) >= 128) {
 					ptr[1] = 0;
-					fail_on_unknow_option(w2c(ptr));
+					fail_on_unknow_option(convert_wcs_to_str(ptr, ConvertToUtf8));
 				}
 #endif
 				next_opt = new_option(cmd_line);

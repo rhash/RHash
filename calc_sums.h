@@ -16,28 +16,18 @@ struct file_t;
  * Information about a file to calculate/verify hashes for.
  */
 struct file_info {
-	/* the file path (in system encoding). It can be changed
-	 * if a crc sum is embedded into the filename. */
-	char* full_path;
-	const char* print_path; /* the part of the path for printing */
-	char* utf8_print_path;  /* file path in UTF8 */
 	uint64_t size;          /* the size of the hashed file */
 	uint64_t msg_offset;    /* rctx->msg_size before hashing this file */
 	double time;            /* file processing time in seconds */
 	struct file_t* file;    /* the file being processed */
 	struct rhash_context* rctx; /* state of hash algorithms */
 	int processing_result;  /* -1/-2 for i/o error, 0 on success, 1 on a hash mismatch */
-	char* allocated_ptr;
-
 	unsigned sums_flags; /* mask of ids of calculated hash functions */
 	struct hash_check hc; /* hash values parsed from a hash file */
 };
 
-void file_info_destroy(struct file_info*); /* free allocated memory */
-const char* file_info_get_utf8_print_path(struct file_info*);
-
 int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
-int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file, const char* print_path);
+int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file);
 int check_hash_file(struct file_t* file, int chdir);
 int rename_file_by_embeding_crc32(struct file_info* info);
 

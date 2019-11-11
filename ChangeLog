@@ -1,3 +1,7 @@
+Tue 12 Nov 2019 Aleksey
+	* correctly align UTF8 file paths, while printing verification results
+	* respect UTF8 BOM when updating or verifying a hash file
+
 Thu 17 Oct 2019 Aleksey
 	* print a new-line after ed2k link, when --ed2k-link option is passed
 

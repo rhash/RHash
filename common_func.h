@@ -33,11 +33,15 @@ void sprintI64(char* dst, uint64_t number, int max_width);
 int  int_len(uint64_t num);
 
 int  urlencode(char* dst, const char* name);
+size_t count_utf8_symbols(const char* str);
 int  is_binary_string(const char* str);
 char* str_tolower(const char* str);
 char* str_trim(char* str);
 char* str_set(char* buf, int ch, int size);
-size_t strlen_utf8_c(const char* str);
+char* str_replace_n(const char* src, size_t start_pos, size_t end_pos, const char* replace);
+#ifdef _WIN32
+wchar_t* wcs_replace_n(const wchar_t* src, size_t start_pos, size_t end_pos, const char* replace);
+#endif /* _WIN32 */
 
 /* check if character starts a commentary in the program config file */
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
@@ -56,13 +60,8 @@ typedef const rsh_tchar* ctstr_t;
 
 #ifdef _WIN32
 # define IF_WINDOWS(code) code
-# define is_utf8() win_is_utf8()
-# define to_utf8(str) str_to_utf8(str)
 #else /* non _WIN32 part */
 # define IF_WINDOWS(code)
-/* stub for utf8 */
-# define is_utf8() 1
-# define to_utf8(str) NULL
 #endif /* _WIN32 */
 
 /* version information */
@@ -136,7 +135,10 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline);
 
 #ifdef _WIN32
 #define rsh_wcsdup(str) rhash_wcsdup(str, __FILE__, __LINE__)
+#define rsh_tstrdup(str) rsh_wcsdup(str)
 wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
+#else
+#define rsh_tstrdup(str) rsh_strdup(str)
 #endif
 
 extern void (*rsh_report_error)(const char* srcfile, int srcline, const char* format, ...);

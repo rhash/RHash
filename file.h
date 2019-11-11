@@ -13,21 +13,26 @@ extern "C" {
 #ifdef _WIN32
 typedef wchar_t file_tchar;
 # define SYS_PATH_SEPARATOR '\\'
+# define ALIEN_PATH_SEPARATOR '/'
 # define IS_PATH_SEPARATOR(c) ((c) == '\\' || (c) == '/')
 # define IS_PATH_SEPARATOR_W(c) ((c) == L'\\' || (c) == L'/')
 #else
 typedef  char file_tchar;
 # define SYS_PATH_SEPARATOR '/'
+# define ALIEN_PATH_SEPARATOR '\\'
 # define IS_PATH_SEPARATOR(c) ((c) == '/')
 #endif /* _WIN32 */
 typedef file_tchar* tpath_t;
 typedef const file_tchar* ctpath_t;
 
 /* Generic path functions */
-const char* get_basename(const char* path);
-char* get_dirname(const char* path);
-char* make_path(const char* dir, const char* filename);
-int are_paths_equal(ctpath_t a, ctpath_t b);
+char* make_path(const char* dir, const char* filename, int user_path_separator);
+#ifdef _WIN32
+tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* filename);
+# define make_tpath(dir_path, filename) make_wpath(dir_path, (size_t)-1, filename)
+#else
+# define make_tpath(dir_path, filename) make_path(dir_path, filename, 0)
+#endif /* _WIN32 */
 
 int is_regular_file(const char* path); /* shall be deprecated */
 
@@ -36,9 +41,10 @@ int is_regular_file(const char* path); /* shall be deprecated */
  */
 typedef struct file_t
 {
-	char* path;
+	tpath_t real_path;
+	const char* print_path;
 #ifdef _WIN32
-	wchar_t* wpath;
+	const char* native_path; /* print_path in native encoding */
 #endif
 	char* data;
 	uint64_t size;
@@ -46,40 +52,61 @@ typedef struct file_t
 	unsigned mode;
 } file_t;
 
-#ifdef _WIN32
-# define FILE_TPATH(file) ((file)->wpath)
-#else
-# define FILE_TPATH(file) ((file)->path)
-#endif
-
 /* bit constants for the file_t.mode bit mask */
-#define FILE_IFDIR   0x01
-#define FILE_IFLNK   0x02
-#define FILE_IFREG   0x04
-#define FILE_IFROOT  0x10
-#define FILE_IFDATA  0x20
-#define FILE_IFLIST  0x40
-#define FILE_IFSTDIN 0x80
-#define FILE_IFSPEC_MASK (FILE_IFDATA | FILE_IFLIST | FILE_IFSTDIN)
-#define FILE_OPT_DONT_FREE_PATH  0x200
-#define FILE_OPT_DONT_FREE_WPATH 0x400
+enum FileModeBits {
+	FileIsDir   = 0x01,
+	FileIsLnk   = 0x02,
+	FileIsReg   = 0x04,
+	FileIsRoot  = 0x10,
+	FileIsData  = 0x20,
+	FileIsList  = 0x40,
+	FileIsStdStream = 0x80,
+	FileIsStdin = FileIsStdStream,
+	FileInitReusePath = 0x100,
+	FileInitUtf8PrintPath = 0x200,
+	FileInitRunFstat = 0x400,
+	FileInitRunLstat = 0x800,
+	FileInitUpdatePrintPathLastSlash = 0x1000,
+	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg),
+	FileMaskIsSpecial = (FileIsData | FileIsList | FileIsStdStream),
+	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial)
+};
 
-#define FILE_ISDIR(file)   ((file)->mode & FILE_IFDIR)
-#define FILE_ISLNK(file)   ((file)->mode & FILE_IFLNK)
-#define FILE_ISREG(file)   ((file)->mode & FILE_IFREG)
-#define FILE_ISDATA(file)  ((file)->mode & FILE_IFDATA)
-#define FILE_ISLIST(file)  ((file)->mode & FILE_IFLIST)
-#define FILE_ISSTDIN(file) ((file)->mode & FILE_IFSTDIN)
-#define FILE_ISSPECIAL(file) ((file)->mode & (FILE_IFSPEC_MASK))
+#define FILE_ISDIR(file)   ((file)->mode & FileIsDir)
+#define FILE_ISLNK(file)   ((file)->mode & FileIsLnk)
+#define FILE_ISREG(file)   ((file)->mode & FileIsReg)
+#define FILE_ISDATA(file)  ((file)->mode & FileIsData)
+#define FILE_ISLIST(file)  ((file)->mode & FileIsList)
+#define FILE_ISSTDIN(file) ((file)->mode & FileIsStdin)
+#define FILE_ISSTDSTREAM(file) ((file)->mode & FileIsStdStream)
+#define FILE_ISSPECIAL(file) ((file)->mode & (FileMaskIsSpecial))
 
 /* file functions */
-void file_init(file_t* file, const char* path, int finit_flags);
+int file_init(file_t* file, ctpath_t path, unsigned init_flags);
+int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print_path, unsigned init_flags);
 void file_cleanup(file_t* file);
-void file_path_append(file_t* dst, const file_t* src, const char* suffix);
+void file_clone(file_t* file, const file_t* orig_file);
+void file_swap(file_t* first, file_t* second);
+int are_paths_equal(ctpath_t path, struct file_t* file);
+
+enum FileGetPrintPathFlags {
+	FPathUtf8 = 1,
+	FPathBaseName = 2,
+	FPathNotNull = 4
+};
+const char* file_get_print_path(file_t* file, unsigned flags);
+
+enum FileModifyOperations {
+	FModifyAppendSuffix,
+	FModifyInsertBeforeExtension,
+	FModifyRemoveExtension,
+	FModifyGetParentDir
+};
+int file_modify_path(file_t* dst, file_t* src, const char* str, int operation);
 
 enum FileStatModes {
 	FNoMode    = 0,
-	FUseLstat  = 1
+	FUseLstat  = FileInitRunLstat
 };
 int file_stat(file_t* file, int fstat_flags);
 
@@ -91,37 +118,32 @@ enum FileFOpenModes {
 	FOpenMask  = 7
 };
 FILE* file_fopen(file_t* file, int fopen_flags);
-FILE* rsh_tfopen(ctpath_t tpath, file_tchar* tmode);
 
-int file_rename(file_t* from, file_t* to);
+int file_rename(const file_t* from, const file_t* to);
 int file_move_to_bak(file_t* file);
 int file_is_readable(file_t* file);
-
-#ifdef _WIN32
-void file_tinit(file_t* file, ctpath_t tpath, int finit_flags);
-const char* file_cpath(file_t* file);
-#else
-# define file_tinit(file, tpath, finit_flags) file_init(file, tpath, finit_flags)
-# define file_cpath(file) ((const char*)(file)->path)
-# define file_is_write_locked(f) (0)
-#endif
 
 typedef struct file_list_t {
 	FILE* fd;
 	file_t current_file;
 	unsigned state;
 } file_list_t;
-int  file_list_open(file_list_t* list, file_t* file_path);
+int  file_list_open(file_list_t* list, file_t* file);
 int  file_list_read(file_list_t* list);
 void file_list_close(file_list_t* list);
 
-#ifdef _WIN32
+#ifndef _WIN32
+# define dirent_get_tname(d) ((d)->d_name)
+# define rsh_topendir(p) opendir(p)
+#else
 /* readdir structures and functions */
-#define DIR WIN_DIR
-#define dirent win_dirent
-#define opendir  win_opendir
-#define readdir  win_readdir
-#define closedir win_closedir
+# define DIR WIN_DIR
+# define dirent win_dirent
+# define opendir  win_opendir
+# define readdir  win_readdir
+# define closedir win_closedir
+# define dirent_get_tname(d) ((d)->d_wname)
+# define rsh_topendir(p) win_wopendir(p)
 
 /* dirent struct for windows to traverse directory content */
 struct win_dirent {

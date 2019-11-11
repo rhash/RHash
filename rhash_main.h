@@ -22,6 +22,7 @@ struct rhash_t
 	FILE* log;
 	file_t out_file;
 	file_t log_file;
+	file_t upd_file;
 #ifdef _WIN32
 	wchar_t* program_dir;
 	unsigned saved_cursor_size;
