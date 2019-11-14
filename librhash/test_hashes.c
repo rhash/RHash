@@ -924,7 +924,7 @@ static void test_magnet(void)
 
 	assert_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y", ctx, RHASH_TTH, RHPR_FILESIZE | TEST_PATH);
 	assert_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661", ctx, RHASH_MD5, RHPR_FILESIZE | RHPR_UPPERCASE);
-	assert_magnet("xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:btih:qj6nrgcg7qjs4lth4kocpbggkrb3wtob",
+	assert_magnet("xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:btih:827cd89846fc132e2e67e29c2784c65443bb4dc1",
 		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
 
 	/* verify length calculation for all hashes */

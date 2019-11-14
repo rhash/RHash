@@ -617,7 +617,7 @@ void init_printf_format(strbuf_t* out)
 	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=%{urlname}");
 		fmt = "&xt=urn:\002:\001";
-		need_modifier = (RHASH_SHA1 | RHASH_BTIH);
+		need_modifier = RHASH_SHA1;
 		tail = "\\n";
 	} else if (opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
 		fmt = "\001  %p\\n";

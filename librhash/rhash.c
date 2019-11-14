@@ -474,7 +474,7 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 
 		size += (7 + 2) + strlen(name);
 		size += rhash_print(NULL, context, bit,
-			(bit & (RHASH_SHA1 | RHASH_BTIH) ? RHPR_BASE32 : 0));
+			(bit & RHASH_SHA1 ? RHPR_BASE32 : 0));
 	}
 
 	return size;
@@ -529,7 +529,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 			output += strlen(name);
 			*(output++) = ':';
 			output += rhash_print(output, context, bit,
-				(bit & (RHASH_SHA1 | RHASH_BTIH) ? flags | RHPR_BASE32 : flags));
+				(bit & RHASH_SHA1 ? flags | RHPR_BASE32 : flags));
 			*(output++) = '&';
 		}
 	}

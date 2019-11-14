@@ -1,3 +1,6 @@
+Fri, 15 Nov 2019 Aleksey
+	* Bugfix: btih in magnet links shall be hex-encoded
+
 Tue 12 Nov 2019 Aleksey
 	* correctly align UTF8 file paths, while printing verification results
 	* respect UTF8 BOM when updating or verifying a hash file
