@@ -63,57 +63,6 @@ int int_len(uint64_t num)
 }
 
 /**
- * Convert a byte to a hexadecimal string. The result, consisting of two
- * hexadecimal digits is stored into a buffer.
- *
- * @param dst  the buffer to receive two symbols of hex representation
- * @param byte the byte to decode
- * @param upper_case flag to print string in uppercase
- * @return pointer to the next char in buffer (dst + 2)
- */
-static char* print_hex_byte(char* dst, const unsigned char byte, int upper_case)
-{
-	const char add = (upper_case ? 'A' - 10 : 'a' - 10);
-	unsigned char c = (byte >> 4) & 15;
-	*dst++ = (c > 9 ? c + add : c + '0');
-	c = byte & 15;
-	*dst++ = (c > 9 ? c + add : c + '0');
-	return dst;
-}
-
-/* unsafe characters are "<>{}[]%#/|\^~`@:;?=&+ */
-#define IS_GOOD_URL_CHAR(c) (isalnum((unsigned char)c) || strchr("$-_.!'(),", c))
-
-/**
- * URL-encode a string.
- *
- * @param dst buffer to receive result or NULL to calculate
- *    the lengths of encoded string
- * @param filename the file name
- * @return the length of the result string
- */
-int urlencode(char* dst, const char* name)
-{
-	const char* start;
-	if (!dst) {
-		int len;
-		for (len = 0; *name; name++) len += (IS_GOOD_URL_CHAR(*name) ? 1 : 3);
-		return len;
-	}
-	/* encode URL as specified by RFC 1738 */
-	for (start = dst; *name; name++) {
-		if ( IS_GOOD_URL_CHAR(*name) ) {
-			*dst++ = *name;
-		} else {
-			*dst++ = '%';
-			dst = print_hex_byte(dst, *name, 'A');
-		}
-	}
-	*dst = 0;
-	return (int)(dst - start);
-}
-
-/**
  * Convert given string to lower case.
  * The result string will be allocated by malloc.
  * The allocated memory should be freed by calling free().

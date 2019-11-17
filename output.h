@@ -40,6 +40,7 @@ enum FileOutputFlags {
 	OutCountSymbols = 0x4
 };
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags);
+int fprint_urlencoded(FILE* out, const char* str, int upper_case);
 
 void log_msg(const char* format, ...);
 void log_msg_file_t(const char* format, struct file_t* file);
@@ -47,6 +48,7 @@ void log_warning(const char* format, ...);
 void log_error(const char* format, ...);
 void log_error_file_t(struct file_t* file);
 void log_error_msg_file_t(const char* format, struct file_t* file);
+
 void report_interrupted(void);
 int print_check_stats(void);
 

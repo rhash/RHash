@@ -22,40 +22,6 @@
 /* global pointer to the selected method of percents output */
 struct percents_output_info_t* percents_output = NULL;
 
-/**
- * Print message prefix before printing an error/warning message.
- *
- * @return the number of characters printed, -1 on error
- */
-static int print_log_prefix(void)
-{
-	return rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
-}
-
-/**
- * Print a formatted message to the program log, and flush the log stream.
- *
- * @param format print a formatted message to the program log
- * @param args
- */
-static void log_va_msg(const char* format, va_list args)
-{
-	rsh_vfprintf(rhash_data.log, format, args);
-	fflush(rhash_data.log);
-}
-
-/**
- * Print a formatted message to the program log, and flush the log stream.
- *
- * @param format print a formatted message to the program log
- */
-void log_msg(const char* format, ...)
-{
-	va_list ap;
-	va_start(ap, format);
-	log_va_msg(format, ap);
-}
-
 #ifdef _WIN32
 #define IS_UTF8_OUTPUT(oflags, out) (((oflags) & OutForceUtf8) || (opt.flags & OPT_UTF8) || win_is_console_stream(out))
 #else
@@ -88,7 +54,7 @@ int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned 
 			errno = EILSEQ;
 			return -1;
 		}
-		res = PRINTF_RES(fprintf(out, "%s", print_path));
+		res = PRINTF_RES(rsh_fprintf(out, native_format, print_path));
 		if (res >= 0 && (output_flags & OutCountSymbols)) {
 			res = count_utf8_symbols(format);
 			res += (strstr(native_format, "%s") ? -2 + strlen(print_path) : 0);
@@ -108,6 +74,81 @@ int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned 
 	res = count_utf8_symbols(format);
 	res += (strstr(format, "%s") ? -2 + count_utf8_symbols(print_path) : 0);
 	return res;
+}
+
+/* safe url ascii characters are alphanum + "$-_.!'()," and unsafe: "\"<>{}[]%#/|\^~`@:;?=&+" */
+static unsigned url_good_char_mask[4] = { 0, 0x03ff7392, 0x87fffffe, 0x07fffffe };
+#define IS_URL_GOOD_CHAR(c) ((unsigned)(c) < 128 && (url_good_char_mask[c >> 5] & (1 << (c & 31))))
+
+/**
+ * Print to a stram an url-encoded representation of the given string.
+ *
+ * @param out the stream to print the result to
+ * @param str string to encode
+ * @param upper_case flag to print hex-codes in uppercase
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+int fprint_urlencoded(FILE* out, const char* str, int upper_case)
+{
+	char buffer[1024];
+	char* buffer_limit = buffer + (sizeof(buffer) - 3);
+	char *p;
+	const char hex_add = (upper_case ? 'A' - 10 : 'a' - 10);
+	while (*str) {
+		for (p = buffer; p < buffer_limit && *str; str++) {
+			if (IS_URL_GOOD_CHAR(*str)) {
+				*(p++) = *str;
+			} else {
+				unsigned char hi = ((unsigned char)(*str) >> 4) & 0x0f;
+				unsigned char lo = (unsigned char)(*str) & 0x0f;
+				*(p++) = '%';
+				*(p++) = (hi > 9 ? hi + hex_add : hi + '0');
+				*(p++) = (lo > 9 ? lo + hex_add : lo + '0');
+			}
+		}
+		*p = 0;
+		if (rsh_fprintf(out, "%s", buffer) < 0)
+			return -1;
+	}
+	return 0;
+}
+
+/*=========================================================================
+ * Logging functions
+ *=========================================================================*/
+
+/**
+ * Print message prefix before printing an error/warning message.
+ *
+ * @return the number of characters printed, -1 on error
+ */
+static int print_log_prefix(void)
+{
+	return rsh_fprintf(rhash_data.log, "%s: ", PROGRAM_NAME);
+}
+
+/**
+ * Print a formatted message to the program log, and flush the log stream.
+ *
+ * @param format print a formatted message to the program log
+ * @param args
+ */
+static void log_va_msg(const char* format, va_list args)
+{
+	rsh_vfprintf(rhash_data.log, format, args);
+	fflush(rhash_data.log);
+}
+
+/**
+ * Print a formatted message to the program log, and flush the log stream.
+ *
+ * @param format print a formatted message to the program log
+ */
+void log_msg(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	log_va_msg(format, ap);
 }
 
 /**
@@ -176,22 +217,19 @@ void log_error_msg_file_t(const char* format, struct file_t* file)
 	fflush(rhash_data.log);
 }
 
-/* global flag */
-int is_interrupted_reported = 0;
-
 /**
  * Log the message, that the program was interrupted.
  * The function should be called only once.
  */
 void report_interrupted(void)
 {
+	static int is_interrupted_reported = 0;
 	assert(rhash_data.stop_flags != 0);
-	if (rhash_data.stop_flags != InterruptedFlag || is_interrupted_reported)
-		return;
-	is_interrupted_reported = 1;
-	log_msg(_("Interrupted by user...\n"));
+	if (rhash_data.stop_flags == InterruptedFlag && !is_interrupted_reported) {
+		is_interrupted_reported = 1;
+		log_msg(_("Interrupted by user...\n"));
+	}
 }
-
 
 /**
  * Information about printed percents.

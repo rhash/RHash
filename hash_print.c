@@ -42,6 +42,7 @@ enum {
 	PRINT_NEWLINE,
 	PRINT_FILEPATH,
 	PRINT_BASENAME,
+	PRINT_URLPATH,
 	PRINT_URLNAME,
 	PRINT_SIZE,
 	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
@@ -201,9 +202,14 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
 
 	/* check for old '%{urlname}' directive for compatibility */
-	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
-		*flags = PRINT_URLNAME;
-		return 0;
+	if (length == 7) {
+		if (memcmp(buf, "urlname", 7) == 0) {
+			*flags = PRINT_URLNAME;
+			return 0;
+		} if (memcmp(buf, "urlpath", 7) == 0) {
+			*flags = PRINT_URLPATH;
+			return 0;
+		}
 	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
@@ -234,14 +240,14 @@ print_item* parse_percent_item(const char** str)
 	print_item* item = NULL;
 
 	static const char* short_hash = "CMHTGWRAE";
-	static const char* short_other = "Llpfus";
+	static const char* short_other = "LlpfUus";
 	static const unsigned hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
 		PRINT_ED2K_LINK, PRINT_ED2K_LINK, PRINT_FILEPATH, PRINT_BASENAME,
-		PRINT_URLNAME, PRINT_SIZE
+		PRINT_URLNAME, PRINT_URLNAME, PRINT_SIZE
 	};
 	/* detect the padding by zeros */
 	if (*format == '0') {
@@ -265,7 +271,7 @@ print_item* parse_percent_item(const char** str)
 	}
 	for (; isdigit((unsigned char)*format); format++) width = 10 * width + (*format - '0');
 
-	/* if a complicated token enconuntered */
+	/* if a complicated token encountered */
 	if (*format == '{') {
 		/* parse the token of the kind "%{some-token}" */
 		const char* p = ++format;
@@ -273,7 +279,7 @@ print_item* parse_percent_item(const char** str)
 		if (*p == '}') {
 			hash_id = printf_name_to_id(format, (int)(p - (format)), &modifier_flags);
 			format--;
-			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_MTIME) {
+			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_URLPATH || modifier_flags == PRINT_MTIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -302,6 +308,8 @@ print_item* parse_percent_item(const char** str)
 			if (modifier_flags == PRINT_ED2K_LINK) {
 				modifier_flags |= (*p & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				hash_id = RHASH_ED2K | RHASH_AICH;
+			} else if (modifier_flags == PRINT_URLNAME) {
+				modifier_flags |= (*p & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 			}
 		} else {
 			return 0; /* no valid token found */
@@ -328,17 +336,12 @@ static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 {
 	const char* filename = file_get_print_path(info->file, FPathUtf8 | FPathBaseName | FPathNotNull);
 	int upper_case = (print_type & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
-	int len = urlencode(NULL, filename) + int_len(info->size) + (info->sums_flags & RHASH_AICH ? 84 : 49);
-	char* buf = (char*)rsh_malloc( len + 1 );
+	char buf[104];
 	char* dst = buf;
-	int res;
-
-	assert(info->sums_flags & (RHASH_ED2K | RHASH_AICH));
+	assert(info->sums_flags & RHASH_ED2K);
 	assert(info->rctx);
-
-	strcpy(dst, "ed2k://|file|");
-	dst += 13;
-	dst += urlencode(dst, filename);
+	if (rsh_fprintf(out, "ed2k://|file|") < 0 || fprint_urlencoded(out, filename, upper_case) < 0)
+		return -1;
 	*dst++ = '|';
 	sprintI64(dst, info->size, 0);
 	dst += strlen(dst);
@@ -351,9 +354,7 @@ static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 		dst += 32;
 	}
 	strcpy(dst, "|/");
-	res = PRINTF_RES(rsh_fprintf(out, "%s", buf));
-	free(buf);
-	return res;
+	return PRINTF_RES(rsh_fprintf(out, "%s", buf));
 }
 
 /**
@@ -421,8 +422,6 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
  */
 int print_line(FILE* out, print_item* list, struct file_info* info)
 {
-	const char* tmp;
-	char* url = NULL;
 	char buffer[130];
 	int res = 0;
 #ifdef _WIN32
@@ -475,13 +474,12 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 			case PRINT_BASENAME: /* the filename without directory */
 				res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, OutBaseName));
 				break;
+			case PRINT_URLPATH:
 			case PRINT_URLNAME: /* URL-encoded filename */
-				if (!url) {
-					tmp = file_get_print_path(info->file, FPathUtf8 | FPathBaseName | FPathNotNull);
-					url = (char*)rsh_malloc(urlencode(NULL, tmp) + 1);
-					urlencode(url, tmp);
-				}
-				res = PRINTF_RES(rsh_fprintf(out, "%s", url));
+				res = fprint_urlencoded(out,
+					file_get_print_path(info->file, FPathUtf8 | FPathNotNull |
+					(print_type == PRINT_URLNAME ? FPathBaseName : 0)),
+					list->flags & PRINT_FLAG_UPPERCASE);
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
 				res = print_time64(out, info->file->mtime, 0);
@@ -494,7 +492,6 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 				break;
 		}
 	}
-	free(url);
 	if (res == 0 && fflush(out) < 0)
 		res = -1;
 #ifdef _WIN32
