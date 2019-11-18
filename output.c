@@ -76,9 +76,9 @@ int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned 
 	return res;
 }
 
-/* safe url ascii characters are alphanum + "$-_.!'()," and unsafe: "\"<>{}[]%#/|\^~`@:;?=&+" */
-static unsigned url_good_char_mask[4] = { 0, 0x03ff7392, 0x87fffffe, 0x07fffffe };
-#define IS_URL_GOOD_CHAR(c) ((unsigned)(c) < 128 && (url_good_char_mask[c >> 5] & (1 << (c & 31))))
+/* RFC 3986: safe url characters are ascii alpha-numeric and "-._~", other characters should be percent-encoded */
+static unsigned url_safe_char_mask[4] = { 0, 0x03ff6000, 0x87fffffe, 0x47fffffe };
+#define IS_URL_GOOD_CHAR(c) ((unsigned)(c) < 128 && (url_safe_char_mask[c >> 5] & (1 << (c & 31))))
 
 /**
  * Print to a stram an url-encoded representation of the given string.

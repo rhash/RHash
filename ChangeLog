@@ -1,5 +1,5 @@
-Sun, 17 Nov 2019 Aleksey
-	* new printf-format token '%{urlpath}' to print url-encoded file path
+Mon, 18 Nov 2019 Aleksey
+	* new printf-format modifier '%u' to print url-encoded filename, path or hash
 
 Fri, 15 Nov 2019 Aleksey
 	* Bugfix: btih in magnet links shall be hex-encoded

@@ -294,26 +294,27 @@ enum rhash_print_sum_flags
 	 * Print as a base64-encoded string
 	 */
 	RHPR_BASE64    = 0x4,
-
-	/**
+	/*
 	 * Print as an uppercase string. Can be used
 	 * for base32 or hexadecimal format only.
 	 */
 	RHPR_UPPERCASE = 0x8,
-
-	/**
+	/*
 	 * Reverse hash bytes. Can be used for GOST hash.
 	 */
 	RHPR_REVERSE   = 0x10,
-
 	/*
 	 * Don't print 'magnet:?' prefix in rhash_print_magnet
 	 */
 	RHPR_NO_MAGNET  = 0x20,
 	/*
-	 * print file size in rhash_print_magnet
+	 * Print file size in rhash_print_magnet
 	 */
 	RHPR_FILESIZE  = 0x40,
+	/*
+	 * Print as URL-encoded string
+	 */
+	RHPR_URLENCODE  = 0x80
 };
 
 
@@ -325,7 +326,7 @@ enum rhash_print_sum_flags
  * @param size a size of hash sum in bytes
  * @param flags  a bit-mask controlling how to format the hash sum,
  *               can be a mix of the flags: RHPR_RAW, RHPR_HEX, RHPR_BASE32,
- *               RHPR_BASE64, RHPR_UPPERCASE, RHPR_REVERSE
+ *               RHPR_BASE64, RHPR_URLENCODE, RHPR_UPPERCASE, RHPR_REVERSE
  * @return the number of written characters
  */
 RHASH_API size_t rhash_print_bytes(char* output,

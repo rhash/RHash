@@ -34,16 +34,15 @@ enum {
 	PRINT_FLAG_HEX    = 0x0800000,
 	PRINT_FLAG_BASE32 = 0x1000000,
 	PRINT_FLAG_BASE64 = 0x2000000,
-	PRINT_FLAG_PAD_WITH_ZERO = 0x4000000,
+	PRINT_FLAG_URLENCODE = 0x4000000,
+	PRINT_FLAG_PAD_WITH_ZERO = 0x8000000,
 	PRINT_FLAGS_ALL = PRINT_FLAG_UPPERCASE | PRINT_FLAG_PAD_WITH_ZERO | PRINT_FLAG_RAW
-		| PRINT_FLAG_HEX | PRINT_FLAG_BASE32 | PRINT_FLAG_BASE64,
+		| PRINT_FLAG_HEX | PRINT_FLAG_BASE32 | PRINT_FLAG_BASE64 | PRINT_FLAG_URLENCODE,
 	PRINT_STR = 0x10000000,
 	PRINT_ZERO,
 	PRINT_NEWLINE,
 	PRINT_FILEPATH,
 	PRINT_BASENAME,
-	PRINT_URLPATH,
-	PRINT_URLNAME,
 	PRINT_SIZE,
 	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
 };
@@ -201,15 +200,10 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 	if (length > (sizeof(buf) - 1)) return 0;
 	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
 
-	/* check for old '%{urlname}' directive for compatibility */
-	if (length == 7) {
-		if (memcmp(buf, "urlname", 7) == 0) {
-			*flags = PRINT_URLNAME;
-			return 0;
-		} if (memcmp(buf, "urlpath", 7) == 0) {
-			*flags = PRINT_URLPATH;
-			return 0;
-		}
+	/* check for legacy '%{urlname}' directive for compatibility */
+	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
+		*flags = PRINT_BASENAME | PRINT_FLAG_URLENCODE;
+		return 0;
 	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
@@ -236,22 +230,24 @@ print_item* parse_percent_item(const char** str)
 	unsigned modifier_flags = 0;
 	int id_found = 0;
 	int width = 0;
-	int pad_with_zero_bit = 0;
 	print_item* item = NULL;
 
 	static const char* short_hash = "CMHTGWRAE";
-	static const char* short_other = "LlpfUus";
+	static const char* short_other = "Llpfs";
 	static const unsigned hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
-		PRINT_ED2K_LINK, PRINT_ED2K_LINK, PRINT_FILEPATH, PRINT_BASENAME,
-		PRINT_URLNAME, PRINT_URLNAME, PRINT_SIZE
+		(PRINT_ED2K_LINK | PRINT_FLAG_UPPERCASE), PRINT_ED2K_LINK,
+		PRINT_FILEPATH, PRINT_BASENAME, PRINT_SIZE
 	};
 	/* detect the padding by zeros */
 	if (*format == '0') {
-		pad_with_zero_bit = PRINT_FLAG_PAD_WITH_ZERO;
+		modifier_flags = PRINT_FLAG_PAD_WITH_ZERO;
+		format++;
+	} else if ((*format & ~0x20) == 'U') {
+		modifier_flags = (*format & 0x20 ? PRINT_FLAG_URLENCODE : PRINT_FLAG_URLENCODE | PRINT_FLAG_UPPERCASE);
 		format++;
 	}
 
@@ -274,19 +270,17 @@ print_item* parse_percent_item(const char** str)
 	/* if a complicated token encountered */
 	if (*format == '{') {
 		/* parse the token of the kind "%{some-token}" */
-		const char* p = ++format;
+		const char* p = format + 1;
 		for (; isalnum((unsigned char)*p) || (*p == '-'); p++);
 		if (*p == '}') {
-			hash_id = printf_name_to_id(format, (int)(p - (format)), &modifier_flags);
-			format--;
-			if (hash_id || modifier_flags == PRINT_URLNAME || modifier_flags == PRINT_URLPATH || modifier_flags == PRINT_MTIME) {
+			unsigned flags = 0;
+			hash_id = printf_name_to_id(format + 1, p - (format + 1), &flags);
+			if (hash_id || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
-				modifier_flags |= (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
+				modifier_flags |= flags | (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
 				id_found = 1;
 			}
-		} else {
-			format--;
 		}
 	}
 
@@ -294,7 +288,8 @@ print_item* parse_percent_item(const char** str)
 	if (!id_found) {
 		const char upper = *format & ~0x20;
 		/* if the string terminated just after the '%' character */
-		if ( *format == '\0' ) return NULL;
+		if (upper == '\0')
+			return NULL;
 		/* look for a known token */
 		if ( (p = strchr(short_hash, upper)) ) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
@@ -303,20 +298,17 @@ print_item* parse_percent_item(const char** str)
 		}
 		else if ( (p = strchr(short_other, *format)) ) {
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
-			modifier_flags = other_flags[p - short_other];
-
-			if (modifier_flags == PRINT_ED2K_LINK) {
-				modifier_flags |= (*p & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
+			modifier_flags |= other_flags[p - short_other];
+			if ((modifier_flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_LINK)
 				hash_id = RHASH_ED2K | RHASH_AICH;
-			} else if (modifier_flags == PRINT_URLNAME) {
-				modifier_flags |= (*p & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
-			}
+		} else if ((modifier_flags & PRINT_FLAG_URLENCODE) != 0) {
+			/* handle legacy token: '%u' -> '%uf' */
+			modifier_flags |= PRINT_BASENAME;
+			format--;
 		} else {
 			return 0; /* no valid token found */
 		}
 	}
-	modifier_flags |= pad_with_zero_bit;
-
 	item = new_print_item(modifier_flags, hash_id, NULL);
 	item->width = width;
 	*str = ++format;
@@ -435,16 +427,17 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 		size_t len;
 
 		/* output a hash function digest */
-		if (list->hash_id && print_type != PRINT_ED2K_LINK) {
+		if (!print_type) {
 			unsigned hash_id = list->hash_id;
 			int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0)
 				| (list->flags & PRINT_FLAG_RAW ? RHPR_RAW : 0)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
 				| (list->flags & PRINT_FLAG_BASE64 ? RHPR_BASE64 : 0)
-				| (list->flags & PRINT_FLAG_HEX ? RHPR_HEX : 0);
+				| (list->flags & PRINT_FLAG_HEX ? RHPR_HEX : 0)
+				| (list->flags & PRINT_FLAG_URLENCODE ? RHPR_URLENCODE : 0);
 			if ((hash_id == RHASH_GOST94 || hash_id == RHASH_GOST94_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
 				print_flags |= RHPR_REVERSE;
-
+			assert(hash_id != 0);
 			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
 			assert(len < sizeof(buffer));
 
@@ -469,17 +462,15 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 				break;
 #endif
 			case PRINT_FILEPATH:
-				res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, 0));
-				break;
 			case PRINT_BASENAME: /* the filename without directory */
-				res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, OutBaseName));
-				break;
-			case PRINT_URLPATH:
-			case PRINT_URLNAME: /* URL-encoded filename */
-				res = fprint_urlencoded(out,
-					file_get_print_path(info->file, FPathUtf8 | FPathNotNull |
-					(print_type == PRINT_URLNAME ? FPathBaseName : 0)),
-					list->flags & PRINT_FLAG_UPPERCASE);
+				if ((list->flags & PRINT_FLAG_URLENCODE) != 0) {
+					unsigned fflags = FPathUtf8 | FPathNotNull | (print_type == PRINT_BASENAME ? FPathBaseName : 0);
+					fprint_urlencoded(out, file_get_print_path(info->file, fflags),
+						(list->flags & PRINT_FLAG_UPPERCASE));
+				} else {
+					unsigned pflags = (print_type == PRINT_BASENAME ? OutBaseName : 0);
+					res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags));
+				}
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
 				res = print_time64(out, info->file->mtime, 0);
@@ -612,7 +603,8 @@ void init_printf_format(strbuf_t* out)
 	if (opt.fmt == FMT_BSD) {
 		fmt = "\003(%p) = \001\\n";
 	} else if (opt.fmt == FMT_MAGNET) {
-		rsh_str_append(out, "magnet:?xl=%s&dn=%{urlname}");
+		rsh_str_append(out, "magnet:?xl=%s&dn=");
+		rsh_str_append(out, (uppercase ? "%Uf" : "%uf"));
 		fmt = "&xt=urn:\002:\001";
 		need_modifier = RHASH_SHA1;
 		tail = "\\n";

@@ -76,15 +76,20 @@ done
 RANDNUM=$RANDOM
 [ -z $RANDNUM ] && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
 RHASH_TMP="$_tmp/rhash-test-$RANDNUM-$$"
-mkdir $RHASH_TMP || die "Unable to create tmp dir."
 remove_tmpdir()
 {
   cd "$SCRIPT_DIR"
   rm -rf "$RHASH_TMP";
 }
 trap remove_tmpdir EXIT
+
+# prepare test files
+SUBDIR=$RHASH_TMP/dir1
+mkdir $RHASH_TMP $SUBDIR || die "Unable to create tmp dir."
 cd "$RHASH_TMP"
 cp "$SCRIPT_DIR/test1K.data" test1K.data
+FILE_A=dir1/a.txt
+printf "a" > $FILE_A
 
 # get the list of supported hash options
 HASHOPT="`$rhash --list-hashes|sed 's/ .*$//;/[^23]-/s/-\([0-9R]\)/\1/'|tr A-Z a-z`"
@@ -201,6 +206,16 @@ TEST_RESULT=$( $rhash -p '%f %s %xC %bc %bM %Bh %bE %bg %xT %xa %bW\n' -m "a" )
 TEST_EXPECTED="(message) 1 E8B7BE43 5c334qy BTAXLOOA6G3KQMODTHRGS5ZGME hvfkN/qlp/zhXR3cuerq6jd2Z7g= XXSSZMY54M7EMJC6AX55XVX3EQ xiyqtg44zbhmfjtr5eytk4rxreqkobntmoyddiolj7ad4aoorxzq 16614B1F68C5C25EAF6136286C9C12932F4F73E87E90A273 86f7e437faa5a7fce15d1ddcb9eaeaea377667b8 RLFCMATZFLWG6ENGOIDFGH5X27YN75MUCMKF42LTYRIADUAIPNBNCG6GIVATV37WHJBDSGRZCRNFSGUSEAGVMAMV4U5UPBME7WXCGGQ"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
+new_test "test %u modifier:           "
+cp $FILE_A "dir1/=@+.txt"
+TEST_RESULT=$( $rhash -p '%uf %Uf %up %Up %uxc %uxC %ubc %ubC\n' "dir1/=@+.txt" )
+TEST_EXPECTED="%3d%40%2b.txt %3D%40%2B.txt dir1%2f%3d%40%2b.txt dir1%2F%3D%40%2B.txt e8b7be43 E8B7BE43 5c334qy 5C334QY"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+TEST_RESULT=$( $rhash -p '%uBc %UBc %Bc %u@c %U@c\n' -m "a" )
+TEST_EXPECTED="6Le%2bQw%3d%3d 6Le%2BQw%3D%3D 6Le+Qw== %e8%b7%beC %E8%B7%BEC"
+check "$TEST_RESULT" "$TEST_EXPECTED"
+rm -f "dir1/=@+.txt"
+
 new_test "test special characters:    "
 TEST_RESULT=$( $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' -m "" )
 TEST_EXPECTED=$( printf '\63\1\277\17\1\t\\ 4\r' )
@@ -216,7 +231,7 @@ rm -f ${F}1 ${F}2 ${F}3 ${F}4 ${F}l
 
 new_test "test eDonkey link:          "
 TEST_RESULT=$( $rhash -p '%L %l\n' -m "a" )
-TEST_EXPECTED="ed2k://|file|(message)|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|(message)|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
+TEST_EXPECTED="ed2k://|file|%28message%29|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|%28message%29|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
 check "$TEST_RESULT" "$TEST_EXPECTED" .
 # test verification of ed2k links
 TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
@@ -263,7 +278,7 @@ match "$TEST_RESULT" "test_.*OK" .
 TEST_RESULT=$( $rhash --check-embedded 'test_[D3D99E8C].data' 2>/dev/null | grep data )
 match "$TEST_RESULT" "test_.*ERR" .
 mv 'test_[D3D99E8B].data' 'test.data'
-# at last test --embed-crc with --embed-crc-delimiter options
+# test --embed-crc and --embed-crc-delimiter options
 TEST_RESULT=$( $rhash --simple --embed-crc --embed-crc-delimiter=_ 'test.data' 2>/dev/null )
 check "$TEST_RESULT" "d3d99e8b  test_[D3D99E8B].data"
 rm 'test_[D3D99E8B].data' 'test_[D3D99E8C].data'

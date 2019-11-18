@@ -247,10 +247,10 @@ A literal percent sign.
 File's path.
 .IP %f
 File's name.
-.IP "%{urlpath}"
-URL\(hyencoded file path.
-.IP "%u or %{urlname}"
-URL\(hyencoded filename.
+.IP "%u or %U"
+Prefix used to print a filename, file path or base64/raw hash value as an URL\(hyencoded string.
+For example: `%uf', `%up', `%uBm', `%u@h'
+Use %u for lowercase and %U for uppercase characters.
 .IP %s
 File's size in bytes.
 .IP %{mtime}
