@@ -37,6 +37,7 @@ char* convert_str_encoding(const char* str, unsigned flags);
 /* file helper functions */
 void set_errno_from_last_file_error(void);
 wchar_t* get_long_path_if_needed(const wchar_t* wpath);
+wchar_t* get_program_dir(void);
 
 /* functions for program initialization */
 void init_program_dir(void);

@@ -587,6 +587,7 @@ static const char* find_conf_file(void)
 	}
 
 #else /* _WIN32 */
+	wchar_t* program_dir = get_program_dir();
 
 	/* first check for the %APPDATA%\RHash\rhashrc config */
 	if ( (dir1 = getenv("APPDATA")) ) {
@@ -614,7 +615,7 @@ static const char* find_conf_file(void)
 	}
 
 	/* check for ${PROGRAM_DIR}\rhashrc */
-	if (rhash_data.program_dir && (dir1 = convert_wcs_to_str(rhash_data.program_dir, ConvertToPrimaryEncoding))) {
+	if (program_dir && program_dir[0] && (dir1 = convert_wcs_to_str(program_dir, ConvertToPrimaryEncoding))) {
 		path = make_path(dir1, CONFIG_FILENAME, 0);
 		free(dir1);
 		if (is_regular_file(path)) {

@@ -157,7 +157,7 @@ size_t rhash_urlencode(char *dst, const char *src, size_t size, int upper_case)
 		const char hex_add = (upper_case ? 'A' - 10 : 'a' - 10);
 		start = dst;
 		/* percent-encode all but unreserved URL characters */
-		for (i = 0; src[i]; i++) {
+		for (i = 0; i < size; i++) {
 			if (IS_URL_GOOD_CHAR(src[i])) {
 				*dst++ = src[i];
 			} else {

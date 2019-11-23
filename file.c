@@ -276,7 +276,7 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
 			if (!last_path)
 				continue;
 			file->real_path = last_path;
-			return 0;
+			return primary_path_index;
 		}
 		if (dir_path) {
 			file->real_path = make_wpath(dir_path, (size_t)-1, path);
@@ -286,20 +286,20 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
 		if (i < 2) {
 			if (file_statw(file) == 0 || errno == EACCES) {
 				free(last_path);
-				return (i & 1);
+				return (path_index & 1);
 			}
 			if (i == 0) {
 				if (step == 2)
-					return 0;
+					return primary_path_index;
 				last_path = file->real_path;
 				continue;
 			}
 			free(file->real_path);
 			file->real_path = last_path;
 			if(file->real_path)
-				return 0;
+				return primary_path_index;
 		} else if (file->real_path) {
-			return (i & 1);
+			return (path_index & 1);
 		}
 		assert(last_path == NULL);
 	}
@@ -343,14 +343,14 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, FPathUtf8) : NULL);
 		} else {
 			primary_path = &file->native_path;
-			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, 0) : NULL);
+			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, FPathNative) : NULL);
 		}
 		if ((!dir_primary_path || IS_DOT_TSTR(dir_primary_path)) &&
 				(init_flags & (FileInitReusePath | FileInitUpdatePrintPathLastSlash)) == FileInitReusePath) {
 			*primary_path = print_path;
 			file->mode |= (encoding == 0 ? FileDontFreePrintPath : FileDontFreeNativePath);
 		} else {
-			file->print_path = make_path(dir_primary_path, print_path, 1);
+			*primary_path = make_path(dir_primary_path, print_path, 1);
 		}
 		return 0;
 	}
@@ -369,7 +369,7 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 		} else
 			file->print_path = rsh_strdup(print_path);
 	} else {
-		file->print_path = make_path(file_get_print_path(prepend_dir, 0), print_path, 1);
+		file->print_path = make_path(file_get_print_path(prepend_dir, FPathPrimaryEncoding), print_path, 1);
 	}
 #endif
 	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
@@ -404,7 +404,7 @@ static const char* handle_rest_of_path_flags(const char* path, unsigned flags)
  * Encoding conversion on Windows can be lossy.
  *
  * @param file the file to get the path
- * @param flags bitmask containing FPathUtf8, FPathBaseName, FPathNotNull
+ * @param flags bitmask containing FPathUtf8, FPathNative, FPathBaseName, FPathNotNull
  *              and FileInitUpdatePrintPathLastSlash bit flags
  * @return transformed print path of the file. If FPathNotNull flag is not specified,
  *         then NULL is returned on function fail with error code stored in errno.
@@ -415,11 +415,12 @@ const char* file_get_print_path(file_t* file, unsigned flags)
 #ifdef _WIN32
 	unsigned convert_to;
 	unsigned dont_use_bit;
+	int is_utf8 = (opt.flags & OPT_UTF8 ? !(flags & FPathNative) : flags & FPathUtf8);
 	const char* secondary_path;
-	const char** primary_path = ((flags & FPathUtf8) || (file->mode & FileIsAsciiPrintPath) ? &file->print_path : &file->native_path);
+	const char** primary_path = (is_utf8 || (file->mode & FileIsAsciiPrintPath) ? &file->print_path : &file->native_path);
 	if (*primary_path)
 		return handle_rest_of_path_flags(*primary_path, flags);
-	if (flags & FPathUtf8) {
+	if (is_utf8) {
 		convert_to = ConvertToUtf8;
 		dont_use_bit = FileDontUsePrintPath;
 		secondary_path = file->native_path;
@@ -635,10 +636,9 @@ int file_modify_path(file_t* dst, file_t* src, const char* str, int operation)
 static int file_statw(file_t* file)
 {
 	WIN32_FILE_ATTRIBUTE_DATA data;
-	wchar_t* long_path = get_long_path_if_needed(file->real_path);
 
 	/* read file attributes */
-	if (GetFileAttributesExW((long_path ? long_path : file->real_path), GetFileExInfoStandard, &data)) {
+	if (GetFileAttributesExW(file->real_path, GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FileIsDir : FileIsReg);
@@ -647,12 +647,11 @@ static int file_statw(file_t* file)
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
-		/* convert to second and subtract the epoch difference */
+		/* convert to seconds and subtract the epoch difference */
 		file->mtime = u / 10000000 - 11644473600LL;
-		free(long_path);
 		return 0;
 	}
-	free(long_path);
+	file->mode |= FileIsInaccessible;
 	set_errno_from_last_file_error();
 	return -1;
 }
@@ -678,14 +677,17 @@ int file_stat(file_t* file, int fstat_flags)
 	if (FILE_ISDATA(file) || FILE_ISSTDSTREAM(file))
 		return 0;
 	else if (!file->real_path) {
+		file->mode |= FileIsInaccessible;
 		errno = EINVAL;
 		return -1;
 	}
 #ifdef _WIN32
 	return file_statw(file);
 #else
-	if (stat(file->real_path, &st))
+	if (stat(file->real_path, &st)) {
+		file->mode |= FileIsInaccessible;
 		return -1;
+	}
 	file->size  = st.st_size;
 	file->mtime = st.st_mtime;
 
@@ -722,7 +724,12 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 		return NULL;
 	}
 #ifdef _WIN32
-	return _wfsopen(file->real_path, mode, _SH_DENYNO);
+	{
+		FILE* fd = _wfsopen(file->real_path, mode, _SH_DENYNO);
+		if (!fd && errno == EINVAL)
+			errno = ENOENT;
+		return fd;
+	}
 #else
 	return fopen(file->real_path, mode);
 #endif

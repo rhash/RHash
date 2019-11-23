@@ -23,57 +23,66 @@
 struct percents_output_info_t* percents_output = NULL;
 
 #ifdef _WIN32
-#define IS_UTF8_OUTPUT(oflags, out) (((oflags) & OutForceUtf8) || (opt.flags & OPT_UTF8) || win_is_console_stream(out))
+# define IS_UTF8() (opt.flags & OPT_UTF8)
 #else
-#define IS_UTF8_OUTPUT(oflags, out) 1
+# define IS_UTF8() 1
 #endif
+
+/**
+ * Calculate the number of symbols printed by fprintf_file_t(...) for a given formated message.
+ * @patam format (nullable) message format string
+ * @param path file path
+ * @param output_flags bitmask specifying path output mode
+ * @return the number of printed symbols
+ */
+static int count_printed_size(const char* format, const char* path, unsigned output_flags)
+{
+	size_t format_length = 0;
+	if (format) {
+		assert(strstr(format, "%s") != NULL);
+		format_length = (IS_UTF8() ? count_utf8_symbols(format) : strlen(format)) - 2;
+	}
+	assert(path != NULL);
+	return format_length + (IS_UTF8() || (output_flags & OutForceUtf8) ? count_utf8_symbols(path) : strlen(path));
+}
 
 /**
  * Print formatted file path to the specified stream.
  *
  * @param out the stream to write to
- * @param format the format string
+ * @param format (nullable) format string
  * @param file the file, which path will be formatted
  * @param output_flags bitmask containing mix of OutForceUtf8, OutBaseName, OutCountSymbols flags
  * @return the number of characters printed, -1 on fail with error code stored in errno
  */
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags)
 {
- 	int res;
-	unsigned bnf = output_flags & FPathBaseName;
-	unsigned ppf = (IS_UTF8_OUTPUT(output_flags, out) ? FPathUtf8 | FPathNotNull : 0);
-	const char* print_path = file_get_print_path(file, ppf | bnf);
-	assert((int)OutBaseName == (int)FPathBaseName);
+	unsigned basename_bit = output_flags & FPathBaseName;
 #ifdef _WIN32
-	if (!print_path)
-		print_path = file_get_print_path(file, FPathUtf8 | FPathNotNull | bnf);
-	assert(print_path);
-	if (format && !(ppf & FPathUtf8)) {
-		char* native_format = convert_str_encoding(format, ConvertToNative);
-		if (!native_format) {
-			errno = EILSEQ;
-			return -1;
+	const char* print_path;
+	if (!file->real_path) {
+		print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | basename_bit);
+	} else {
+		unsigned ppf = ((output_flags & OutForceUtf8) || (opt.flags & OPT_UTF8) ? FPathUtf8 | FPathNotNull : FPathPrimaryEncoding);
+		assert(file->real_path != NULL);
+		assert((int)OutBaseName == (int)FPathBaseName);
+		print_path = file_get_print_path(file, ppf | basename_bit);
+		if (!print_path) {
+			print_path = file_get_print_path(file, FPathUtf8 | FPathNotNull | basename_bit);
+			assert(print_path);
+			assert(!(opt.flags & OPT_UTF8));
 		}
-		res = PRINTF_RES(rsh_fprintf(out, native_format, print_path));
-		if (res >= 0 && (output_flags & OutCountSymbols)) {
-			res = count_utf8_symbols(format);
-			res += (strstr(native_format, "%s") ? -2 + strlen(print_path) : 0);
-		}
-		free(native_format);
-		return res;
 	}
 #else
+	const char* print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | basename_bit);
+	assert((int)OutBaseName == (int)FPathBaseName);
 	assert(print_path);
 #endif
 	if (rsh_fprintf(out, (format ? format : "%s"), print_path) < 0)
 		return -1;
-	if ((output_flags & OutCountSymbols) == 0)
-		return 0;
-	if (!format)
-		return count_utf8_symbols(print_path);
-	res = count_utf8_symbols(format);
-	res += (strstr(format, "%s") ? -2 + count_utf8_symbols(print_path) : 0);
-	return res;
+	if ((output_flags & OutCountSymbols) != 0)
+		return count_printed_size(format, print_path, output_flags);
+	return 0;
 }
 
 /* RFC 3986: safe url characters are ascii alpha-numeric and "-._~", other characters should be percent-encoded */
@@ -163,19 +172,6 @@ void log_msg_file_t(const char* format, struct file_t* file)
 {
 	fprintf_file_t(rhash_data.log, format, file, OutDefaultFlags);
 	fflush(rhash_data.log);
-}
-
-/**
- * Print a formatted warning message to the program log.
- *
- * @param format the format string
- */
-void log_warning(const char* format, ...)
-{
-	va_list ap;
-	va_start(ap, format);
-	print_log_prefix();
-	log_va_msg(format, ap);
 }
 
 /**
@@ -460,9 +456,9 @@ static void dots_update_percents(struct file_info* info, uint64_t offset)
 
 	if (percents.points == 0) {
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			rsh_fprintf(rhash_data.log, _("\nChecking %s\n"), file_get_print_path(info->file, FPathUtf8 | FPathNotNull));
+			rsh_fprintf(rhash_data.log, _("\nChecking %s\n"), file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull));
 		} else {
-			rsh_fprintf(rhash_data.log, _("\nProcessing %s\n"), file_get_print_path(info->file, FPathUtf8 | FPathNotNull));
+			rsh_fprintf(rhash_data.log, _("\nProcessing %s\n"), file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull));
 		}
 		fflush(rhash_data.log);
 	}

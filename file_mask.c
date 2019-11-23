@@ -67,14 +67,13 @@ int file_mask_match(file_mask_array* vect, struct file_t* file)
 	unsigned i;
 	int res = 0;
 	size_t len, namelen;
-	const char* name = file_get_print_path(file, FPathUtf8);
 	char* buf;
-
-	if (!name) return 0;
-
+	const char* name = file_get_print_path(file, FPathUtf8);
+	if (!name)
+		return 0;
 	/* all names should match against an empty array */
-	if (!vect || !vect->size) return 1;
-
+	if (!vect || !vect->size)
+		return 1;
 	/* get a lowercase name version to ignore case when matching */
 	buf = str_tolower(name);
 	namelen = strlen(buf);

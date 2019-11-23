@@ -36,15 +36,16 @@ void setup_percents(void);
 enum FileOutputFlags {
 	OutDefaultFlags = 0x0,
 	OutForceUtf8 = 0x1,
-	OutBaseName = 0x2,
-	OutCountSymbols = 0x4
+	OutBaseName = 0x4,
+	OutCountSymbols = 0x8
 };
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags);
 int fprint_urlencoded(FILE* out, const char* str, int upper_case);
 
 void log_msg(const char* format, ...);
 void log_msg_file_t(const char* format, struct file_t* file);
-void log_warning(const char* format, ...);
+#define log_warning log_error
+#define log_warning_msg_file_t log_error_msg_file_t
 void log_error(const char* format, ...);
 void log_error_file_t(struct file_t* file);
 void log_error_msg_file_t(const char* format, struct file_t* file);

@@ -198,9 +198,6 @@ void rhash_destroy(struct rhash_t* ptr)
 	file_cleanup(&ptr->out_file);
 	file_cleanup(&ptr->log_file);
 	file_cleanup(&ptr->upd_file);
-#ifdef _WIN32
-	if (ptr->program_dir) free(ptr->program_dir);
-#endif
 }
 
 static void free_allocated_data(void)

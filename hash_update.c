@@ -82,7 +82,7 @@ int update_ctx_update(struct update_ctx* ctx, file_t* file)
 
 	/* skip files already present in the hash file */
 	if (file_set_exist(ctx->crc_entries,
-			file_get_print_path(file, (ctx->flags & HasBom ? FPathUtf8 : 0))))
+			file_get_print_path(file, (ctx->flags & HasBom ? FPathUtf8 : FPathPrimaryEncoding))))
 		return 0;
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
@@ -296,8 +296,8 @@ static int fix_sfv_header(file_t* file)
 	if (result == 0 && file_rename(&new_file, file) < 0) {
 		/* TRANSLATORS: printed when a file rename failed */
 		log_error(_("can't move %s to %s: %s\n"),
-			file_get_print_path(&new_file, FPathUtf8 | FPathNotNull),
-			file_get_print_path(file, FPathUtf8 | FPathNotNull), strerror(errno));
+			file_get_print_path(&new_file, FPathPrimaryEncoding | FPathNotNull),
+			file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), strerror(errno));
 		result = -1;
 	}
 	file_cleanup(&new_file);

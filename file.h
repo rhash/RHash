@@ -57,6 +57,7 @@ enum FileModeBits {
 	FileIsDir   = 0x01,
 	FileIsLnk   = 0x02,
 	FileIsReg   = 0x04,
+	FileIsInaccessible = 0x08,
 	FileIsRoot  = 0x10,
 	FileIsData  = 0x20,
 	FileIsList  = 0x40,
@@ -67,7 +68,7 @@ enum FileModeBits {
 	FileInitRunFstat = 0x400,
 	FileInitRunLstat = 0x800,
 	FileInitUpdatePrintPathLastSlash = 0x1000,
-	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg),
+	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg | FileIsInaccessible),
 	FileMaskIsSpecial = (FileIsData | FileIsList | FileIsStdStream),
 	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial)
 };
@@ -75,6 +76,7 @@ enum FileModeBits {
 #define FILE_ISDIR(file)   ((file)->mode & FileIsDir)
 #define FILE_ISLNK(file)   ((file)->mode & FileIsLnk)
 #define FILE_ISREG(file)   ((file)->mode & FileIsReg)
+#define FILE_ISBAD(file)   ((file)->mode & FileIsInaccessible)
 #define FILE_ISDATA(file)  ((file)->mode & FileIsData)
 #define FILE_ISLIST(file)  ((file)->mode & FileIsList)
 #define FILE_ISSTDIN(file) ((file)->mode & FileIsStdin)
@@ -90,9 +92,11 @@ void file_swap(file_t* first, file_t* second);
 int are_paths_equal(ctpath_t path, struct file_t* file);
 
 enum FileGetPrintPathFlags {
+	FPathPrimaryEncoding = 0,
 	FPathUtf8 = 1,
-	FPathBaseName = 2,
-	FPathNotNull = 4
+	FPathNative = 2,
+	FPathBaseName = 4,
+	FPathNotNull = 8
 };
 const char* file_get_print_path(file_t* file, unsigned flags);
 
@@ -123,11 +127,16 @@ int file_rename(const file_t* from, const file_t* to);
 int file_move_to_bak(file_t* file);
 int file_is_readable(file_t* file);
 
-typedef struct file_list_t {
+/**
+ * A file list iterator.
+ */
+typedef struct file_list_t
+{
 	FILE* fd;
 	file_t current_file;
 	unsigned state;
 } file_list_t;
+
 int  file_list_open(file_list_t* list, file_t* file);
 int  file_list_read(file_list_t* list);
 void file_list_close(file_list_t* list);
@@ -146,7 +155,8 @@ void file_list_close(file_list_t* list);
 # define rsh_topendir(p) win_wopendir(p)
 
 /* dirent struct for windows to traverse directory content */
-struct win_dirent {
+struct win_dirent
+{
 	char*     d_name;   /* file name */
 	wchar_t*  d_wname;  /* file name in Unicode (UTF-16) */
 	int       d_isdir;  /* non-zero if file is a directory */

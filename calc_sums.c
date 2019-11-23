@@ -226,8 +226,8 @@ int rename_file_by_embeding_crc32(struct file_info* info)
 		log_error_msg_file_t(_("failed to rename file: %s\n"), info->file);
 	} else if (file_rename(info->file, &new_file) < 0) {
 		log_error(_("can't move %s to %s: %s\n"),
-			file_get_print_path(info->file, FPathUtf8 | FPathNotNull),
-			file_get_print_path(&new_file, FPathUtf8 | FPathNotNull), strerror(errno));
+			file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull),
+			file_get_print_path(&new_file, FPathPrimaryEncoding | FPathNotNull), strerror(errno));
 	} else {
 		/* store the new path */
 		file_swap(info->file, &new_file);
@@ -403,9 +403,8 @@ static int verify_sums(struct file_info* info)
 	}
 	rsh_timer_start(&timer);
 
-	if (calc_sums(info) < 0) {
-		finish_percents(info, -1);
-		return -1;
+	if (FILE_ISBAD(info->file) || calc_sums(info) < 0) {
+		return (finish_percents(info, -1) < 0 ? -2 : -1);
 	}
 	info->time = rsh_timer_stop(&timer);
 
@@ -478,7 +477,7 @@ int check_hash_file(file_t* file, int chdir)
 			}
 		} else {
 			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
-			log_warning(_("file name doesn't contain a CRC32: %s\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull));
+			log_warning_msg_file_t(_("file name doesn't contain a CRC32: %s\n"), file);
 			return -1;
 		}
 		return res;
@@ -557,7 +556,7 @@ int check_hash_file(file_t* file, int chdir)
 		} else {
 			if (file_modify_path(&file_to_check, file, NULL, FModifyRemoveExtension) < 0) {
 				/* note: trailing whitespaces were removed from line by hash_check_parse_line() */
-				log_error(_("%s: can't parse line \"%s\"\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull), line);
+				log_error(_("%s: can't parse line \"%s\"\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line);
 				continue;
 			}
 		}

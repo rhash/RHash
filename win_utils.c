@@ -26,8 +26,8 @@ void set_benchmark_cpu_affinity(void)
 #ifdef _WIN32
 /* Windows-only (non-CygWin) functions */
 
+#include "file.h"
 #include "parse_cmdline.h"
-#include "rhash_main.h"
 #include <share.h> /* for _SH_DENYWR */
 #include <fcntl.h> /* for _O_RDONLY, _O_BINARY */
 #include <io.h> /* for isatty */
@@ -35,13 +35,44 @@ void set_benchmark_cpu_affinity(void)
 #include <errno.h>
 #include <locale.h>
 
+struct console_data_t
+{
+	unsigned console_flags;
+	unsigned saved_cursor_size;
+	unsigned primary_codepage;
+	unsigned secondary_codepage;
+	wchar_t format_buffer[4096];
+	wchar_t printf_result[65536];
+	wchar_t program_dir[32768];
+};
+struct console_data_t console_data;
+
 /**
- * Convert a c-string to wide character string using given codepage
+ * Convert a c-string as wide character string using given codepage
+ * and print it to the given buffer.
+ *
+ * @param str the string to convert
+ * @param codepage the codepage to use
+ * @param buffer buffer to print the string to
+ * @param buf_size buffer size in bytes
+ * @return converted string on success, NULL on fail with error code stored in errno
+ */
+static wchar_t* cstr_to_wchar_buffer(const char* str, int codepage, wchar_t* buffer, size_t buf_size)
+{
+	if (MultiByteToWideChar(codepage, 0, str, -1, buffer, buf_size / sizeof(wchar_t)) != 0)
+		return buffer;
+	set_errno_from_last_file_error();
+	return NULL; /* conversion failed */
+}
+
+/**
+ * Convert a c-string to wide character string using given codepage.
+ * The result is allocated with malloc and must be freed by caller.
  *
  * @param str the string to convert
  * @param codepage the codepage to use
  * @param exact_conversion non-zero to require exact encoding conversion, 0 otherwise
- * @return converted string on success, NULL on fail  with error code stored in errno
+ * @return converted string on success, NULL on fail with error code stored in errno
  */
 static wchar_t* cstr_to_wchar(const char* str, int codepage, int exact_conversion)
 {
@@ -58,7 +89,7 @@ static wchar_t* cstr_to_wchar(const char* str, int codepage, int exact_conversio
 
 /**
  * Convert a wide character string to c-string using given codepage.
- * Optionally set a flag if conversion failed.
+ * The result is allocated with malloc and must be freed by caller.
  *
  * @param wstr the wide string to convert
  * @param codepage the codepage to use
@@ -92,6 +123,7 @@ static char* wchar_to_cstr(const wchar_t* wstr, int codepage, int exact_conversi
 
 /**
  * Convert c-string to wide string using encoding and transformation specified by flags.
+ * The result is allocated with malloc and must be freed by caller.
  *
  * @param str the C-string to convert
  * @param flags bit-mask containing the following bits: ConvertToPrimaryEncoding, ConvertToSecondaryEncoding,
@@ -143,7 +175,7 @@ char* convert_str_encoding(const char* str, unsigned flags)
 	int convert_from = (flags & ConvertToUtf8 ? ConvertNativeToWcs : ConvertUtf8ToWcs) | (flags & ConvertExact);
 	wchar_t* wstr;
 	assert((flags & ~(ConvertToUtf8 | ConvertToNative | ConvertExact)) == 0); /* disallow invalid flags */
-	if ((opt.flags & OPT_UTF8) || !(flags & (ConvertToUtf8 | ConvertToNative))) {
+	if ((flags & (ConvertToUtf8 | ConvertToNative)) == 0) {
 		errno = EINVAL;
 		return NULL; /* error: no conversion needed */
 	}
@@ -199,6 +231,7 @@ static int convert_last_error_to_errno(void)
 	case ERROR_FILE_NOT_FOUND:
 	case ERROR_PATH_NOT_FOUND:
 	case ERROR_INVALID_DRIVE:
+	case ERROR_INVALID_NAME:
 	case ERROR_BAD_NETPATH:
 	case ERROR_BAD_PATHNAME:
 	case ERROR_FILENAME_EXCED_RANGE:
@@ -267,9 +300,9 @@ static void restore_cursor(void)
 {
 	CONSOLE_CURSOR_INFO cci;
 	HANDLE hOut = GetStdHandle(STD_ERROR_HANDLE);
-	if (hOut != INVALID_HANDLE_VALUE && rhash_data.saved_cursor_size) {
+	if (hOut != INVALID_HANDLE_VALUE && console_data.saved_cursor_size) {
 		/* restore cursor size and visibility */
-		cci.dwSize = rhash_data.saved_cursor_size;
+		cci.dwSize = console_data.saved_cursor_size;
 		cci.bVisible = 1;
 		SetConsoleCursorInfo(hOut, &cci);
 	}
@@ -285,7 +318,7 @@ void hide_cursor(void)
 	if (hOut != INVALID_HANDLE_VALUE && GetConsoleCursorInfo(hOut, &cci))
 	{
 		/* store current cursor size and visibility flag */
-		rhash_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
+		console_data.saved_cursor_size = (cci.bVisible ? cci.dwSize : 0);
 
 		/* now hide cursor */
 		cci.bVisible = 0;
@@ -304,20 +337,25 @@ void setup_console(void)
 	if ((opt.flags & OPT_ENCODING) == 0)
 		opt.flags |= OPT_UTF8;
 
+	console_data.console_flags = 0;
+	console_data.saved_cursor_size = 0;
+	console_data.primary_codepage = (opt.flags & OPT_UTF8 ? CP_UTF8 : (opt.flags & OPT_ENC_DOS) ? CP_OEMCP : CP_ACP);
+	console_data.secondary_codepage = (!(opt.flags & OPT_UTF8) ? CP_UTF8 : (opt.flags & OPT_ENC_DOS) ? CP_OEMCP : CP_ACP);
+
+	/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
+	/* cause _fileno() is undefined, when compiling as strict ansi C. */
+	if (isatty(1))
+		console_data.console_flags |= 1;
+	if (isatty(2))
+		console_data.console_flags |= 2;
+
 	if ((opt.flags & OPT_UTF8) != 0)
 	{
-		/* note: we are using numbers 1 = _fileno(stdout), 2 = _fileno(stderr) */
-		/* cause _fileno() is undefined,  when compiling as strict ansi C. */
-		if (isatty(1))
-		{
+		if (console_data.console_flags & 1)
 			_setmode(1, _O_U8TEXT);
-			rhash_data.output_flags |= 1;
-		}
-		if (isatty(2))
-		{
+		if (console_data.console_flags & 2)
 			_setmode(2, _O_U8TEXT);
-			rhash_data.output_flags |= 2;
-		}
+
 #ifdef USE_GETTEXT
 		bind_textdomain_codeset(TEXT_DOMAIN, "utf-8");
 #endif /* USE_GETTEXT */
@@ -328,6 +366,11 @@ void setup_console(void)
 	}
 }
 
+wchar_t* get_program_dir(void)
+{
+	return console_data.program_dir;
+}
+
 /**
  * Check if the given stream is connected to console.
  *
@@ -336,8 +379,8 @@ void setup_console(void)
  */
 int win_is_console_stream(FILE* stream)
 {
-	return ((stream == stdout && (rhash_data.output_flags & 1))
-		|| (stream == stderr && (rhash_data.output_flags & 2)));
+	return ((stream == stdout && (console_data.console_flags & 1))
+		|| (stream == stderr && (console_data.console_flags & 2)));
 }
 
 /**
@@ -345,26 +388,17 @@ int win_is_console_stream(FILE* stream)
  */
 void init_program_dir(void)
 {
-	wchar_t* program_path = NULL;
-	DWORD buf_size;
-	DWORD len;
-	for (buf_size = 2048;; buf_size += 2048)
-	{
-		program_path = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
-		len = GetModuleFileNameW(NULL, program_path, buf_size);
-		if (len && len < buf_size) break;
-		free(program_path);
-		if (!len || buf_size >= 32768) return;
-	}
-	/* remove trailng file name with the last separator */
-	for (; len > 0 && !IS_PATH_SEPARATOR_W(program_path[len]); len--);
-	for (; len > 0 && IS_PATH_SEPARATOR_W(program_path[len]); len--);
-	program_path[len + 1] = 0;
-	if (len == 0) {
-		free(program_path);
+	DWORD buf_size = sizeof(console_data.program_dir) / sizeof(console_data.program_dir[0]);
+	DWORD length;
+	length = GetModuleFileNameW(NULL, console_data.program_dir, buf_size);
+	if (length == 0 || length >= buf_size) {
+		console_data.program_dir[0] = 0;
 		return;
 	}
-	rhash_data.program_dir = program_path;
+	/* remove trailng file name with the last path separator */
+	for (; length > 0 && !IS_PATH_SEPARATOR_W(console_data.program_dir[length]); length--);
+	for (; length > 0 && IS_PATH_SEPARATOR_W(console_data.program_dir[length]); length--);
+	console_data.program_dir[length + 1] = 0;
 }
 
 #ifdef USE_GETTEXT
@@ -392,12 +426,12 @@ void setup_locale_dir(void)
 	DWORD buf_size;
 	DWORD res;
 
-	if (!rhash_data.program_dir) return;
-	buf_size = GetShortPathNameW(rhash_data.program_dir, NULL, 0);
+	if (!console_data.program_dir[0]) return;
+	buf_size = GetShortPathNameW(console_data.program_dir, NULL, 0);
 	if (!buf_size) return;
 
 	short_dir = (wchar_t*)rsh_malloc(sizeof(wchar_t) * buf_size);
-	res = GetShortPathNameW(rhash_data.program_dir, short_dir, buf_size);
+	res = GetShortPathNameW(console_data.program_dir, short_dir, buf_size);
 	if (res > 0 && res < buf_size)
 		program_dir = convert_wcs_to_str(short_dir, ConvertToPrimaryEncoding);
 	free(short_dir);
@@ -428,36 +462,22 @@ void setup_locale_dir(void)
  */
 static int win_vfprintf_encoded(FILE* out, const char* format, int str_type, va_list args)
 {
-	if (!win_is_console_stream(out))
-	{
-		int res;
-		char* actual_format = (char*)format;
-		if (str_type != USE_CSTR_ARGS)
-		{
-			char* p;
-			actual_format = rsh_strdup(format);
-			for (p = actual_format; *p; p++)
-				if (*p == '%' && *(++p) == 's')
-					*p = 'S';
+	if (!win_is_console_stream(out)) {
+		return vfprintf(out, (format ? format : "%s"), args);
+	} else if (str_type == USE_CSTR_ARGS) {
+		/* thread-unsafe code: using a static buffer */
+		static char buffer[8192];
+		int res = vsnprintf(buffer, sizeof(buffer) - 1, format, args);
+		if (res >= 0) {
+			wchar_t *wstr = cstr_to_wchar_buffer(buffer, console_data.primary_codepage, console_data.printf_result, sizeof(console_data.printf_result));
+			res = (wstr ? fwprintf(out, L"%s", wstr) : -1);
 		}
-		res = vfprintf(out, actual_format, args);
-		if (actual_format != format)
-			free(actual_format);
 		return res;
-	}
-	else
-	{
-		int res;
-		wchar_t* wformat = cstr_to_wchar(format, CP_UTF8, 0);
-		if (wformat && str_type == USE_CSTR_ARGS)
-		{
-			wchar_t* p;
-			for (p = wformat; *p; p++)
-				if (*p == L'%' && *(++p) == L's')
-					*p = L'S';
-		}
-		res = vfwprintf(out, (wformat ? wformat : L"[UTF8 conversion error]\n"), args);
-		free(wformat);
+	} else {
+		wchar_t* wformat = (!format || (format[0] == '%' && format[1] == 's' && !format[2]) ? L"%s" :
+			cstr_to_wchar_buffer(format, console_data.primary_codepage, console_data.format_buffer, sizeof(console_data.format_buffer)));
+		int res = vfwprintf(out, (wformat ? wformat : L"[UTF8 conversion error]\n"), args);
+		assert(str_type == USE_WSTR_ARGS);
 		return res;
 	}
 }
@@ -517,8 +537,8 @@ int win_fprintf_warg(FILE* out, const char* format, ...)
  */
 size_t win_fwrite(const void* ptr, size_t size, size_t count, FILE* out)
 {
-	if ((out != stdout || !(rhash_data.output_flags & 1))
-		&& (out != stderr || !(rhash_data.output_flags & 2)))
+	if ((out != stdout || !(console_data.console_flags & 1))
+		&& (out != stderr || !(console_data.console_flags & 2)))
 		return fwrite(ptr, size, count, out);
 	{
 		size_t i;

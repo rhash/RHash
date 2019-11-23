@@ -129,7 +129,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 				free(filepath);
 
 				/* convert file name */
-				if (res == 0 && !(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0))
+				if (res == 0 && !(opt.flags & OPT_UTF8) && !file_get_print_path(&file, FPathPrimaryEncoding))
 					res = -1;
 
 				/* quietly skip unconvertible file names and nonexistent files */
@@ -155,19 +155,14 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	}
 	else
 	{
-		int res = file_init(&file, path, file_mode | FileInitRunFstat);
-		if (res == 0 && !(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0))
-			res = -1;
-
-
-		if (!(opt.flags & OPT_UTF8) && !file_get_print_path(&file, 0)) {
-			log_error_msg_file_t(_("can't convert the file path to local encoding: %s\n"), &file);
+		if (file_init(&file, path, file_mode | FileInitRunFstat) < 0) {
+			log_error_file_t(&file);
 			file_cleanup(&file);
 			data->errors_count++;
 			return;
 		}
-		if (file_stat(&file, 0) < 0) {
-			log_error_file_t(&file);
+		if (!(opt.flags & OPT_UTF8) && !file_get_print_path(&file, FPathPrimaryEncoding)) {
+			log_error_msg_file_t(_("can't convert the file path to local encoding: %s\n"), &file);
 			file_cleanup(&file);
 			data->errors_count++;
 			return;
