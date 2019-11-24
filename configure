@@ -169,7 +169,7 @@ for OPT do
     BUILD_DEBUG='-g'
     ;;
   --enable-debug=*)
-    BUILD_DEBUG='-g'$(get_opt_value $OPT)
+    BUILD_DEBUG='-g '$(get_opt_value $OPT)
     ;;
   --disable-debug)
     BUILD_DEBUG=
@@ -563,8 +563,9 @@ has_optimization()
   return 1
 }
 has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
-OPTFLAGS="-pipe -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections"
-OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTFLAGS)
+test -n "$BUILD_DEBUG" && OPTNDEBUG= || OPTNDEBUG="-DNDEBUG"
+OPTFLAGS="-pipe -fomit-frame-pointer -ffunction-sections -fdata-sections"
+OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTNDEBUG $OPTFLAGS)
 
 # test that compiler works with options specified by command line
 log_start "compiler working with provided options"
