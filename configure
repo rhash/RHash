@@ -4,6 +4,7 @@
 OPT_OPENSSL=auto
 OPT_OPENSSL_RUNTIME=auto
 OPT_GETTEXT=auto
+OPT_CC=
 
 export LC_ALL=C
 CFG_LINE="$*"
@@ -23,7 +24,7 @@ INSTALL_LIB_SHARED=auto
 INSTALL_PKGCONFIGDIR="$PKG_INSTALLDIR"
 
 # display error message and exit
-die () {
+die() {
   echo
   echo "Error: $@" >&2
   echo >&2
@@ -132,6 +133,7 @@ for OPT do
     ;;
   --cc=*)
     CC=$(get_opt_value $OPT)
+    OPT_CC=1
     ;;
   --ar=*)
     CMD_AR=$(get_opt_value $OPT)
@@ -200,7 +202,7 @@ test -z "$INSTALL_PKGCONFIGDIR" && INSTALL_PKGCONFIGDIR="$INSTALL_LIBDIR/pkgconf
 test -z "$INSTALL_LOCALEDIR" && INSTALL_LOCALEDIR="$INSTALL_PREFIX/share/locale"
 
 # detect and prepare tmp directory
-for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp" ; do
+for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
   test -d "$DETECT_TMP" && break
 done
 RANDNUM=$RANDOM
@@ -227,26 +229,45 @@ join_params()
   printf '%s ' $@ | sed -e 's/ $//'
 }
 
+run_cmd() {
+  echo "Run: $@" >> "$TMPLOG"
+  $@ >> "$TMPLOG" 2>&1
+  TMPRES="$?"
+  echo "Run result: $TMPRES" >> "$TMPLOG"
+  echo >> "$TMPLOG"
+  return "$TMPRES"
+}
+
 yn_nonempty()
 {
   test -n "$1" && echo yes || echo no;
 }
 
+log_start()
+{
+  echo "============ Checking for $1 ============" >> "$TMPLOG"
+}
+
+log_finish()
+{
+  echo "=============================================" >> "$TMPLOG"
+  echo "" >> "$TMPLOG"
+}
+
 # Use this before starting a check
 start_check() {
-  echo "============ Checking for $1 ============" >> "$TMPLOG"
+  log_start "$1"
   printf '%s' "Checking for $1 ... "
   res_comment=""
 }
 
 # Use this to echo the results of a check
 finish_check() {
-  if test "$res_comment" ; then
+  if test -n "$res_comment"; then
     res_comment="($res_comment)"
   fi
   echo "Result is: $1 $res_comment" >> "$TMPLOG"
-  echo "=============================================" >> "$TMPLOG"
-  echo "" >> "$TMPLOG"
+  log_finish
   echo "$1 $res_comment"
   res_comment=""
 }
@@ -353,7 +374,7 @@ case "$HOST_OS" in
     ;;
 esac
 
-if test -z "$BUILD_TARGET" ; then
+if test -z "$BUILD_TARGET"; then
   # host's CPU/instruction set
   set_host_arch() {
       case "$1" in
@@ -376,7 +397,7 @@ if test -z "$BUILD_TARGET" ; then
       esac
   }
   set_host_arch "$(uname -m 2>&1)"
-  if test "$HOST_ARCH" = UNKNOWN ; then
+  if test "$HOST_ARCH" = UNKNOWN; then
     set_host_arch "$(uname -p 2>&1)"
   fi
   TARGET_OS="$HOST_OS"
@@ -405,11 +426,11 @@ else
   }
   TARGET_OS="UNKNOWN"
   set_target_os 3
-  if test "$TARGET_OS" = UNKNOWN ; then
+  if test "$TARGET_OS" = UNKNOWN; then
     set_target_os 2
   fi
   TARGET_ARCH=$(echo $BUILD_TARGET | cut -d '-' -f 1)
-  if test "$(echo $TARGET_ARCH)" != "x86_64" ; then
+  if test "$(echo $TARGET_ARCH)" != "x86_64"; then
     TARGET_ARCH=$(echo $TARGET_ARCH | tr '_' '-')
   fi
 fi
@@ -470,8 +491,9 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
   finish_check "$cc_version"
 else
   CC_TMP="$CC"
-  for CC in "$CC_TMP" gcc cc ; do
-    if $CC -v >/dev/null 2>&1; then
+  test -n "$OPT_CC" && OTHER_CC= || OTHER_CC="gcc cc"
+  for CC in "$CC_TMP" $OTHER_CC; do
+    if run_cmd "$CC -v"; then
       cc_name_tmp=$($CC -v 2>&1 | tail -n 1 | cut -d ' ' -f 1)
       if test "$cc_name_tmp" = "gcc"; then
         cc_name=$cc_name_tmp
@@ -519,6 +541,12 @@ fi # icc
 test -z "$cc_vendor" && die "compiler not found"
 test "$cc_fail" = "yes" && die "unsupported compiler version"
 
+log_start "compiler working with default options"
+if ! cc_check_cflag; then
+  die "compiler doesn't work"
+fi
+log_finish
+
 if test "$cc_name" = "gcc" && test "$_cc_major" -gt 3; then
   WARN_CFLAGS="$WARN_CFLAGS -Wdeclaration-after-statement"
 fi
@@ -527,7 +555,7 @@ fi
 has_optimization()
 {
   # posix-compatible way to find -O<n> option
-  for OPT in $BUILD_EXTRA_CFLAGS; do
+  for OPT in $BUILD_EXTRA_CFLAGS $BUILD_DEBUG; do
     case "$OPT" in
       -O[0-3]|-O) return 0 ;;
     esac
@@ -537,6 +565,13 @@ has_optimization()
 has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
 OPTFLAGS="-pipe -DNDEBUG -fomit-frame-pointer -ffunction-sections -fdata-sections"
 OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTFLAGS)
+
+# test that compiler works with options specified by command line
+log_start "compiler working with provided options"
+if ! cc_check_cflag; then
+  die "wrong compiler options provided"
+fi
+log_finish
 
 # detect proper shared library name
 SHARED_PREFIX="lib"
