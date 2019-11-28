@@ -85,7 +85,7 @@ WriteMakefile(
     AUTHOR       => 'Aleksey Kravchenko',
     VERSION_FROM => 'Rhash.pm', # finds $VERSION
     OPTIONAL( '6.31',
-        LICENSE => 'unrestricted',
+        LICENSE => 'open_source',
     ),
     OPTIONAL( '6.46',
         # Use META_ADD instead of META_MERGE so that we can remove

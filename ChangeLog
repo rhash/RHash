@@ -1,3 +1,6 @@
+Thu, 28 Nov 2019 Aleksey
+	* change project license to BSD Zero Clause License
+
 Mon, 18 Nov 2019 Aleksey
 	* new printf-format modifier '%u' to print url-encoded filename, path or hash
 
@@ -63,7 +66,7 @@ Sun Mar 11 2018 And Sch
 
 Sun Feb 18 2018 Aleksey
 	* Bugfix: fix --follow option
-	
+
 Mon Jan 29 2018 J. Peter Mugaas
 	* better MSYS and CygWin support
 

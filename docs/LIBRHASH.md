@@ -18,8 +18,7 @@ LibRHash has [bindings] to several programming languages: *Java*, *C#*, *Perl*, 
 License
 -------
 
-The library is licensed under [RHash License].
-Basically the library and its source code can be used for free in Commercial, [Open Source] and other projects.
+The library is licensed under [BSD Zero Clause License].
 
 Usage examples
 --------------
@@ -51,10 +50,10 @@ Usage examples
    rhash_final(context, NULL); /* finalize hash calculation */
  
    /* output digest as a hexadecimal hash string */
-   rhash_print(output, context, RHASH_MD4, RHPR_UPPERCASE); 
+   rhash_print(output, context, RHASH_MD4, RHPR_UPPERCASE);
    printf("%s ('a'x1000000) = %s\n", rhash_get_name(RHASH_MD4), output);
  
-   rhash_print(output, context, RHASH_MD5, RHPR_UPPERCASE); 
+   rhash_print(output, context, RHASH_MD5, RHPR_UPPERCASE);
    printf("%s ('a'x1000000) = %s\n", rhash_get_name(RHASH_MD5), output);
  
    rhash_free(context);
@@ -123,5 +122,4 @@ Usage examples
 ```
 
 [bindings]: ../bindings/
-[RHash License]: ../COPYING
-[Open Source]: http://en.wikipedia.org/wiki/Open_Source
+[BSD Zero Clause License]: ../COPYING

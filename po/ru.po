@@ -1,7 +1,7 @@
 # Translation of RHash messages to Russian
-# Copyright (C) 2011 RHash Software Corp.
+# Copyright (c) 2011 RHash Software Corp.
 # This file is distributed under the same license as the RHash package.
-# Aleksey <rhash.admin@gmail.com>, 2011.
+# Kravchenko Aleksey <rhash.admin@gmail.com>, 2011.
 #
 msgid ""
 msgstr ""

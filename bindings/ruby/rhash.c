@@ -1,18 +1,19 @@
 /*
  * Ruby Bindings for Librhash
+ *
  * Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com> and
  *                     Aleksey Kravchenko <rhash.admin@gmail.com>
- * 
- * Permission is hereby granted, free of charge,  to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction,  including without limitation the rights
- * to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
- * copies  of  the Software,  and  to permit  persons  to whom  the Software  is
- * furnished to do so.
- * 
- * This library  is distributed  in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. Use it at your own risk!
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE  INCLUDING ALL IMPLIED WARRANTIES OF  MERCHANTABILITY
+ * AND FITNESS.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT,  OR CONSEQUENTIAL DAMAGES  OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE,  DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT,  NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <ruby.h>
@@ -50,7 +51,7 @@ VALUE rh_update_file(VALUE self, VALUE file);
 /**
  * call-seq:
  *   rhash.update_file(filename) -> RHash
- * 
+ *
  * Updates this <code>RHash</code> with data from given file.
  */
 VALUE rh_update_file(VALUE self, VALUE file) {
@@ -249,7 +250,7 @@ VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
  * that supports many hashing algorithms. This module provides
  * class for incremental hashing that utilizes the library.
  * Sample usage of it you can see from the following example:
- * 
+ *
  *   hasher = RHash.new(RHash::CRC32, RHash::MD5)
  *   hasher.update('Hello, ')
  *   hasher << 'world' << '!'
@@ -278,12 +279,12 @@ VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
  */
 void Init_rhash() {
 	rhash_library_init();
-	
+
 	cRHash = rb_define_class("RHash", rb_cObject);
-	
+
 	rb_define_singleton_method(cRHash, "new", rh_new, -1);
 	rb_define_singleton_method(cRHash, "base32?", rh_is_base32, 1);
-	
+
 	rb_define_method(cRHash, "initialize", rh_init,  -1);
 	rb_define_method(cRHash, "update",     rh_update, 1);
 	rb_define_method(cRHash, "<<",         rh_update, 1);
@@ -295,7 +296,7 @@ void Init_rhash() {
 	rb_define_method(cRHash, "to_base64",  rh_to_base64, -1);
 	rb_define_method(cRHash, "to_s",       rh_to_s, -1);
 	rb_define_method(cRHash, "magnet",     rh_magnet, -1);
-	
+
 	rb_eval_string(
 "class RHash \n\
   def update_file(filename) \n\
@@ -319,7 +320,7 @@ end\n\
 def RHash.magnet_for_file(filename, *hash_ids)\n\
   RHash.new(*hash_ids).update_file(filename).finish.magnet(filename)\n\
 end");
-	
+
 	/** CRC32 checksum. */
 	rb_define_const(cRHash, "CRC32",     INT2FIX(RHASH_CRC32));
 	/** CRC32C checksum. */

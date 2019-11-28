@@ -1,17 +1,18 @@
 /*
  * This file is a part of Java Bindings for Librhash
+ *
  * Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>
- * 
- * Permission is hereby granted, free of charge,  to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction,  including without limitation the rights
- * to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
- * copies  of  the Software,  and  to permit  persons  to whom  the Software  is
- * furnished to do so.
- * 
- * This library  is distributed  in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. Use it at your own risk!
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE  INCLUDING ALL IMPLIED WARRANTIES OF  MERCHANTABILITY
+ * AND FITNESS.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT,  OR CONSEQUENTIAL DAMAGES  OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE,  DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT,  NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 package org.sf.rhash;
@@ -59,7 +60,7 @@ public final class RHash {
 	 * This method calculates message digest for byte subsequence
 	 * in array <code>data</code> starting from <code>data[ofs]</code>
 	 * and ending at <code>data[ofs+len-1]</code>.
-	 * 
+	 *
 	 * @param  type  type of hash algorithm
 	 * @param  data  the bytes to process
 	 * @param  ofs   index of the first byte in array to process
@@ -81,10 +82,10 @@ public final class RHash {
 		}
 		return new Digest(Bindings.rhash_msg(type.hashId(), data, ofs, len), type);
 	}
-	
+
 	/**
 	 * Computes hash of given data.
-	 * 
+	 *
 	 * @param  type  type of hash algorithm
 	 * @param  data  the bytes to process
 	 * @return  message digest for specified array
@@ -148,7 +149,7 @@ public final class RHash {
 		hasher.update(file).finish();
 		return hasher.getDigest();
 	}
-	
+
 	/**
 	 * Produces magnet link for specified file with given hashes.
 	 *
@@ -160,7 +161,7 @@ public final class RHash {
 		hasher.update(new File(filename)).finish();
 		return hasher.getMagnet(filename);
 	}
-	
+
 	/**
 	 * Produces magnet link for specified file with given hashes.
 	 *
@@ -237,7 +238,7 @@ public final class RHash {
 	 * Updates this <code>RHash</code> with new data chunk.
 	 * This method hashes bytes from <code>data[ofs]</code>
 	 * through <code>data[ofs+len-1]</code>.
-	 * 
+	 *
 	 * @param  data  data to be hashed
 	 * @param  ofs   index of the first byte to hash
 	 * @param  len   number of bytes to hash
@@ -283,7 +284,7 @@ public final class RHash {
 	 * Updates this <code>RHash</code> with new data chunk.
 	 * String is encoded into a sequence of bytes using the
 	 * default platform encoding.
-	 * 
+	 *
 	 * @param str  string to be hashed
 	 * @return this object
 	 * @throws NullPointerException
@@ -298,7 +299,7 @@ public final class RHash {
 
 	/**
 	 * Updates this <code>RHash</code> with data from given file.
-	 * 
+	 *
 	 * @param  file  file to be hashed
 	 * @return this object
 	 * @throws IOException if an I/O error occurs
@@ -361,7 +362,7 @@ public final class RHash {
 
 	/**
 	 * Returns digest for given hash type.
-	 * 
+	 *
 	 * @param type  hash type
 	 * @return  <code>Digest</code> for processed data
 	 * @throws NullPointerException
@@ -391,7 +392,7 @@ public final class RHash {
 	 * <code>RHash</code> constructor, then the least
 	 * hash type (in the order induced by
 	 * {@link Enum#compareTo(Enum) compareTo()}) is used.
-	 * 
+	 *
 	 * @return <code>Digest</code> for processed data
 	 * @throws IllegalStateException
 	 *   if this <code>RHash</code> is not finished
@@ -399,7 +400,7 @@ public final class RHash {
 	public Digest getDigest() {
 		return getDigest(deftype);
 	}
-	
+
 	/**
 	 * Returns magnet link that includes specified filename
 	 * and hashes for given algorithms. Only hashes that were
@@ -425,7 +426,7 @@ public final class RHash {
 	 * Returns magnet link for given filename.
 	 * Magnet includes all hashes that were computed
 	 * by this <code>RHash</code>.
-	 * 
+	 *
 	 * @param  filename  file name to include in magnet, may be <code>null</code>
 	 * @return magnet link
 	 * @throws IllegalStateException
@@ -437,7 +438,7 @@ public final class RHash {
 		}
 		return Bindings.rhash_print_magnet(context_ptr, filename, hash_flags);
 	}
-	
+
 	/**
 	 * Called by garbage collector to free native resources.
 	 */

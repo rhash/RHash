@@ -16,7 +16,7 @@ public class RHashTest {
 	public void testAllHashes() {
 		RHash r = new RHash(EnumSet.allOf(HashType.class));
 		r.update("a").finish();
-		
+
 		assertEquals("e8b7be43", r.getDigest(CRC32).toString());
 		assertEquals("c1d04330", r.getDigest(CRC32C).toString());
 		assertEquals("bde52cb31de33e46245e05fbdbd6fb24", r.getDigest(MD4).toString());

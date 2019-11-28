@@ -39,14 +39,9 @@ For more complicated cases of installation see the [INSTALL.md] file.
 ## Contribution
 Please read the [Contribution guidelines](docs/CONTRIBUTING.md) document.
 
-## Notes on RHash License
-The code is distributed under [RHash License](COPYING). Basically,
-the program, the library and source code can be used free of charge under
-the MIT, BSD, GPL, a commercial or a freeware license without additional
-restrictions. In the case an  OSI-approved license is required the
-[MIT license] should be used.
+## License
+The code is distributed under [BSD Zero Clause License](COPYING).
 
 [INSTALL.md]: INSTALL.md
 [The LibRHash Library]: docs/LIBRHASH.md
 [ChangeLog]: ChangeLog
-[MIT license]: http://www.opensource.org/licenses/MIT

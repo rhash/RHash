@@ -333,7 +333,7 @@ The update_fd method doesn't close the $fd, leaving the file position after the 
 The optional $start and $size specify the block of the file to hash.
 No error is reported if the $size is greater than the number of the unread bytes left in the file.
 
-Returns the number of characters actually read, 0 at end of file, 
+Returns the number of characters actually read, 0 at end of file,
 or undef if there was an error (in the latter case $! is also set).
 
   use Crypt::Rhash;
@@ -349,7 +349,7 @@ or undef if there was an error (in the latter case $! is also set).
 =item $rhash->final()
 
 Finishes calculation for all data buffered by updating methods and stops hash
-calculation. The function is called automatically by any of the 
+calculation. The function is called automatically by any of the
 $rhash->hash*() methods if the final() call was skipped.
 
 =item $rhash->reset()
@@ -457,15 +457,19 @@ Computes and returns a single hash (in its default format) of the $message by th
 
 =head1 LICENSE
 
- Permission is hereby granted, free of charge,  to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction,  including without limitation the rights
- to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
- copies  of  the Software,  and  to permit  persons  to whom  the Software  is
- furnished to do so.
+                           BSD Zero Clause License
 
- The Software  is distributed in the hope that it will be useful,  but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  Use  this  program  at  your  own  risk!
+Copyright (c) 2011, Aleksey Kravchenko
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE  INCLUDING ALL IMPLIED WARRANTIES OF  MERCHANTABILITY
+AND FITNESS.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT,  OR CONSEQUENTIAL DAMAGES  OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE,  DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT,  NEGLIGENCE
+OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
+PERFORMANCE OF THIS SOFTWARE.
 
 =cut

@@ -1,17 +1,18 @@
 /*
  * This file is a part of Java Bindings for Librhash
+ *
  * Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>
- * 
- * Permission is hereby granted, free of charge,  to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction,  including without limitation the rights
- * to  use,  copy,  modify,  merge, publish, distribute, sublicense, and/or sell
- * copies  of  the Software,  and  to permit  persons  to whom  the Software  is
- * furnished to do so.
- * 
- * This library  is distributed  in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. Use it at your own risk!
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE  INCLUDING ALL IMPLIED WARRANTIES OF  MERCHANTABILITY
+ * AND FITNESS.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT,  OR CONSEQUENTIAL DAMAGES  OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE,  DATA OR PROFITS,  WHETHER IN AN ACTION OF CONTRACT,  NEGLIGENCE
+ * OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 using System;
@@ -19,7 +20,7 @@ using System.IO;
 using System.Text;
 
 namespace RHash {
-		
+
 	public sealed class Hasher {
 
 		private const int DEFAULT   = 0x0;
@@ -37,29 +38,29 @@ namespace RHash {
 		private const int REVERSE   = 0x10;
 		/* Print file size. */
 		private const int FILESIZE  = 0x40;
-		
+
 		private uint hash_ids;
 		/* Pointer to the native structure. */
 		private IntPtr ptr;
-		
+
 		public Hasher (HashType hashtype) {
 			this.hash_ids = (uint)hashtype;
 			this.ptr = Bindings.rhash_init(hash_ids);
 		}
-		
+
 		public Hasher (uint hashmask) {
 			this.hash_ids = hashmask;
 			this.ptr = Bindings.rhash_init(hash_ids);
 			if (ptr == IntPtr.Zero) throw new ArgumentException("Invalid mask of hashes", "hashmask");
 		}
-		
+
 		~Hasher() {
 			if (ptr != IntPtr.Zero) {
 				Bindings.rhash_free(ptr);
 				ptr = IntPtr.Zero;
 			}
 		}
-		
+
 		public Hasher Update(byte[] buf) {
 			Bindings.rhash_update(ptr, buf, buf.Length);
 			return this;
@@ -72,7 +73,7 @@ namespace RHash {
 			Bindings.rhash_update(ptr, buf, len);
 			return this;
 		}
-		
+
 		public Hasher UpdateFile(string filename) {
 			Stream file = new FileStream(filename, FileMode.Open);
 			byte[] buf = new byte[8192];
@@ -84,21 +85,21 @@ namespace RHash {
 			file.Close();
 			return this;
 		}
-		
+
 		public void Finish() {
 			Bindings.rhash_final(ptr, IntPtr.Zero);
 		}
-		
+
 		public void Reset() {
 			Bindings.rhash_reset(ptr);
 		}
-		
+
 		public override string ToString() {
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, 0, 0);
 			return sb.ToString();
 		}
-		
+
 		public string ToString(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
 				throw new ArgumentException("This hasher does not support hash type "+type, "type");
@@ -107,7 +108,7 @@ namespace RHash {
 			Bindings.rhash_print(sb, ptr, (uint)type, 0);
 			return sb.ToString();
 		}
-		
+
 		public string ToHex(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
 				throw new ArgumentException("This hasher does not support hash type "+type, "type");
@@ -154,15 +155,15 @@ namespace RHash {
 			Bindings.rhash_print_magnet(sb, filepath, ptr, hashmask, FILESIZE);
 			return sb.ToString();
 		}
-		
+
 		public static string GetHashForMsg(byte[] buf, HashType type) {
 			return new Hasher(type).Update(buf).ToString(type);
 		}
-		
+
 		public static string GetHashForFile(string filename, HashType type) {
 			return new Hasher(type).UpdateFile(filename).ToString(type);
 		}
-		
+
 		public static string GetMagnetFor(string filepath, uint hashmask) {
 			return new Hasher(hashmask).UpdateFile(filepath).GetMagnet(filepath);
 		}

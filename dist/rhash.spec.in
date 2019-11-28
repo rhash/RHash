@@ -19,7 +19,7 @@ Summary:        Utility for computing hash sums and creating magnet links.
 Name:           rhash
 Version:        %{version}
 Release:        1%{?dist}
-License:        MIT
+License:        0BSD
 %if 0%{?suse_version}
 Group:          Productivity/File utilities
 %else
