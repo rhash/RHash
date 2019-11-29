@@ -26,7 +26,7 @@
  * @param length string length
  * @param upper_case flag to print string in uppercase
  */
-void rhash_byte_to_hex(char *dst, const unsigned char *src, size_t length, int upper_case)
+void rhash_byte_to_hex(char* dst, const unsigned char* src, size_t length, int upper_case)
 {
 	const char hex_add = (upper_case ? 'A' - 10 : 'a' - 10);
 	for (; length > 0; src++, length--) {
@@ -143,7 +143,7 @@ static unsigned url_safe_char_mask[4] = { 0, 0x03ff6000, 0x87fffffe, 0x47fffffe 
  * @param upper_case flag to output hex-codes in uppercase
  * @return the length of the result string
  */
-size_t rhash_urlencode(char *dst, const char *src, size_t size, int upper_case)
+size_t rhash_urlencode(char* dst, const char* src, size_t size, int upper_case)
 {
 	const char* start;
 	size_t i;
@@ -181,7 +181,7 @@ size_t rhash_urlencode(char *dst, const char *src, size_t size, int upper_case)
  * @param number the number to print
  * @return length of the printed number (without trailing '\0')
  */
-int rhash_sprintI64(char *dst, uint64_t number)
+int rhash_sprintI64(char* dst, uint64_t number)
 {
 	/* The biggest number has 20 digits: 2^64 = 18 446 744 073 709 551 616 */
 	char buf[24];

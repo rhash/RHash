@@ -121,7 +121,7 @@ unsigned rhash_ctz(unsigned); /* define as function */
 void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t length);
 void rhash_swap_copy_str_to_u64(void* to, int index, const void* from, size_t length);
 void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length);
-void rhash_u32_mem_swap(unsigned *p, int length_in_u32);
+void rhash_u32_mem_swap(unsigned* p, int length_in_u32);
 
 /* bswap definitions */
 #if (defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3)) || \

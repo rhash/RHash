@@ -48,7 +48,7 @@ typedef struct rhash_info
 } rhash_info;
 
 typedef void (*pinit_t)(void*);
-typedef void (*pupdate_t)(void *ctx, const void* msg, size_t size);
+typedef void (*pupdate_t)(void* ctx, const void* msg, size_t size);
 typedef void (*pfinal_t)(void*, unsigned char*);
 typedef void (*pcleanup_t)(void*);
 
@@ -57,7 +57,7 @@ typedef void (*pcleanup_t)(void*);
  */
 typedef struct rhash_hash_info
 {
-	rhash_info *info;
+	rhash_info* info;
 	size_t context_size;
 	ptrdiff_t  digest_diff;
 	pinit_t    init;
@@ -72,7 +72,7 @@ typedef struct rhash_hash_info
 typedef struct rhash_vector_item
 {
 	struct rhash_hash_info* hash_info;
-	void *context;
+	void* context;
 } rhash_vector_item;
 
 /**
@@ -84,8 +84,9 @@ typedef struct rhash_context_ext
 	unsigned hash_vector_size; /* number of contained hash sums */
 	unsigned flags;
 	unsigned state;
-	void *callback, *callback_data;
-	void *bt_ctx;
+	void* callback;
+	void* callback_data;
+	void* bt_ctx;
 	rhash_vector_item vector[1]; /* contexts of contained hash sums */
 } rhash_context_ext;
 

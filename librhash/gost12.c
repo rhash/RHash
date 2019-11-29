@@ -619,7 +619,7 @@ static const uint64_t zero_512[8] = { 0,0,0,0,0,0,0,0 };
  * @param ctx context to initialize
  * @param hash_size the size of the digest in bytes
  */
-static RHASH_INLINE void rhash_gost12_init(gost12_ctx *ctx, size_t hash_size)
+static RHASH_INLINE void rhash_gost12_init(gost12_ctx* ctx, size_t hash_size)
 {
 	memset(ctx, 0, sizeof(gost12_ctx));
 	memset(ctx->h, (hash_size == 64 ? 0 : 1), 64);
@@ -632,7 +632,7 @@ static RHASH_INLINE void rhash_gost12_init(gost12_ctx *ctx, size_t hash_size)
  * @param ctx context to initialize
  * @param hash_size the size of the digest in bytes
  */
-void rhash_gost12_256_init(gost12_ctx *ctx)
+void rhash_gost12_256_init(gost12_ctx* ctx)
 {
 	rhash_gost12_init(ctx, gost12_256_hash_size);
 }
@@ -643,7 +643,7 @@ void rhash_gost12_256_init(gost12_ctx *ctx)
  * @param ctx context to initialize
  * @param hash_size the size of the digest in bytes
  */
-void rhash_gost12_512_init(gost12_ctx *ctx)
+void rhash_gost12_512_init(gost12_ctx* ctx)
 {
 	rhash_gost12_init(ctx, gost12_512_hash_size);
 }
@@ -793,14 +793,14 @@ static RHASH_INLINE void add_uint512(uint64_t sum[], const uint64_t x[])
 
 static const uint64_t stage2_constant[8] = { I64(512), 0, 0, 0, 0, 0, 0, 0 };
 
-static RHASH_INLINE void rhash_gost12_stage2(gost12_ctx *ctx, uint64_t m[])
+static RHASH_INLINE void rhash_gost12_stage2(gost12_ctx* ctx, uint64_t m[])
 {
 	g_N(ctx->N, ctx->h, m);
 	add_uint512(ctx->N, stage2_constant);
 	add_uint512(ctx->S, m);
 }
 
-void rhash_gost12_update(gost12_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_gost12_update(gost12_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	if (ctx->index)
 	{
@@ -841,7 +841,7 @@ void rhash_gost12_update(gost12_ctx *ctx, const unsigned char* msg, size_t size)
 	}
 }
 
-void rhash_gost12_final(gost12_ctx *ctx, unsigned char result[32])
+void rhash_gost12_final(gost12_ctx* ctx, unsigned char result[32])
 {
 	uint64_t unprocessed_bits_count[8] = { 0,0,0,0,0,0,0,0 };
 	size_t index_u64 = ctx->index >> 3;

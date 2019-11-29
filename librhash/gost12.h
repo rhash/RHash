@@ -23,10 +23,10 @@ typedef struct gost12_ctx {
 
 /* hash functions */
 
-void rhash_gost12_256_init(gost12_ctx *ctx);
-void rhash_gost12_512_init(gost12_ctx *ctx);
-void rhash_gost12_update(gost12_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_gost12_final(gost12_ctx *ctx, unsigned char result[32]);
+void rhash_gost12_256_init(gost12_ctx* ctx);
+void rhash_gost12_512_init(gost12_ctx* ctx);
+void rhash_gost12_update(gost12_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_gost12_final(gost12_ctx* ctx, unsigned char result[32]);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -81,7 +81,7 @@ static const uint64_t rhash_k512[80] = {
  *
  * @param ctx context to initialize
  */
-void rhash_sha512_init(sha512_ctx *ctx)
+void rhash_sha512_init(sha512_ctx* ctx)
 {
 	/* Initial values. These words were obtained by taking the first 32
 	 * bits of the fractional parts of the square roots of the first
@@ -104,7 +104,7 @@ void rhash_sha512_init(sha512_ctx *ctx)
  *
  * @param ctx context to initialize
  */
-void rhash_sha384_init(struct sha512_ctx *ctx)
+void rhash_sha384_init(struct sha512_ctx* ctx)
 {
 	/* Initial values from FIPS 180-3. These words were obtained by taking
 	 * the first sixty-four bits of the fractional parts of the square
@@ -131,7 +131,7 @@ static void rhash_sha512_process_block(uint64_t hash[8], uint64_t block[16])
 {
 	uint64_t A, B, C, D, E, F, G, H;
 	uint64_t W[16];
-	const uint64_t *k;
+	const uint64_t* k;
 	int i;
 
 	A = hash[0], B = hash[1], C = hash[2], D = hash[3];
@@ -186,7 +186,7 @@ static void rhash_sha512_process_block(uint64_t hash[8], uint64_t block[16])
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_sha512_update(sha512_ctx *ctx, const unsigned char *msg, size_t size)
+void rhash_sha512_update(sha512_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	size_t index = (size_t)ctx->length & 127;
 	ctx->length += size;
@@ -228,7 +228,7 @@ void rhash_sha512_update(sha512_ctx *ctx, const unsigned char *msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_sha512_final(sha512_ctx *ctx, unsigned char* result)
+void rhash_sha512_final(sha512_ctx* ctx, unsigned char* result)
 {
 	size_t index = ((unsigned)ctx->length & 127) >> 3;
 	unsigned shift = ((unsigned)ctx->length & 7) * 8;

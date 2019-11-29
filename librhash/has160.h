@@ -19,9 +19,9 @@ typedef struct has160_ctx
 
 /* hash functions */
 
-void rhash_has160_init(has160_ctx *ctx);
-void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_has160_final(has160_ctx *ctx, unsigned char* result);
+void rhash_has160_init(has160_ctx* ctx);
+void rhash_has160_update(has160_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_has160_final(has160_ctx* ctx, unsigned char* result);
 
 #ifdef __cplusplus
 } /* extern "C" */

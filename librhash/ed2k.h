@@ -17,9 +17,9 @@ typedef struct ed2k_ctx
 
 /* hash functions */
 
-void rhash_ed2k_init(ed2k_ctx *ctx);
-void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16]);
+void rhash_ed2k_init(ed2k_ctx* ctx);
+void rhash_ed2k_update(ed2k_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_ed2k_final(ed2k_ctx* ctx, unsigned char result[16]);
 
 #ifdef __cplusplus
 } /* extern "C" */

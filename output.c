@@ -450,7 +450,7 @@ static int dots_finish_percents(struct file_info* info, int process_res)
  */
 static void dots_update_percents(struct file_info* info, uint64_t offset)
 {
-	const int pt_size = 1024*1024; /* 1MiB */
+	const int pt_size = 1024 * 1024; /* 1MiB */
 	offset -= info->msg_offset; /* get real file offset */
 	if ( (offset % pt_size) != 0 ) return;
 

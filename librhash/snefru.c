@@ -738,7 +738,7 @@ static const unsigned rhash_snefru_sbox[SNEFRU_NUMBER_OF_ROUNDS * 512] = {
  *
  * @param ctx context to initialize
  */
-void rhash_snefru128_init(struct snefru_ctx *ctx)
+void rhash_snefru128_init(struct snefru_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(snefru_ctx));
 	ctx->digest_length = snefru128_hash_length;
@@ -749,7 +749,7 @@ void rhash_snefru128_init(struct snefru_ctx *ctx)
  *
  * @param ctx context to initialize
  */
-void rhash_snefru256_init(struct snefru_ctx *ctx)
+void rhash_snefru256_init(struct snefru_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(snefru_ctx));
 	ctx->digest_length = snefru256_hash_length;
@@ -762,12 +762,12 @@ void rhash_snefru256_init(struct snefru_ctx *ctx)
  * @param ctx algorithm context
  * @param block the message block to process
  */
-static void rhash_snefru_process_block(snefru_ctx* ctx, unsigned *block)
+static void rhash_snefru_process_block(snefru_ctx* ctx, unsigned* block)
 {
 	unsigned W[16];
 	unsigned rot;
 
-	const unsigned *sbox;
+	const unsigned* sbox;
 	const unsigned* const sbox_end = rhash_snefru_sbox + 512 * SNEFRU_NUMBER_OF_ROUNDS;
 	unsigned* const hash = ctx->hash;
 
@@ -849,7 +849,7 @@ static void rhash_snefru_process_block(snefru_ctx* ctx, unsigned *block)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_snefru_update(snefru_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_snefru_update(snefru_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	const unsigned data_block_size = 64 - ctx->digest_length;
 	ctx->length += size;
@@ -899,7 +899,7 @@ void rhash_snefru_update(snefru_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_snefru_final(snefru_ctx *ctx, unsigned char *result)
+void rhash_snefru_final(snefru_ctx* ctx, unsigned char* result)
 {
 	const unsigned digest_dw_len = ctx->digest_length / 4; /* length in dwords */
 	const unsigned data_block_size = 64 - ctx->digest_length;

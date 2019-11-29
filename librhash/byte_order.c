@@ -143,7 +143,7 @@ void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length)
  * @param arr    the array to process
  * @param length array length
  */
-void rhash_u32_mem_swap(unsigned *arr, int length)
+void rhash_u32_mem_swap(unsigned* arr, int length)
 {
 	unsigned* end = arr + length;
 	for (; arr < end; arr++) {

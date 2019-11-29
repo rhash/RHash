@@ -39,7 +39,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_ed2k_init(ed2k_ctx *ctx)
+void rhash_ed2k_init(ed2k_ctx* ctx)
 {
 	rhash_md4_init(&ctx->md4_context);
 	rhash_md4_init(&ctx->md4_context_inner);
@@ -54,7 +54,7 @@ void rhash_ed2k_init(ed2k_ctx *ctx)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_ed2k_update(ed2k_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned char chunk_md4_hash[16];
 	unsigned blockleft = ED2K_CHUNK_SIZE - (unsigned)ctx->md4_context_inner.length;
@@ -91,7 +91,7 @@ void rhash_ed2k_update(ed2k_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_ed2k_final(ed2k_ctx *ctx, unsigned char result[16])
+void rhash_ed2k_final(ed2k_ctx* ctx, unsigned char result[16])
 {
 	/* check if hashed message size is greater or equal to ED2K_CHUNK_SIZE */
 	if ( ctx->md4_context.length ) {

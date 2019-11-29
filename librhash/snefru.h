@@ -28,10 +28,10 @@ typedef struct snefru_ctx
 
 /* hash functions */
 
-void rhash_snefru128_init(snefru_ctx *ctx);
-void rhash_snefru256_init(snefru_ctx *ctx);
-void rhash_snefru_update(snefru_ctx *ctx, const unsigned char *data, size_t size);
-void rhash_snefru_final(snefru_ctx *ctx, unsigned char* result);
+void rhash_snefru128_init(snefru_ctx* ctx);
+void rhash_snefru256_init(snefru_ctx* ctx);
+void rhash_snefru_update(snefru_ctx* ctx, const unsigned char* data, size_t size);
+void rhash_snefru_final(snefru_ctx* ctx, unsigned char* result);
 
 #ifdef __cplusplus
 } /* extern "C" */

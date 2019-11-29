@@ -64,7 +64,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 {
 	unsigned tail_bit_index; /* index of hash_id trailing bit */
 	unsigned num = 0;        /* number of hashes to compute */
-	rhash_context_ext *rctx = NULL; /* allocated rhash context */
+	rhash_context_ext* rctx = NULL; /* allocated rhash context */
 	size_t hash_size_sum = 0;   /* size of hash contexts to store in rctx */
 
 	unsigned i, bit_index, id;
@@ -248,7 +248,7 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
-	rhash_vector_item *item;
+	rhash_vector_item* item;
 	struct rhash_hash_info* info;
 	unsigned char* digest;
 
@@ -309,7 +309,8 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	const size_t block_size = 8192;
-	unsigned char *buffer, *pmem;
+	unsigned char* buffer;
+	unsigned char* pmem;
 	size_t length = 0, align8;
 	int res = 0;
 	if (ectx->state != STATE_ACTIVE) return 0; /* do nothing if canceled */
@@ -607,7 +608,8 @@ size_t RHASH_API rhash_print(char* output, rhash context, unsigned hash_id, int 
 
 	if ((flags & ~RHPR_UPPERCASE) == (RHPR_REVERSE | RHPR_HEX)) {
 		/* reverse the digest */
-		unsigned char *p = digest, *r = digest + digest_size - 1;
+		unsigned char* p = digest;
+		unsigned char* r = digest + digest_size - 1;
 		char tmp;
 		for (; p < r; p++, r--) {
 			tmp = *p;

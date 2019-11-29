@@ -24,7 +24,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_sha1_init(sha1_ctx *ctx)
+void rhash_sha1_init(sha1_ctx* ctx)
 {
 	ctx->length = 0;
 
@@ -121,7 +121,7 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_sha1_update(sha1_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_sha1_update(sha1_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	ctx->length += size;
@@ -164,7 +164,7 @@ void rhash_sha1_update(sha1_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_sha1_final(sha1_ctx *ctx, unsigned char* result)
+void rhash_sha1_final(sha1_ctx* ctx, unsigned char* result)
 {
 	unsigned  index = (unsigned)ctx->length & 63;
 	unsigned* msg32 = (unsigned*)ctx->message;

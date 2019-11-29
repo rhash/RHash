@@ -25,7 +25,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_tiger_init(tiger_ctx *ctx)
+void rhash_tiger_init(tiger_ctx* ctx)
 {
 	ctx->length = 0;
 	ctx->tiger2 = 0;
@@ -158,7 +158,7 @@ static void rhash_tiger_process_block(uint64_t state[3], uint64_t* block)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_tiger_update(tiger_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	size_t index = (size_t)ctx->length & 63;
 	ctx->length += size;
@@ -201,7 +201,7 @@ void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_tiger_final(tiger_ctx *ctx, unsigned char result[24])
+void rhash_tiger_final(tiger_ctx* ctx, unsigned char result[24])
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	uint64_t* msg64 = (uint64_t*)ctx->message;

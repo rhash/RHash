@@ -130,7 +130,7 @@ static void benchmark_cpu_init(void)
 static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
 {
 	int i;
-	struct rhash_context *context = rhash_init(hash_id);
+	struct rhash_context* context = rhash_init(hash_id);
 	if (!context) return 0;
 
 	/* process the repeated message buffer */

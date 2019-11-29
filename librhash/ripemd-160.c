@@ -26,7 +26,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_ripemd160_init(ripemd160_ctx *ctx)
+void rhash_ripemd160_init(ripemd160_ctx* ctx)
 {
 	ctx->length = 0;
 
@@ -68,7 +68,7 @@ void rhash_ripemd160_init(ripemd160_ctx *ctx)
  * @param hash algorithm intermediate hash
  * @param X the message block to process
  */
-static void rhash_ripemd160_process_block(unsigned *hash, const unsigned* X)
+static void rhash_ripemd160_process_block(unsigned* hash, const unsigned* X)
 {
 	register unsigned A = hash[0],  B = hash[1],  C = hash[2],
 		D = hash[3],  E = hash[4];
@@ -267,7 +267,7 @@ static void rhash_ripemd160_process_block(unsigned *hash, const unsigned* X)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_ripemd160_update(ripemd160_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	ctx->length += size;
@@ -310,7 +310,7 @@ void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_ripemd160_final(ripemd160_ctx *ctx, unsigned char result[20])
+void rhash_ripemd160_final(ripemd160_ctx* ctx, unsigned char result[20])
 {
 	unsigned index = ((unsigned)ctx->length & 63) >> 2;
 	unsigned shift = ((unsigned)ctx->length & 3) * 8;

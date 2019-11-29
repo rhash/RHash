@@ -20,9 +20,9 @@ typedef struct ripemd160_ctx
 
 /* hash functions */
 
-void rhash_ripemd160_init(ripemd160_ctx *ctx);
-void rhash_ripemd160_update(ripemd160_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_ripemd160_final(ripemd160_ctx *ctx, unsigned char result[20]);
+void rhash_ripemd160_init(ripemd160_ctx* ctx);
+void rhash_ripemd160_update(ripemd160_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_ripemd160_final(ripemd160_ctx* ctx, unsigned char result[20]);
 
 #ifdef __cplusplus
 } /* extern "C" */

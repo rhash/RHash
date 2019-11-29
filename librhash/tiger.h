@@ -22,9 +22,9 @@ typedef struct tiger_ctx
 
 /* hash functions */
 
-void rhash_tiger_init(tiger_ctx *ctx);
-void rhash_tiger_update(tiger_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_tiger_final(tiger_ctx *ctx, unsigned char result[24]);
+void rhash_tiger_init(tiger_ctx* ctx);
+void rhash_tiger_update(tiger_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_tiger_final(tiger_ctx* ctx, unsigned char result[24]);
 
 #ifdef __cplusplus
 } /* extern "C" */

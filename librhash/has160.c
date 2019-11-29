@@ -31,7 +31,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_has160_init(has160_ctx *ctx)
+void rhash_has160_init(has160_ctx* ctx)
 {
 	ctx->length = 0;
 
@@ -204,7 +204,7 @@ static void rhash_has160_process_block(unsigned* hash, const unsigned* block)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_has160_update(has160_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	ctx->length += size;
@@ -247,7 +247,7 @@ void rhash_has160_update(has160_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_has160_final(has160_ctx *ctx, unsigned char* result)
+void rhash_has160_final(has160_ctx* ctx, unsigned char* result)
 {
 	unsigned shift = ((unsigned)ctx->length & 3) * 8;
 	unsigned index = ((unsigned)ctx->length & 63) >> 2;

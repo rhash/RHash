@@ -20,9 +20,9 @@ typedef struct md4_ctx
 
 /* hash functions */
 
-void rhash_md4_init(md4_ctx *ctx);
-void rhash_md4_update(md4_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_md4_final(md4_ctx *ctx, unsigned char result[16]);
+void rhash_md4_init(md4_ctx* ctx);
+void rhash_md4_update(md4_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_md4_final(md4_ctx* ctx, unsigned char result[16]);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -36,15 +36,15 @@ typedef struct edonr_ctx
 	unsigned digest_length; /* length of the algorithm digest in bytes */
 } edonr_ctx;
 
-void rhash_edonr224_init(edonr_ctx *ctx);
-void rhash_edonr256_init(edonr_ctx *ctx);
-void rhash_edonr256_update(edonr_ctx *ctx, const unsigned char* data, size_t length);
-void rhash_edonr256_final(edonr_ctx *ctx, unsigned char *result);
+void rhash_edonr224_init(edonr_ctx* ctx);
+void rhash_edonr256_init(edonr_ctx* ctx);
+void rhash_edonr256_update(edonr_ctx* ctx, const unsigned char* data, size_t length);
+void rhash_edonr256_final(edonr_ctx* ctx, unsigned char* result);
 
-void rhash_edonr384_init(edonr_ctx *ctx);
-void rhash_edonr512_init(edonr_ctx *ctx);
-void rhash_edonr512_update(edonr_ctx *ctx, const unsigned char* data, size_t length);
-void rhash_edonr512_final(edonr_ctx *ctx, unsigned char *result);
+void rhash_edonr384_init(edonr_ctx* ctx);
+void rhash_edonr512_init(edonr_ctx* ctx);
+void rhash_edonr512_update(edonr_ctx* ctx, const unsigned char* data, size_t length);
+void rhash_edonr512_final(edonr_ctx* ctx, unsigned char* result);
 
 #ifdef __cplusplus
 } /* extern "C" */

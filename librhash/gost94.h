@@ -22,10 +22,10 @@ typedef struct gost94_ctx
 
 /* hash functions */
 
-void rhash_gost94_init(gost94_ctx *ctx);
-void rhash_gost94_cryptopro_init(gost94_ctx *ctx);
-void rhash_gost94_update(gost94_ctx *ctx, const unsigned char* msg, size_t size);
-void rhash_gost94_final(gost94_ctx *ctx, unsigned char result[32]);
+void rhash_gost94_init(gost94_ctx* ctx);
+void rhash_gost94_cryptopro_init(gost94_ctx* ctx);
+void rhash_gost94_update(gost94_ctx* ctx, const unsigned char* msg, size_t size);
+void rhash_gost94_final(gost94_ctx* ctx, unsigned char result[32]);
 
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
 void rhash_gost94_init_table(void); /* initialize algorithm static data */

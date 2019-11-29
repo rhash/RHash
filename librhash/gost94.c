@@ -35,7 +35,7 @@ extern unsigned rhash_gost94_sbox_cryptpro[4][256];
  *
  * @param ctx context to initialize
  */
-void rhash_gost94_init(gost94_ctx *ctx)
+void rhash_gost94_init(gost94_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(gost94_ctx));
 }
@@ -45,7 +45,7 @@ void rhash_gost94_init(gost94_ctx *ctx)
  *
  * @param ctx context to initialize
  */
-void rhash_gost94_cryptopro_init(gost94_ctx *ctx)
+void rhash_gost94_cryptopro_init(gost94_ctx* ctx)
 {
 	rhash_gost94_init(ctx);
 	ctx->cryptpro = 1;
@@ -117,11 +117,11 @@ void rhash_gost94_cryptopro_init(gost94_ctx *ctx)
  * @param hash intermediate message hash
  * @param block the message block to process
  */
-static void rhash_gost94_block_compress(gost94_ctx *ctx, const unsigned* block)
+static void rhash_gost94_block_compress(gost94_ctx* ctx, const unsigned* block)
 {
 	unsigned i;
 	unsigned key[8], u[8], v[8], w[8], s[8];
-	unsigned *sbox = (ctx->cryptpro ? (unsigned*)rhash_gost94_sbox_cryptpro : (unsigned*)rhash_gost94_sbox);
+	unsigned* sbox = (ctx->cryptpro ? (unsigned*)rhash_gost94_sbox_cryptpro : (unsigned*)rhash_gost94_sbox);
 
 	/* u := hash, v := <256-bit message block> */
 	memcpy(u, ctx->hash, sizeof(u));
@@ -277,7 +277,7 @@ static void rhash_gost94_block_compress(gost94_ctx *ctx, const unsigned* block)
  * @param ctx algorithm context
  * @param block the 256-bit message block to process
  */
-static void rhash_gost94_compute_sum_and_hash(gost94_ctx * ctx, const unsigned* block)
+static void rhash_gost94_compute_sum_and_hash(gost94_ctx* ctx, const unsigned* block)
 {
 #if IS_LITTLE_ENDIAN
 # define block_le block
@@ -344,7 +344,7 @@ static void rhash_gost94_compute_sum_and_hash(gost94_ctx * ctx, const unsigned* 
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_gost94_update(gost94_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_gost94_update(gost94_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 31;
 	ctx->length += size;
@@ -391,7 +391,7 @@ void rhash_gost94_update(gost94_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_gost94_final(gost94_ctx *ctx, unsigned char result[32])
+void rhash_gost94_final(gost94_ctx* ctx, unsigned char result[32])
 {
 	unsigned  index = (unsigned)ctx->length & 31;
 	unsigned* msg32 = (unsigned*)ctx->message;
@@ -405,7 +405,7 @@ void rhash_gost94_final(gost94_ctx *ctx, unsigned char result[32])
 	/* hash the message length and the sum */
 	msg32[0] = (unsigned)(ctx->length << 3);
 	msg32[1] = (unsigned)(ctx->length >> 29);
-	memset(msg32 + 2, 0, sizeof(unsigned)*6);
+	memset(msg32 + 2, 0, sizeof(unsigned) * 6);
 
 	rhash_gost94_block_compress(ctx, msg32);
 	rhash_gost94_block_compress(ctx, ctx->sum);

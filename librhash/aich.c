@@ -67,13 +67,13 @@
  *
  * @param ctx context to initialize
  */
-void rhash_aich_init(aich_ctx *ctx)
+void rhash_aich_init(aich_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(aich_ctx));
 
 #ifdef USE_OPENSSL
 	{
-		rhash_hash_info *sha1_info = &rhash_info_table[3];
+		rhash_hash_info* sha1_info = &rhash_info_table[3];
 		assert(sha1_info->info->hash_id == RHASH_SHA1);
 		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
 		ctx->sha_init = sha1_info->init;
@@ -176,7 +176,7 @@ void rhash_aich_cleanup(aich_ctx* ctx)
  * @param type the type of hash to calculate, can be one of constants
  *   AICH_HASH_LEFT_BRANCH, AICH_HASH_RIGHT_BRANCH or AICH_HASH_FULL_TREE.
  */
-static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
+static void rhash_aich_hash_tree(aich_ctx* ctx, unsigned char* result, int type)
 {
 	unsigned index = 0; /* leaf index */
 	unsigned blocks;
@@ -254,7 +254,7 @@ static void rhash_aich_hash_tree(aich_ctx *ctx, unsigned char* result, int type)
  * @param type the actions to take, can be combination of bits AICH_PROCESS_FINAL_BLOCK
  *             and AICH_PROCESS_FLUSH_BLOCK
  */
-static void rhash_aich_process_block(aich_ctx *ctx, int type)
+static void rhash_aich_process_block(aich_ctx* ctx, int type)
 {
 	assert(type != 0);
 	assert(ctx->index <= ED2K_CHUNK_SIZE);
@@ -316,7 +316,7 @@ static void rhash_aich_process_block(aich_ctx *ctx, int type)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_aich_update(aich_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_aich_update(aich_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	if (ctx->error) return;
 
@@ -351,7 +351,7 @@ void rhash_aich_update(aich_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_aich_final(aich_ctx *ctx, unsigned char result[20])
+void rhash_aich_final(aich_ctx* ctx, unsigned char result[20])
 {
 	uint64_t total_size =
 		((uint64_t)ctx->chunks_number * ED2K_CHUNK_SIZE) + ctx->index;

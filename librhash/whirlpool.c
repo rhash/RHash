@@ -55,7 +55,7 @@ extern uint64_t rhash_whirlpool_sbox[8][256];
  * @param hash algorithm state
  * @param block the message block to process
  */
-static void rhash_whirlpool_process_block(uint64_t *hash, uint64_t* p_block)
+static void rhash_whirlpool_process_block(uint64_t* hash, uint64_t* p_block)
 {
 	int i;                /* loop counter */
 	uint64_t K[2][8];       /* key */
@@ -134,7 +134,7 @@ static void rhash_whirlpool_process_block(uint64_t *hash, uint64_t* p_block)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_whirlpool_update(whirlpool_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_whirlpool_update(whirlpool_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	unsigned left;
@@ -178,7 +178,7 @@ void rhash_whirlpool_update(whirlpool_ctx *ctx, const unsigned char* msg, size_t
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_whirlpool_final(whirlpool_ctx *ctx, unsigned char* result)
+void rhash_whirlpool_final(whirlpool_ctx* ctx, unsigned char* result)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	uint64_t* msg64 = (uint64_t*)ctx->message;

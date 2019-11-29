@@ -29,7 +29,7 @@
 /**
  * Calculate CRC sum, defined by table
  */
-static unsigned calculate_crc_soft(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size)
+static unsigned calculate_crc_soft(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size)
 {
 	uint32_t crc = ~crcinit;
 	const uint32_t* current;
@@ -337,7 +337,7 @@ unsigned rhash_crc32_table[8][256] = { {
  * @param size the length of the message
  * @return updated CRC32 hash sum
  */
-unsigned rhash_get_crc32(unsigned crcinit, const unsigned char *msg, size_t size)
+unsigned rhash_get_crc32(unsigned crcinit, const unsigned char* msg, size_t size)
 {
 	return calculate_crc_soft(crcinit, rhash_crc32_table, msg, size);
 }
@@ -613,11 +613,11 @@ unsigned rhash_crc32c_table[8][256] = { {
 } };
 
 #ifdef HAS_INTEL_CPUID
-static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size);
-static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size);
-static unsigned (*calculate_crc32c_p)(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size) = calculate_crc32c_choose_best;
+static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size);
+static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size);
+static unsigned (*calculate_crc32c_p)(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size) = calculate_crc32c_choose_best;
 
-static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size)
+static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size)
 {
 	calculate_crc32c_p = (has_cpu_feature(CPU_FEATURE_SSE4_2) ?
 		calculate_crc32c_sse42 : calculate_crc_soft);
@@ -638,7 +638,7 @@ static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8]
 #define CRC32C_U8(crc, u8) __asm__ __volatile__( \
 	".byte 0xf2, 0x0f, 0x38, 0xf0, 0xf1" :"=S"(crc) :"0"(crc), "c"(u8))
 
-static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256], const unsigned char *msg, size_t size)
+static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size)
 {
 	unsigned crc = ~crcinit;
 	(void)table;
@@ -669,7 +669,7 @@ static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256],
  * @param size the length of the message
  * @return updated CRC32C hash sum
  */
-unsigned rhash_get_crc32c(unsigned crcinit, const unsigned char *msg, size_t size)
+unsigned rhash_get_crc32c(unsigned crcinit, const unsigned char* msg, size_t size)
 {
 	return calculate_crc32c_p(crcinit, rhash_crc32c_table, msg, size);
 }

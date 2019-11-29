@@ -79,8 +79,8 @@ OS_METHOD(WHIRLPOOL);
 #endif
 
 
-/* The openssl * _Update functions have the same signature as RHash ones:
- * void update_func(void *ctx, const void* msg, size_t size),
+/* The openssl *_Update functions have the same signature as RHash ones:
+ * void update_func(void* ctx, const void* msg, size_t size),
  * so we can use them in RHash directly. But the _Final functions
  * have different order of arguments, so we need to wrap them. */
 #define WRAP_FINAL(name) WRAP_FINAL2(name, name##_CTX)
@@ -181,7 +181,7 @@ static int load_openssl_runtime(void)
 	};
 	void* handle = 0;
 	size_t i;
-	for (i = 0; !handle && i < (sizeof(libNames)/sizeof(*libNames)); i++)
+	for (i = 0; !handle && i < (sizeof(libNames) / sizeof(*libNames)); i++)
 		handle = dlopen(libNames[i], RTLD_NOW);
 #endif
 
@@ -230,7 +230,7 @@ int rhash_plug_openssl(void)
 	/* replace internal rhash methods with the OpenSSL ones */
 	for (i = 0; i < (int)(sizeof(rhash_openssl_methods) / sizeof(rhash_hash_info)); i++)
 	{
-		rhash_hash_info *method = &rhash_openssl_methods[i];
+		rhash_hash_info* method = &rhash_openssl_methods[i];
 		if (!method->init) continue;
 		openssl_available_algorithms_hash_mask |= method->info->hash_id;
 		if ((rhash_openssl_hash_mask & method->info->hash_id) == 0) continue;

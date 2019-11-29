@@ -65,7 +65,7 @@ static const unsigned rhash_k256[64] = {
  *
  * @param ctx context to initialize
  */
-void rhash_sha256_init(sha256_ctx *ctx)
+void rhash_sha256_init(sha256_ctx* ctx)
 {
 	/* Initial values. These words were obtained by taking the first 32
 	 * bits of the fractional parts of the square roots of the first
@@ -87,7 +87,7 @@ void rhash_sha256_init(sha256_ctx *ctx)
  *
  * @param ctx context to initialize
  */
-void rhash_sha224_init(struct sha256_ctx *ctx)
+void rhash_sha224_init(struct sha256_ctx* ctx)
 {
 	/* Initial values from FIPS 180-3. These words were obtained by taking
 	 * bits from 33th to 64th of the fractional parts of the square
@@ -113,7 +113,7 @@ static void rhash_sha256_process_block(unsigned hash[8], unsigned block[16])
 {
 	unsigned A, B, C, D, E, F, G, H;
 	unsigned W[16];
-	const unsigned *k;
+	const unsigned* k;
 	int i;
 
 	A = hash[0], B = hash[1], C = hash[2], D = hash[3];
@@ -168,7 +168,7 @@ static void rhash_sha256_process_block(unsigned hash[8], unsigned block[16])
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_sha256_update(sha256_ctx *ctx, const unsigned char *msg, size_t size)
+void rhash_sha256_update(sha256_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	size_t index = (size_t)ctx->length & 63;
 	ctx->length += size;
@@ -210,7 +210,7 @@ void rhash_sha256_update(sha256_ctx *ctx, const unsigned char *msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_sha256_final(sha256_ctx *ctx, unsigned char* result)
+void rhash_sha256_final(sha256_ctx* ctx, unsigned char* result)
 {
 	size_t index = ((unsigned)ctx->length & 63) >> 2;
 	unsigned shift = ((unsigned)ctx->length & 3) * 8;

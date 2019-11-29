@@ -23,7 +23,7 @@
  *
  * @param ctx context to initialize
  */
-void rhash_md5_init(md5_ctx *ctx)
+void rhash_md5_init(md5_ctx* ctx)
 {
 	ctx->length = 0;
 
@@ -162,7 +162,7 @@ static void rhash_md5_process_block(unsigned state[4], const unsigned* x)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void rhash_md5_update(md5_ctx *ctx, const unsigned char* msg, size_t size)
+void rhash_md5_update(md5_ctx* ctx, const unsigned char* msg, size_t size)
 {
 	unsigned index = (unsigned)ctx->length & 63;
 	ctx->length += size;
@@ -205,7 +205,7 @@ void rhash_md5_update(md5_ctx *ctx, const unsigned char* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result calculated hash in binary form
  */
-void rhash_md5_final(md5_ctx *ctx, unsigned char* result)
+void rhash_md5_final(md5_ctx* ctx, unsigned char* result)
 {
 	unsigned index = ((unsigned)ctx->length & 63) >> 2;
 	unsigned shift = ((unsigned)ctx->length & 3) * 8;

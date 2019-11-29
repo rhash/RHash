@@ -563,7 +563,7 @@ static void log_message(char* format, ...)
  */
 static char* repeat_hash(unsigned hash_id, const char* chunk, size_t chunk_size, size_t msg_size, int set_filename)
 {
-	struct rhash_context *ctx;
+	struct rhash_context* ctx;
 	size_t left, size;
 	static char out[130];
 	assert(rhash_get_hash_length(hash_id) < 130);
@@ -789,11 +789,11 @@ static void test_long_strings(void)
  */
 static void test_results_consistency(void)
 {
-	const char * msg = "a";
+	const char* msg = "a";
 	size_t msg_size = strlen(msg);
 
 	size_t digest_size;
-	struct rhash_context *ctx;
+	struct rhash_context* ctx;
 	unsigned char res1[70];
 	char res2[70];
 	unsigned i, hash_id;
@@ -996,7 +996,7 @@ static void print_openssl_status(void)
  * @param argv program arguments including the program name
  * @return program exit code
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
 #ifndef USE_RHASH_DLL
 	rhash_library_init();
@@ -1017,7 +1017,7 @@ int main(int argc, char *argv[])
 			printf("%s", compiler_flags);
 			print_openssl_status();
 		} else {
-			printf("Options: [--speed [HASH_NAME]| --info]\n");
+			printf("Options: [--speed [HASH_NAME] | --info]\n");
 		}
 	} else {
 		test_all_known_strings();

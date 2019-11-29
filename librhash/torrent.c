@@ -55,7 +55,7 @@ void bt_init(torrent_ctx* ctx)
 #ifdef USE_OPENSSL
 	{
 		/* get the methods of the selected SHA1 algorithm */
-		rhash_hash_info *sha1_info = &rhash_info_table[3];
+		rhash_hash_info* sha1_info = &rhash_info_table[3];
 		assert(sha1_info->info->hash_id == RHASH_SHA1);
 		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
 		ctx->sha_init = sha1_info->init;
@@ -72,7 +72,7 @@ void bt_init(torrent_ctx* ctx)
  *
  * @param vect vector to clean
  */
-static void bt_vector_clean(torrent_vect *vect)
+static void bt_vector_clean(torrent_vect* vect)
 {
 	size_t i;
 	for (i = 0; i < vect->size; i++) {
@@ -87,7 +87,7 @@ static void bt_vector_clean(torrent_vect *vect)
  *
  * @param ctx torrent algorithm context
  */
-void bt_cleanup(torrent_ctx *ctx)
+void bt_cleanup(torrent_ctx* ctx)
 {
 	assert(ctx != NULL);
 
@@ -102,7 +102,7 @@ void bt_cleanup(torrent_ctx *ctx)
 	ctx->content.str = 0;
 }
 
-static void bt_generate_torrent(torrent_ctx *ctx);
+static void bt_generate_torrent(torrent_ctx* ctx);
 
 /**
  * Add an item to vector.
@@ -116,7 +116,7 @@ static int bt_vector_add_ptr(torrent_vect* vect, void* item)
 	/* check if vector contains enough space for the next item */
 	if (vect->size >= vect->allocated) {
 		size_t size = (vect->allocated == 0 ? 128 : vect->allocated * 2);
-		void *new_array = realloc(vect->array, size * sizeof(void*));
+		void* new_array = realloc(vect->array, size * sizeof(void*));
 		if (new_array == NULL) return 0; /* failed: no memory */
 		vect->array = (void**)new_array;
 		vect->allocated = size;
@@ -133,7 +133,7 @@ static int bt_vector_add_ptr(torrent_vect* vect, void* item)
  * @param ctx torrent algorithm context
  * @return non-zero on success, zero on fail
  */
-static int bt_store_piece_sha1(torrent_ctx *ctx)
+static int bt_store_piece_sha1(torrent_ctx* ctx)
 {
 	unsigned char* block;
 	unsigned char* hash;
@@ -171,7 +171,7 @@ typedef struct bt_file_info
  * @param filesize file size
  * @return non-zero on success, zero on fail
  */
-int bt_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
+int bt_add_file(torrent_ctx* ctx, const char* path, uint64_t filesize)
 {
 	size_t len = strlen(path);
 	bt_file_info* info = (bt_file_info*)malloc(sizeof(uint64_t) + len + 1);
@@ -203,7 +203,7 @@ int bt_add_file(torrent_ctx *ctx, const char* path, uint64_t filesize)
  * @param msg message chunk
  * @param size length of the message chunk
  */
-void bt_update(torrent_ctx *ctx, const void* msg, size_t size)
+void bt_update(torrent_ctx* ctx, const void* msg, size_t size)
 {
 	const unsigned char* pmsg = (const unsigned char*)msg;
 	size_t rest = (size_t)(ctx->piece_length - ctx->index);
@@ -234,7 +234,7 @@ void bt_update(torrent_ctx *ctx, const void* msg, size_t size)
  * @param ctx the algorithm context containing current hashing state
  * @param result pointer to the array store message hash into
  */
-void bt_final(torrent_ctx *ctx, unsigned char result[20])
+void bt_final(torrent_ctx* ctx, unsigned char result[20])
 {
 	if (ctx->index > 0) {
 		bt_store_piece_sha1(ctx); /* flush buffered data */
@@ -279,7 +279,7 @@ static int bt_str_ensure_length(torrent_ctx* ctx, size_t length)
  * @param ctx the torrent algorithm context
  * @param text the null-terminated string to append
  */
-static void bt_str_append(torrent_ctx *ctx, const char* text)
+static void bt_str_append(torrent_ctx* ctx, const char* text)
 {
 	size_t length = strlen(text);
 
@@ -388,7 +388,7 @@ size_t bt_default_piece_length(uint64_t total_size)
 /* get file basename */
 static const char* bt_get_basename(const char* path)
 {
-	const char *p = strchr(path, '\0') - 1;
+	const char* p = strchr(path, '\0') - 1;
 	for (; p >= path && *p != '/' && *p != '\\'; p--);
 	return (p + 1);
 }
@@ -403,7 +403,7 @@ static const char* get_batch_name(char* path)
 }
 
 /* write file size and path */
-static void bt_file_info_append(torrent_ctx *ctx, const char* length_name,
+static void bt_file_info_append(torrent_ctx* ctx, const char* length_name,
 	const char* path_name, bt_file_info* info)
 {
 	bt_bencode_int(ctx, length_name, info->size);
@@ -417,7 +417,7 @@ static void bt_file_info_append(torrent_ctx *ctx, const char* length_name,
  *
  * @param ctx the torrent algorithm context
  */
-static void bt_generate_torrent(torrent_ctx *ctx)
+static void bt_generate_torrent(torrent_ctx* ctx)
 {
 	uint64_t total_size = 0;
 	size_t info_start_pos;
@@ -513,7 +513,7 @@ static void bt_generate_torrent(torrent_ctx *ctx)
  * @param ctx the torrent algorithm context
  * @return the 20-bytes long BTIH value
  */
-unsigned char* bt_get_btih(torrent_ctx *ctx)
+unsigned char* bt_get_btih(torrent_ctx* ctx)
 {
 	return ctx->btih;
 }
@@ -524,7 +524,7 @@ unsigned char* bt_get_btih(torrent_ctx *ctx)
  * @param ctx the torrent algorithm context
  * @param options the options to set
  */
-void bt_set_options(torrent_ctx *ctx, unsigned options)
+void bt_set_options(torrent_ctx* ctx, unsigned options)
 {
 	ctx->options = options;
 }
@@ -549,7 +549,7 @@ static char* bt_strdup(const char* str)
  * @param name the program name
  * @return non-zero on success, zero on error
  */
-int bt_set_program_name(torrent_ctx *ctx, const char* name)
+int bt_set_program_name(torrent_ctx* ctx, const char* name)
 {
 	ctx->program_name = strdup(name);
 	return (ctx->program_name != NULL);
@@ -561,7 +561,7 @@ int bt_set_program_name(torrent_ctx *ctx, const char* name)
  * @param ctx the torrent algorithm context
  * @param piece_length the piece length in bytes
  */
-void bt_set_piece_length(torrent_ctx *ctx, size_t piece_length)
+void bt_set_piece_length(torrent_ctx* ctx, size_t piece_length)
 {
 	ctx->piece_length = piece_length;
 }
@@ -573,7 +573,7 @@ void bt_set_piece_length(torrent_ctx *ctx, size_t piece_length)
  * @param announce_url the announce URL of the tracker
  * @return non-zero on success, zero on error
  */
-int bt_add_announce(torrent_ctx *ctx, const char* announce_url)
+int bt_add_announce(torrent_ctx* ctx, const char* announce_url)
 {
 	char* url_copy;
 	if (!announce_url || announce_url[0] == '\0') return 0;
@@ -592,7 +592,7 @@ int bt_add_announce(torrent_ctx *ctx, const char* announce_url)
  * @param pstr pointer to pointer receiving the buffer with file content
  * @return length of the torrent file content
  */
-size_t bt_get_text(torrent_ctx *ctx, char** pstr)
+size_t bt_get_text(torrent_ctx* ctx, char** pstr)
 {
 	assert(ctx->content.str);
 	*pstr = ctx->content.str;

@@ -64,7 +64,7 @@ RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total
 
 RHASH_API const rhash_str* rhash_torrent_generate_content(rhash ctx)
 {
-	torrent_ctx *tc = BT_CTX(ctx);
+	torrent_ctx* tc = BT_CTX(ctx);
 	if (!tc || tc->error || !tc->content.str) return 0;
 	return (rhash_str*)(&tc->content);
 }
