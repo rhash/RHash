@@ -325,11 +325,14 @@ $rhash -c none-existent.file 2>/dev/null
 check "$?" "1" .
 $rhash -H test1K.data >/dev/null
 check "$?" "0"
-UNREADABLE_FILE="$RHASH_TMP/test-unreadable.file"
-printf "" > "$UNREADABLE_FILE" && chmod a-w "$UNREADABLE_FILE"
-$rhash -o "$UNREADABLE_FILE" -H test1K.data 2>/dev/null
-check "$?" "2" .
-rm -f "$UNREADABLE_FILE"
+UNWRITABLE_FILE="$RHASH_TMP/test-unwritable.file"
+printf "" > "$UNWRITABLE_FILE" && chmod a-w "$UNWRITABLE_FILE"
+# check if really unwritable, since superuser still can write
+if ! test -w "$UNWRITABLE_FILE" ; then
+ $rhash -o "$UNWRITABLE_FILE" -H test1K.data 2>/dev/null
+ check "$?" "2" .
+fi
+rm -f "$UNWRITABLE_FILE"
 
 # check if any test failed
 if [ $fail_cnt -gt 0 ]; then

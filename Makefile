@@ -141,12 +141,10 @@ test-full:
 
 test: test-$(BUILD_TYPE)
 test-static: $(RHASH_STATIC)
-	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh $(TEST_OPTIONS) ./$(RHASH_STATIC)
+	/bin/sh tests/test_rhash.sh $(TEST_OPTIONS) ./$(RHASH_STATIC)
 
 test-shared: $(RHASH_SHARED)
-	chmod +x tests/test_rhash.sh
-	tests/test_rhash.sh --shared $(TEST_OPTIONS) ./$(RHASH_SHARED)
+	/bin/sh tests/test_rhash.sh --shared $(TEST_OPTIONS) ./$(RHASH_SHARED)
 
 print-info: lib-$(BUILD_TYPE)
 	+cd librhash && $(MAKE) print-info
