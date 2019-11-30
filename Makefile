@@ -52,18 +52,17 @@ config.mak:
 # creating archives
 WIN_SUFFIX     = win32
 PACKAGE_NAME   = $(RHASH_NAME)-$(VERSION)
-ARCHIVE_BZIP   = $(PACKAGE_NAME)-src.tar.bz2
-ARCHIVE_GZIP   = $(PACKAGE_NAME)-src.tar.gz
-ARCHIVE_FULL   = $(PACKAGE_NAME)-full-src.tar.gz
-ARCHIVE_DEB_GZ = $(RHASH_NAME)_$(VERSION).orig.tar.gz
-ARCHIVE_7Z     = $(PACKAGE_NAME)-src.tar.7z
+ARCHIVE_TARGZ  = $(PACKAGE_NAME)-src.tar.gz
+ARCHIVE_TARGZ_CORE     = $(RHASH_NAME)-core-$(VERSION)-src.tar.gz
+ARCHIVE_TARGZ_BINDINGS = $(RHASH_NAME)-bindings-$(VERSION)-src.tar.gz
+ARCHIVE_TARGZ_DEB      = $(RHASH_NAME)_$(VERSION).orig.tar.gz
+ARCHIVE_XZ     = $(PACKAGE_NAME)-src.tar.xz
 ARCHIVE_ZIP    = $(PACKAGE_NAME)-$(WIN_SUFFIX).zip
 WIN_ZIP_DIR    = RHash-$(VERSION)-$(WIN_SUFFIX)
-dist: gzip gzip-bindings
-dist-full: gzip-full
+dist: tgz
 win-dist: zip
 zip: $(ARCHIVE_ZIP)
-dgz: check $(ARCHIVE_DEB_GZ)
+dgz: check $(ARCHIVE_TARGZ_DEB)
 
 build-install-binary: $(BUILD_TARGETS)
 	+$(MAKE) install-binary
@@ -241,28 +240,24 @@ copy-dist: $(ALL_FILES) permissions
 	mkdir $(PACKAGE_NAME)
 	cp -rl --parents $(ALL_FILES) $(PACKAGE_NAME)/
 
-gzip: check
-	+$(MAKE) copy-dist
-	tar czf $(ARCHIVE_GZIP) --owner=root --group=root $(PACKAGE_NAME)/
-	rm -rf $(PACKAGE_NAME)
+tgz-core: check
+	+$(MAKE) copy-dist PACKAGE_NAME=$(PACKAGE_NAME)-core
+	tar czf $(ARCHIVE_TARGZ_CORE) --owner=root --group=root $(PACKAGE_NAME)-core/
+	rm -rf $(PACKAGE_NAME)-core
 
-gzip-bindings:
-	+cd bindings && $(MAKE) gzip ARCHIVE_GZIP=../rhash-bindings-$(VERSION)-src.tar.gz
+tgz-bindings:
+	+cd bindings && $(MAKE) gzip ARCHIVE_GZIP=../$(ARCHIVE_TARGZ_BINDINGS)
 
-gzip-full: check clean-bindings
+tgz: check clean-bindings
 	+$(MAKE) copy-dist
 	+cd bindings && $(MAKE) copy-dist COPYDIR=../$(PACKAGE_NAME)/bindings
-	tar czf $(ARCHIVE_FULL) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
+	tar czf $(ARCHIVE_TARGZ) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)
 
-bzip: check
+xz: check clean-bindings
 	+$(MAKE) copy-dist
-	tar cjf $(ARCHIVE_BZIP) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
-	rm -rf $(PACKAGE_NAME)
-
-7z: check
-	+$(MAKE) copy-dist
-	tar cf - --owner=root:0 --group=root:0 $(PACKAGE_NAME)/ | 7zr a -si $(ARCHIVE_7Z)
+	+cd bindings && $(MAKE) copy-dist COPYDIR=../$(PACKAGE_NAME)/bindings
+	tar cJf $(ARCHIVE_XZ) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)
 
 $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
@@ -274,17 +269,17 @@ $(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
 
-$(ARCHIVE_DEB_GZ) : $(ALL_FILES)
-	+$(MAKE) $(ARCHIVE_GZIP)
-	mv -f $(ARCHIVE_GZIP) $(ARCHIVE_DEB_GZ)
+$(ARCHIVE_TARGZ_DEB) : $(ALL_FILES)
+	+$(MAKE) tgz
+	mv -f $(ARCHIVE_TARGZ) $(ARCHIVE_TARGZ_DEB)
 
 # rpm packaging
 $(SPECFILE): $(SPECFILE).in config.mak
 	sed -e 's/@VERSION@/$(VERSION)/' $(SPECFILE).in > $(SPECFILE)
 
-rpm: gzip
+rpm: tgz
 	-for i in $(RPMDIRS); do mkdir -p $(RPMTOP)/$$i; done
-	cp -f $(ARCHIVE_GZIP) $(RPMTOP)/SOURCES
+	cp -f $(ARCHIVE_TARGZ) $(RPMTOP)/SOURCES
 	rpmbuild -ba --clean --define "_topdir `pwd`/$(RPMTOP)" $(SPECFILE)
 	mv -f `find $(RPMTOP) -name "*rhash*-$(VERSION)*.rpm"` .
 	rm -rf $(RPMTOP)
@@ -335,4 +330,4 @@ uninstall-gmo:
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	print-info check copy-dist update-po compile-gmo mkdir-bin permissions \
-	bzip dgz dist dist-full gzip gzip-bindings gzip-full rpm win-dist zip
+	dgz dist tgz tgz-bindings tgz-core rpm win-dist xz zip
