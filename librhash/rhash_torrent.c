@@ -13,16 +13,16 @@
  * OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-#include <assert.h>
 
 /* modifier for Windows DLL */
 #if (defined(_WIN32) || defined(__CYGWIN__) ) && defined(RHASH_EXPORTS)
 # define RHASH_API __declspec(dllexport)
 #endif
 
+#include "rhash_torrent.h"
 #include "algorithms.h"
 #include "torrent.h"
-#include "rhash_torrent.h"
+#include <assert.h>
 
 /* obtain torrent context from rhash context */
 #define BT_CTX(rctx) ((torrent_ctx*)(((rhash_context_ext*)rctx)->bt_ctx))

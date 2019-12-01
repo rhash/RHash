@@ -42,6 +42,7 @@ static void print_help_line(const char* option, const char* format, ...)
 	va_start(args, format);
 	rsh_fprintf(rhash_data.out, "%s", option);
 	rsh_vfprintf(rhash_data.out, format, args);
+	va_end(args);
 }
 
 /**

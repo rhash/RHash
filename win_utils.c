@@ -506,9 +506,12 @@ int win_vfprintf(FILE* out, const char* format, va_list args)
  */
 int win_fprintf(FILE* out, const char* format, ...)
 {
+	int res;
 	va_list args;
 	va_start(args, format);
-	return win_vfprintf_encoded(out, format, USE_CSTR_ARGS, args);
+	res = win_vfprintf_encoded(out, format, USE_CSTR_ARGS, args);
+	va_end(args);
+	return res;
 }
 
 /**
@@ -521,9 +524,12 @@ int win_fprintf(FILE* out, const char* format, ...)
  */
 int win_fprintf_warg(FILE* out, const char* format, ...)
 {
+	int res;
 	va_list args;
 	va_start(args, format);
-	return win_vfprintf_encoded(out, format, USE_WSTR_ARGS, args);
+	res = win_vfprintf_encoded(out, format, USE_WSTR_ARGS, args);
+	va_end(args);
+	return res;
 }
 
 /**

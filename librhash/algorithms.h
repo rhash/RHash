@@ -2,9 +2,9 @@
 #ifndef RHASH_ALGORITHMS_H
 #define RHASH_ALGORITHMS_H
 
-#include <stddef.h> /* for ptrdiff_t */
 #include "rhash.h"
 #include "byte_order.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

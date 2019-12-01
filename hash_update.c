@@ -194,7 +194,7 @@ static int file_set_load_from_crc_file(file_set* set, file_t* file)
 	}
 	while (!feof(fd) && fgets(buf, 2048, fd)) {
 		char* line = buf;
-		if ((result && IsEmptyFile) != 0) {
+		if ((result & IsEmptyFile) != 0) {
 			/* skip unicode BOM */
 			if (STARTS_WITH_UTF8_BOM(line)) {
 				line += 3;

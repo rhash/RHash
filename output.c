@@ -158,6 +158,7 @@ void log_msg(const char* format, ...)
 	va_list ap;
 	va_start(ap, format);
 	log_va_msg(format, ap);
+	va_end(ap);
 }
 
 /**
@@ -185,6 +186,7 @@ void log_error(const char* format, ...)
 	va_start(ap, format);
 	print_log_prefix();
 	log_va_msg(format, ap);
+	va_end(ap);
 }
 
 /**

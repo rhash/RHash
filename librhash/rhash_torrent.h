@@ -2,6 +2,8 @@
 #ifndef RHASH_TORRENT_H
 #define RHASH_TORRENT_H
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

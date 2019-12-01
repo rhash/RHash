@@ -321,7 +321,7 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 {
 	assert(print_path);
 	assert(!prepend_dir || prepend_dir->real_path);
-	memset(file, 0, sizeof(*file));
+	memset(file, 0, sizeof(file_t));
 	file->mode = (init_flags & FileMaskModeBits);
 	if (init_flags & (FileIsStdStream | FileIsData)) {
 		file->print_path = print_path;

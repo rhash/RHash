@@ -14,6 +14,11 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* modifier for Windows DLL */
+#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
+# define RHASH_API __declspec(dllexport)
+#endif
+
 /* macros for large file support, must be defined before any include file */
 #define _LARGEFILE64_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -30,11 +35,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-
-/* modifier for Windows DLL */
-#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
-# define RHASH_API __declspec(dllexport)
-#endif
 
 #define STATE_ACTIVE  0xb01dbabe
 #define STATE_STOPED  0xdeadbeef
