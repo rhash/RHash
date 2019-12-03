@@ -23,6 +23,29 @@ INSTALL_LIB_STATIC=auto
 INSTALL_LIB_SHARED=auto
 INSTALL_PKGCONFIGDIR="$PKG_INSTALLDIR"
 
+# detect and prepare tmp directory
+for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
+  test -d "$DETECT_TMP" && break
+done
+RANDNUM=$RANDOM
+test -z $RANDNUM && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
+BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
+mkdir $BUILD_TMPDIR || die "Unable to create tmp dir."
+TMPC="$BUILD_TMPDIR/tmp.c"
+TMPT="$BUILD_TMPDIR/tmp.txt"
+TMPBIN="$BUILD_TMPDIR/tmp"
+TMPLOG="config.log"
+rm -f "$TMPLOG"
+echo "Configuration parameters: \"$CFG_LINE\"" > "$TMPLOG"
+echo "Symlinks to install: $INSTALL_SYMLINKS" >> "$TMPLOG"
+echo >> "$TMPLOG"
+
+remove_tmpdir()
+{
+  rm -rf "$BUILD_TMPDIR"
+}
+trap remove_tmpdir EXIT
+
 # display error message and exit
 die() {
   echo
@@ -60,9 +83,9 @@ Directory Options:
 Features options:
   --disable-FEATURE      do not include FEATURE
   --enable-gettext       enable gettext (localization) support [autodetect]
-  --enable-openssl       enable OpenSSL (optimized hash functions) support
-                         [autodetect]
-  --enable-openssl-runtime   load OpenSSL at runtime if present [autodetect]
+  --enable-openssl[=runtime] enable OpenSSL (optimized hash functions) support.
+                         If runtime specified, then load OpenSSL at runtime if
+                         the library is found [autodetect]
   --enable-static        statically link RHash binary
   --enable-lib-static    build and install LibRHash static library [auto]
   --enable-lib-shared    build and install LibRHash shared library [auto]
@@ -73,6 +96,19 @@ Use these options if autodetection fails:
   --extra-ldflags=FLAGS       extra LDFLAGS
 EOF
 exit 0
+}
+
+validate_value()
+{
+  VALUE="$1"
+  shift
+  for VALID_VALUE do
+	if test "$VALUE" = "$VALID_VALUE"; then
+	  return 0
+	fi
+    shift
+  done
+  return 1
 }
 
 get_opt_value()
@@ -119,14 +155,20 @@ for OPT do
   --enable-openssl)
       OPT_OPENSSL=yes
       ;;
+  --enable-openssl=*)
+      OPT_OPENSSL=$(get_opt_value $OPT)
+	  validate_value "$OPT_OPENSSL" "runtime" || die "Unexpected option value: $OPT"
+      ;;
   --disable-openssl)
       OPT_OPENSSL=no
       ;;
   --enable-openssl-runtime)
-      OPT_OPENSSL_RUNTIME=yes
+      OPT_OPENSSL=runtime # legacy option
+      echo "warning: use --enable-openssl=runtime instead of $OPT" >> "$TMPLOG"
       ;;
   --disable-openssl-runtime)
-      OPT_OPENSSL_RUNTIME=no
+      OPT_OPENSSL=yes # legacy option
+      echo "warning: use --enable-openssl instead of $OPT" >> "$TMPLOG"
       ;;
   --target=*)
     BUILD_TARGET=$(get_opt_value $OPT)
@@ -178,10 +220,10 @@ for OPT do
     CMD_INSTALL=$(get_opt_value $OPT)
     ;;
   --extra-cflags=*)
-    BUILD_EXTRA_CFLAGS=$(get_opt_value $OPT)
+    BUILD_EXTRA_CFLAGS=$BUILD_EXTRA_CFLAGS $(get_opt_value $OPT)
     ;;
   --extra-ldflags=*)
-    BUILD_EXTRA_LDFLAGS=$(get_opt_value $OPT)
+    BUILD_EXTRA_LDFLAGS=$BUILD_EXTRA_LDFLAGS $(get_opt_value $OPT)
     ;;
   *)
       echo "unknown option $OPT"
@@ -200,29 +242,6 @@ test -z "$INSTALL_INCDIR" && INSTALL_INCDIR="$INSTALL_PREFIX/include"
 test -z "$INSTALL_LIBDIR" && INSTALL_LIBDIR="$INSTALL_EXEC_PREFIX/lib"
 test -z "$INSTALL_PKGCONFIGDIR" && INSTALL_PKGCONFIGDIR="$INSTALL_LIBDIR/pkgconfig"
 test -z "$INSTALL_LOCALEDIR" && INSTALL_LOCALEDIR="$INSTALL_PREFIX/share/locale"
-
-# detect and prepare tmp directory
-for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
-  test -d "$DETECT_TMP" && break
-done
-RANDNUM=$RANDOM
-test -z $RANDNUM && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
-BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
-mkdir $BUILD_TMPDIR || die "Unable to create tmp dir."
-TMPC="$BUILD_TMPDIR/tmp.c"
-TMPT="$BUILD_TMPDIR/tmp.txt"
-TMPBIN="$BUILD_TMPDIR/tmp"
-TMPLOG="config.log"
-rm -f "$TMPLOG"
-echo "Configuration parameters: \"$CFG_LINE\"" > "$TMPLOG"
-echo "Symlinks to install: $INSTALL_SYMLINKS" >> "$TMPLOG"
-echo >> "$TMPLOG"
-
-remove_tmpdir()
-{
-  rm -rf "$BUILD_TMPDIR"
-}
-trap remove_tmpdir EXIT
 
 join_params()
 {
@@ -605,7 +624,7 @@ fi
 # check for linker flags
 LD_STATIC=-static
 test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
-test "$OPT_OPENSSL_RUNTIME" = "yes" && ! win32 && LD_STATIC=
+test "$OPT_OPENSSL" = "runtime" && ! win32 && LD_STATIC=
 if test -n "$LD_STATIC"; then
   start_check "linker support for $LD_STATIC"
   if cc_check_cflag "$LD_STATIC"; then
@@ -615,11 +634,13 @@ if test -n "$LD_STATIC"; then
   fi
   finish_check $(yn_nonempty "$LD_STATIC")
 fi
-test "$OPT_OPENSSL_RUNTIME" = "auto" && test "$BUILD_STATIC" = "yes" && ! win32 && OPT_OPENSSL_RUNTIME=no
 
-ALLOW_RUNTIME_LINKING=yes
 LIBDL_LDFLAGS=
-if ! win32 && test "$OPT_OPENSSL_RUNTIME" != "no"; then
+if win32; then
+  ALLOW_RUNTIME_LINKING=yes
+elif test "$BUILD_STATIC" = "yes"; then
+  ALLOW_RUNTIME_LINKING=no
+elif test "$OPT_OPENSSL" = "auto" || test "$OPT_OPENSSL" = "runtime"; then
   start_check "linker support for dlopen"
   ALLOW_RUNTIME_LINKING=no
   if cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);'; then
@@ -703,16 +724,14 @@ fi
 
 if test "$OPT_OPENSSL" != "no"; then
   start_check "OpenSSL"
-  test "$OPT_OPENSSL" = "auto" && test "$OPT_OPENSSL_RUNTIME" = "yes" && OPT_OPENSSL=yes
   OPENSSL_FOUND=no
   if test "$ALLOW_RUNTIME_LINKING" = "no"; then
     echo "No runtime library loading, because dlopen() is not found!" >> "$TMPLOG"
-    test "$OPT_OPENSSL_RUNTIME" = "yes" && die "dlopen() is required for OpenSSL runtime loading"
-    OPT_OPENSSL_RUNTIME=no
+    test "$OPT_OPENSSL" = "runtime" && die "dlopen() is required for OpenSSL runtime loading"
   fi
   OPENSSL_HEADERS="openssl/opensslconf.h openssl/md4.h openssl/md5.h openssl/sha.h"
   if cc_check_headers $OPENSSL_HEADERS; then
-    if test "$OPT_OPENSSL_RUNTIME" != "no"; then
+    if test "$OPT_OPENSSL" = "runtime" || ( test "$ALLOW_RUNTIME_LINKING" = "yes" && test "$OPT_OPENSSL" = "auto" ); then
       OPENSSL_FOUND=runtime
       LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DOPENSSL_RUNTIME)
       OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
@@ -729,10 +748,10 @@ if test "$OPT_OPENSSL" != "no"; then
     fi
   fi
   finish_check $OPENSSL_FOUND
-  test "$OPT_OPENSSL" = "yes" && test "$OPENSSL_FOUND" = "no" && die "OpenSSL library not found"
+  test "$OPT_OPENSSL" != "auto" && test "$OPENSSL_FOUND" = "no" && die "OpenSSL library not found"
 fi
 
-# building of static/shared binary an library
+# building of static/shared binary and library
 RHASH_STATIC=rhash_static
 RHASH_SHARED=rhash_shared
 RHASH_BUILD_TARGETS=
