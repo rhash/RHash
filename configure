@@ -220,10 +220,10 @@ for OPT do
     CMD_INSTALL=$(get_opt_value $OPT)
     ;;
   --extra-cflags=*)
-    BUILD_EXTRA_CFLAGS=$BUILD_EXTRA_CFLAGS $(get_opt_value $OPT)
+    BUILD_EXTRA_CFLAGS="$BUILD_EXTRA_CFLAGS $(get_opt_value $OPT)"
     ;;
   --extra-ldflags=*)
-    BUILD_EXTRA_LDFLAGS=$BUILD_EXTRA_LDFLAGS $(get_opt_value $OPT)
+    BUILD_EXTRA_LDFLAGS="$BUILD_EXTRA_LDFLAGS $(get_opt_value $OPT)"
     ;;
   *)
       echo "unknown option $OPT"

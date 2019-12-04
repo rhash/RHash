@@ -288,15 +288,15 @@ print_item* parse_percent_item(const char** str)
 	if (!id_found) {
 		const char upper = *format & ~0x20;
 		/* if the string terminated just after the '%' character */
-		if (upper == '\0')
+		if (*format == '\0')
 			return NULL;
 		/* look for a known token */
-		if ( (p = strchr(short_hash, upper)) ) {
+		if (upper && (p = strchr(short_hash, upper))) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
 			hash_id = hash_ids[p - short_hash];
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 		}
-		else if ( (p = strchr(short_other, *format)) ) {
+		else if ((p = strchr(short_other, *format))) {
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
 			modifier_flags |= other_flags[p - short_other];
 			if ((modifier_flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_LINK)
