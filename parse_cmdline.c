@@ -1125,7 +1125,8 @@ void read_options(int argc, char* argv[])
 	IF_WINDOWS(setup_console());
 	setup_output();
 
-	apply_cmdline_options(&cmd_line); /* process the rest of command options */
+	apply_cmdline_options(&cmd_line); /* process the rest of command line options */
+	options_destroy(&conf_opt);
 
 	/* options were processed, so we don't need them any more */
 	rsh_remove_exit_handler();
