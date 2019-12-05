@@ -121,6 +121,7 @@ unsigned rhash_get_ticks(void);
 typedef void (*exit_handler_t)(void);
 void rsh_install_exit_handler(exit_handler_t handler);
 void rsh_remove_exit_handler(void);
+void rsh_call_exit_handlers(void);
 void rsh_exit(int code);
 
 /* clever malloc with error detection */

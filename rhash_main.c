@@ -191,10 +191,14 @@ void rhash_destroy(struct rhash_t* ptr)
 {
 	free_print_list(ptr->print_list);
 	rsh_str_free(ptr->template_text);
-	if (ptr->update_context) update_ctx_free(ptr->update_context);
-	if (ptr->rctx) rhash_free(ptr->rctx);
-	if (ptr->out) fclose(ptr->out);
-	if (ptr->log) fclose(ptr->log);
+	if (ptr->update_context)
+		update_ctx_free(ptr->update_context);
+	if (ptr->rctx)
+		rhash_free(ptr->rctx);
+	if (ptr->out && !FILE_ISSTDSTREAM(&ptr->out_file))
+		fclose(ptr->out);
+	if (ptr->log && !FILE_ISSTDSTREAM(&ptr->log_file))
+		fclose(ptr->log);
 	file_cleanup(&ptr->out_file);
 	file_cleanup(&ptr->log_file);
 	file_cleanup(&ptr->upd_file);
@@ -365,6 +369,6 @@ int main(int argc, char* argv[])
 	exit_code = ((rhash_data.stop_flags & FatalErrorFlag) ? 2 :
 		(rhash_data.non_fatal_error || opt.search_data->errors_count) ? 1 :
 		(rhash_data.stop_flags & InterruptedFlag) ? 3 : 0);
-	rsh_exit(exit_code);
-	return 0; /* unreachable statement */
+	rsh_call_exit_handlers();
+	return exit_code;
 }

@@ -325,14 +325,24 @@ void rsh_remove_exit_handler(void)
 }
 
 /**
- * Call all installed exit handlers, starting from the latest one, and exit the program.
+ * Call all installed exit handlers, starting from the latest one.
+ *
+ * @param code the program exit code
+ */
+void rsh_call_exit_handlers(void)
+{
+	while (rhash_exit_handlers.handlers_count > 0)
+		rhash_exit_handlers.handlers[--rhash_exit_handlers.handlers_count]();
+}
+
+/**
+ * Call all installed exit handlers and exit the program.
  *
  * @param code the program exit code
  */
 void rsh_exit(int code)
 {
-	while (rhash_exit_handlers.handlers_count > 0)
-		rhash_exit_handlers.handlers[--rhash_exit_handlers.handlers_count]();
+	rsh_call_exit_handlers();
 	exit(code);
 }
 
