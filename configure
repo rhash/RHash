@@ -98,7 +98,7 @@ EOF
 exit 0
 }
 
-validate_value()
+check_set_contains()
 {
   VALUE="$1"
   shift
@@ -157,7 +157,7 @@ for OPT do
       ;;
   --enable-openssl=*)
       OPT_OPENSSL=$(get_opt_value $OPT)
-	  validate_value "$OPT_OPENSSL" "runtime" || die "Unexpected option value: $OPT"
+      check_set_contains "$OPT_OPENSSL" "runtime" || die "Unexpected option value: $OPT"
       ;;
   --disable-openssl)
       OPT_OPENSSL=no
@@ -583,7 +583,9 @@ has_optimization()
 }
 has_optimization && OPTLEVEL= || OPTLEVEL="-O2"
 test -n "$BUILD_DEBUG" && OPTNDEBUG= || OPTNDEBUG="-DNDEBUG"
-OPTFLAGS="-pipe -fomit-frame-pointer -ffunction-sections -fdata-sections"
+OPTFLAGS="-pipe -ffunction-sections -fdata-sections"
+check_set_contains "-fno-omit-frame-pointer" $BUILD_EXTRA_CFLAGS $BUILD_DEBUG \
+  || OPTFLAGS="$OPTFLAGS -fomit-frame-pointer"
 OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTNDEBUG $OPTFLAGS)
 
 # test that compiler works with options specified by command line
