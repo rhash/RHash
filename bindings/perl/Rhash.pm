@@ -65,10 +65,18 @@ use constant RHASH_ALL       => 0x1FFFFFFF;
 # Rhash class methods
 
 # Rhash object constructor
-sub new
+sub new($$@)
 {
-	my $hash_id = $_[1] or die "hash_id not specified";
-	my $context = rhash_init(scalar($hash_id)) or return undef;
+	my $hash_id = 0;
+	shift;
+	scalar(@_) > 0 or die "hash_id not specified";
+	for my $id (@_) {
+		$hash_id |= scalar($id);
+		if(!scalar($id) || (scalar($id) & RHASH_ALL) != $id) {
+			die "bad hash_id = " . scalar($id);
+		}
+	}
+	my $context = rhash_init($hash_id) or return undef;
 	my $self = {
 		context => $context,
 	};
@@ -243,19 +251,23 @@ Crypt::Rhash - Compute hash sums and magnet links
 =head1 SYNOPSIS
 
   use Crypt::Rhash;
-  
   my $msg = "a message text";
   print "MD5 = " . Crypt::Rhash::msg(RHASH_MD5, $msg) . "\n";
-  
+
+or
+
+  use Crypt::Rhash;
+  my $filepath = "/tmp/file.txt";
   # Calculate two hash functions simultaneously
-  my $r = Crypt::Rhash->new(RHASH_MD5 | RHASH_SHA1);
-  $r->update("a message text")->update(" another message");
-  print  "MD5  = " . $r->hash(RHASH_MD5) . "\n";
-  print  "SHA1 = " . $r->hash(RHASH_SHA1) . "\n";
+  my $r = Crypt::Rhash->new(RHASH_SHA1, RHASH_SHA512);
+  $res = $r->update_file($filepath);
+  defined($res) or die "failed to read $filepath: $!";
+  print "SHA1   = " . $r->hash(RHASH_SHA1) . "\n";
+  print "SHA512 = " . $r->hash(RHASH_SHA512) . "\n";
 
 =head1 DESCRIPTION
 
-Crypt::Rhash module is an object-oriented interface to the LibRHash library,
+Crypt::Rhash module is an object-oriented interface to LibRHash library,
 allowing simultaneous calculation of several hash functions for a file  or a
 text message.
 
@@ -273,10 +285,10 @@ HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
 
 Creates and returns new Crypt::Rhash object.
 
-  my $r = Crypt::Rhash->new($hash_id);
-  my $p = new Crypt::Rhash($hash_id); # alternative way to call the constructor
+  my $r = Crypt::Rhash->new($hash_id1, $hash_id2, ...);
+  my $p = new Crypt::Rhash($hash_id1, ...); # alternative way to call the constructor
 
-The $hash_id parameter can be union (via bitwise OR) of any of the following bit-flags:
+Constructor accepts the following constants as arguments:
 
   RHASH_CRC32,
   RHASH_CRC32C,
@@ -306,10 +318,11 @@ The $hash_id parameter can be union (via bitwise OR) of any of the following bit
   RHASH_EDONR256,
   RHASH_EDONR512,
   RHASH_SNEFRU128,
-  RHASH_SNEFRU256
+  RHASH_SNEFRU256,
+  RHASH_ALL
 
-Also the RHASH_ALL bit mask is the union of all listed bit-flags.
-So the object created via Crypt::Rhash->new(RHASH_ALL) calculates all
+The RHASH_ALL bit mask is bitwise union of all listed above bit-flags.
+An object created as Crypt::Rhash->new(RHASH_ALL) calculates all
 supported hash functions for the same data.
 
 =head1 COMPUTING HASHES
@@ -330,7 +343,8 @@ It returns the $rhash object itself allowing the following construction:
 
 Calculate a hash of the file (or its part) specified by $file_path or a file descriptor $fd.
 The update_fd method doesn't close the $fd, leaving the file position after the hashed block.
-The optional $start and $size specify the block of the file to hash.
+The optional $start and $size specify the block of the file to hash. If $start is undefined,
+then the size is read from the start. If $size is undefined, then the file is read till the end.
 No error is reported if the $size is greater than the number of the unread bytes left in the file.
 
 Returns the number of characters actually read, 0 at end of file,
