@@ -524,6 +524,12 @@ void init_hash_info_table(void)
 	print_hash_info* info = hash_info_table;
 	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 
+	/* prevent crash on incompatible librhash */
+	if (rhash_count() < RHASH_HASH_COUNT) {
+		rsh_fprintf(stderr, "fatal error: incompatible librhash version\n");
+		rsh_exit(2);
+	}
+
 	memset(hash_info_table, 0, sizeof(hash_info_table));
 	/* check consistency with librhash */
 	if (RHASH_HASH_COUNT != rhash_count())
