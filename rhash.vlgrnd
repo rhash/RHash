@@ -1,3 +1,0 @@
-#!/bin/bash
-d=$(dirname $0)
-exec valgrind --leak-check=full --show-leak-kinds=all --time-stamp=yes --track-origins=yes --log-file=valgrind.%p.log $d/rhash "$@"
