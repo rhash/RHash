@@ -103,7 +103,7 @@ static void print_help(void)
 	print_help_line("      --speed   ", _("Output per-file and total processing speed.\n"));
 	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
 	if (rhash_is_openssl_supported())
-		print_help_line("      --openssl=<list> ", _("List hash functions to be calculated using OpenSSL.\n"));
+		print_help_line("      --openssl=<list> ", _("Specify hash functions to be calculated using OpenSSL.\n"));
 	print_help_line("  -o, --output=<file> ", _("File to output calculation or checking results.\n"));
 	print_help_line("  -l, --log=<file>    ", _("File to log errors and verbose information.\n"));
 	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));

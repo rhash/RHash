@@ -223,7 +223,8 @@ int rename_file_by_embeding_crc32(struct file_info* info)
 	memset(&new_file, 0, sizeof(new_file));
 	if (file_modify_path(&new_file, info->file, suffix_start, FModifyInsertBeforeExtension) < 0 &&
 			file_modify_path(&new_file, info->file, suffix_start, FModifyAppendSuffix) < 0) {
-		log_error_msg_file_t(_("failed to rename file: %s\n"), info->file);
+		/* impossible situation: AppendSuffix can't fail, so not translating this error */
+		log_error_msg_file_t("impossible: failed to rename file: %s\n", info->file);
 	} else if (file_rename(info->file, &new_file) < 0) {
 		log_error(_("can't move %s to %s: %s\n"),
 			file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull),
