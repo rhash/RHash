@@ -199,6 +199,7 @@ static int file_set_load_from_crc_file(file_set* set, file_t* file)
 			if (STARTS_WITH_UTF8_BOM(line)) {
 				line += 3;
 				result |= HasBom;
+				file->mode |= FileContentIsUtf8;
 			}
 			if (*line == 0 && feof(fd))
 				break;

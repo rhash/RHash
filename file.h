@@ -63,14 +63,15 @@ enum FileModeBits {
 	FileIsList  = 0x40,
 	FileIsStdStream = 0x80,
 	FileIsStdin = FileIsStdStream,
-	FileInitReusePath = 0x100,
-	FileInitUtf8PrintPath = 0x200,
-	FileInitRunFstat = 0x400,
-	FileInitRunLstat = 0x800,
-	FileInitUpdatePrintPathLastSlash = 0x1000,
+	FileContentIsUtf8 = 0x100,
+	FileInitReusePath = 0x1000,
+	FileInitUtf8PrintPath = 0x2000,
+	FileInitRunFstat = 0x4000,
+	FileInitRunLstat = 0x8000,
+	FileInitUpdatePrintPathLastSlash = 0x10000,
 	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg | FileIsInaccessible),
 	FileMaskIsSpecial = (FileIsData | FileIsList | FileIsStdStream),
-	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial)
+	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial | FileContentIsUtf8)
 };
 
 #define FILE_ISDIR(file)   ((file)->mode & FileIsDir)

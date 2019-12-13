@@ -499,7 +499,7 @@ void file_cleanup(file_t* file)
 void file_clone(file_t* file, const file_t* orig_file)
 {
 	memset(file, 0, sizeof(*file));
-	file->mode = orig_file->mode &  FileMaskModeBits;
+	file->mode = orig_file->mode & FileMaskModeBits;
 	if (orig_file->real_path)
 		file->real_path = rsh_tstrdup(orig_file->real_path);
 	if (orig_file->print_path)

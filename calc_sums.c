@@ -355,25 +355,25 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 
 	if ((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV && res == 0) {
 		/* updating SFV file: print SFV header line */
-		if (print_sfv_header_line(out, file) < 0) {
+		if (print_sfv_header_line(out, out_file->mode, file) < 0) {
 			log_error_file_t(out_file);
 			res = -2;
 		}
 		if (opt.flags & OPT_VERBOSE) {
-			print_sfv_header_line(rhash_data.log, file);
+			print_sfv_header_line(rhash_data.log, rhash_data.log_file.mode, file);
 			fflush(rhash_data.log);
 		}
 	}
 
 	if (rhash_data.print_list && res == 0) {
 		if (!opt.bt_batch_file) {
-			if (print_line(out, rhash_data.print_list, &info) < 0) {
+			if (print_line(out, out_file->mode, rhash_data.print_list, &info) < 0) {
 				log_error_file_t(out_file);
 				res = -2;
 			}
 			/* print the calculated line to stderr/log-file if verbose */
 			else if ((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
-				print_line(rhash_data.log, rhash_data.print_list, &info);
+				print_line(rhash_data.log, rhash_data.log_file.mode, rhash_data.print_list, &info);
 			}
 		}
 

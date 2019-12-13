@@ -408,14 +408,16 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
  * Print formatted file information to the given output stream.
  *
  * @param out the stream to print information to
+ * @param out_mode output file mode
  * @param list the format according to which information shall be printed
  * @param info the file information
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_line(FILE* out, print_item* list, struct file_info* info)
+int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info* info)
 {
 	char buffer[130];
 	int res = 0;
+	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
 #ifdef _WIN32
 	/* switch to binary mode to correctly output binary hashes */
 	int out_fd = _fileno(out);
@@ -469,7 +471,7 @@ int print_line(FILE* out, print_item* list, struct file_info* info)
 						(list->flags & PRINT_FLAG_UPPERCASE));
 				} else {
 					unsigned pflags = (print_type == PRINT_BASENAME ? OutBaseName : 0);
-					res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags));
+					res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags | out_flags));
 				}
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */
@@ -687,12 +689,14 @@ void init_printf_format(strbuf_t* out)
  * Format file information into SFV line and print it to the specified stream.
  *
  * @param out the stream to print the file information to
+ * @param out_mode output file mode
  * @param file the file info to print
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_sfv_header_line(FILE* out, file_t* file)
+int print_sfv_header_line(FILE* out, unsigned out_mode, file_t* file)
 {
 	char buf[24];
+	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
 
 	/* skip stdin stream and message-texts passed by command-line */
 	if (FILE_ISSPECIAL(file))
@@ -704,7 +708,7 @@ int print_sfv_header_line(FILE* out, file_t* file)
 	if (rsh_fprintf(out, "; %s  ", buf) < 0)
 		return -1;
 	print_time64(out, file->mtime, 1);
-	return PRINTF_RES(fprintf_file_t(out, " %s\n", file, 0));
+	return PRINTF_RES(fprintf_file_t(out, " %s\n", file, out_flags));
 }
 
 /**

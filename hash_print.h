@@ -42,12 +42,12 @@ void init_printf_format(struct strbuf_t* out);
 
 /* formatted output of hash sums and file information */
 print_item* parse_print_string(const char* format, unsigned* sum_mask);
-int print_line(FILE* out, print_item* list, struct file_info* info);
+int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info* info);
 void free_print_list(print_item* list);
 
 /* SFV format functions */
 int print_sfv_banner(FILE* out);
-int print_sfv_header_line(FILE* out, struct file_t* file);
+int print_sfv_header_line(FILE* out, unsigned out_mode, struct file_t* file);
 
 #ifdef __cplusplus
 } /* extern "C" */

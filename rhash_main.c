@@ -65,7 +65,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 				must_skip_file(file))
 			return 0;
 
-		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, file) < 0) {
+		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, rhash_data.out_file.mode, file) < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		}
