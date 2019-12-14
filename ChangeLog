@@ -1,10 +1,13 @@
-Thu, 28 Nov 2019 Aleksey
+Sun 08 Dec 2019 Aleksey
+	* add uk translations
+
+Thu 28 Nov 2019 Aleksey
 	* change project license to BSD Zero Clause License
 
-Mon, 18 Nov 2019 Aleksey
+Mon 18 Nov 2019 Aleksey
 	* new printf-format modifier '%u' to print url-encoded filename, path or hash
 
-Fri, 15 Nov 2019 Aleksey
+Fri 15 Nov 2019 Aleksey
 	* Bugfix: btih in magnet links shall be hex-encoded
 
 Tue 12 Nov 2019 Aleksey
