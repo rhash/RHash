@@ -234,7 +234,7 @@ msgstr "Перевірити хеш-файли, вказані у командн
 
 #: parse_cmdline.c:91
 msgid "Update the specified hash file.\n"
-msgstr "Оновити вказаний хеш-файл"
+msgstr "Оновити вказаний хеш-файл.\n"
 
 #: parse_cmdline.c:92
 msgid "Rename files by inserting crc32 sum into name.\n"
