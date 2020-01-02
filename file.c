@@ -361,8 +361,9 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 		const char* path = make_path(prepend_dir->real_path, print_path, 0);
 		file_init(file, path, init_flags & ~FileInitReusePath);
 	}
-	if (!prepend_dir || IS_DOT_STR(prepend_dir->print_path) ||
-			(!prepend_dir->print_path && opt.path_separator != ALIEN_PATH_SEPARATOR)) {
+	if (!prepend_dir || (prepend_dir->print_path ?
+			IS_DOT_STR(prepend_dir->print_path) :
+			opt.path_separator != ALIEN_PATH_SEPARATOR)) {
 		if ((init_flags & FileInitReusePath) != 0) {
 			file->print_path = print_path;
 			file->mode |= FileDontFreePrintPath;
