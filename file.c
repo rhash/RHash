@@ -545,9 +545,10 @@ static char* get_modified_path(const char* path, const char* str, int operation)
 			end_pos = strlen(path);
 			start_pos = (end_pos > 0 ? end_pos - 1 : 0);
 			for (; start_pos > 0 && !IS_ANY_SLASH(path[start_pos]); start_pos--);
-			for (; start_pos > 0 && IS_ANY_SLASH(path[start_pos]); start_pos--);
-			if (start_pos == 0)
+			if (start_pos == 0 && !IS_ANY_SLASH(path[start_pos]))
 				return rsh_strdup(".");
+			for (; start_pos > 0 && IS_ANY_SLASH(path[start_pos]); start_pos--);
+			start_pos++;
 		} else {
 			char* point = strrchr(path, '.');
 			if (!point)
@@ -581,9 +582,10 @@ static tpath_t get_modified_tpath(ctpath_t path, const char* str, int operation)
 			end_pos = wcslen(path);
 			start_pos = (end_pos > 0 ? end_pos - 1 : 0);
 			for (; start_pos > 0 && !IS_ANY_TSLASH(path[start_pos]); start_pos--);
-			for (; start_pos > 0 && IS_ANY_TSLASH(path[start_pos]); start_pos--);
-			if (start_pos == 0)
+			if (start_pos == 0 && !IS_ANY_TSLASH(path[start_pos]))
 				return rsh_wcsdup(L".");
+			for (; start_pos > 0 && IS_ANY_TSLASH(path[start_pos]); start_pos--);
+			start_pos++;
 		} else {
 			rsh_tchar* point = wcsrchr(path, L'.');
 			if (!point)
