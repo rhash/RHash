@@ -266,7 +266,7 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
 	int i;
 	assert(file && !file->real_path);
 	file->mode &= ~FileMaskStatBits;
-	if (!dir_path && ascii)
+	if (ascii)
 		file->mode |= FileIsAsciiPrintPath;
 	/* detect encoding in two or four steps */
 	for (i = 0; i < 4; i += step) {
@@ -333,46 +333,39 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 #ifdef _WIN32
 	{
 		const char** primary_path;
-		const char* dir_primary_path;
 		wchar_t* dir_path = (prepend_dir && !IS_DOT_TSTR(prepend_dir->real_path) ? prepend_dir->real_path : NULL);
 		int encoding = detect_path_encoding(file, dir_path, print_path, init_flags);
 		if (encoding < 0)
 			return -1;
 		if (encoding == 0) {
 			primary_path = &file->print_path;
-			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, FPathUtf8) : NULL);
 		} else {
 			primary_path = &file->native_path;
-			dir_primary_path = (prepend_dir ? file_get_print_path(prepend_dir, FPathNative) : NULL);
 		}
-		if ((!dir_primary_path || IS_DOT_TSTR(dir_primary_path)) &&
-				(init_flags & (FileInitReusePath | FileInitUpdatePrintPathLastSlash)) == FileInitReusePath) {
+		if ((init_flags & (FileInitReusePath | FileInitUpdatePrintPathLastSlash)) == FileInitReusePath) {
 			*primary_path = print_path;
 			file->mode |= (encoding == 0 ? FileDontFreePrintPath : FileDontFreeNativePath);
 		} else {
-			*primary_path = make_path(dir_primary_path, print_path, 1);
+			*primary_path = rsh_strdup(print_path);
 		}
-		return 0;
 	}
 #else
 	if (!prepend_dir || IS_DOT_STR(prepend_dir->real_path)) {
-		file_init(file, print_path, init_flags);
+		file_init(file, print_path, init_flags & (FileInitReusePath | FileMaskModeBits));
 	} else {
-		const char* path = make_path(prepend_dir->real_path, print_path, 0);
-		file_init(file, path, init_flags & ~FileInitReusePath);
+		file->real_path = make_path(prepend_dir->real_path, print_path, 0);
+		file->mode = init_flags & FileMaskModeBits;
 	}
-	if (!prepend_dir || (prepend_dir->print_path ?
-			IS_DOT_STR(prepend_dir->print_path) :
-			opt.path_separator != ALIEN_PATH_SEPARATOR)) {
-		if ((init_flags & FileInitReusePath) != 0) {
-			file->print_path = print_path;
-			file->mode |= FileDontFreePrintPath;
-		} else
-			file->print_path = rsh_strdup(print_path);
+	assert(file->print_path == NULL);
+	if ((init_flags & (FileInitReusePath | FileInitUpdatePrintPathLastSlash)) == FileInitReusePath) {
+		file->print_path = print_path;
+		file->mode |= FileDontFreePrintPath;
 	} else {
-		file->print_path = make_path(file_get_print_path(prepend_dir, FPathPrimaryEncoding), print_path, 1);
+		file->print_path = rsh_strdup(print_path);
 	}
 #endif
+	/* note: flag FileInitUpdatePrintPathLastSlash is used only with file_init() */
+	assert((init_flags & FileInitUpdatePrintPathLastSlash) == 0);
 	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
 			file_stat(file, (init_flags & FileInitRunLstat)) < 0)
 		return -1;

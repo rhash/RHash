@@ -1,4 +1,5 @@
 Tue 07 Jan 2020 Aleksey
+	* Bugfix: restore behavior of 'rhash -rc' to be the same as in v1.3.8
 	* Bugfix: fix a segfault and memory errors
 
 Sat 14 Dec 2019 Aleksey
