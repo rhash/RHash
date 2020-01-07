@@ -535,6 +535,7 @@ int check_hash_file(file_t* file, int chdir)
 			log_error_msg_file_t(_("file is binary: %s\n"), file);
 			if (fd != stdin)
 				fclose(fd);
+			file_cleanup(&parent_dir);
 			return -1;
 		}
 
@@ -586,6 +587,7 @@ int check_hash_file(file_t* file, int chdir)
 			rhash_data.miss++;
 		rhash_data.processed++;
 	}
+	file_cleanup(&parent_dir);
 	time = rsh_timer_stop(&timer);
 
 	if (res >= -1 && (rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80)) < 0 ||

@@ -210,9 +210,9 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
 	} else {
 		/* search backward (but no more then 129 symbols) */
 		if ((p - end) >= 129) end = p - 129;
-		for (; p >= end && p[-1] == '='; eq_num++, p--)
+		for (; p > end && p[-1] == '='; eq_num++, p--)
 			char_type = FmtBase64;
-		for (; p >= end && (next_type &= test_hash_char(p[-1])); len++, p--)
+		for (; p > end && (next_type &= test_hash_char(p[-1])); len++, p--)
 			char_type = next_type;
 	}
 	if ((char_type & FmtBase64) != 0)
