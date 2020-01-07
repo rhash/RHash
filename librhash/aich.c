@@ -118,16 +118,20 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	if (index >= ctx->allocated) {
 		/* resize the table by allocating some extra space */
 		size_t new_size = (ctx->allocated == 0 ? 64 : ctx->allocated * 2);
+		void** new_block;
 		assert(index == ctx->allocated);
 
-		/* re-allocate the chunk table to contain new_size void*-pointers */
-		ctx->chunk_table = (void**)realloc(ctx->chunk_table, new_size * sizeof(void*));
-		if (ctx->chunk_table == 0) {
+		/* re-size the chunk table to new_size */
+		new_block = (void**)realloc(ctx->chunk_table, new_size * sizeof(void*));
+		if (new_block == 0) {
+			free(ctx->chunk_table);
+			ctx->chunk_table = 0;
 			ctx->error = 1;
 			return;
 		}
 
-		memset(ctx->chunk_table + ctx->allocated, 0, (new_size - ctx->allocated) * sizeof(void*));
+		memset(new_block + ctx->allocated, 0, (new_size - ctx->allocated) * sizeof(void*));
+		ctx->chunk_table = new_block;
 		ctx->allocated = new_size;
 	}
 

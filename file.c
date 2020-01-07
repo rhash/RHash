@@ -389,7 +389,7 @@ static const char* handle_rest_of_path_flags(const char* path, unsigned flags)
 		if (p >= path)
 			*p = opt.path_separator;
 	}
-	return ((flags & FPathBaseName) && path ? get_basename(path) : path);
+	return (flags & FPathBaseName ? get_basename(path) : path);
 }
 
 /**

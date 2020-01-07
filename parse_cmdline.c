@@ -1070,7 +1070,7 @@ static void make_final_options_checks(void)
 
 	if ((opt.flags & OPT_VERBOSE) && conf_opt.config_file) {
 		/* note that the first log_msg call shall be made after setup_output() */
-		log_msg(_("Config file: %s\n"), (conf_opt.config_file ? conf_opt.config_file : _("None")));
+		log_msg(_("Config file: %s\n"), conf_opt.config_file);
 	}
 
 	if (opt.bt_batch_file)

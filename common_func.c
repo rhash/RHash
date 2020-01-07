@@ -611,7 +611,7 @@ void rsh_blocks_vector_destroy(blocks_vector_t* bvector)
  */
 strbuf_t* rsh_str_new(void)
 {
-	strbuf_t* res = (strbuf_t*)malloc(sizeof(strbuf_t));
+	strbuf_t* res = (strbuf_t*)rsh_malloc(sizeof(strbuf_t));
 	memset(res, 0, sizeof(strbuf_t));
 	return res;
 }
