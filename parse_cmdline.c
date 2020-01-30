@@ -9,6 +9,7 @@
 #include "win_utils.h"
 #include "librhash/rhash.h"
 #include <assert.h>
+#include <errno.h>
 #include <locale.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -1120,6 +1121,7 @@ void read_options(int argc, char* argv[])
 	/* parse command line and apply encoding options */
 	parse_cmdline_options(&cmd_line);
 	read_config();
+	errno = 0;
 
 	/* setup the program output */
 	IF_WINDOWS(setup_console());

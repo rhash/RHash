@@ -543,8 +543,7 @@ int win_fprintf_warg(FILE* out, const char* format, ...)
  */
 size_t win_fwrite(const void* ptr, size_t size, size_t count, FILE* out)
 {
-	if ((out != stdout || !(console_data.console_flags & 1))
-		&& (out != stderr || !(console_data.console_flags & 2)))
+	if (!win_is_console_stream(out))
 		return fwrite(ptr, size, count, out);
 	{
 		size_t i;
@@ -556,18 +555,26 @@ size_t win_fwrite(const void* ptr, size_t size, size_t count, FILE* out)
 		if (i == size)
 		{
 			wchar_t* wstr = rsh_malloc(sizeof(wchar_t) * (size + 1));
+			int res;
 			for (i = 0; i < size; i++)
 				wstr[i] = (wchar_t)buf[i];
-			wstr[size] = 0;
-			fwprintf(out, L"%s", wstr);
+			wstr[size] = L'\0';
+			res = fwprintf(out, L"%s", wstr);
 			free(wstr);
-			return count;
+			if (res < 0)
+				return res;
 		}
-		for (i = 0; (i + 8) <= size; i += 8)
-			fwprintf(out, L"%C%C%C%C%C%C%C%C", buf[i], buf[i + 1], buf[i + 2],
-				buf[i + 3], buf[i + 4], buf[i + 5], buf[i + 6], buf[i + 7]);
-		for (; i < size; i++)
-			fwprintf(out, L"%C", buf[i]);
+		else
+		{
+			for (i = 0; (i + 8) <= size; i += 8)
+				if (fwprintf(out, L"%C%C%C%C%C%C%C%C", buf[i], buf[i + 1], buf[i + 2],
+						buf[i + 3], buf[i + 4], buf[i + 5], buf[i + 6], buf[i + 7]) < 0)
+					return -1;
+			for (; i < size; i++)
+				if (fwprintf(out, L"%C", buf[i]) < 0)
+					return -1;
+		}
+		clearerr(out); /* fix for win7 */
 		return count;
 	}
 }

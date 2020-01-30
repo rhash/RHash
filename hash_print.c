@@ -8,6 +8,7 @@
 #include "librhash/rhash.h"
 #include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
@@ -442,9 +443,8 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 			assert(hash_id != 0);
 			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
 			assert(len < sizeof(buffer));
-
 			/* output the hash, continue on success */
-			if (rsh_fwrite(buffer, 1, len, out) == len && !ferror(out))
+			if (rsh_fwrite(buffer, 1, len, out) == len || errno == 0)
 				continue;
 			res = -1;
 			break; /* exit on error */

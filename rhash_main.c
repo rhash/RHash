@@ -16,6 +16,7 @@
 #include "win_utils.h"
 #include "librhash/rhash.h"
 #include <assert.h>
+#include <errno.h>
 #include <locale.h>
 #include <signal.h>
 #include <stdlib.h> /* free() */
@@ -57,6 +58,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 		opt.search_data->options |= FIND_CANCEL;
 		return 0;
 	}
+	errno = 0; /* start processing each file with clear errno */
 
 	if (preprocess) {
 		if (FILE_ISDATA(file) ||

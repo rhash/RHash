@@ -1,3 +1,6 @@
+Thu 30 Jan 2020 Aleksey
+	* Bugfix: fix broken output on Win 7
+
 Tue 07 Jan 2020 Aleksey
 	* Bugfix: restore behavior of 'rhash -rc' to be the same as in v1.3.8
 	* Bugfix: fix a segfault and memory errors
