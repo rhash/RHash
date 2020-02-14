@@ -35,6 +35,7 @@ install-implib:
 
 install-so-link:
 	$(INSTALL) -d $(LIBDIR)
+	rm -f $(LIBDIR)/$(LIBRHASH_SOLINK)
 	ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SOLINK)
 
 uninstall-lib-static: uninstall-lib-headers
