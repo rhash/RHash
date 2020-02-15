@@ -110,7 +110,7 @@ uninstall-lib:
 install-lib-static: $(LIBRHASH_STATIC) install-lib-headers
 	+cd librhash && $(MAKE) install-lib-static
 
-install-lib-shared: $(LIBRHASH_SHARED)
+install-lib-shared: $(LIBRHASH_SHARED) install-lib-headers
 	+cd librhash && $(MAKE) install-lib-shared
 
 install-lib-headers:
