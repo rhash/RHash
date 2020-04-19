@@ -212,7 +212,7 @@ parse_cmdline.o: parse_cmdline.c parse_cmdline.h common_func.h file.h \
 rhash_main.o: rhash_main.c rhash_main.h calc_sums.h common_func.h file.h \
  hash_check.h file_mask.h find_file.h hash_print.h hash_update.h \
  parse_cmdline.h output.h win_utils.h librhash/rhash.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(LOCALECFLAGS) $< -o $@
 
 win_utils.o: win_utils.c win_utils.h common_func.h file.h parse_cmdline.h \
  rhash_main.h

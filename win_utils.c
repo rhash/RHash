@@ -416,7 +416,7 @@ static int is_directory(const char* path)
 }
 
 /**
- * Set the locale directory relative to ${PROGRAM_DIR}/LOCALEDIR.
+ * Set the locale directory relative to ${PROGRAM_DIR}/locale.
  */
 void setup_locale_dir(void)
 {
