@@ -60,70 +60,70 @@ static void print_help(void)
 		"       %s --printf=<format string> [FILE | -]...\n\n"), get_full_program_version(), CMD_FILENAME, CMD_FILENAME);
 
 	rsh_fprintf(rhash_data.out, _("Options:\n"));
-	print_help_line("  -V, --version ", _("Print program version and exit.\n"));
-	print_help_line("  -h, --help    ", _("Print this help screen.\n"));
+	print_help_line("  -V, --version    ", _("Print program version and exit.\n"));
+	print_help_line("  -h, --help       ", _("Print this help screen.\n"));
 	/* TRANSLATORS: format string for a help line, like: "Calculate SHA1 hash sum.\n" */
 	hash_sum_format = _("Calculate %s hash sum.\n");
-	print_help_line("  -C, --crc32   ", hash_sum_format, "CRC32");
-	print_help_line("      --crc32c  ", hash_sum_format, "CRC32C");
-	print_help_line("      --md4     ", hash_sum_format, "MD4");
-	print_help_line("  -M, --md5     ", hash_sum_format, "MD5");
-	print_help_line("  -H, --sha1    ", hash_sum_format, "SHA1");
+	print_help_line("  -C, --crc32      ", hash_sum_format, "CRC32");
+	print_help_line("      --crc32c     ", hash_sum_format, "CRC32C");
+	print_help_line("      --md4        ", hash_sum_format, "MD4");
+	print_help_line("  -M, --md5        ", hash_sum_format, "MD5");
+	print_help_line("  -H, --sha1       ", hash_sum_format, "SHA1");
 	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", hash_sum_format, "SHA2");
 	print_help_line("      --sha3-224, --sha3-256, --sha3-384, --sha3-512 ", hash_sum_format, "SHA3");
-	print_help_line("  -T, --tth     ", hash_sum_format, "TTH");
-	print_help_line("      --btih    ", hash_sum_format, "BitTorrent InfoHash");
-	print_help_line("  -A, --aich    ", hash_sum_format, "AICH");
-	print_help_line("  -E, --ed2k    ", hash_sum_format, "eDonkey");
+	print_help_line("  -T, --tth        ", hash_sum_format, "TTH");
+	print_help_line("      --btih       ", hash_sum_format, "BitTorrent InfoHash");
+	print_help_line("  -A, --aich       ", hash_sum_format, "AICH");
+	print_help_line("  -E, --ed2k       ", hash_sum_format, "eDonkey");
 	print_help_line("  -L, --ed2k-link  ", _("Calculate and print eDonkey link.\n"));
-	print_help_line("      --tiger   ", hash_sum_format, "Tiger");
+	print_help_line("      --tiger      ", hash_sum_format, "Tiger");
 	print_help_line("  -G, --gost12-256 ", hash_sum_format, _("GOST R 34.11-2012, 256 bit"));
 	print_help_line("      --gost12-512 ", hash_sum_format, _("GOST R 34.11-2012, 512 bit"));
 	/* TRANSLATORS: This hash function name should be translated to Russian only */
-	print_help_line("      --gost94  ", hash_sum_format, _("GOST R 34.11-94"));
+	print_help_line("      --gost94     ", hash_sum_format, _("GOST R 34.11-94"));
 	/* TRANSLATORS: This hash function name should be translated to Russian only */
 	print_help_line("      --gost94-cryptopro ", hash_sum_format, _("GOST R 34.11-94 CryptoPro"));
 	print_help_line("      --ripemd160  ", hash_sum_format, "RIPEMD-160");
-	print_help_line("      --has160  ", hash_sum_format, "HAS-160");
+	print_help_line("      --has160     ", hash_sum_format, "HAS-160");
 	print_help_line("      --edonr256, --edonr512  ", hash_sum_format, "EDON-R 256/512");
 	print_help_line("      --snefru128, --snefru256  ", hash_sum_format, "SNEFRU-128/256");
-	print_help_line("  -a, --all     ", _("Calculate all supported hashes.\n"));
-	print_help_line("  -c, --check   ", _("Check hash files specified by command line.\n"));
+	print_help_line("  -a, --all        ", _("Calculate all supported hashes.\n"));
+	print_help_line("  -c, --check      ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
 	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hashes, one per line.\n"));
 	print_help_line("  -B, --benchmark  ", _("Benchmark selected algorithm.\n"));
-	print_help_line("  -v, --verbose ", _("Be verbose.\n"));
+	print_help_line("  -v, --verbose    ", _("Be verbose.\n"));
 	print_help_line("  -r, --recursive  ", _("Process directories recursively.\n"));
 	print_help_line("      --file-list=<file> ", _("Process a list of files.\n"));
 	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
-	print_help_line("      --skip-ok ", _("Don't print OK messages for successfully verified files.\n"));
+	print_help_line("      --skip-ok    ", _("Don't print OK messages for successfully verified files.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
 	print_help_line("  -P, --percents   ", _("Show percents, while calculating or checking hashes.\n"));
-	print_help_line("      --speed   ", _("Output per-file and total processing speed.\n"));
+	print_help_line("      --speed      ", _("Output per-file and total processing speed.\n"));
 	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
 	if (rhash_is_openssl_supported())
 		print_help_line("      --openssl=<list> ", _("Specify hash functions to be calculated using OpenSSL.\n"));
 	print_help_line("  -o, --output=<file> ", _("File to output calculation or checking results.\n"));
 	print_help_line("  -l, --log=<file>    ", _("File to log errors and verbose information.\n"));
-	print_help_line("      --sfv     ", _("Print hash sums, using SFV format (default).\n"));
-	print_help_line("      --bsd     ", _("Print hash sums, using BSD-like format.\n"));
-	print_help_line("      --simple  ", _("Print hash sums, using simple format.\n"));
-	print_help_line("      --hex  ", _("Print hash sums in hexadecimal format.\n"));
-	print_help_line("      --base32", _("Print hash sums in Base32 format.\n"));
-	print_help_line("  -b, --base64", _("Print hash sums in Base64 format.\n"));
+	print_help_line("      --sfv        ", _("Print hash sums, using SFV format (default).\n"));
+	print_help_line("      --bsd        ", _("Print hash sums, using BSD-like format.\n"));
+	print_help_line("      --simple     ", _("Print hash sums, using simple format.\n"));
+	print_help_line("      --hex        ", _("Print hash sums in hexadecimal format.\n"));
+	print_help_line("      --base32     ", _("Print hash sums in Base32 format.\n"));
+	print_help_line("  -b, --base64     ", _("Print hash sums in Base64 format.\n"));
 
-	print_help_line("  -g, --magnet  ", _("Print hash sums  as magnet links.\n"));
-	print_help_line("      --torrent ", _("Create torrent files.\n"));
+	print_help_line("  -g, --magnet     ", _("Print hash sums  as magnet links.\n"));
+	print_help_line("      --torrent    ", _("Create torrent files.\n"));
 #ifdef _WIN32
-	print_help_line("      --utf8    ", _("Use UTF-8 encoding for output (Windows only).\n"));
-	print_help_line("      --win     ", _("Use Windows codepage for output (Windows only).\n"));
-	print_help_line("      --dos     ", _("Use DOS codepage for output (Windows only).\n"));
+	print_help_line("      --utf8       ", _("Use UTF-8 encoding for output (Windows only).\n"));
+	print_help_line("      --win        ", _("Use Windows codepage for output (Windows only).\n"));
+	print_help_line("      --dos        ", _("Use DOS codepage for output (Windows only).\n"));
 #endif
 	print_help_line("      --template=<file> ", _("Load a printf-like template from the <file>\n"));
 	print_help_line("  -p, --printf=<format string>  ", _("Format and print hash sums.\n"));
-	print_help_line("                ", _("See the RHash manual for details.\n"));
+	print_help_line("                   ", _("See the RHash manual for details.\n"));
 	rsh_exit(0);
 }
 
