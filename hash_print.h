@@ -26,6 +26,7 @@ typedef struct print_item
 typedef struct print_hash_info
 {
 	const char* name;
+	const char* bsd_name;
 	char short_name[20];
 	char short_char;
 } print_hash_info;

@@ -270,13 +270,13 @@ static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
 }
 
 /**
- * Detect a hash-function by name.
+ * Detect a hash-function id by its BSD name.
  *
  * @param name an uppercase string, a possible name of a hash-function
  * @param length length of the name string
  * @return id of hash function if found, zero otherwise
  */
-static unsigned detect_hash_id(const char* name, unsigned length)
+static unsigned bsd_hash_name_to_id(const char* name, unsigned length)
 {
 #define code2mask_size (18 * 2)
 	static unsigned code2mask[code2mask_size] = {
@@ -302,10 +302,13 @@ static unsigned detect_hash_id(const char* name, unsigned length)
 		FOURC2U('W', 'H', 'I', 'R'), RHASH_WHIRLPOOL
 	};
 	unsigned code, i, hash_mask, hash_id;
-	char ch;
+	char fourth_char;
 	if (length < 3) return 0;
-	ch = (name[3] != '-' ? name[3] : name[4]);
-	code = FOURC2U(name[0], name[1], name[2], ch);
+	fourth_char = (name[3] != '-' ? name[3] : name[4]);
+	code = FOURC2U(name[0], name[1], name[2], fourth_char);
+	/* quick fix to detect "RMD160" as RIPEMD160 */
+	if (code == FOURC2U('R', 'M', 'D', '1'))
+		return (length == 6 && name[4] == '6' && name[5] == '0' ? RHASH_RIPEMD160 : 0);
 	for (i = 0; code2mask[i] != code; i += 2)
 		if (i >= (code2mask_size - 2)) return 0;
 	hash_mask = code2mask[i + 1];
@@ -325,8 +328,9 @@ static unsigned detect_hash_id(const char* name, unsigned length)
 		/* check the name tail, start from name[3] to detect names like "SHA-1" or "SHA256" */
 		for (a = hash_info_table[i].name + 3, b = name + 3; *a; a++, b++)
 		{
-			if (*a == *b) continue;
-			if (*a == '-')
+			if (*a == *b)
+				continue;
+			else if (*a == '-')
 				b--;
 			else if (*b == '-')
 				a--;
@@ -340,7 +344,7 @@ static unsigned detect_hash_id(const char* name, unsigned length)
 
 /**
  * Detect ASCII-7 white spaces (not including Unicode whitespaces).
- * Note that isspace() is locale specific and detect Unicode spaces,
+ * Note that isspace() is locale specific and detects Unicode spaces,
  * like U+00A0.
  *
  * @param ch character to check
@@ -368,7 +372,7 @@ typedef struct hc_search
 /**
  * Parse the buffer pointed by search->begin, into tokens specified by format
  * string. The format string can contain the following special characters:
- * '\1' - hash function name, '\2' - any hash, '\3' - specified hash,
+ * '\1' - BSD hash function name, '\2' - any hash, '\3' - specified hash,
  * '\4' - an URL-encoded file name, '\5' - a file size,
  * '\6' - a required-space, '\7' - a space or string end.
  * A space ' ' means 0 or more space characters.
@@ -399,7 +403,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
 
 		if (backward) {
 			for (; fend[-1] >= '-' && format < fend; fend--, len++);
-			if (len == 0) --fend;
+			if (len == 0) fend--;
 			search_str = fend;
 		} else {
 			search_str = format;
@@ -417,7 +421,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
 
 		/* find substring specified by single character */
 		switch (*search_str) {
-		case '\1': /* parse hash function name */
+		case '\1': /* parse BSD hash function name */
 			/* the name should contain alphanumeric or '-' symbols, but */
 			/* actually the loop shall stop at characters [:& \(\t] */
 			for (; (begin[len] <= '9' ? begin[len] >= '0' || begin[len] == '-' : begin[len] >= 'A'); len++) {
@@ -425,7 +429,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
 				buf[len] = toupper(begin[len]);
 			}
 			buf[len] = '\0';
-			search->expected_hash_id = detect_hash_id(buf, len);
+			search->expected_hash_id = bsd_hash_name_to_id(buf, len);
 			if (!search->expected_hash_id) return 0;
 			search->hash_type = FmtAll;
 			begin += len;
@@ -482,8 +486,8 @@ static int hash_check_find_str(hc_search* search, const char* format)
 			else for (; rhash_isspace(*begin) && begin < end; begin++, len++);
 			/* check if space is mandatory */
 			if (*search_str != ' ' && len == 0) {
-				/* for '\6' check (len > 0) */
-				/* for '\7' check (len > 0 || begin == end) */
+				/* for '\6' verify (len > 0) */
+				/* for '\7' verify (len > 0 || begin == end) */
 				if (*search_str == '\6' || begin < end) return 0;
 			}
 			break;

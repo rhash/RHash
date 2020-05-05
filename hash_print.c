@@ -520,11 +520,13 @@ void free_print_list(print_item* list)
 void init_hash_info_table(void)
 {
 	unsigned bit;
-	unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
+	const unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
+	const unsigned custom_bsd_name = RHASH_RIPEMD160 |
+		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512;
+	const unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
-	char* short_opt = "cmhteawrgl";
+	const char* short_opt = "cmhteawrgl";
 	print_hash_info* info = hash_info_table;
-	unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 
 	/* prevent crash on incompatible librhash */
 	if (rhash_count() < RHASH_HASH_COUNT) {
@@ -569,6 +571,26 @@ void init_hash_info_table(void)
 			}
 		}
 		*d = 0;
+		if ((bit & custom_bsd_name) != 0) {
+			switch (bit) {
+				case RHASH_RIPEMD160:
+					info->bsd_name = "RMD160";
+					break;
+				case RHASH_SHA224:
+					info->bsd_name = "SHA224";
+					break;
+				case RHASH_SHA256:
+					info->bsd_name = "SHA256";
+					break;
+				case RHASH_SHA384:
+					info->bsd_name = "SHA384";
+					break;
+				case RHASH_SHA512:
+					info->bsd_name = "SHA512";
+					break;
+			}
+		} else
+			info->bsd_name = info->name;
 		++info;
 	}
 }
@@ -668,8 +690,9 @@ void init_printf_format(strbuf_t* out)
 					rsh_str_append(out, rhash_get_magnet_name(bit));
 					break;
 				case 3:
-					rsh_str_append(out, info->name);
-					i = (int)strlen(info->name);
+					rsh_str_append(out, info->bsd_name);
+					/* add some spaces after the hash BSD name */
+					i = (int)strlen(info->bsd_name);
 					for (i = (i < 5 ? 6 - i : 1); i > 0; i--)
 						out->str[out->len++] = ' ';
 					break;
