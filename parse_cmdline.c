@@ -1003,13 +1003,13 @@ static void set_default_sums_flags(const char* progName)
 	if (strstr(buf, "gost94-cryptopro"))  res |= RHASH_GOST94_CRYPTOPRO;
 	else if (strstr(buf, "gost94"))  res |= RHASH_GOST94;
 	if (strstr(buf, "has160"))  res |= RHASH_HAS160;
-	if (strstr(buf, "ripemd160"))  res |= RHASH_RIPEMD160;
+	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160"))  res |= RHASH_RIPEMD160;
 	if (strstr(buf, "whirlpool"))  res |= RHASH_WHIRLPOOL;
 	if (strstr(buf, "edonr256"))   res |= RHASH_EDONR256;
 	if (strstr(buf, "edonr512"))   res |= RHASH_EDONR512;
 	if (strstr(buf, "snefru256"))  res |= RHASH_SNEFRU128;
 	if (strstr(buf, "snefru128"))  res |= RHASH_SNEFRU256;
-	if (strstr(buf, "ed2k-link") || strstr(buf, "ed2k-hash")) res |= OPT_ED2K_LINK;
+	if (strstr(buf, "ed2k-link")) res |= OPT_ED2K_LINK;
 	else if (strstr(buf, "ed2k")) res |= RHASH_ED2K;
 
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
