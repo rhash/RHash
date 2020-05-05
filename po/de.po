@@ -15,14 +15,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2019-10-16 23:20+0000\n"
-"X-Generator: Launchpad (build 186023fa645d8be19d403a76064f0643f510db2f)\n"
+"X-Launchpad-Export-Date: 2020-05-05 20:20+0000\n"
+"X-Generator: Launchpad (build fbdff7602bd10fb883bf7e2ddcc7fd5a16f60398)\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:213
 #, c-format
 msgid "wrong embedded CRC32, should be %s\n"
-msgstr ""
+msgstr "falsch eingebetteter CRC32,  %s erwartet\n"
 
 #. TRANSLATORS: printed when a file rename failed
 #: calc_sums.c:229 hash_update.c:299
@@ -64,7 +64,7 @@ msgstr "%s: kann Zeile \"%s\" nicht analysieren.\n"
 #: find_file.c:165
 #, c-format
 msgid "can't convert the file path to local encoding: %s\n"
-msgstr ""
+msgstr "Dateipfad kann nicht in lokale Kodierung konvertiert werden: %s\n"
 
 #: hash_check.c:591
 #, c-format
@@ -235,19 +235,20 @@ msgstr "Durch Kommandozeile angegebene Hash-Dateien überprüfen.\n"
 
 #: parse_cmdline.c:91
 msgid "Update the specified hash file.\n"
-msgstr ""
+msgstr "Die angegebene Hash-Datei aktualisieren.\n"
 
 #: parse_cmdline.c:92
 msgid "Rename files by inserting crc32 sum into name.\n"
-msgstr ""
+msgstr "Dateien umbenennen durch Einfügen der crc32-Summe in den Namen.\n"
 
 #: parse_cmdline.c:93
 msgid "Verify files by crc32 sum embedded in their names.\n"
 msgstr ""
+"Dateien durch die in ihren Namen eingebettete crc32-Summe verifizieren.\n"
 
 #: parse_cmdline.c:94
 msgid "List the names of supported hashes, one per line.\n"
-msgstr ""
+msgstr "Namen der unterstützten Hashes auflisten, einen je Zeile.\n"
 
 #: parse_cmdline.c:95
 msgid "Benchmark selected algorithm.\n"
@@ -276,6 +277,8 @@ msgstr "Keine Ok-Nachricht für erfolgreich verifizierte Dateien ausgeben.\n"
 #: parse_cmdline.c:101
 msgid "Ignore case of filenames when updating hash files.\n"
 msgstr ""
+"Groß-/Kleinschreibung von Dateinamen beim Aktualisieren von Hashdateien "
+"ignorieren.\n"
 
 #: parse_cmdline.c:102
 msgid "Show percents, while calculating or checking hashes.\n"
@@ -283,11 +286,11 @@ msgstr "Prozente währen dem Berechnen oder Prüfen von Hashes anzeigen.\n"
 
 #: parse_cmdline.c:103
 msgid "Output per-file and total processing speed.\n"
-msgstr ""
+msgstr "Ausgabe je Datei sowie Gesamtverarbeitungsgeschwindigkeit\n"
 
 #: parse_cmdline.c:104
 msgid "Descend at most <n> levels of directories.\n"
-msgstr ""
+msgstr "Höchstens <n> Ebenen von Verzeichnissen herabsteigen.\n"
 
 #: parse_cmdline.c:106
 msgid "Specify hash functions to be calculated using OpenSSL.\n"
@@ -300,34 +303,35 @@ msgstr ""
 #: parse_cmdline.c:108
 msgid "File to log errors and verbose information.\n"
 msgstr ""
+"Datei zur Protokollierung von Fehlern und ausführlichen Informationen.\n"
 
 #: parse_cmdline.c:109
 msgid "Print hash sums, using SFV format (default).\n"
-msgstr ""
+msgstr "Prüfsummen mithilfe des SFV-Formats (Standard) ausgeben.\n"
 
 #: parse_cmdline.c:110
 msgid "Print hash sums, using BSD-like format.\n"
-msgstr ""
+msgstr "Hash-Summen in BSD-ähnlichem Format anzeigen.\n"
 
 #: parse_cmdline.c:111
 msgid "Print hash sums, using simple format.\n"
-msgstr ""
+msgstr "Prüfsummen mithilfe des einfachen Formats ausgeben.\n"
 
 #: parse_cmdline.c:112
 msgid "Print hash sums in hexadecimal format.\n"
-msgstr ""
+msgstr "Prüfsummen im hexadezimalen Format ausgeben.\n"
 
 #: parse_cmdline.c:113
 msgid "Print hash sums in Base32 format.\n"
-msgstr ""
+msgstr "Prüfsummen im Format Base32 ausgeben.\n"
 
 #: parse_cmdline.c:114
 msgid "Print hash sums in Base64 format.\n"
-msgstr ""
+msgstr "Prüfsummen im Format Base64 ausgeben.\n"
 
 #: parse_cmdline.c:116
 msgid "Print hash sums  as magnet links.\n"
-msgstr ""
+msgstr "Prüfsummen als Magnet-Links ausgeben.\n"
 
 #: parse_cmdline.c:117
 msgid "Create torrent files.\n"
@@ -335,7 +339,7 @@ msgstr "Torrent-Dateien erstellen.\n"
 
 #: parse_cmdline.c:119
 msgid "Use UTF-8 encoding for output (Windows only).\n"
-msgstr ""
+msgstr "UTF-8-Enkodierung zur Ausgabe verwenden (nur Windows).\n"
 
 #: parse_cmdline.c:120
 msgid "Use Windows codepage for output (Windows only).\n"
@@ -388,7 +392,7 @@ msgstr "Falsches Pfad-Trennzeichen, verwende '//' statt '/' bei MSYS\n"
 #: parse_cmdline.c:311
 #, fuzzy, c-format
 msgid "path-separator is neither '/' nor '\\': %s\n"
-msgstr "Pfad-Trennzeichen ist nicht '/' oder '\\': %s\n"
+msgstr "Pfad-Trennzeichen ist weder '/' noch '\\': %s\n"
 
 #: parse_cmdline.c:468
 #, c-format
@@ -415,7 +419,7 @@ msgstr "Inkompatible Programmmodi\n"
 
 #: parse_cmdline.c:1060
 msgid "incompatible formatting options\n"
-msgstr ""
+msgstr "inkompatible Formatierungsoptionen\n"
 
 #: parse_cmdline.c:1073
 #, c-format
@@ -429,7 +433,7 @@ msgstr "Keine"
 #: rhash_main.c:94
 #, c-format
 msgid "skipping: %s\n"
-msgstr ""
+msgstr "Überspringe: %s\n"
 
 #: rhash_main.c:169
 #, c-format
@@ -459,4 +463,4 @@ msgstr ""
 #: rhash_main.c:296
 #, c-format
 msgid "Format string is: %s\n"
-msgstr ""
+msgstr "Formatierte Zeichenkette ist: %s\n"
