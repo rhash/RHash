@@ -1,5 +1,11 @@
-Thu 30 Jan 2020 Aleksey
+Mon 29 Jun 2020 Aleksey
 	* Bugfix: fix broken output on Win 7
+
+Sun Apr 19 2020 Alexey Dokuchaev, Aleksey
+	* Bugfix: fix broken 'configure --localedir=<dir>' option
+
+Fri 14 Feb 2020 Fabrice Fontaine
+	* Bugfix: fix broken makefile install-so-link target
 
 Tue 07 Jan 2020 Aleksey
 	* Bugfix: restore behavior of 'rhash -rc' to be the same as in v1.3.8

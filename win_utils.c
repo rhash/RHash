@@ -462,24 +462,27 @@ void setup_locale_dir(void)
  */
 static int win_vfprintf_encoded(FILE* out, const char* format, int str_type, va_list args)
 {
+	int res;
 	if (!win_is_console_stream(out)) {
 		return vfprintf(out, (format ? format : "%s"), args);
 	} else if (str_type == USE_CSTR_ARGS) {
 		/* thread-unsafe code: using a static buffer */
 		static char buffer[8192];
-		int res = vsnprintf(buffer, sizeof(buffer) - 1, format, args);
+		res = vsnprintf(buffer, sizeof(buffer) - 1, format, args);
 		if (res >= 0) {
 			wchar_t *wstr = cstr_to_wchar_buffer(buffer, console_data.primary_codepage, console_data.printf_result, sizeof(console_data.printf_result));
 			res = (wstr ? fwprintf(out, L"%s", wstr) : -1);
 		}
-		return res;
 	} else {
 		wchar_t* wformat = (!format || (format[0] == '%' && format[1] == 's' && !format[2]) ? L"%s" :
 			cstr_to_wchar_buffer(format, console_data.primary_codepage, console_data.format_buffer, sizeof(console_data.format_buffer)));
-		int res = vfwprintf(out, (wformat ? wformat : L"[UTF8 conversion error]\n"), args);
+		res = vfwprintf(out, (wformat ? wformat : L"[UTF8 conversion error]\n"), args);
 		assert(str_type == USE_WSTR_ARGS);
-		return res;
 	}
+	/* fix: win7 incorrectly sets _IOERR(=0x20) flag of the stream for UTF-8 encoding, so clear it */
+	if (res >= 0)
+		clearerr(out);
+	return res;
 }
 
 /**
@@ -574,7 +577,8 @@ size_t win_fwrite(const void* ptr, size_t size, size_t count, FILE* out)
 				if (fwprintf(out, L"%C", buf[i]) < 0)
 					return -1;
 		}
-		clearerr(out); /* fix for win7 */
+		/* fix: win7 incorrectly sets _IOERR(=0x20) flag of the stream for UTF-8 encoding, so clear it */
+		clearerr(out);
 		return count;
 	}
 }

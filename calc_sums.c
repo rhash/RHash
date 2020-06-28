@@ -433,6 +433,21 @@ static int verify_sums(struct file_info* info)
 }
 
 /**
+ * Print the "Verifying <FILE>" heading line.
+ *
+ * @param file the file containing hash sums to verify.
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+static int print_verifying_msg(file_t* file)
+{
+	char dash_line[84];
+	int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
+	int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
+	int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
+	return (count < 0 ? count : res);
+}
+
+/**
  * Check hash sums in a hash file.
  * Lines beginning with ';' and '#' are ignored.
  * In a case of fail, the error will be logged.
@@ -496,16 +511,11 @@ int check_hash_file(file_t* file, int chdir)
 		return -1;
 	}
 
-	{
-		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
-		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
-		rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', tail_dash_len));
-		if (ferror(rhash_data.out) || fflush(rhash_data.out) < 0) {
-			log_error_file_t(&rhash_data.out_file);
-			if (fd != stdin)
-				fclose(fd);
-			return -2;
-		}
+	if (print_verifying_msg(file) < 0) {
+		log_error_file_t(&rhash_data.out_file);
+		if (fd != stdin)
+			fclose(fd);
+		return -2;
 	}
 	rsh_timer_start(&timer);
 	memset(&parent_dir, 0, sizeof(parent_dir));
