@@ -465,7 +465,7 @@ int check_hash_file(file_t* file, int chdir)
 	timedelta_t timer;
 	struct file_info info;
 	int res = 0;
-	int line_num = 0;
+	int line_number = 0;
 	unsigned init_flags = 0;
 	double time;
 
@@ -527,14 +527,14 @@ int check_hash_file(file_t* file, int chdir)
 	}
 
 	/* read hash file line by line */
-	for (line_num = 0; fgets(buf, sizeof(buf), fd); line_num++) {
+	for (line_number = 0; fgets(buf, sizeof(buf), fd); line_number++) {
 		char* line = buf;
 		file_t file_to_check;
 
 		/* skip unicode BOM */
 		if (STARTS_WITH_UTF8_BOM(buf)) {
 			line += 3;
-			if (line_num == 0)
+			if (line_number == 0)
 				init_flags = FileInitUtf8PrintPath; /* hash file is in UTF8 */
 		}
 
@@ -542,7 +542,7 @@ int check_hash_file(file_t* file, int chdir)
 			continue; /* skip empty lines */
 
 		if (is_binary_string(line)) {
-			log_error_msg_file_t(_("file is binary: %s\n"), file);
+			log_error(_("file is binary: %s:%d\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line_number + 1);
 			if (fd != stdin)
 				fclose(fd);
 			file_cleanup(&parent_dir);
