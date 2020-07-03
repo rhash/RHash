@@ -75,7 +75,7 @@ enum rhash_ids
 /**
  * The rhash context structure contains contexts for several hash functions.
  */
-typedef struct rhash_context
+struct rhash_context
 {
 	/**
 	 * The size of the hashed message.
@@ -86,7 +86,7 @@ typedef struct rhash_context
 	 * The bit-mask containing identifiers of the hashes being calculated.
 	 */
 	unsigned hash_id;
-} rhash_context;
+};
 
 #ifndef LIBRHASH_RHASH_CTX_DEFINED
 #define LIBRHASH_RHASH_CTX_DEFINED

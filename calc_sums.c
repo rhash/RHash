@@ -246,7 +246,7 @@ int rename_file_by_embeding_crc32(struct file_info* info)
  * @param rctx the context containing torrent data
  * @return 0 on success, -1 on fail
  */
-int save_torrent_to(file_t* torrent_file, rhash_context* rctx)
+int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx)
 {
 	FILE* fd;
 	int res = 0;

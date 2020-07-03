@@ -91,14 +91,14 @@ rhash_file_raw(hash_id, filepath)
 ##############################################################################
 # perl bindings for Low-level functions
 
-rhash_context *
+struct rhash_context *
 rhash_init(hash_id)
 		unsigned hash_id
 	PROTOTYPE: $
 
 int
 rhash_update(ctx, message)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $$
 	PREINIT:
 		STRLEN length;
@@ -111,7 +111,7 @@ rhash_update(ctx, message)
 
 int
 rhash_final(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 	CODE:
 		RETVAL = rhash_final(ctx, 0);
@@ -120,17 +120,17 @@ rhash_final(ctx)
 
 void
 rhash_reset(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 
 void
 rhash_free(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 
 SV *
 rhash_print(ctx, hash_id, flags = 0)
-		rhash_context * ctx
+		struct rhash_context * ctx
 		unsigned hash_id
 		int flags
 	PROTOTYPE: $$;$
@@ -149,7 +149,7 @@ rhash_print(ctx, hash_id, flags = 0)
 
 SV *
 rhash_print_magnet(ctx, filename, hash_mask)
-		rhash_context * ctx
+		struct rhash_context * ctx
 		SV * filename
 		SV * hash_mask
 	PROTOTYPE: $;$$
@@ -172,7 +172,7 @@ rhash_print_magnet(ctx, filename, hash_mask)
 
 unsigned
 rhash_get_hash_id(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 	CODE:
 		RETVAL = ctx->hash_id;
@@ -181,7 +181,7 @@ rhash_get_hash_id(ctx)
 
 ulonglong
 rhash_get_hashed_length(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 	CODE:
 		RETVAL = ctx->msg_size;
@@ -284,7 +284,7 @@ raw2base64(bytes)
 
 void
 rhash_bt_add_filename(ctx, filename, filesize)
-		rhash_context * ctx
+		struct rhash_context * ctx
 		char * filename
 		ulonglong filesize
 	PROTOTYPE: $$$
@@ -293,7 +293,7 @@ rhash_bt_add_filename(ctx, filename, filesize)
 
 void
 rhash_bt_set_piece_length(ctx, piece_length)
-		rhash_context * ctx
+		struct rhash_context * ctx
 		unsigned piece_length
 	PROTOTYPE: $$
 	CODE:
@@ -301,14 +301,14 @@ rhash_bt_set_piece_length(ctx, piece_length)
 
 void
 rhash_bt_set_private(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 	CODE:
 		rhash_torrent_set_options(ctx, RHASH_TORRENT_OPT_PRIVATE);
 
 SV *
 rhash_bt_get_torrent_text(ctx)
-		rhash_context * ctx
+		struct rhash_context * ctx
 	PROTOTYPE: $
 	PREINIT:
 		const rhash_str* text;
