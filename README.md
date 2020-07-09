@@ -1,20 +1,20 @@
 # RHash
 
 RHash  (Recursive  Hasher)   is  a  console  utility  for   calculation  and
-verification of magnet links and various hash sums, including CRC32, CRC32C,
+verification of magnet links and various message digests, including CRC32, CRC32C,
 MD4, MD5, SHA1, SHA256, SHA512, SHA3, AICH, ED2K, DC++ TTH, BitTorrent BTIH,
 Tiger, GOST R 34.11-94, GOST R 34.11-2012, RIPEMD-160, HAS-160, EDON-R,  and
 Whirlpool.
 
-Hash sums are used to  ensure and verify integrity  of large volumes of data
-for a long-term storing or transferring.
+Message digests are used to ensure and verify integrity  of large volumes of
+data for a long-term storing or transferring.
 
 ### Program features:
  * Ability to process directories recursively.
  * Output in a predefined (SFV, BSD-like) or a user-defined format.
  * Calculation of Magnet links.
- * Updating hash files (adding hash sums of files missing in the hash file).
- * Calculates several hash sums in one pass.
+ * Updating hash files (adding message digests of files missing in the hash file).
+ * Calculates several message digests in one pass.
  * Portability: the program works the same on Linux, Unix, macOS or Windows.
 
 ## Installation

@@ -1,7 +1,7 @@
 LibRHash Library
 ================
 
-**LibRHash** is a professional, portable, thread-safe *C* library for computing a wide variety of hash sums.
+**LibRHash** is a professional, portable, thread-safe *C* library for computing a wide variety of hash functions.
 
 ### Main features
 * Small and easy to learn interface.
@@ -47,9 +47,9 @@ Usage examples
    for(i = 0; i < 1000000; i++) {
      rhash_update(context, "a", 1);
    }
-   rhash_final(context, NULL); /* finalize hash calculation */
+   rhash_final(context, NULL); /* finalize message digests calculation */
  
-   /* output digest as a hexadecimal hash string */
+   /* output message digest as a hexadecimal string */
    rhash_print(output, context, RHASH_MD4, RHPR_UPPERCASE);
    printf("%s ('a'x1000000) = %s\n", rhash_get_name(RHASH_MD4), output);
  
@@ -63,7 +63,7 @@ Usage examples
 
 ### Hi-level interface
 
-* Calculating SHA1 hash of a string
+* Calculating SHA1 message digest of a string
 
 ```c
  #include <string.h>
@@ -79,7 +79,7 @@ Usage examples
  
    int res = rhash_msg(RHASH_SHA1, msg, strlen(msg), digest);
    if(res < 0) {
-     fprintf(stderr, "hash calculation error\n");
+     fprintf(stderr, "message digest calculation error\n");
      return 1;
    }
  
@@ -92,7 +92,7 @@ Usage examples
  }
 ```
 
-* Calculating TTH hash of a file
+* Calculating TTH message digest of a file
 
 ```c
  #include <errno.h>
