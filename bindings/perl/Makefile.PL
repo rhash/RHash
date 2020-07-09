@@ -81,7 +81,7 @@ sub OPTIONAL {
 # the contents of the Makefile that is written
 WriteMakefile(
     NAME         => 'Crypt::Rhash',
-    ABSTRACT     => 'Library for computing hash sums and magnet links',
+    ABSTRACT     => 'Library for computing message digests and magnet links',
     AUTHOR       => 'Aleksey Kravchenko',
     VERSION_FROM => 'Rhash.pm', # finds $VERSION
     OPTIONAL( '6.31',

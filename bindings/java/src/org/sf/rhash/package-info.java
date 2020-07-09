@@ -1,5 +1,5 @@
 /*
- * This file is a part of Java Bindings for Librhash
+ * This file is a part of Java Bindings for LibRHash
  *
  * Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>
  *
@@ -16,10 +16,10 @@
  */
 
 /**
- * Java bindings for librhash.
- * Librhash is a library for computing and verifying hash sums.
- * List of all supported hash functions can be found in
- * {@link org.sf.rhash.HashType} class description.
+ * Java bindings for LibRHash.
+ * LibRHash  is  a library for computing message digests  and magnet links
+ * for various hash functions. List of all supported hash functions can be
+ * found in {@link org.sf.rhash.HashType} class description.
  * <p>
  * In its simplest usage to calculate a hash for message or file
  * you just need to use one of <code>RHash.computeHash()</code>

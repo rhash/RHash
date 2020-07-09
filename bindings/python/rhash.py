@@ -16,10 +16,10 @@
 
 """Python bindings for librhash
 
-Librhash  is  a library for computing and verifying hash sums
-that supports many hashing algorithms. The  simplest  way  to
-calculate  hash  of  a message  or  a file is by using one of
-the functions:
+Librhash  is  a library  for  computing  message digests  and
+magnet links for various hash functions. The simplest  way to
+calculate a message digest of  a string  or  file is by using
+one of the functions:
 
 hash_for_msg(message, hash_id)
 hash_for_file(filename, hash_id)
@@ -30,7 +30,7 @@ SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL, RIPEMD160,
 GOST94, GOST94_CRYPTOPRO, GOST12_256, GOST12_512, HAS160,
 SHA224, SHA256, SHA384, SHA512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
 EDONR256, EDONR512, SNEFRU128, SNEFRU256.
-The first  two functions  will  return the  default text representation
+The first two functions will return the default text representation
 of the message digest they compute.  The latter will return the
 magnet link  for the  file. In this function  you can OR-combine
 several hash_ids, like
@@ -39,7 +39,7 @@ several hash_ids, like
 magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:
 f88e6c1620361da9d04e2a2a1c788059
 
-Next, this module provides a class to calculate several hashes
+Next, this module provides a class to calculate several message digests
 simultaneously in an incremental way. Example of using it:
 
 >>> hasher = RHash(CRC32 | MD5)
@@ -60,12 +60,12 @@ To  receive  text represenation of the message digest use one
 of the methods hex(), HEX(), base32(), BASE32(), base64() and
 BASE64().  The hash() method  outputs  message digest  in its
 default format.  Binary  message digest may be obtained  with
-raw().  All of these  methods  accept  hash_id  as  argument.
-It may  be omitted  if  RHash  was  created  to  compute hash
-for only a single hashing algorithm.
+raw().  All of these  methods  accept  hash_id  as  argument,
+hash_id can be omitted  if the instance of RHash  was created
+to compute message digest of a single hash function.
 
-Method  magnet(filename)  will generate magnet link with  all
-hashes computed by the RHash object.
+Method  magnet(filename) will generate magnet link containing
+message digests computed by the RHash object.
 """
 
 # public API
@@ -214,14 +214,14 @@ class RHash(object):
         return self
 
     def finish(self):
-        """Calculate hashes for all the data buffered by
+        """Calculate message digests for all the data buffered by
         the update() method.
         """
         LIBRHASH.rhash_final(self._ctx, None)
         return self
 
     def _print(self, hash_id, flags):
-        """Retrieve the message hash in required format."""
+        """Retrieve the message digest in required format."""
         buf = create_string_buffer(130)
         size = LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
         if (flags & 3) == RHPR_RAW:
@@ -230,33 +230,33 @@ class RHash(object):
             return buf[0:size].decode()
 
     def raw(self, hash_id=0):
-        """Returns the message hash as raw binary data."""
+        """Returns the message digest as raw binary data."""
         return self._print(hash_id, RHPR_RAW)
 
     def hex(self, hash_id=0):
-        """Returns the message hash as a hexadecimal lower-case string."""
+        """Returns the message digest as a hexadecimal lower-case string."""
         return self._print(hash_id, RHPR_HEX)
 
     def base32(self, hash_id=0):
-        """Returns the message hash as a Base32 lower-case string."""
+        """Returns the message digest as a Base32 lower-case string."""
         return self._print(hash_id, RHPR_BASE32)
 
     def base64(self, hash_id=0):
-        """Returns the message hash as a Base64 string."""
+        """Returns the message digest as a Base64 string."""
         return self._print(hash_id, RHPR_BASE64)
 
     # pylint: disable=invalid-name
     def HEX(self, hash_id=0):
-        """Returns the message hash as a hexadecimal upper-case string."""
+        """Returns the message digest as a hexadecimal upper-case string."""
         return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
 
     def BASE32(self, hash_id=0):
-        """Returns the message hash as a Base32 upper-case string."""
+        """Returns the message digest as a Base32 upper-case string."""
         return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
     # pylint: enable=invalid-name
 
     def magnet(self, filepath):
-        """Returns magnet link with all hashes computed by
+        """Returns magnet link with all message digests computed by
         this object."""
         size = LIBRHASH.rhash_print_magnet(
             None, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE)

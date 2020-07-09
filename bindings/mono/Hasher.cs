@@ -24,17 +24,17 @@ namespace RHash {
 	public sealed class Hasher {
 
 		private const int DEFAULT   = 0x0;
-		/* output as binary message digest */
+		/* output binary message digest */
 		private const int RAW       = 0x1;
-		/* print as a hexadecimal string */
+		/* print message digest as a hexadecimal string */
 		private const int HEX       = 0x2;
-		/* print as a base32-encoded string */
+		/* print message digest as a base32-encoded string */
 		private const int BASE32    = 0x3;
-		/* print as a base64-encoded string */
+		/* print message digest as a base64-encoded string */
 		private const int BASE64    = 0x4;
-		/* Print as an uppercase string. */
+		/* Print message digest as an uppercase string. */
 		private const int UPPERCASE = 0x8;
-		/* Reverse hash bytes. */
+		/* Reverse bytes order for hexadecimal message digest. */
 		private const int REVERSE   = 0x10;
 		/* Print file size. */
 		private const int FILESIZE  = 0x40;
@@ -51,7 +51,7 @@ namespace RHash {
 		public Hasher (uint hashmask) {
 			this.hash_ids = hashmask;
 			this.ptr = Bindings.rhash_init(hash_ids);
-			if (ptr == IntPtr.Zero) throw new ArgumentException("Invalid mask of hashes", "hashmask");
+			if (ptr == IntPtr.Zero) throw new ArgumentException("Hash functions bit-mask must be non-zero", "hashmask");
 		}
 
 		~Hasher() {
@@ -102,7 +102,7 @@ namespace RHash {
 
 		public string ToString(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
-				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+				throw new ArgumentException("This hasher has not computed message digest for id: "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, 0);
@@ -111,7 +111,7 @@ namespace RHash {
 
 		public string ToHex(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
-				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+				throw new ArgumentException("This hasher has not computed message digest for id: "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, HEX);
@@ -120,7 +120,7 @@ namespace RHash {
 
 		public string ToBase32(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
-				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+				throw new ArgumentException("This hasher has not computed message digest for id: "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, BASE32);
@@ -129,7 +129,7 @@ namespace RHash {
 
 		public string ToBase64(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
-				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+				throw new ArgumentException("This hasher has not computed message digest for id: "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, BASE64);
@@ -138,7 +138,7 @@ namespace RHash {
 
 		public string ToRaw(HashType type) {
 			if ((hash_ids & (uint)type) == 0) {
-				throw new ArgumentException("This hasher does not support hash type "+type, "type");
+				throw new ArgumentException("This hasher has not computed message digest for id: "+type, "type");
 			}
 			StringBuilder sb = new StringBuilder(130);
 			Bindings.rhash_print(sb, ptr, (uint)type, RAW);

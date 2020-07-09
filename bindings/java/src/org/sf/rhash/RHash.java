@@ -151,7 +151,7 @@ public final class RHash {
 	}
 
 	/**
-	 * Produces magnet link for specified file with given hashes.
+	 * Produces magnet link for specified file using specified hash functions.
 	 *
 	 * @param  filename   the file to generate magnet for
 	 * @param  types      types of hashing algorithms
@@ -163,7 +163,7 @@ public final class RHash {
 	}
 
 	/**
-	 * Produces magnet link for specified file with given hashes.
+	 * Produces magnet link for specified file using specified hash functions.
 	 *
 	 * @param  filename   the file to generate magnet for
 	 * @param  types      set of hashing types
@@ -341,7 +341,7 @@ public final class RHash {
 	 * new data chunks. Note, that this method returns
 	 * <code>RHash</code> to the state after creating the
 	 * object, NOT the state when hashing continues.
-	 * Therefore, all previously calculated hashes are lost
+	 * Therefore, all previously calculated message digests are lost
 	 * and process starts from the very beginning.
 	 */
 	public synchronized void reset() {
@@ -402,11 +402,11 @@ public final class RHash {
 	}
 
 	/**
-	 * Returns magnet link that includes specified filename
-	 * and hashes for given algorithms. Only hashes that were
-	 * computed by this <code>RHash</code> are included.
+	 * Returns magnet link that includes filename
+	 * and message digests for the specified hash functions.
+	 * Message digests only for computed hash functions are included into the link.
 	 *
-	 * @param  filename  file name to include in magnet, may be <code>null</code>
+	 * @param  filename file name to include into the magnet link, can be <code>null</code>
 	 * @return magnet link
 	 * @throws IllegalStateException
 	 *   if this <code>RHash</code> is not finished
@@ -423,11 +423,10 @@ public final class RHash {
 	}
 
 	/**
-	 * Returns magnet link for given filename.
-	 * Magnet includes all hashes that were computed
-	 * by this <code>RHash</code>.
+	 * Returns magnet link that includes filename
+	 * and all computed message digests.
 	 *
-	 * @param  filename  file name to include in magnet, may be <code>null</code>
+	 * @param  filename file name to include into the magnet link, can be <code>null</code>
 	 * @return magnet link
 	 * @throws IllegalStateException
 	 *   if this <code>RHash</code> is not finished

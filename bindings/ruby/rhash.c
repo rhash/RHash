@@ -65,7 +65,7 @@ VALUE rh_update_file(VALUE self, VALUE file) {
  *   rhash.finish
  *
  * Finishes calculation for all data buffered by
- * <code>update</code> and stops calculation of hashes.
+ * <code>update</code> and stops calculation of message digests.
  */
 static VALUE rh_finish(VALUE self) {
 	rhash ctx;
@@ -148,7 +148,7 @@ static VALUE rh_to_base32(int argc, VALUE* argv, VALUE self) {
  *   rhash.magnet(filepath)
  *   rhash.magnet
  *
- * Returns magnet link with all hashes computed by
+ * Returns magnet link with all message digests computed by
  * the RHash object.
  * if filepath is specified, then it is url-encoded
  * and included into the resulting magnet link.
@@ -227,7 +227,7 @@ static VALUE rh_init(int argc, VALUE *argv, VALUE self) {
  * call-seq:
  *   RHash.new(id, ...)
  *
- * Creates RHash object to calculate hashes for given algorithms.
+ * Creates RHash object to calculate message digests for given algorithms.
  * Parameters should be constants defined in this class.
  */
 VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
@@ -246,9 +246,9 @@ VALUE rh_new(int argc, VALUE* argv, VALUE clz) {
 }
 
 /**
- * Librhash is a library for computing and verifying hash sums
- * that supports many hashing algorithms. This module provides
- * class for incremental hashing that utilizes the library.
+ * Librhash  is  a library  for  computing  message digests  and
+ * magnet links for various hash functions. This module provides
+ * class RHash for incremental hashing that utilizes the library.
  * Sample usage of it you can see from the following example:
  *
  *   hasher = RHash.new(RHash::CRC32, RHash::MD5)
@@ -379,7 +379,7 @@ end");
 	rb_define_const(cRHash, "SNEFRU128", INT2FIX(RHASH_SNEFRU128));
 	/** Snefru-256 hash. */
 	rb_define_const(cRHash, "SNEFRU256", INT2FIX(RHASH_SNEFRU256));
-	/** Create RHash with this parameter to compute hashes for all available algorithms. */
+	/** Compute message digests for all available algorithms. */
 	rb_define_const(cRHash, "ALL",       INT2FIX(RHASH_ALL_HASHES));
 }
 

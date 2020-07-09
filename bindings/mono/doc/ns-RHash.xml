@@ -2,8 +2,8 @@
   <Docs>
     <summary>.NET/Mono bindings to librhash.</summary>
     <remarks>
-<para>Librhash is a library for computing and verifying hash sums
-that supports many hashing algorithms. This module provides
+<para>Librhash is a library for computing hash functions.
+It supports many hashing algorithms. This module provides
 class for incremental hashing that utilizes the library.
 Sample usage of it you can see from the following example:
 <example><code lang="C#">
@@ -21,7 +21,7 @@ Sample usage of it you can see from the following example:
  all remaining calculations.
 </para><para>
  To receive text represenation of the message digest use one
- of methods ToHex(), ToBase32() and ToBase64(). Binary message
+ of the methods ToHex(), ToBase32() and ToBase64(). Binary message
  digest may be obtained with ToRaw(). All of these methods accept
  algorithm  value as argument. It may be omitted if Hasher was
  created to compute hash for only a single hashing algorithm.

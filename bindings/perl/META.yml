@@ -1,5 +1,5 @@
 ---
-abstract: 'Library for computing hash sums and magnet links'
+abstract: 'Library for computing message digests and magnet links'
 author:
   - 'Aleksey Kravchenko'
 build_requires:
@@ -23,4 +23,4 @@ resources:
   homepage: http://rhash.sf.net/
   license: https://github.com/rhash/RHash/blob/master/COPYING
   repository: https://github.com/rhash/RHash
-version: 0.98
+version: 0.99

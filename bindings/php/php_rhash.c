@@ -542,7 +542,7 @@ PHP_METHOD(RHash, update)
 /* }}} */
 
 /* {{{ proto boolean RHash::update_stream(resource handle[, int start[, int size]])
-   Returns true if successfully calculated hashes for a (part of) stream, false on error */
+   Returns true if successfully calculated message digests for a (part of) stream, false on error */
 PHP_METHOD(RHash, update_stream)
 {
 	zval *handle;
@@ -564,7 +564,7 @@ PHP_METHOD(RHash, update_stream)
 /* }}} */
 
 /* {{{ proto boolean RHash::update_file(string path[, int start[, int size]])
-   Returns true if successfully calculated hashes for a (part of) file, false on error */
+   Returns true if successfully calculated message digests for a (part of) file, false on error */
 PHP_METHOD(RHash, update_file)
 {
 	char *path;
@@ -672,7 +672,7 @@ PHP_METHOD(RHash, base64)
 /* }}} */
 
 /* {{{ proto string RHash::magnet([string filename])
-   Returns magnet link with all hashes computed by the RHash object */
+   Returns magnet link with all message digests computed by the RHash object */
 PHP_METHOD(RHash, magnet)
 {
 	char *s = 0;
