@@ -244,9 +244,9 @@ static struct percents_t percents;
 #define REPORT_FIRST_MASK (RHASH_MD5 | RHASH_SHA256 | RHASH_SHA512)
 
 /**
- * Print verbose error on a hash sum mismatch.
+ * Print verbose error on a message digest mismatch.
  *
- * @param info file information with path and its hash sums.
+ * @param info file information with path and its message digests.
  * @return 0 on success, -1 on error
  */
 static int print_verbose_hash_check_error(struct file_info* info)
@@ -254,7 +254,7 @@ static int print_verbose_hash_check_error(struct file_info* info)
 	char actual[130], expected[130];
 	assert(HC_FAILED(info->hc.flags));
 
-	/* TRANSLATORS: printed in verbose mode on a hash sum mismatch */
+	/* TRANSLATORS: printed in the verbose mode on a message digest mismatch */
 	if (rsh_fprintf(rhash_data.out, _("ERROR")) < 0)
 		return -1;
 
@@ -327,12 +327,12 @@ static int print_aligned_filepath(FILE* out, struct file_info* info)
 }
 
 /**
- * Print file path and result of its verification by hash.
+ * Print file path and result of its verification against message digests.
  * Also if error occurred, print error message.
  *
  * @param info pointer to the file-info structure
  * @param print_name set to non-zero to print file path
- * @param print_result set to non-zero to print hash verification result
+ * @param print_result set to non-zero to print verification result
  * @return 0 on success, -1 on i/o error
  */
 static int print_check_result(struct file_info* info, int print_name, int print_result)
@@ -347,9 +347,9 @@ static int print_check_result(struct file_info* info, int print_name, int print_
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s\n", strerror(saved_errno)));
 		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ?
-				/* TRANSLATORS: printed when all hash sums match, use at least 3 characters to overwrite "99%" */
+				/* TRANSLATORS: printed when all message digests match, use at least 3 characters to overwrite "99%" */
 				_("OK \n") :
-				/* TRANSLATORS: ERR (short for 'error') is printed on a hash sum mismatch */
+				/* TRANSLATORS: ERR (short for 'error') is printed on a message digest mismatch */
 				_("ERR\n"))));
 		} else {
 			res = print_verbose_hash_check_error(info);
@@ -364,8 +364,8 @@ static int print_check_result(struct file_info* info, int print_name, int print_
  * Prepare or print result of file processing.
  *
  * @param info pointer to the file-info structure
- * @param init non-zero on initialization before hash calculation,
- *             and zero after hash calculation finished.
+ * @param init non-zero on initialization before message digests calculation,
+ *             and zero after message digests calculation finished.
  * @return 0 on success, -1 on i/o error
  */
 static int print_results_on_check(struct file_info* info, int init)
@@ -383,7 +383,7 @@ static int print_results_on_check(struct file_info* info, int init)
 /* functions to output file info without percents */
 
 /**
- * Print file name in hash checking mode.
+ * Print file name in the verification mode.
  * No information is printed in other modes.
  *
  * @param info pointer to the file-info structure
@@ -396,7 +396,7 @@ static int dummy_init_percents(struct file_info* info)
 
 /**
  * Print file check results without printing percents.
- * Information is printed only in hash verification mode.
+ * Information is printed only in the verification mode.
  *
  * @param info pointer to the file-info structure
  * @param process_res non-zero if error occurred while hashing/checking
@@ -427,7 +427,7 @@ static int dots_init_percents(struct file_info* info)
 }
 
 /**
- * Finish dots percent mode. If in hash verification mode,
+ * Finish dots percent mode. If in the verification mode,
  * then print the results of file check.
  *
  * @param info pointer to the file-info structure
@@ -537,7 +537,7 @@ static void p_update_percents(struct file_info* info, uint64_t offset)
 }
 
 /**
- * Finish one-line percent mode. If in hash verification mode,
+ * Finish one-line percent mode. If in the verification mode,
  * then print the results of file check.
  *
  * @param info pointer to the file-info structure

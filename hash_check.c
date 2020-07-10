@@ -1,4 +1,4 @@
-/* hash_check.c - verification of hashes of files */
+/* hash_check.c - verification of message digests of files */
 
 #include "hash_check.h"
 #include "common_func.h"
@@ -10,7 +10,7 @@
 #include <ctype.h>  /* isspace */
 #include <string.h>
 
-/* hash conversion macros and functions */
+/* message digest conversion macros and functions */
 #define HEX_TO_DIGIT(c) ((c) <= '9' ? (c) & 0xF : ((c) - 'a' + 10) & 0xF)
 #define BASE32_TO_DIGIT(c) ((c) < 'A' ? (c) - '2' + 26 : ((c) & ~0x20) - 'A')
 #define BASE32_LENGTH(bits) (((bits) + 4) / 5)
@@ -91,7 +91,7 @@ static void process_backslashes(char* path)
 #define process_backslashes(path)
 #endif /* _WIN32 */
 
-/* convert a hash flag to index */
+/* convert a hash function bit-flag to the index of the bit */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
 # define get_ctz(x) __builtin_ctz(x)
 #else
@@ -131,9 +131,9 @@ static int code_digest_size(int digest_size)
 }
 
 /**
- * Calculate an OR-ed mask of hash-ids by a length of hash in bytes.
+ * Calculate a bit-mask of hash-ids by a length of message digest in bytes.
  *
- * @param digest_size length of a hash in bytes.
+ * @param digest_size length of a binary message digest in bytes.
  * @return mask of hash-ids with given hash length, 0 on fail.
  */
 static unsigned hash_check_mask_by_digest_size(int digest_size)
@@ -186,7 +186,7 @@ static int test_hash_char(char c)
  *
  * @param ptr the pointer to start scanning from
  * @param end pointer to scan to
- * @param p_len pointer to a number to store length of detected hash string
+ * @param p_len pointer to a number to store length of detected message digest
  * @return type of detected hash as combination of Fmt* flags
  */
 static int detect_hash_type(char** ptr, char* end, int* p_len)
@@ -227,10 +227,10 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
 }
 
 /**
- * Check if a hash with of the specified bit length is supported by the program.
+ * Check if a message digest of the specified bit length is supported by the program.
  *
- * @param length the bit length of a binary string
- * @return 1 if a hash of the specified bit length is supported, 0 otherwise
+ * @param length the bit length of a binary message digest value
+ * @return 1 if a message digest of the specified bit length is supported, 0 otherwise
  */
 static int is_acceptable_bit_length(int length)
 {
@@ -244,12 +244,12 @@ static int is_acceptable_bit_length(int length)
 }
 
 /**
- * Test that the given string contain a hexadecimal or base32 hash string
- * of one of supported hash sums.
+ * Test the given substring to be a hexadecimal or base32
+ * message digest of one of the supported hash functions.
  *
  * @param ptr the pointer to start scanning from
  * @param end pointer to scan to
- * @param p_len pointer to a number to store length of detected hash string
+ * @param p_len pointer to a number to store length of detected message digest
  * @return possible type of detected hash as algorithm RHASH id
  */
 static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
@@ -445,7 +445,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
 			}
 			if (!hv.format) return 0;
 			if (*search_str == '\3') {
-				/* verify hash type */
+				/* verify message digest type */
 				int bit_length = rhash_get_digest_size(search->expected_hash_id) * 8;
 				hv.format &= search->hash_type;
 				if ((len * 4) != bit_length)
@@ -521,7 +521,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
  * For a magnet/ed2k links file size is also parsed.
  *
  * @param line the line to parse
- * @param hashes structure to store parsed hashes, file path and file size
+ * @param hashes structure to store parsed message digests, file path and file size
  * @return 1 on success, 0 if couldn't parse the line
  */
 int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
@@ -668,7 +668,7 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 	}
 
 	if (reversed) {
-		/* change the order of hash values from reversed back to forward */
+		/* change reversed order of message digests to the forward order */
 		for (i = 0, j = hashes->hashes_num - 1; i < j; i++, j--) {
 			hash_value tmp = hashes->hashes[i];
 			hashes->hashes[i] = hashes->hashes[j];
@@ -676,14 +676,14 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 		}
 	}
 
-	/* post-process parsed hashes */
+	/* post-process parsed message digests */
 	for (i = 0; i < hashes->hashes_num; i++) {
 		hash_value* hv = &hashes->hashes[i];
 		char* hash_str = hashes->data + hv->offset;
-		hash_str[hv->length] = '\0'; /* terminate the hash string */
+		hash_str[hv->length] = '\0'; /* terminate the message digest */
 
 		if (hv->hash_id == 0) {
-			/* calculate hash mask */
+			/* calculate bit-mask of hash function ids */
 			unsigned mask = 0;
 			if (hv->format & FmtHex) {
 				mask |= hash_check_mask_by_digest_size(hv->length >> 1);
@@ -711,13 +711,13 @@ enum {
 };
 
 /**
- * Compare two hash strings. For base64 encoding, the case-sensitive comparasion is done.
+ * Compare two message digests. For base64 encoding, the case-sensitive comparasion is done.
  * For hexadecimal or base32 encodings, the case-insensitive match occurs.
  * For the GOST94 hash, the additional reversed case-insensitive match is done.
  *
- * @param calculated_hash the calculated hash, for the hex/base32 the hash is an upper-case string.
- * @param expected a hash value from a hash file to match against
- * @param length length of the hash strings
+ * @param calculated_hash the calculated message digest, for the hex/base32 the value must be in upper case
+ * @param expected a message digest from a hash file to match against
+ * @param length length of the message digests
  * @param comparision_mode 0, CompareHashCaseSensitive or CompareHashReversed comparision mode
  */
 static int is_hash_string_equal(const char* calculated_hash, const char* expected, size_t length, int comparision_mode)
@@ -745,7 +745,7 @@ static int is_hash_string_equal(const char* calculated_hash, const char* expecte
  * context contains CRC32 and makes no checks for this.
  *
  * @param rhash context
- * @return crc32 hash sum
+ * @return crc32 checksum
  */
 unsigned get_crc32(struct rhash_context* ctx)
 {
@@ -756,13 +756,13 @@ unsigned get_crc32(struct rhash_context* ctx)
 }
 
 /**
- * Verify calculated hashes against original values.
+ * Verify calculated message digests against original values.
  * Also verify the file size and embedded CRC32 if present.
  * The HC_WRONG_* bits are set in the hashes->flags field on fail.
  *
- * @param hashes 'original' parsed hash values, to verify against
- * @param ctx the rhash context containing calculated hash values
- * @return 1 on successfull verification, 0 on hash sums mismatch
+ * @param hashes 'original' parsed message digests, to verify against
+ * @param ctx the rhash context containing calculated message digests
+ * @return 1 on successfull verification, 0 on message digests mismatch
  */
 int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 {
@@ -776,7 +776,7 @@ int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 	if ((hashes->flags & HC_HAS_FILESIZE) != 0 && hashes->file_size != ctx->msg_size)
 		hashes->flags |= HC_WRONG_FILESIZE;
 
-	/* verify embedded CRC32 hash sum, if present */
+	/* verify embedded CRC32 checksum, if present */
 	if ((hashes->flags & HC_HAS_EMBCRC32) != 0 && get_crc32(ctx) != hashes->embedded_crc32)
 		hashes->flags |= HC_WRONG_EMBCRC32;
 
@@ -798,7 +798,7 @@ int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 			int bit_length;
 			int comparision_mode;
 
-			/* skip already verified hashes and hashes with different digest size */
+			/* skip already verified message digests and message digests of different size */
 			if (!(unverified_mask & (1 << j)) || !(hv->hash_id & hash_id))
 				continue;
 			comparision_mode = 0;
@@ -842,10 +842,10 @@ int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx)
 			if (!is_hash_string_equal(calculated_hash, expected_hash, hv->length, comparision_mode))
 				continue;
 
-			unverified_mask &= ~(1 << j); /* the j-th hash verified */
+			unverified_mask &= ~(1 << j); /* mark the j-th message digest as verified */
 			hashes->found_hash_ids |= hash_id;
 
-			/* end the loop if all hashes were successfully verified */
+			/* end the loop if all message digests were successfully verified */
 			if (unverified_mask == 0)
 				break;
 		}

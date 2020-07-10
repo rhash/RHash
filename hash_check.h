@@ -1,4 +1,4 @@
-/* hash_check.h - functions to parse a file with hash sums to verify it */
+/* hash_check.h - functions to parse a file with message digests to verify it */
 #ifndef HASH_CHECK_H
 #define HASH_CHECK_H
 
@@ -19,7 +19,7 @@ extern "C" {
 #define HC_MAX_HASHES 32
 
 /**
- * Parsed hash value.
+ * Parsed message digest.
  */
 typedef struct hash_value
 {
@@ -32,7 +32,7 @@ typedef struct hash_value
 struct rhash_context;
 
 /**
- * Parsed file info, like the path, size and file hash values.
+ * Parsed file info, like the path, size and file message digests.
  */
 typedef struct hash_check
 {
@@ -43,8 +43,8 @@ typedef struct hash_check
 	unsigned embedded_crc32;  /* CRC32 embedded into filename */
 	char* data; /* the buffer with the current hash file line */
 	unsigned found_hash_ids; /* bit mask for matched hash ids */
-	unsigned wrong_hashes;   /* bit mask for mismatched hashes */
-	int hashes_num; /* number of parsed hashes */
+	unsigned wrong_hashes;   /* bit mask for mismatched message digests */
+	int hashes_num; /* number of parsed message digests */
 	hash_value hashes[HC_MAX_HASHES];
 } hash_check;
 

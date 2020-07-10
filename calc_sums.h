@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /**
- * Information about a file to calculate/verify hashes for.
+ * Information about a file to calculate/verify message digests for.
  */
 struct file_info {
 	uint64_t size;          /* the size of the hashed file */
@@ -21,7 +21,7 @@ struct file_info {
 	struct rhash_context* rctx; /* state of hash algorithms */
 	int processing_result;  /* -1/-2 for i/o error, 0 on success, 1 on a hash mismatch */
 	unsigned sums_flags; /* mask of ids of calculated hash functions */
-	struct hash_check hc; /* hash values parsed from a hash file */
+	struct hash_check hc; /* message digests parsed from a hash file */
 };
 
 int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);

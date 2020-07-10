@@ -1,4 +1,4 @@
-/* hash_print.c - output hash sums using printf-like format */
+/* hash_print.c - output message digests using printf-like format */
 
 #include "hash_print.h"
 #include "calc_sums.h"
@@ -322,7 +322,7 @@ print_item* parse_percent_item(const char** str)
  * @param out the stream where to print url to
  * @param filename the file name
  * @param filesize the file size
- * @param sums the file hash sums
+ * @param sums the file message digests
  * @return 0 on success, -1 on fail with error code stored in errno
  */
 static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
@@ -420,7 +420,7 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 	int res = 0;
 	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
 #ifdef _WIN32
-	/* switch to binary mode to correctly output binary hashes */
+	/* switch to binary mode to correctly output binary message digests */
 	int out_fd = _fileno(out);
 	int old_mode = (out_fd > 0 && !isatty(out_fd) ? _setmode(out_fd, _O_BINARY) : -1);
 #endif
@@ -514,7 +514,7 @@ void free_print_list(print_item* list)
  *=========================================================================*/
 
 /**
- * Initialize information about hashes, stored in the
+ * Initialize information about message digests, stored in the
  * hash_info_table global variable.
  */
 void init_hash_info_table(void)
@@ -613,7 +613,7 @@ void init_printf_format(strbuf_t* out)
 	char fmt_modifier = 'b';
 
 	if (!opt.fmt) {
-		/* print SFV header for CRC32 or if no hash sums options specified */
+		/* print SFV header for CRC32 or if no hash functions options has been specified */
 		opt.fmt = (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags ? FMT_SFV : FMT_SIMPLE);
 	}
 	uppercase = ((opt.flags & OPT_UPPERCASE) ||
@@ -651,7 +651,7 @@ void init_printf_format(strbuf_t* out)
 		fmt_modifier = (opt.flags & OPT_HEX ? 'x' : opt.flags & OPT_BASE32 ? 'b' : 'B');
 	}
 
-	/* loop by hashes */
+	/* loop by message digests */
 	for (bit = 1 << index; bit && bit <= opt.sum_flags; bit = bit << 1, index++) {
 		const char* p;
 		print_hash_info* info;

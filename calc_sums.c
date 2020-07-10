@@ -1,4 +1,4 @@
-/* calc_sums.c - hash calculating and printing functions */
+/* calc_sums.c - message digests calculating and printing functions */
 
 #include "calc_sums.h"
 #include "hash_print.h"
@@ -52,7 +52,7 @@ static void init_btih_data(struct file_info* info)
 }
 
 /**
- * (Re)-initialize RHash context, to calculate hash sums.
+ * (Re)-initialize RHash context, to calculate message digests.
  *
  * @param info the file data
  */
@@ -60,7 +60,7 @@ static void re_init_rhash_context(struct file_info* info)
 {
 	if (rhash_data.rctx != 0) {
 		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			/* a set of hash sums can change from file to file */
+			/* a set of hash algorithms can change from file to file */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
 		} else {
@@ -88,8 +88,8 @@ static void re_init_rhash_context(struct file_info* info)
 }
 
 /**
- * Calculate hash sums simultaneously, according to the info->sums_flags.
- * Calculated hashes are stored in info->rctx.
+ * Calculate message digests simultaneously, according to the info->sums_flags.
+ * Calculated message digests are stored in info->rctx.
  *
  * @param info file data
  * @return 0 on success, -1 on fail with error code stored in errno
@@ -154,10 +154,10 @@ static int calc_sums(struct file_info* info)
 /* functions to calculate and print file sums */
 
 /**
- * Search for a crc32 hash sum in the given file name.
+ * Search for a crc32 checksum in the given file name.
  *
  * @param file the file, which filename is checked.
- * @param crc32 pointer to integer to receive parsed hash sum.
+ * @param crc32 pointer to integer to receive parsed checksum.
  * @return non zero if crc32 was found, zero otherwise.
  */
 static int find_embedded_crc32(file_t* file, unsigned* crc32)
@@ -296,7 +296,7 @@ static int save_torrent(struct file_info* info)
 }
 
 /**
- * Calculate and print file hash sums using printf format.
+ * Calculate and print file message digests using printf format.
  * In a case of fail, the error will be logged.
  *
  * @param out the output stream to print results to
@@ -385,11 +385,11 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 }
 
 /**
- * Verify hash sums of the file.
+ * Verify message digests of the file.
  * In a case of fail, the error will be logged.
  *
  * @param info structure file path to process
- * @return 0 on success, 1 on hash sums mismatch,
+ * @return 0 on success, 1 on message digests mismatch,
  *     -1/-2 on input/output error
  */
 static int verify_sums(struct file_info* info)
@@ -435,7 +435,7 @@ static int verify_sums(struct file_info* info)
 /**
  * Print the "Verifying <FILE>" heading line.
  *
- * @param file the file containing hash sums to verify.
+ * @param file the file containing message digests to verify.
  * @return 0 on success, -1 on fail with error code stored in errno
  */
 static int print_verifying_msg(file_t* file)
@@ -448,11 +448,11 @@ static int print_verifying_msg(file_t* file)
 }
 
 /**
- * Check hash sums in a hash file.
+ * Verify message digests in a hash file.
  * Lines beginning with ';' and '#' are ignored.
  * In a case of fail, the error will be logged.
  *
- * @param file the file containing hash sums to verify.
+ * @param file the file containing message digests to verify.
  * @param chdir true if function should emulate chdir to directory of filepath before checking it.
  * @return 0 on success, -1 on input error, -2 on results output error
  */
@@ -560,7 +560,7 @@ int check_hash_file(file_t* file, int chdir)
 		if (info.hc.hash_mask == 0)
 			continue;
 
-		/* check if hash file contains a hash sum without a filename */
+		/* check if the hash file contains a message digest without a filename */
 		if (info.hc.file_path != NULL) {
 			int is_absolute = IS_PATH_SEPARATOR(info.hc.file_path[0]);
 			IF_WINDOWS(is_absolute = is_absolute || (info.hc.file_path[0] && info.hc.file_path[1] == ':'));
@@ -577,7 +577,7 @@ int check_hash_file(file_t* file, int chdir)
 		info.sums_flags = info.hc.hash_mask;
 		file_stat(&file_to_check, 0);
 
-		/* verify hash sums of the file */
+		/* verify message digests of the file */
 		res = verify_sums(&info);
 
 		if (res >= -1 && fflush(rhash_data.out) < 0) {
@@ -706,7 +706,7 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 	sz_mb = msg_size / (1 << 20); /* size in MiB */
 	hash_name = rhash_get_name(hash_id);
 	if (!hash_name)
-		hash_name = ""; /* benchmarking several hashes*/
+		hash_name = ""; /* benchmarking several hash functions */
 
 	for (i = 0; i < (int)sizeof(message); i++)
 		message[i] = i & 0xff;

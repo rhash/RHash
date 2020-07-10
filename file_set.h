@@ -1,4 +1,4 @@
-/* file_set.h - functions to manipulate a set of files with their hash sums */
+/* file_set.h - functions to manipulate a set of files with its message digests */
 #ifndef FILE_SET_H
 #define FILE_SET_H
 

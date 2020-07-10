@@ -53,7 +53,7 @@ enum rhash_ids
 	RHASH_SNEFRU256 = 0x10000000,
 
 	/**
-	 * The bit-mask containing all supported hashe functions.
+	 * The bit-mask containing all supported hash functions.
 	 */
 	RHASH_ALL_HASHES = RHASH_CRC32 | RHASH_CRC32C | RHASH_MD4 | RHASH_MD5 |
 		RHASH_ED2K | RHASH_SHA1 |RHASH_TIGER | RHASH_TTH |
@@ -83,7 +83,7 @@ struct rhash_context
 	unsigned long long msg_size;
 
 	/**
-	 * The bit-mask containing identifiers of the hashes being calculated.
+	 * The bit-mask containing identifiers of the hash functions being calculated.
 	 */
 	unsigned hash_id;
 };
@@ -110,33 +110,33 @@ RHASH_API void rhash_library_init(void);
 /* HIGH-LEVEL LIBRHASH INTERFACE */
 
 /**
- * Compute a hash of the given message.
+ * Compute a message digest of the given message.
  *
- * @param hash_id id of hash sum to compute
+ * @param hash_id id of message digest to compute
  * @param message the message to process
  * @param length message length
- * @param result buffer to receive binary hash string
+ * @param result buffer to receive the binary message digest value
  * @return 0 on success, -1 on error
  */
 RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result);
 
 /**
- * Compute a single hash for given file.
+ * Compute a single message digest for the given file.
  *
- * @param hash_id id of hash sum to compute
- * @param filepath path to the file to hash
- * @param result buffer to receive hash value with the lowest requested id
+ * @param hash_id id of hash function to compute
+ * @param filepath path to the file to process
+ * @param result buffer to receive message digest
  * @return 0 on success, -1 on error and errno is set
  */
 RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result);
 
 #ifdef _WIN32
 /**
- * Compute a single hash for given file (Windows-specific function).
+ * Compute a single message digest for the given file (Windows-specific function).
  *
- * @param hash_id id of hash sum to compute
- * @param filepath path to the file to hash
- * @param result buffer to receive hash value with the lowest requested id
+ * @param hash_id id of hash function to compute
+ * @param filepath path to the file to process
+ * @param result buffer to receive the binary message digest value
  * @return 0 on success, -1 on error, -1 on error and errno is set
  */
 RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
@@ -146,17 +146,17 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 /* LOW-LEVEL LIBRHASH INTERFACE */
 
 /**
- * Allocate and initialize RHash context for calculating hash(es).
+ * Allocate and initialize RHash context for calculating message digests.
  * After initializing rhash_update()/rhash_final() functions should be used.
  * Then the context must be freed by calling rhash_free().
  *
- * @param hash_id union of bit flags, containing ids of hashes to calculate.
+ * @param hash_id union of bit-flags, containing ids of hash functions to calculate.
  * @return initialized rhash context, NULL on error and errno is set
  */
 RHASH_API rhash rhash_init(unsigned hash_id);
 
 /**
- * Calculate hashes of message.
+ * Calculate message digests of message.
  * Can be called repeatedly with chunks of the message to be hashed.
  *
  * @param ctx the rhash context
@@ -167,10 +167,10 @@ RHASH_API rhash rhash_init(unsigned hash_id);
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
 
 /**
- * Hash a file or stream. Multiple hashes can be computed.
+ * Process a file or stream. Multiple message digests can be computed.
  * First, inintialize ctx parameter with rhash_init() before calling
  * rhash_file_update(). Then use rhash_final() and rhash_print()
- * to retrive hash values. Finaly call rhash_free() on ctx
+ * to retrive message digests. Finaly call rhash_free() on ctx
  * to free allocated memory or call rhash_reset() to reuse ctx.
  *
  * @param ctx rhash context
@@ -180,10 +180,10 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd);
 
 /**
- * Finalize hash calculation and optionally store the first hash.
+ * Finalize message digest calculation and optionally store the first message digest.
  *
  * @param ctx the rhash context
- * @param first_result optional buffer to store a calculated hash with the lowest available id
+ * @param first_result optional buffer to store a calculated message digest with the lowest available id
  * @return 0 on success; On fail return -1 and set errno
  */
 RHASH_API int rhash_final(rhash ctx, unsigned char* first_result);
@@ -223,37 +223,37 @@ RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* c
  *
  * @return the number of supported hash functions
  */
-RHASH_API int  rhash_count(void); /* number of supported hashes */
+RHASH_API int  rhash_count(void);
 
 /**
- * Returns size of binary digest for given hash algorithm.
+ * Returns the size of binary message digest for given hash function.
  *
- * @param hash_id the id of hash algorithm
- * @return digest size in bytes
+ * @param hash_id the id of the hash function
+ * @return the size of the message digest in bytes
  */
-RHASH_API int  rhash_get_digest_size(unsigned hash_id); /* size of binary message digest */
+RHASH_API int  rhash_get_digest_size(unsigned hash_id);
 
 /**
- * Returns length of digest hash string in default output format.
+ * Returns the length of message digest string in its default output format.
  *
- * @param hash_id the id of hash algorithm
- * @return the length of hash string
+ * @param hash_id the id of the hash function
+ * @return the length of the message digest
  */
-RHASH_API int  rhash_get_hash_length(unsigned hash_id); /* length of formatted hash string */
+RHASH_API int  rhash_get_hash_length(unsigned hash_id);
 
 /**
- * Detect default digest output format for given hash algorithm.
+ * Detect default message digest output format for the given hash algorithm.
  *
  * @param hash_id the id of hash algorithm
  * @return 1 for base32 format, 0 for hexadecimal
  */
-RHASH_API int  rhash_is_base32(unsigned hash_id); /* default digest output format */
+RHASH_API int  rhash_is_base32(unsigned hash_id);
 
 /**
- * Returns a name of given hash algorithm.
+ * Returns the name of the given hash function.
  *
- * @param hash_id the id of hash algorithm
- * @return algorithm name
+ * @param hash_id id of the hash function
+ * @return hash function name
  */
 RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function name */
 
@@ -262,7 +262,7 @@ RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function nam
  * Such magnet_name is used to generate a magnet link of the form
  * urn:&lt;magnet_name&gt;=&lt;hash_value&gt;.
  *
- * @param hash_id the id of hash algorithm
+ * @param hash_id id of the hash algorithm
  * @return name
  */
 RHASH_API const char* rhash_get_magnet_name(unsigned hash_id); /* get name part of magnet urn */
@@ -270,7 +270,7 @@ RHASH_API const char* rhash_get_magnet_name(unsigned hash_id); /* get name part 
 /* HASH SUM OUTPUT INTERFACE */
 
 /**
- * Flags for printing a hash sum.
+ * Flags for printing a message digest.
  */
 enum rhash_print_sum_flags
 {
@@ -300,7 +300,7 @@ enum rhash_print_sum_flags
 	 */
 	RHPR_UPPERCASE = 0x8,
 	/*
-	 * Reverse hash bytes. Can be used for GOST hash.
+	 * Reverse message digest bytes. Can be used for GOST hash functions.
 	 */
 	RHPR_REVERSE   = 0x10,
 	/*
@@ -319,12 +319,12 @@ enum rhash_print_sum_flags
 
 
 /**
- * Print a text presentation of a given hash sum to the specified buffer.
+ * Print to the specified buffer the text representation of the given message digest.
  *
- * @param output a buffer to print the hash to
- * @param bytes a hash sum to print
- * @param size a size of hash sum in bytes
- * @param flags  a bit-mask controlling how to format the hash sum,
+ * @param output a buffer to print the message digest to
+ * @param bytes a binary message digest to print
+ * @param size a size of the message digest in bytes
+ * @param flags  a bit-mask controlling how to format the message digest,
  *               can be a mix of the flags: RHPR_RAW, RHPR_HEX, RHPR_BASE32,
  *               RHPR_BASE64, RHPR_URLENCODE, RHPR_UPPERCASE, RHPR_REVERSE
  * @return the number of written characters
@@ -333,33 +333,33 @@ RHASH_API size_t rhash_print_bytes(char* output,
 	const unsigned char* bytes, size_t size, int flags);
 
 /**
- * Print text presentation of a hash sum with given hash_id to the specified
- * output buffer. If the hash_id is zero, then print the hash sum with
- * the lowest id stored in the hash context.
- * The function call fails if the context doesn't include a hash with the
+ * Print to the specified output buffer the text representation of the message digest
+ * with the given hash_id. If the hash_id is zero, then print the message digest with
+ * the lowest hash_id calculated by the hash context.
+ * The function call fails if the context doesn't include the message digest with the
  * given hash_id.
  *
- * @param output a buffer to print the hash to
+ * @param output a buffer to print the message digest to
  * @param context algorithms state
- * @param hash_id id of the hash sum to print or 0 to print the first hash
- *                saved in the context.
- * @param flags  a bitmask controlling how to print the hash. Can contain flags
- *               RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
+ * @param hash_id id of the message digest to print or 0 to print the first
+ *                message digest saved in the context.
+ * @param flags  a bitmask controlling how to print the message digest. Can contain
+ *               flags RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
  * @return the number of written characters on success or 0 on fail
  */
 RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
 	int flags);
 
 /**
- * Print magnet link with given filepath and calculated hash sums into the
- * output buffer. The hash_mask can limit which hash values will be printed.
+ * Print magnet link with given filepath and calculated message digest into the
+ * output buffer. The hash_mask can limit which message digests will be printed.
  * The function returns the size of the required buffer.
  * If output is NULL the .
  *
  * @param output a string buffer to receive the magnet link or NULL
  * @param filepath the file path to be printed or NULL
  * @param context algorithms state
- * @param hash_mask bit mask of the hash sums to add to the link
+ * @param hash_mask bit mask of the message digest to add to the link
  * @param flags   can be combination of bits RHPR_UPPERCASE, RHPR_NO_MAGNET,
  *                RHPR_FILESIZE
  * @return number of written characters, including terminating '\0' on success, 0 on fail
@@ -440,15 +440,15 @@ RHASH_API rhash_uptr_t rhash_transmit(
 /* HELPER MACROS */
 
 /**
- * Get a pointer to context of the specified hash function.
+ * Get a pointer to the context of the specified hash function.
  */
 #define rhash_get_context_ptr(ctx, hash_id) RHASH_UPTR2PVOID(rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
 /**
- * Cancel hash calculation of a file.
+ * Cancel file processing.
  */
 #define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
 /**
- * Return non-zero if hash calculation was canceled, zero otherwise.
+ * Return non-zero if a message digest calculation was canceled, zero otherwise.
  */
 #define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
 /**
@@ -459,7 +459,7 @@ RHASH_API rhash_uptr_t rhash_transmit(
 /**
  * Turn on/off the auto-final flag for the given rhash_context. By default
  * auto-final is on, which means rhash_final is called automatically, if
- * needed when a hash value is retrieved by rhash_print call.
+ * needed when a message digest is retrieved by rhash_print call.
  */
 #define rhash_set_autofinal(ctx, on) rhash_transmit(RMSG_SET_AUTOFINAL, ctx, on, 0)
 
@@ -493,7 +493,7 @@ RHASH_API rhash_uptr_t rhash_transmit(
 
 
 /**
- * Return non-zero if LibRHash hash been compiled with OpenSSL support,
+ * Return non-zero if LibRHash has been compiled with OpenSSL support,
  * and zero otherwise.
  */
 #define rhash_is_openssl_supported() (rhash_get_openssl_mask() != RHASH_ERROR)
