@@ -103,7 +103,7 @@ static void print_help(void)
 	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
 	print_help_line("      --skip-ok    ", _("Don't print OK messages for successfully verified files.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
-	print_help_line("  -P, --percents   ", _("Show percents, while calculating or verifying.\n"));
+	print_help_line("  -P, --percents   ", _("Show percents, while calculating or verifying message digests.\n"));
 	print_help_line("      --speed      ", _("Output per-file and total processing speed.\n"));
 	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
 	if (rhash_is_openssl_supported())
