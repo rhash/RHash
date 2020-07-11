@@ -113,7 +113,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	if (rctx == NULL) return NULL;
 
 	/* initialize common fields of the rhash context */
-	memset(rctx, 0, sizeof(rhash_context_ext));
+	memset(rctx, 0, aligned_size);
 	rctx->rc.hash_id = hash_id;
 	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
