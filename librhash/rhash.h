@@ -418,6 +418,7 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define RMSG_GET_OPENSSL_MASK 11
 #define RMSG_GET_OPENSSL_SUPPORTED_MASK 12
 #define RMSG_GET_OPENSSL_AVAILABLE_MASK 13
+#define RMSG_GET_LIBRHASH_VERSION 14
 
 #define RMSG_BT_ADD_FILE 32
 #define RMSG_BT_SET_OPTIONS 33
@@ -491,6 +492,10 @@ RHASH_API rhash_uptr_t rhash_transmit(
  */
 #define rhash_get_openssl_available_mask() rhash_transmit(RMSG_GET_OPENSSL_AVAILABLE_MASK, NULL, 0, 0)
 
+/**
+ * Return librhash version.
+ */
+#define rhash_get_version() rhash_transmit(RMSG_GET_LIBRHASH_VERSION, NULL, 0, 0)
 
 /**
  * Return non-zero if LibRHash has been compiled with OpenSSL support,

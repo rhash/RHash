@@ -868,6 +868,15 @@ static void test_endianness(void)
 	}
 }
 
+static void test_version_sanity(void)
+{
+	unsigned version = rhash_get_version();
+	if (!(version & 0xff0000) || (version & 0xfff0e0e0)) {
+		log_message("error: wrong librhash version: %x\n", version);
+		g_errors++;
+	}
+}
+
 /**
  * Run various simple tests.
  */
@@ -880,6 +889,7 @@ static void test_generic_assumptions(void)
 	}
 
 	test_endianness();
+	test_version_sanity();
 }
 
 #define TEST_PATH 0x4000000

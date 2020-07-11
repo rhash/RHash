@@ -108,7 +108,7 @@ plug_openssl.o: plug_openssl.c algorithms.h rhash.h byte_order.h ustd.h \
 
 rhash.o: rhash.c byte_order.h ustd.h algorithms.h rhash.h torrent.h \
  sha1.h plug_openssl.h util.h hex.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(VERSION_CFLAGS) $< -o $@
 
 rhash_timing.o: rhash_timing.c byte_order.h ustd.h rhash.h rhash_timing.h
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -167,7 +167,7 @@ $(LIBRHASH_SOLINK):
 	ln -s $(LIBRHASH_SHARED) $(LIBRHASH_SOLINK)
 
 $(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
-	$(CC) $(SHARED_CFLAGS) $(SOURCES) $(SHARED_LDFLAGS) -o $@
+	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SOURCES) $(SHARED_LDFLAGS) -o $@
 
 # build static library
 $(LIBRHASH_STATIC): $(OBJECTS)

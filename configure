@@ -799,6 +799,7 @@ HAS_RHASH=no
 HAS_LIBRHASH=no
 HAS_BINDINGS=no
 RHASH_VERSION=
+RHASH_VERSION_NUM=
 BINDINGS_VERSION=
 RHASH_SRC=
 LIBRHASH_SRC=
@@ -828,11 +829,15 @@ echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_S
 
 # check version
 good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[1-9]' ; }
-if test "$HAS_RHASH" = "yes"; then
+if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
   test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
   RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
   echo "RHASH_VERSION=$RHASH_VERSION" >> "$TMPLOG"
   good_version "$RHASH_VERSION" || die "wrong version: $RHASH_VERSION"
+  _v1=$(echo $RHASH_VERSION | cut -d '.' -f 1)
+  _v2=$(echo $RHASH_VERSION | cut -d '.' -f 2)
+  _v3=$(echo $RHASH_VERSION | cut -d '.' -f 3)
+  RHASH_VERSION_NUM=$(printf "0x%02x%02x%02x" "$_v1" "$_v2" "$_v3")
   test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
 fi
 if test "$HAS_BINDINGS" = "yes"; then
@@ -934,6 +939,7 @@ CFLAGS  = $LIBRHASH_DEFINES \$(OPTFLAGS) \$(WARN_CFLAGS) \$(ADDCFLAGS)
 LDFLAGS = \$(OPTLDFLAGS) \$(ADDLDFLAGS)
 SHARED_CFLAGS  = \$(CFLAGS) $LIBRHASH_SH_CFLAGS
 SHARED_LDFLAGS = \$(LDFLAGS) $(join_params $OPENSSL_LDFLAGS $LIBRHASH_SH_LDFLAGS)
+VERSION_CFLAGS = -DVERSION_NUM=$RHASH_VERSION_NUM
 BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(join_params $LD_STATIC $OPENSSL_LDFLAGS)
 
 EOF
