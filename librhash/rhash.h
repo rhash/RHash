@@ -66,6 +66,7 @@ enum rhash_ids
 
 	RHASH_GOST = RHASH_GOST94, /* deprecated constant name */
 	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO, /* deprecated constant name */
+
 	/**
 	 * The number of supported hash functions.
 	 */
@@ -137,7 +138,7 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
  * @param hash_id id of hash function to compute
  * @param filepath path to the file to process
  * @param result buffer to receive the binary message digest value
- * @return 0 on success, -1 on error, -1 on error and errno is set
+ * @return 0 on success, -1 on error and errno is set
  */
 RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
 #endif
@@ -147,8 +148,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 
 /**
  * Allocate and initialize RHash context for calculating message digests.
- * After initializing rhash_update()/rhash_final() functions should be used.
- * Then the context must be freed by calling rhash_free().
+ * The context after usage must be freed by calling rhash_free().
  *
  * @param hash_id union of bit-flags, containing ids of hash functions to calculate.
  * @return initialized rhash context, NULL on error and errno is set

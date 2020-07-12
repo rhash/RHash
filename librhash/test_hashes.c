@@ -817,6 +817,7 @@ static void test_results_consistency(void)
 
 		if (memcmp(res1, res2, digest_size) != 0) {
 			log_message("failed: inconsistent %s(\"%s\") hash results\n", rhash_get_name(hash_id), msg);
+			g_errors++;
 		}
 	}
 }
@@ -824,7 +825,7 @@ static void test_results_consistency(void)
 /**
  * Verify that calculated hash doesn't depend on message alignment.
  */
-static void test_alignment(void)
+static void test_unaligned_messages_consistency(void)
 {
 	int i, start, hash_id, alignment_size;
 
@@ -1032,10 +1033,11 @@ int main(int argc, char* argv[])
 	} else {
 		test_all_known_strings();
 		test_long_strings();
-		test_alignment();
 		test_results_consistency();
+		test_unaligned_messages_consistency();
 		test_magnet();
-		if (g_errors == 0) printf("All sums are working properly!\n");
+		if (g_errors == 0)
+			printf("All sums are working properly!\n");
 		fflush(stdout);
 	}
 

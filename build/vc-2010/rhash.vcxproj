@@ -257,6 +257,7 @@
     <ClCompile Include="..\..\librhash\tiger_sbox.c" />
     <ClCompile Include="..\..\librhash\torrent.c" />
     <ClCompile Include="..\..\librhash\tth.c" />
+    <ClCompile Include="..\..\librhash\util.c" />
     <ClCompile Include="..\..\librhash\whirlpool.c" />
     <ClCompile Include="..\..\librhash\whirlpool_sbox.c" />
   </ItemGroup>

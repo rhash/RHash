@@ -3,6 +3,7 @@
 #define TEST_HASHES_H
 
 #include "byte_order.h"
+#include "util.h"
 
 /* first some magic to convert a macro value to a string */
 #define STRINGIZE_ARG(x) #x
@@ -181,8 +182,17 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __TINYC__ /* tcc */
 	" __TINYC__"
 #endif
+#ifdef _ISOC11_SOURCE
+	" _ISOC11_SOURCE"
+#endif
 #ifdef __STDC_VERSION__
 	" __STDC_VERSION__=" EXPAND_TO_STRING(__STDC_VERSION__)
+#endif
+#ifdef _POSIX_VERSION
+	" _POSIX_VERSION=" EXPAND_TO_STRING(_POSIX_VERSION)
+#endif
+#ifdef _XOPEN_SOURCE
+	" _XOPEN_SOURCE=" EXPAND_TO_STRING(_XOPEN_SOURCE)
 #endif
 #ifdef __STRICT_ANSI__
 	" __STRICT_ANSI__"
@@ -251,6 +261,20 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef OPENSSL_RUNTIME
 	" OPENSSL_RUNTIME"
 #endif
+#ifdef HAS_WIN32_ALIGNED_ALLOC
+	" HAS_WIN32_ALIGNED_ALLOC"
+#endif
+#ifdef HAS_STDC_ALIGNED_ALLOC
+	" HAS_STDC_ALIGNED_ALLOC"
+#endif
+#if defined(HAS_POSIX_ALIGNED_ALLOC)
+	" HAS_POSIX_ALIGNED_ALLOC"
+#endif
+#ifdef HAS_GENERIC_ALIGNED_ALLOC
+	" HAS_GENERIC_ALIGNED_ALLOC"
+#endif
+
+/* cpu features */
 #ifdef CPU_X64
 	" CPU_X64"
 #endif
@@ -258,7 +282,6 @@ char* compiler_flags = "Compile-time flags:"
 	" CPU_IA32"
 #endif
 
-/* detect endianness */
 #if IS_LITTLE_ENDIAN
 	" IS_LITTLE_ENDIAN"
 #endif

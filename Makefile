@@ -20,11 +20,11 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/md4.h librhash/md5.c librhash/md5.h librhash/ripemd-160.c librhash/ripemd-160.h \
   librhash/sha1.c librhash/sha1.h librhash/sha3.c librhash/sha3.h \
   librhash/sha256.c librhash/sha256.h librhash/sha512.c librhash/sha512.h \
-  librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h \
-  librhash/tiger_sbox.c librhash/tth.c librhash/tth.h librhash/whirlpool.c \
-  librhash/whirlpool.h librhash/whirlpool_sbox.c librhash/test_hashes.c \
-  librhash/test_hashes.h librhash/torrent.h librhash/torrent.c librhash/ustd.h \
-  librhash/util.h librhash/Makefile
+  librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h librhash/tiger_sbox.c \
+  librhash/torrent.h librhash/torrent.c librhash/tth.c librhash/tth.h \
+  librhash/whirlpool.c librhash/whirlpool.h librhash/whirlpool_sbox.c \
+  librhash/test_hashes.c librhash/test_hashes.h librhash/ustd.h \
+  librhash/util.c librhash/util.h librhash/Makefile
 I18N_FILES  = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po po/uk.po
 ALL_FILES   = $(SOURCES) $(HEADERS) $(LIBRHASH_FILES) $(OTHER_FILES) $(WIN_DIST_FILES) $(I18N_FILES)
 SPECFILE    = dist/rhash.spec

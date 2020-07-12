@@ -3,7 +3,7 @@
 include config.mak
 
 HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_timing.h rhash_torrent.h aich.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h sha3.h ripemd-160.h gost12.h gost94.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
-SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c rhash_torrent.c aich.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c whirlpool.c whirlpool_sbox.c
+SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c rhash_torrent.c aich.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
 OBJECTS = $(SOURCES:.c=.o)
 LIB_HEADERS = rhash.h rhash_torrent.h
 SO_HEADERS = $(LIB_HEADERS) $(LEGACY_HEADERS)
@@ -136,7 +136,7 @@ snefru.o: snefru.c byte_order.h ustd.h snefru.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 test_hashes.o: test_hashes.c byte_order.h ustd.h rhash_timing.h \
- rhash_torrent.h rhash.h test_hashes.h
+ rhash_torrent.h rhash.h test_hashes.h util.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 tiger.o: tiger.c byte_order.h ustd.h tiger.h
@@ -150,6 +150,9 @@ torrent.o: torrent.c byte_order.h ustd.h algorithms.h rhash.h hex.h \
 	$(CC) -c $(CFLAGS) $< -o $@
 
 tth.o: tth.c byte_order.h ustd.h tth.h tiger.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+util.o: util.c util.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 whirlpool.o: whirlpool.c byte_order.h ustd.h whirlpool.h
