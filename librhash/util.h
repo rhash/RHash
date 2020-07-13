@@ -39,7 +39,7 @@ extern "C" {
 # define rhash_aligned_alloc(alignment, size) _aligned_malloc((size), (alignment))
 # define rhash_aligned_free(ptr) _aligned_free(ptr)
 
-#elif __STDC_VERSION__ >= 201112L || defined(_ISOC11_SOURCE)
+#elif (__STDC_VERSION__ >= 201112L || defined(_ISOC11_SOURCE)) && !defined(__APPLE__)
 
 # define HAS_STDC_ALIGNED_ALLOC
 # include <stdlib.h>
