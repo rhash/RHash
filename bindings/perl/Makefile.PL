@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 use File::Copy;
 
 my $libs  = '';
+my $def   = '';
 my $inc   = '';
 my $obj   = '';
 my $clean = '';
@@ -69,6 +70,7 @@ if($rh_type eq 'builtin') {
 	my @c_files = copy_c_files($rh_builtin_dir);
 	$clean = join(' ', @c_files);
 	$obj = join(' ', map { s/\.c$/\$(OBJ_EXT)/; $_ } @c_files) . ' ';
+	$def = '-DRHASH_XVERSION=0' # QuickFix
 }
 
 # make setting optional MakeMaker parameters more readable
@@ -102,8 +104,8 @@ WriteMakefile(
     ),
 
     LIBS         => [ $libs ],
-    DEFINE       => '',       # e.g., '-DHAVE_SOMETHING'
-    INC          => $inc,     # e.g., '-I/usr/include/other'
+    DEFINE       => $def,
+    INC          => $inc,
     OBJECT       => $obj . 'Rhash$(OBJ_EXT)',
     clean        => {
         FILES => $clean,

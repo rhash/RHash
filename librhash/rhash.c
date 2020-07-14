@@ -738,7 +738,7 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 		return rhash_get_openssl_available_hash_mask();
 
 	case RMSG_GET_LIBRHASH_VERSION:
-		return VERSION_NUM;
+		return RHASH_XVERSION;
 
 	/* BitTorrent related messages */
 	case RMSG_BT_ADD_FILE:
