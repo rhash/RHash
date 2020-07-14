@@ -1,3 +1,9 @@
+Tue 14 Jul 2020 Aleksey
+	* === Version 1.4.0 ===
+
+Sat Jul 11 2020 Aleksey
+	* librhash: supported rhash_get_version() - get library version
+
 Mon 29 Jun 2020 Aleksey
 	* Bugfix: fix broken output on Win 7
 

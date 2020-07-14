@@ -828,7 +828,7 @@ fi
 echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_SRC" >> "$TMPLOG"
 
 # check version
-good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[1-9]' ; }
+good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[0-9]' ; }
 if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
   test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
   RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
