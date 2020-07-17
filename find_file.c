@@ -80,7 +80,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	}
 	if (IS_DASH_TSTR(path))
 	{
-		file_search_add_special_file(data, (FileIsRoot | FileIsStdin), NULL);
+		file_search_add_special_file(data, (file_mode | FileIsStdin), NULL);
 		return;
 	}
 
