@@ -102,11 +102,11 @@ cpan:
 	echo "$(PERL_PKG_VER)" | grep -q '^[0-9\.]\+$$'
 	rm -rf $(PERL_PKG)/ $(PERL_PKG).tar.gz
 	mkdir -p $(PERL_PKG)/librhash/
-	grep -q / perl/MANIFEST && mkdir -p `sed -ne '/\//s/\([^\/]*\/\).*/$(PERL_PKG)\/\1/p' perl/MANIFEST | sort -u`
-	sed -e 's/^\([^ ]*\)\( .*\)\?/cp perl\/\1 $(PERL_PKG)\/\1/' perl/MANIFEST > _cpy.sh
-	sh _cpy.sh && rm -f _cpy.sh
-	cp ../librhash/*.[hc] $(PERL_PKG)/librhash/
-	cp perl/MANIFEST $(PERL_PKG)/
+	grep -q / perl/MANIFEST && mkdir -p `sed -ne '/\//s/\([^\/]*\/\).*/$(PERL_PKG)\/\1/p' perl/MANIFEST | sort | uniq`
+	for f in `sed 's/ .*//' perl/MANIFEST`; do cp perl/$$f $(PERL_PKG)/$$f; done
+	cp ../docs/CONTRIBUTING.md ../COPYING $(PERL_PKG)/
+	cp ../librhash/*.[hc] ../version.h $(PERL_PKG)/librhash/
+	( echo CONTRIBUTING.md; echo COPYING ) >> $(PERL_PKG)/MANIFEST
 	find $(PERL_PKG)/librhash/ -type f -printf "librhash/%f\n" | sort >> $(PERL_PKG)/MANIFEST
 	tar -czf $(PERL_PKG).tar.gz --owner=root:0 --group=root:0 $(PERL_PKG)/
 	rm -rf $(PERL_PKG)/
