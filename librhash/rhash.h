@@ -420,24 +420,6 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define RMSG_GET_OPENSSL_AVAILABLE_MASK 13
 #define RMSG_GET_LIBRHASH_VERSION 14
 
-#define RMSG_BT_ADD_FILE 32
-#define RMSG_BT_SET_OPTIONS 33
-#define RMSG_BT_SET_ANNOUNCE 34
-#define RMSG_BT_SET_PIECE_LENGTH 35
-#define RMSG_BT_SET_PROGRAM_NAME 36
-#define RMSG_BT_GET_TEXT 37
-#define RMSG_BT_SET_BATCH_SIZE 38
-
-/**
- * RMSG_BT_SET_OPTIONS message option: generate private BitTorrent.
- */
-#define RHASH_BT_OPT_PRIVATE 1
-/**
- * RMSG_BT_SET_OPTIONS message option: calculate infohash without torrent file body.
- */
-#define RHASH_BT_OPT_INFOHASH_ONLY 2
-
-
 /* HELPER MACROS */
 
 /**

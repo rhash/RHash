@@ -649,53 +649,13 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
 }
 #endif
 
-/**
- * Process a BitTorrent-related rhash message.
- *
- * @param msg_id message identifier
- * @param bt BitTorrent context
- * @param ldata data depending on message
- * @param rdata data depending on message
- * @return message-specific data
- */
-static rhash_uptr_t process_bt_msg(unsigned msg_id, torrent_ctx* bt, rhash_uptr_t ldata, rhash_uptr_t rdata)
-{
-	if (bt == NULL) return RHASH_ERROR;
-
-	switch (msg_id) {
-	case RMSG_BT_ADD_FILE:
-		bt_add_file(bt, (const char*)ldata, *(unsigned long long*)rdata);
-		break;
-	case RMSG_BT_SET_OPTIONS:
-		bt_set_options(bt, (unsigned)ldata);
-		break;
-	case RMSG_BT_SET_ANNOUNCE:
-		bt_add_announce(bt, (const char*)ldata);
-		break;
-	case RMSG_BT_SET_PIECE_LENGTH:
-		bt_set_piece_length(bt, (size_t)ldata);
-		break;
-	case RMSG_BT_SET_BATCH_SIZE:
-		bt_set_piece_length(bt,
-			bt_default_piece_length(*(unsigned long long*)ldata));
-		break;
-	case RMSG_BT_SET_PROGRAM_NAME:
-		bt_set_program_name(bt, (const char*)ldata);
-		break;
-	case RMSG_BT_GET_TEXT:
-		return (rhash_uptr_t)bt_get_text(bt, (char**)ldata);
-	default:
-		return RHASH_ERROR; /* unknown message */
-	}
-	return 0;
-}
-
 #define PVOID2UPTR(p) ((rhash_uptr_t)(((char*)(p)) + 0))
 
 RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata)
 {
 	/* for messages working with rhash context */
 	rhash_context_ext* const ctx = (rhash_context_ext*)dst;
+	(void)rdata;
 
 	switch (msg_id) {
 	case RMSG_GET_CONTEXT:
@@ -739,16 +699,6 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 
 	case RMSG_GET_LIBRHASH_VERSION:
 		return RHASH_XVERSION;
-
-	/* BitTorrent related messages */
-	case RMSG_BT_ADD_FILE:
-	case RMSG_BT_SET_OPTIONS:
-	case RMSG_BT_SET_ANNOUNCE:
-	case RMSG_BT_SET_PIECE_LENGTH:
-	case RMSG_BT_SET_PROGRAM_NAME:
-	case RMSG_BT_GET_TEXT:
-	case RMSG_BT_SET_BATCH_SIZE:
-		return process_bt_msg(msg_id, (torrent_ctx*)(((rhash_context_ext*)dst)->bt_ctx), ldata, rdata);
 
 	default:
 		return RHASH_ERROR; /* unknown message */
