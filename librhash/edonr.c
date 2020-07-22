@@ -415,7 +415,7 @@ void rhash_edonr256_update(edonr_ctx* ctx, const unsigned char* msg, size_t size
 	/* fill partial block */
 	if (index) {
 		size_t left = edonr256_block_size - index;
-		le32_copy((char*)ctx->u.data256.message, index, msg, (size < left ? size : left));
+		le32_copy(ctx->u.data256.message, index, msg, (size < left ? size : left));
 		if (size < left) return;
 
 		/* process partial block */
@@ -509,7 +509,7 @@ void rhash_edonr512_update(edonr_ctx* ctx, const unsigned char* msg, size_t size
 	/* fill partial block */
 	if (index) {
 		size_t left = edonr512_block_size - index;
-		le64_copy((char*)ctx->u.data512.message, index, msg, (size < left ? size : left));
+		le64_copy(ctx->u.data512.message, index, msg, (size < left ? size : left));
 		if (size < left) return;
 
 		/* process partial block */

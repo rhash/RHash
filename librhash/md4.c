@@ -140,7 +140,7 @@ void rhash_md4_update(md4_ctx* ctx, const unsigned char* msg, size_t size)
 	/* fill partial block */
 	if (index) {
 		unsigned left = md4_block_size - index;
-		le32_copy((char*)ctx->message, index, msg, (size < left ? size : left));
+		le32_copy(ctx->message, index, msg, (size < left ? size : left));
 		if (size < left) return;
 
 		/* process partial block */
