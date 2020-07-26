@@ -174,6 +174,8 @@ RHPR_UPPERCASE = 8
 RHPR_NO_MAGNET = 0x20
 RHPR_FILESIZE = 0x40
 
+RMSG_SET_AUTOFINAL = 5
+
 class RHash(object):
     """Class to compute message digests and magnet links."""
 
@@ -184,7 +186,7 @@ class RHash(object):
             raise ValueError('Invalid argument')
         self._ctx = LIBRHASH.rhash_init(hash_ids)
         #switching off the autofinal feature
-        LIBRHASH.rhash_transmit(5, self._ctx, 0, 0)
+        LIBRHASH.rhash_transmit(RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
 
     def __del__(self):
         """Cleanup allocated resources."""
