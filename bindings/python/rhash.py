@@ -70,7 +70,7 @@ message digests computed by the RHash object.
 
 # public API
 __all__ = [
-    'ALL', 'CRC32', 'CRC3C', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
+    'ALL', 'CRC32', 'CRC32C', 'MD4', 'MD5', 'SHA1', 'TIGER', 'TTH',
     'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST94',
     'GOST94_CRYPTOPRO', 'GOST12_256', 'GOST12_512', 'HAS160',
     'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
