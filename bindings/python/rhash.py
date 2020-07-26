@@ -14,7 +14,7 @@
 # OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-"""Python bindings for librhash
+"""Python bindings for librhash.
 
 Librhash  is  a library  for  computing  message digests  and
 magnet links for various hash functions. The simplest  way to
@@ -112,20 +112,20 @@ LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
 # conversion of a string to binary data with Python 2/3 compatibility
 if sys.version < '3':
     def _s2b(string):
-        """Python 2: just return the string"""
+        """Python 2: just return the string."""
         return string
     def _msg_to_bytes(msg):
-        """convert the msg parameter to a string"""
+        """Convert the msg parameter to a string."""
         if isinstance(msg, str):
             return msg
         return str(msg)
 else:
     import codecs
     def _s2b(string):
-        """Python 3: convert the string to binary data"""
+        """Python 3: convert the string to binary data."""
         return codecs.utf_8_encode(string)[0]
     def _msg_to_bytes(msg):
-        """convert the msg parameter to binary data"""
+        """Convert the msg parameter to binary data."""
         if isinstance(msg, bytes):
             return msg
         if isinstance(msg, str):
@@ -175,9 +175,10 @@ RHPR_NO_MAGNET = 0x20
 RHPR_FILESIZE = 0x40
 
 class RHash(object):
-    'Incremental hasher'
+    """Class to compute message digests and magnet links."""
 
     def __init__(self, hash_ids):
+        """Construct RHash object."""
         if hash_ids == 0:
             self._ctx = None
             raise ValueError('Invalid argument')
@@ -186,21 +187,23 @@ class RHash(object):
         LIBRHASH.rhash_transmit(5, self._ctx, 0, 0)
 
     def __del__(self):
+        """Cleanup allocated resources."""
         if self._ctx != None:
             LIBRHASH.rhash_free(self._ctx)
 
     def reset(self):
-        """reset this object to initial state"""
+        """Reset this object to initial state."""
         LIBRHASH.rhash_reset(self._ctx)
         return self
 
     def update(self, message):
-        """update this object with new data chunk"""
+        """Update this object with new data chunk."""
         data = _msg_to_bytes(message)
         LIBRHASH.rhash_update(self._ctx, data, len(data))
         return self
 
     def __lshift__(self, message):
+        """Update this object with new data chunk."""
         return self.update(message)
 
     def update_file(self, filename):
@@ -214,14 +217,12 @@ class RHash(object):
         return self
 
     def finish(self):
-        """Calculate message digests for all the data buffered by
-        the update() method.
-        """
+        """Flush buffered data and calculate message digests."""
         LIBRHASH.rhash_final(self._ctx, None)
         return self
 
     def _print(self, hash_id, flags):
-        """Retrieve the message digest in required format."""
+        """Retrieve the message digest in the specified format."""
         buf = create_string_buffer(130)
         size = LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
         if (flags & 3) == RHPR_RAW:
@@ -230,34 +231,33 @@ class RHash(object):
             return buf[0:size].decode()
 
     def raw(self, hash_id=0):
-        """Returns the message digest as raw binary data."""
+        """Return the message digest as raw binary data."""
         return self._print(hash_id, RHPR_RAW)
 
     def hex(self, hash_id=0):
-        """Returns the message digest as a hexadecimal lower-case string."""
+        """Return the message digest as a hexadecimal lower-case string."""
         return self._print(hash_id, RHPR_HEX)
 
     def base32(self, hash_id=0):
-        """Returns the message digest as a Base32 lower-case string."""
+        """Return the message digest as a Base32 lower-case string."""
         return self._print(hash_id, RHPR_BASE32)
 
     def base64(self, hash_id=0):
-        """Returns the message digest as a Base64 string."""
+        """Return the message digest as a Base64 string."""
         return self._print(hash_id, RHPR_BASE64)
 
     # pylint: disable=invalid-name
     def HEX(self, hash_id=0):
-        """Returns the message digest as a hexadecimal upper-case string."""
+        """Return the message digest as a hexadecimal upper-case string."""
         return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
 
     def BASE32(self, hash_id=0):
-        """Returns the message digest as a Base32 upper-case string."""
+        """Return the message digest as a Base32 upper-case string."""
         return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
     # pylint: enable=invalid-name
 
     def magnet(self, filepath):
-        """Returns magnet link with all message digests computed by
-        this object."""
+        """Return magnet link with all message digests computed by this object."""
         size = LIBRHASH.rhash_print_magnet(
             None, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE)
         buf = create_string_buffer(size)
@@ -266,29 +266,27 @@ class RHash(object):
         return buf[0:size-1].decode('utf-8')
 
     def hash(self, hash_id=0):
-        """Returns the message digest for the given hash function
-        as a string in the default format."""
+        """Return the message digest for the given hash function as a string in the default format."""
         return self._print(hash_id, 0)
 
     def __str__(self):
+        """Return the message digest."""
         return self._print(0, 0)
 
 def hash_for_msg(message, hash_id):
-    """Computes and returns the message digest (in its default format)
-    of the message"""
+    """Compute and return the message digest (in its default format) of the message."""
     handle = RHash(hash_id)
     handle.update(message).finish()
     return str(handle)
 
 def hash_for_file(filename, hash_id):
-    """Computes and returns the message digest (in its default format)
-    of the file content"""
+    """Compute and return the message digest (in its default format) of the file content."""
     handle = RHash(hash_id)
     handle.update_file(filename).finish()
     return str(handle)
 
 def magnet_for_file(filename, hash_mask):
-    """Computes and returns the magnet link for the file."""
+    """Compute and return the magnet link for the file."""
     handle = RHash(hash_mask)
     handle.update_file(filename).finish()
     return handle.magnet(filename)
