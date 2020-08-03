@@ -13,7 +13,7 @@
 # OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-"""Unit-tests for the rhash module"""
+"""Unit-tests for the rhash module."""
 
 import rhash
 import os
@@ -21,10 +21,10 @@ import unittest
 
 # pylint: disable=too-many-public-methods, pointless-statement
 class TestRHash(unittest.TestCase):
-    """The test-case class for the rhash module"""
+    """The test-case class for the rhash module."""
 
     def test_all_hashes(self):
-        """Verify all hash functions"""
+        """Verify all hash functions."""
         ctx = rhash.RHash(rhash.ALL)
         ctx.update('a')
         ctx.finish()
@@ -103,27 +103,27 @@ class TestRHash(unittest.TestCase):
             ctx.reset().finish().hash(rhash.MD5)) # MD5( '' )
 
     def test_update(self):
-        """Test the sequential update calls"""
+        """Test the sequential update calls."""
         ctx = rhash.RHash(rhash.CRC32 | rhash.MD5)
         ctx.update('Hello, ').update('world!').finish()
         self.assertEqual('EBE6C6E6', ctx.HEX(rhash.CRC32))
         self.assertEqual('6cd3556deb0da54bca060b4c39479839', ctx.hex(rhash.MD5))
 
     def test_shift_operator(self):
-        """Test the << operator"""
+        """Test the << operator."""
         ctx = rhash.RHash(rhash.MD5)
         ctx << 'a' << 'bc'
         # MD5( 'abc' )
         self.assertEqual('900150983cd24fb0d6963f7d28e17f72', str(ctx.finish()))
 
-    def test_hash_for_msg(self):
-        """Test the hash_for_msg() function"""
+    def test_hash_msg(self):
+        """Test the hash_msg() function."""
         self.assertEqual(
             '900150983cd24fb0d6963f7d28e17f72',
-            rhash.hash_for_msg('abc', rhash.MD5))
+            rhash.hash_msg('abc', rhash.MD5))
 
     def test_output_formats(self):
-        """Test all output formats of a message digest"""
+        """Test all output formats of a message digest."""
         ctx = rhash.RHash(rhash.MD5 | rhash.TTH).finish()
         self.assertEqual(
             '5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6',
@@ -135,7 +135,7 @@ class TestRHash(unittest.TestCase):
             ctx.raw(rhash.MD5))
 
     def test_magnet(self):
-        """Test calculation of a magnet link"""
+        """Test calculation of a magnet link."""
         ctx = rhash.RHash(rhash.MD5 | rhash.TTH)
         ctx.update('abc').finish()
         self.assertEqual(
@@ -143,7 +143,7 @@ class TestRHash(unittest.TestCase):
             ctx.magnet('file.txt'))
 
     def test_update_file(self):
-        """Test the update_file() method"""
+        """Test the update_file() method."""
         path = 'python_test_input_123.txt'
         file = open(path, 'wb')
         file.write(b"\0\1\2\n")
@@ -154,10 +154,10 @@ class TestRHash(unittest.TestCase):
         self.assertEqual('e3869ec477661fad6b9fc25914bb2eee5455b483', str(ctx))
         self.assertEqual(
             'e3869ec477661fad6b9fc25914bb2eee5455b483',
-            rhash.hash_for_file(path, rhash.SHA1))
+            rhash.hash_file(path, rhash.SHA1))
         self.assertEqual(
             'magnet:?xl=4&dn=python_test_input_123.txt&xt=urn:tree:tiger:c6docz63fpef5pdfpz35z7mw2iozshxlpr4erza',
-            rhash.magnet_for_file(path, rhash.TTH))
+            rhash.make_magnet(path, rhash.TTH))
         os.remove(path)
 
 if __name__ == '__main__':

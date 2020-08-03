@@ -21,9 +21,9 @@ magnet links for various hash functions. The simplest  way to
 calculate a message digest of  a string  or  file is by using
 one of the functions:
 
-hash_for_msg(message, hash_id)
-hash_for_file(filename, hash_id)
-magnet_for_file(filename, hash_ids)
+hash_msg(message, hash_id)
+hash_file(filepath, hash_id)
+make_magnet(filepath, hash_ids)
 
 Here  hash_id  is one of the constants CRC32, CRC32C, MD4, MD5,
 SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL, RIPEMD160,
@@ -35,7 +35,7 @@ of the message digest they compute.  The latter will return the
 magnet link  for the  file. In this function  you can OR-combine
 several hash_ids, like
 
->>> print magnet_for_file('rhash.py', CRC32 | MD5)
+>>> print make_magnet('rhash.py', CRC32 | MD5)
 magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:
 f88e6c1620361da9d04e2a2a1c788059
 
@@ -53,7 +53,7 @@ EBE6C6E6
 
 In this example RHash object is first created for  a  set  of
 hashing algorithms. Then, data for hashing is given in chunks
-with   methods   update(message)  and  update_file(filename).
+with   methods   update(message)  and  update_file(filepath).
 Finally, call finish() to end up all remaining calculations.
 
 To  receive  text represenation of the message digest use one
@@ -64,7 +64,7 @@ raw().  All of these  methods  accept  hash_id  as  argument,
 hash_id can be omitted  if the instance of RHash  was created
 to compute message digest of a single hash function.
 
-Method  magnet(filename) will generate magnet link containing
+Method  magnet(filepath) will generate magnet link containing
 message digests computed by the RHash object.
 """
 
@@ -75,7 +75,8 @@ __all__ = [
     'GOST94_CRYPTOPRO', 'GOST12_256', 'GOST12_512', 'HAS160',
     'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
     'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512', 'SNEFRU128', 'SNEFRU256',
-    'RHash', 'hash_for_msg', 'hash_for_file', 'magnet_for_file']
+    'RHash', 'hash_msg', 'hash_file', 'make_magnet',
+    'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
 import sys
 from ctypes import (
@@ -164,7 +165,6 @@ SNEFRU128 = 0x08000000
 SNEFRU256 = 0x10000000
 ALL = SNEFRU256*2 - 1
 
-
 #rhash_print values
 RHPR_RAW = 1
 RHPR_HEX = 2
@@ -208,9 +208,9 @@ class RHash(object):
         """Update this object with new data chunk."""
         return self.update(message)
 
-    def update_file(self, filename):
+    def update_file(self, filepath):
         """Update this object with data from the given file."""
-        file = open(filename, 'rb')
+        file = open(filepath, 'rb')
         buf = file.read(8192)
         while len(buf) > 0:
             self.update(buf)
@@ -275,20 +275,42 @@ class RHash(object):
         """Return the message digest."""
         return self._print(0, 0)
 
-def hash_for_msg(message, hash_id):
+# simplified interface functions
+
+def hash_msg(message, hash_id):
     """Compute and return the message digest (in its default format) of the message."""
     handle = RHash(hash_id)
     handle.update(message).finish()
     return str(handle)
 
-def hash_for_file(filename, hash_id):
+def hash_file(filepath, hash_id):
     """Compute and return the message digest (in its default format) of the file content."""
     handle = RHash(hash_id)
-    handle.update_file(filename).finish()
+    handle.update_file(filepath).finish()
     return str(handle)
 
-def magnet_for_file(filename, hash_mask):
+def make_magnet(filepath, hash_mask):
     """Compute and return the magnet link for the file."""
     handle = RHash(hash_mask)
-    handle.update_file(filename).finish()
-    return handle.magnet(filename)
+    handle.update_file(filepath).finish()
+    return handle.magnet(filepath)
+
+# depricated functions
+
+def _deprecation(message):
+    warnings.warn(message, category=DeprecationWarning, stacklevel=2)
+
+def hash_for_msg(message, hash_id):
+    """Depricated function to compute a hash of a message."""
+    _deprecation("Call to deprecated function hash_for_msg(), should use hash_msg().")
+    return hash_msg(message, hash_id)
+
+def hash_for_file(filepath, hash_id):
+    """Depricated function to compute a hash of a file."""
+    _deprecation("Call to deprecated function hash_for_file(), should use hash_file().")
+    return hash_file(filepath, hash_id)
+
+def magnet_for_file(filepath, hash_mask):
+    """Depricated function to compute a magnet link for a file."""
+    _deprecation("Call to deprecated function magnet_for_file(), should use make_magnet().")
+    return make_magnet(filepath, hash_mask)
