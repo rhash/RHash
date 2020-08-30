@@ -459,7 +459,7 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			filepath = make_tpath(dir_path, dirent_get_tname(de));
 			if (!filepath)
 				continue;
-			res  = file_init(&file, filepath, FileInitRunFstat | FileInitUpdatePrintPathLastSlash);
+			res  = file_init(&file, filepath, fstat_bit | FileInitUpdatePrintPathLastSlash);
 			free(filepath);
 			if (res >= 0)
 			{
