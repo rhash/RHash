@@ -68,7 +68,7 @@ extern "C" {
       defined(__POWERPC__) || defined(POWERPC) || defined(__powerpc) || \
       defined(__powerpc__) || defined(__powerpc64__) || defined(__ppc__) || \
       defined(__hpux)  || defined(_MIPSEB) || defined(mc68000) || \
-      defined(__s390__) || defined(__s390x__) || defined(sel)
+      defined(__s390__) || defined(__s390x__) || defined(sel) || defined(__hppa__)
 # define RHASH_BYTE_ORDER RHASH_BYTE_ORDER_BE
 #else
 #  error "Can't detect CPU architechture"
