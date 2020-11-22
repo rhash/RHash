@@ -884,7 +884,7 @@ int file_list_read(file_list_t* list)
 		if (*line == '\0')
 			continue; /* skip empty lines */
 		file_init_by_print_path(&list->current_file, NULL, line,
-			(list->state & FileInitUtf8PrintPath));
+			(list->state & FileInitUtf8PrintPath) | FileInitRunFstat);
 		return 1;
 	}
 	return 0;

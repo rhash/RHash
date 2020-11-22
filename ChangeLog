@@ -1,3 +1,12 @@
+Sun 22 Nov 2020 Aleksey
+	* Bugfix: print correct '%{mtime}' when --file-list is specified
+
+Sat 29 Aug 2020 Theodore Ts'o
+	* Bugfix: only follow symbolic links when --follow is specified
+
+Wed 22 Jul 2020 Aleksey
+	* Bugfix: fix buffer overflow in GOST12
+
 Tue 14 Jul 2020 Aleksey
 	* === Version 1.4.0 ===
 
