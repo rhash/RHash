@@ -113,7 +113,6 @@ char* make_path(const char* dir_path, const char* sub_path, int user_path_separa
 tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* sub_path)
 {
 	wchar_t* result;
-	wchar_t* long_path;
 	size_t len;
 	if (dir_path == 0 || IS_DOT_TSTR(dir_path))
 		dir_len = 0;
@@ -138,10 +137,24 @@ tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* sub_path)
 	}
 	/* append sub_path */
 	memcpy(result + dir_len, sub_path, (len + 1) * sizeof(wchar_t));
-	long_path = get_long_path_if_needed(result);
+	return result;
+}
+
+/**
+ * Return wide-string filepath, obtained by concatinating a directory path and a sub-path.
+ * Windows UNC path is returned if the resulting path is too long.
+ *
+ * @param dir_path (nullable) directory path
+ * @param sub_path the filepath to append to the directory
+ * @return concatinated file path
+ */
+static tpath_t make_wpath_unc(ctpath_t dir_path, wchar_t* sub_path)
+{
+	wchar_t* path = make_wpath(dir_path, (size_t)-1, sub_path);
+	wchar_t* long_path = get_long_path_if_needed(path);
 	if (!long_path)
-		return result;
-	free(result);
+		return path;
+	free(path);
 	return long_path;
 }
 #endif /* _WIN32 */
@@ -213,29 +226,35 @@ enum FileMemoryModeBits {
  */
 int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 {
+#if _WIN32
+	tpath_t long_path;
+#endif
 	memset(file, 0, sizeof(*file));
 	if (path[0] == RSH_T('.') && IS_ANY_TSLASH(path[1]))
 		path += 2;
+	file->real_path = (tpath_t)path;
+	file->mode = (init_flags & FileMaskModeBits) | FileDontFreeRealPath;
+	if ((init_flags & FileInitUpdatePrintPathLastSlash) && opt.path_separator == ALIEN_PATH_SEPARATOR &&
+			!file_get_print_path(file, FPathUtf8 | FileInitUpdatePrintPathLastSlash))
+		return -1;
 #if _WIN32
-	file->real_path = get_long_path_if_needed(path);
-	if (file->real_path)
+	long_path = get_long_path_if_needed(path);
+	if (long_path)
+	{
+		file->real_path = long_path;
 		file->mode = init_flags & FileMaskModeBits;
+	}
 	else
 #endif
 	{
-		if ((init_flags & FileInitReusePath) != 0) {
-			file->real_path = (tpath_t)path;
-			file->mode = (init_flags & FileMaskModeBits) | FileDontFreeRealPath;
-		} else {
+		if ((init_flags & FileInitReusePath) == 0)
+		{
 			file->real_path = rsh_tstrdup(path);
 			file->mode = init_flags & FileMaskModeBits;
 		}
 	}
 	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
 			file_stat(file, (init_flags & FileInitRunLstat)) < 0)
-		return -1;
-	if ((init_flags & FileInitUpdatePrintPathLastSlash) && opt.path_separator == ALIEN_PATH_SEPARATOR &&
-			!file_get_print_path(file, FPathUtf8 | FileInitUpdatePrintPathLastSlash))
 		return -1;
 	return 0;
 }
@@ -279,7 +298,7 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
 			return primary_path_index;
 		}
 		if (dir_path) {
-			file->real_path = make_wpath(dir_path, (size_t)-1, path);
+			file->real_path = make_wpath_unc(dir_path, path);
 			free(path);
 		} else
 			file->real_path = path;
@@ -968,7 +987,7 @@ WIN_DIR* win_wopendir(const wchar_t* dir_path)
 	WIN_DIR* d;
 
 	/* append '\*' to the dir_path */
-	wchar_t* real_path = make_wpath(dir_path, (size_t)-1, L"*");
+	wchar_t* real_path = make_wpath_unc(dir_path, L"*");
 	d = (WIN_DIR*)rsh_malloc(sizeof(WIN_DIR));
 
 	d->hFind = FindFirstFileW(real_path, &d->findFileData);

@@ -1,3 +1,6 @@
+Sun 29 Nov 2020 Aleksey
+	* Bugfix: correctly print long paths on Windows
+
 Sun 22 Nov 2020 Aleksey
 	* Bugfix: print correct '%{mtime}' when --file-list is specified
 
