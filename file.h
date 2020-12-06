@@ -69,6 +69,8 @@ enum FileModeBits {
 	FileInitRunFstat = 0x4000,
 	FileInitRunLstat = 0x8000,
 	FileInitUpdatePrintPathLastSlash = 0x10000,
+	FileInitUpdatePrintPathSlashes = 0x20000,
+	FileMaskUpdatePrintPath = (FileInitUpdatePrintPathLastSlash | FileInitUpdatePrintPathSlashes),
 	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg | FileIsInaccessible),
 	FileMaskIsSpecial = (FileIsData | FileIsList | FileIsStdStream),
 	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial | FileContentIsUtf8)

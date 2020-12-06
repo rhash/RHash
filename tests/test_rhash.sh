@@ -302,16 +302,16 @@ check "$TEST_RESULT" ""
 rm t.sum
 
 new_test "test *accept options:       "
-mkdir test_dir && touch test_dir/file.txt test_dir/file.bin
+mkdir -p test_dir/a && touch test_dir/a/file.txt test_dir/a/file.bin
 # correctly handle MIGW posix path conversion
 echo "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
 # test also --path-separator option
 TEST_RESULT=$( $rhash -rC --simple --accept=.bin --path-separator=$SLASH test_dir )
-check "$TEST_RESULT" "00000000  test_dir/file.bin" .
-TEST_RESULT=$( $rhash -rC --simple --accept=.txt --path-separator=\\ test_dir )
-check "$TEST_RESULT" "00000000  test_dir\\file.txt" .
+check "$TEST_RESULT" "00000000  test_dir/a/file.bin" .
+TEST_RESULT=$( $rhash -rC --simple --accept=.txt --path-separator=\\ test_dir/a )
+check "$TEST_RESULT" "00000000  test_dir\\a\\file.txt" .
 TEST_RESULT=$( $rhash -rc --crc-accept=.bin test_dir 2>/dev/null | sed -n '/Verifying/s/-//gp' )
-match "$TEST_RESULT" "( Verifying test_dir.file\\.bin )"
+match "$TEST_RESULT" "( Verifying test_dir.a.file\\.bin )"
 
 new_test "test ignoring of log files: "
 touch t1.out t2.out
