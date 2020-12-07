@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2020-07-10 03:27+0300\n"
-"PO-Revision-Date: 2019-06-16 17:27+0000\n"
+"PO-Revision-Date: 2020-06-30 11:45+0000\n"
 "Last-Translator: Matthias Loidolt <kedapperdrake@googlemail.com>\n"
 "Language-Team: German <de@li.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2020-05-05 20:20+0000\n"
-"X-Generator: Launchpad (build fbdff7602bd10fb883bf7e2ddcc7fd5a16f60398)\n"
+"X-Launchpad-Export-Date: 2020-12-07 15:12+0000\n"
+"X-Generator: Launchpad (build 4853cb86c14c5a9e513816c8a61121c639b30835)\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:213
@@ -260,11 +260,11 @@ msgstr "Namen der unterstützten Hashes auflisten, einen je Zeile.\n"
 
 #: parse_cmdline.c:99
 msgid "Benchmark selected algorithm.\n"
-msgstr ""
+msgstr "Benchmark ausgewählten Algorithmus.\n"
 
 #: parse_cmdline.c:100
 msgid "Be verbose.\n"
-msgstr ""
+msgstr "Ausführlich sein.\n"
 
 #: parse_cmdline.c:101
 msgid "Process directories recursively.\n"
@@ -303,11 +303,11 @@ msgstr "Höchstens <n> Ebenen von Verzeichnissen herabsteigen.\n"
 
 #: parse_cmdline.c:110
 msgid "Specify hash functions to be calculated using OpenSSL.\n"
-msgstr ""
+msgstr "Geben Sie Hash-Funktionen an, die mit OpenSSL berechnet werden sollen.\n"
 
 #: parse_cmdline.c:111
 msgid "File to output calculation or checking results.\n"
-msgstr ""
+msgstr "Datei zur Ausgabe von Berechnungs- oder Überprüfungsergebnissen.\n"
 
 #: parse_cmdline.c:112
 msgid "File to log errors and verbose information.\n"
