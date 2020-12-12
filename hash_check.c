@@ -441,7 +441,7 @@ static int hash_check_find_str(hc_search* search, const char* format)
 				hv.offset = (unsigned short)(end - hc->data);
 			} else {
 				hv.offset = (unsigned short)(begin - hc->data);
-				hv.format = test_hash_string(&begin, end, &len);
+				hv.format = test_hash_string(&begin, end, &len) & search->hash_type;
 			}
 			if (!hv.format) return 0;
 			if (*search_str == '\3') {
@@ -631,17 +631,22 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 			while (hash_check_find_str(&hs, "$\6\2"));
 			if (hashes->hashes_num > 1)
 				reversed = 1;
-		} else if (hash_check_find_str(&hs, "\2\7")) {
-			if (hs.begin == hs.end) {
-				/* the line contains no file path, only a single hash */
-				single_hash = 1;
-			} else {
-				while (hash_check_find_str(&hs, "\2\6"));
-				/* drop an asterisk before filename if present */
-				if (*hs.begin == '*')
-					hs.begin++;
-			}
-		} else bad = 1;
+		} else {
+			hs.hash_type = FmtAll;
+			if (hash_check_find_str(&hs, "\2\7")) {
+				if (hs.begin == hs.end) {
+					/* the line contains no file path, only a single hash */
+					single_hash = 1;
+				} else {
+					if (hs.hc->hashes_num == 1 && hs.hc->hashes[0].format != FmtBase64)
+						hs.hash_type &= ~FmtBase64;
+					while (hash_check_find_str(&hs, "\2\6"));
+					/* drop an asterisk before filename if present */
+					if (*hs.begin == '*')
+						hs.begin++;
+				}
+			} else bad = 1;
+		}
 
 		if (hs.begin >= hs.end && !single_hash)
 			bad = 1;
