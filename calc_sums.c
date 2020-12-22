@@ -3,7 +3,6 @@
 #include "calc_sums.h"
 #include "hash_print.h"
 #include "output.h"
-#include "platform.h" /* unlink() on unix */
 #include "parse_cmdline.h"
 #include "rhash_main.h"
 #include "win_utils.h"
@@ -94,7 +93,7 @@ static void re_init_rhash_context(struct file_info* info)
  * @param info file data
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-static int calc_sums(struct file_info* info)
+int calc_sums(struct file_info* info)
 {
 	FILE* fd = 0;
 	int res;
@@ -160,7 +159,7 @@ static int calc_sums(struct file_info* info)
  * @param crc32 pointer to integer to receive parsed checksum.
  * @return non zero if crc32 was found, zero otherwise.
  */
-static int find_embedded_crc32(file_t* file, unsigned* crc32)
+int find_embedded_crc32(file_t* file, unsigned* crc32)
 {
 	const char* filepath = file_get_print_path(file, FPathUtf8 | FPathNotNull);
 	const char* e = filepath + strlen(filepath) - 10;
@@ -381,243 +380,6 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 			print_file_time_stats(&info);
 		}
 	}
-	return res;
-}
-
-/**
- * Verify message digests of the file.
- * In a case of fail, the error will be logged.
- *
- * @param info structure file path to process
- * @return 0 on success, 1 on message digests mismatch,
- *     -1/-2 on input/output error
- */
-static int verify_sums(struct file_info* info)
-{
-	timedelta_t timer;
-	int res = 0;
-
-	/* initialize percents output */
-	if (init_percents(info) < 0) {
-		log_error_file_t(&rhash_data.out_file);
-		return -2;
-	}
-	rsh_timer_start(&timer);
-
-	if (FILE_ISBAD(info->file) || calc_sums(info) < 0) {
-		return (finish_percents(info, -1) < 0 ? -2 : -1);
-	}
-	info->time = rsh_timer_stop(&timer);
-
-	if (rhash_data.stop_flags) {
-		report_interrupted();
-		return 0;
-	}
-
-	if ((opt.flags & OPT_EMBED_CRC) &&
-			find_embedded_crc32(info->file, &info->hc.embedded_crc32)) {
-		info->hc.flags |= HC_HAS_EMBCRC32;
-		assert(info->hc.hash_mask & RHASH_CRC32);
-	}
-
-	if (!do_hash_sums_match(&info->hc, info->rctx))
-		res = 1;
-
-	if (finish_percents(info, res) < 0)
-		res = -2;
-
-	if ((opt.flags & OPT_SPEED) && info->sums_flags) {
-		print_file_time_stats(info);
-	}
-	return res;
-}
-
-/**
- * Print the "Verifying <FILE>" heading line.
- *
- * @param file the file containing message digests to verify.
- * @return 0 on success, -1 on fail with error code stored in errno
- */
-static int print_verifying_msg(file_t* file)
-{
-	char dash_line[84];
-	int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
-	int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
-	int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
-	return (count < 0 ? count : res);
-}
-
-/**
- * Verify message digests in a hash file.
- * Lines beginning with ';' and '#' are ignored.
- * In a case of fail, the error will be logged.
- *
- * @param file the file containing message digests to verify.
- * @param chdir true if function should emulate chdir to directory of filepath before checking it.
- * @return 0 on success, -1 on input error, -2 on results output error
- */
-int check_hash_file(file_t* file, int chdir)
-{
-	FILE* fd;
-	file_t parent_dir;
-	file_t* p_parent_dir = 0;
-	char buf[4096];
-	timedelta_t timer;
-	struct file_info info;
-	int res = 0;
-	int line_number = 0;
-	unsigned init_flags = 0;
-	double time;
-
-	/* process --check-embedded option */
-	if (opt.mode & MODE_CHECK_EMBEDDED) {
-		unsigned crc32;
-		if (find_embedded_crc32(file, &crc32)) {
-			/* initialize file_info structure */
-			memset(&info, 0, sizeof(info));
-			info.file = file;
-			info.sums_flags = info.hc.hash_mask = RHASH_CRC32;
-			info.hc.flags = HC_HAS_EMBCRC32;
-			info.hc.embedded_crc32 = crc32;
-
-			res = verify_sums(&info);
-			if (res >= -1 && fflush(rhash_data.out) < 0) {
-				log_error_file_t(&rhash_data.out_file);
-				res = -2;
-			} else if (!rhash_data.stop_flags) {
-				if (res >= 0)
-					rhash_data.ok++;
-				else if (res == -1 && errno == ENOENT)
-					rhash_data.miss++;
-				rhash_data.processed++;
-			}
-		} else {
-			/* TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv */
-			log_warning_msg_file_t(_("file name doesn't contain a CRC32: %s\n"), file);
-			return -1;
-		}
-		return res;
-	}
-
-	/* initialize statistics */
-	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
-	rhash_data.total_size = 0;
-
-	/* open file / prepare file descriptor */
-	if (FILE_ISSTDIN(file)) {
-		fd = stdin;
-	} else if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
-		log_error_file_t(file);
-		return -1;
-	}
-
-	if (print_verifying_msg(file) < 0) {
-		log_error_file_t(&rhash_data.out_file);
-		if (fd != stdin)
-			fclose(fd);
-		return -2;
-	}
-	rsh_timer_start(&timer);
-	memset(&parent_dir, 0, sizeof(parent_dir));
-
-	/* mark the directory part of the path, by setting the pos index */
-	if (chdir) {
-		file_modify_path(&parent_dir, file, NULL, FModifyGetParentDir);
-		p_parent_dir = &parent_dir;
-	}
-
-	/* read hash file line by line */
-	for (line_number = 0; fgets(buf, sizeof(buf), fd); line_number++) {
-		char* line = buf;
-		file_t file_to_check;
-
-		/* skip unicode BOM */
-		if (STARTS_WITH_UTF8_BOM(buf)) {
-			line += 3;
-			if (line_number == 0)
-				init_flags = FileInitUtf8PrintPath; /* hash file is in UTF8 */
-		}
-
-		if (*line == 0)
-			continue; /* skip empty lines */
-
-		if (is_binary_string(line)) {
-			log_error(_("file is binary: %s:%d\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line_number + 1);
-			if (fd != stdin)
-				fclose(fd);
-			file_cleanup(&parent_dir);
-			return -1;
-		}
-
-		/* skip comments and empty lines */
-		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
-			continue;
-
-		memset(&info, 0, sizeof(info));
-
-		if (!hash_check_parse_line(line, &info.hc, !feof(fd)))
-			continue;
-		if (info.hc.hash_mask == 0)
-			continue;
-
-		/* check if the hash file contains a message digest without a filename */
-		if (info.hc.file_path != NULL) {
-			int is_absolute = IS_PATH_SEPARATOR(info.hc.file_path[0]);
-			IF_WINDOWS(is_absolute = is_absolute || (info.hc.file_path[0] && info.hc.file_path[1] == ':'));
-			file_init_by_print_path(&file_to_check, (is_absolute ? NULL : p_parent_dir), info.hc.file_path, init_flags);
-		} else {
-			if (file_modify_path(&file_to_check, file, NULL, FModifyRemoveExtension) < 0) {
-				/* note: trailing whitespaces were removed from line by hash_check_parse_line() */
-				log_error(_("%s: can't parse line \"%s\"\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line);
-				continue;
-			}
-		}
-
-		info.file = &file_to_check;
-		info.sums_flags = info.hc.hash_mask;
-		file_stat(&file_to_check, 0);
-
-		/* verify message digests of the file */
-		res = verify_sums(&info);
-
-		if (res >= -1 && fflush(rhash_data.out) < 0) {
-			log_error_file_t(&rhash_data.out_file);
-			res = -2;
-		}
-		file_cleanup(&file_to_check);
-
-		if (rhash_data.stop_flags || res < -1) {
-			break; /* stop on fatal error */
-		}
-
-		/* update statistics */
-		if (res == 0)
-			rhash_data.ok++;
-		else if (res == -1 && errno == ENOENT)
-			rhash_data.miss++;
-		rhash_data.processed++;
-	}
-	file_cleanup(&parent_dir);
-	time = rsh_timer_stop(&timer);
-
-	if (res >= -1 && (rsh_fprintf(rhash_data.out, "%s\n", str_set(buf, '-', 80)) < 0 ||
-			print_check_stats() < 0)) {
-		log_error_file_t(&rhash_data.out_file);
-		res = -2;
-	}
-
-	if (rhash_data.processed != rhash_data.ok)
-		rhash_data.non_fatal_error = 1;
-
-	if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
-		print_time_stats(time, rhash_data.total_size, 1);
-
-	rhash_data.processed = 0;
-	/* check for input errors */
-	if (res >= 0 && ferror(fd))
-		res = -1;
-	if (fd != stdin)
-		fclose(fd);
 	return res;
 }
 

@@ -51,6 +51,8 @@ void log_error_file_t(struct file_t* file);
 void log_error_msg_file_t(const char* format, struct file_t* file);
 
 void report_interrupted(void);
+int print_verifying_header(struct file_t* file);
+int print_verifying_footer(void);
 int print_check_stats(void);
 
 void print_time_stats(double time, uint64_t size, int total);

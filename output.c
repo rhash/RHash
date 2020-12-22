@@ -627,6 +627,32 @@ void setup_percents(void)
 /* misc output functions */
 
 /**
+ * Print the "Verifying <FILE>" heading line.
+ *
+ * @param file the file containing message digests to verify.
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+int print_verifying_header(file_t* file)
+{
+	char dash_line[84];
+	int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
+	int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
+	int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
+	return (count < 0 ? count : res);
+}
+
+/**
+ * Print a line consisting of 80 dashes.
+ *
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+int print_verifying_footer(void)
+{
+	char dash_line[84];
+	return rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', 80));
+}
+
+/**
  * Print total statistics of hash file checking.
  *
  * @return 0 on success, -1 on i/o error with error code stored in errno

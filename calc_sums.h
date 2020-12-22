@@ -24,10 +24,11 @@ struct file_info {
 	struct hash_check hc; /* message digests parsed from a hash file */
 };
 
-int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
+int calc_sums(struct file_info* info);
 int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file);
-int check_hash_file(file_t* file, int chdir);
+int find_embedded_crc32(file_t* file, unsigned* crc32);
 int rename_file_by_embeding_crc32(struct file_info* info);
+int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
 
 /* Benchmarking */
 

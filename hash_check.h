@@ -29,6 +29,7 @@ typedef struct hash_value
 	unsigned char format;
 } hash_value;
 
+struct file_t;
 struct rhash_context;
 
 /**
@@ -50,6 +51,7 @@ typedef struct hash_check
 
 int hash_check_parse_line(char* line, hash_check* hashes, int check_eol);
 int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx);
+int check_hash_file(struct file_t* file, int chdir);
 
 void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);
 void rhash_hex_to_byte(const char* str, unsigned char* bin, int len);
