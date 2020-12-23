@@ -1037,7 +1037,7 @@ int check_hash_file(file_t* file, int chdir)
 		file_modify_path(&parent_dir, file, NULL, FModifyGetParentDir);
 		p_parent_dir = &parent_dir;
 	}
-	if (!expected_hash_mask)
+	if (!expected_hash_mask && !(opt.flags & OPT_NO_DETECT_BY_EXT))
 		expected_hash_mask = hash_mask_by_file_ext(file);
 
 	/* read hash file line by line */

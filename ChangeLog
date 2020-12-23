@@ -1,3 +1,7 @@
+Thu 24 Dec 2020 Aleksey
+	* support --no-detect-by-ext option
+	* speed up verification by detecting hash type from file extension
+
 Sun 06 Dec 2020 Aleksey
 	* Bugfix: correctly print long paths on Windows
 
@@ -13,13 +17,13 @@ Wed 22 Jul 2020 Aleksey
 Tue 14 Jul 2020 Aleksey
 	* === Version 1.4.0 ===
 
-Sat Jul 11 2020 Aleksey
+Sat 11 Jul 2020 Aleksey
 	* librhash: supported rhash_get_version() - get library version
 
 Mon 29 Jun 2020 Aleksey
 	* Bugfix: fix broken output on Win 7
 
-Sun Apr 19 2020 Alexey Dokuchaev, Aleksey
+Sun 19 Apr 2020 Alexey Dokuchaev, Aleksey
 	* Bugfix: fix broken 'configure --localedir=<dir>' option
 
 Fri 14 Feb 2020 Fabrice Fontaine
