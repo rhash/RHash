@@ -216,7 +216,7 @@ static int file_set_load_from_crc_file(file_set* set, file_t* file)
 		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
 			continue;
 		/* parse a hash file line */
-		if (hash_check_parse_line(line, &hc, !feof(fd))) {
+		if (hash_check_parse_line(line, &hc, opt.sum_flags, !feof(fd))) {
 			/* put file path into the file set */
 			if (hc.file_path) file_set_add_name(set, hc.file_path);
 		}

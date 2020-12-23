@@ -49,7 +49,7 @@ typedef struct hash_check
 	hash_value hashes[HC_MAX_HASHES];
 } hash_check;
 
-int hash_check_parse_line(char* line, hash_check* hashes, int check_eol);
+int hash_check_parse_line(char* line, hash_check* hashes, unsigned expected_hash_mask, int check_eol);
 int do_hash_sums_match(hash_check* hashes, struct rhash_context* ctx);
 int check_hash_file(struct file_t* file, int chdir);
 

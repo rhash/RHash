@@ -525,9 +525,11 @@ static int hash_check_find_str(hc_search* search, const char* format)
  *
  * @param line the line to parse
  * @param hashes structure to store parsed message digests, file path and file size
+ * @param expected_hash_mask hash mask of expected algorithms
+ * @param check_eol boolean flag meaning that '\n' at the end of the line is required
  * @return 1 on success, 0 if couldn't parse the line
  */
-int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
+int hash_check_parse_line(char* line, hash_check* hashes, unsigned expected_hash_mask, int check_eol)
 {
 	hc_search hs;
 	char* le = strchr(line, '\0'); /* set pointer to the end of line */
@@ -704,8 +706,8 @@ int hash_check_parse_line(char* line, hash_check* hashes, int check_eol)
 				mask |= hash_check_mask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
 			}
 			assert(mask != 0);
-			if ((mask & opt.sum_flags) != 0)
-				mask &= opt.sum_flags;
+			if ((mask & expected_hash_mask) != 0)
+				mask &= expected_hash_mask;
 			hv->hash_id = mask;
 		}
 		hashes->hash_mask |= hv->hash_id;
@@ -951,6 +953,37 @@ static int check_embedded_crc32(file_t* file)
 	return res;
 }
 
+/*
+ * Detect hash mask by the file extension.
+ *
+ * @param file the file which extension will be checked
+ * @return hash_id on success, 0 on fail
+ */
+static unsigned hash_mask_by_file_ext(file_t* file)
+{
+	const char* basename = file_get_print_path(file, FPathUtf8 | FPathBaseName);
+	if (basename) {
+		const char* ext = strrchr(basename, '.');
+		if (ext && *(++ext) != '\0') {
+			size_t length;
+			char buffer[20];
+			unsigned hash_id;
+			for (length = 0; '-' <= ext[length] && ext[length] <= 'z'; length++) {
+				if (length >= 20)
+					return 0; /* limit hash name length */
+				buffer[length] = toupper(ext[length]);
+			}
+			if (ext[length] == '\0') {
+				buffer[length] = '\0';
+				hash_id = bsd_hash_name_to_id(buffer, length);
+				if (hash_id != 0)
+					return hash_id;
+			}
+		}
+	}
+	return 0;
+}
+
 /**
  * Verify message digests in a hash file.
  * Lines beginning with ';' and '#' are ignored.
@@ -971,6 +1004,7 @@ int check_hash_file(file_t* file, int chdir)
 	int res = 0;
 	int line_number = 0;
 	unsigned init_flags = 0;
+	unsigned expected_hash_mask = opt.sum_flags;
 	double time;
 
 	/* process --check-embedded option */
@@ -1003,6 +1037,8 @@ int check_hash_file(file_t* file, int chdir)
 		file_modify_path(&parent_dir, file, NULL, FModifyGetParentDir);
 		p_parent_dir = &parent_dir;
 	}
+	if (!expected_hash_mask)
+		expected_hash_mask = hash_mask_by_file_ext(file);
 
 	/* read hash file line by line */
 	for (line_number = 0; fgets(buf, sizeof(buf), fd); line_number++) {
@@ -1033,7 +1069,7 @@ int check_hash_file(file_t* file, int chdir)
 
 		memset(&info, 0, sizeof(info));
 
-		if (!hash_check_parse_line(line, &info.hc, !feof(fd)))
+		if (!hash_check_parse_line(line, &info.hc, expected_hash_mask, !feof(fd)))
 			continue;
 		if (info.hc.hash_mask == 0)
 			continue;
