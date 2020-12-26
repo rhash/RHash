@@ -1,5 +1,8 @@
 /* win_utils.c - utility functions for Windows and CygWin */
 #if defined(_WIN32) || defined(__CYGWIN__)
+
+/* Fix #138: require to use MSVCRT implementation of *printf functions */
+#define __USE_MINGW_ANSI_STDIO 0
 #include "win_utils.h"
 #include <windows.h>
 
