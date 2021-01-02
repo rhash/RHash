@@ -18,7 +18,7 @@
  *    Cryptographic Hash Function EDON-R - Submission to NIST, 2008
  *
  * EDON-R has been designed to be much more efficient than SHA-2
- * cryptographic hash functions, offering same or better security.
+ * cryptographic hash functions, offering the same or better security.
  */
 
 #include <string.h>
@@ -311,34 +311,34 @@ static void rhash_edonr256_process_block(unsigned hash[16], const unsigned* bloc
 		uint32_t p24, p25, p26, p27, p28, p29, p30, p31;
 
 		/* First row of quasigroup e-transformations */
-		Q256( block[15], block[14], block[13], block[12], block[11], block[10], block[ 9], block[ 8],
+		Q256(block[15], block[14], block[13], block[12], block[11], block[10], block[ 9], block[ 8],
 			block[ 0], block[ 1], block[ 2], block[ 3], block[ 4], block[ 5], block[ 6], block[ 7],
 			p16, p17, p18, p19, p20, p21, p22, p23);
-		Q256( p16, p17, p18, p19, p20, p21, p22, p23,
+		Q256(p16, p17, p18, p19, p20, p21, p22, p23,
 			block[ 8], block[ 9], block[10], block[11], block[12], block[13], block[14], block[15],
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Second row of quasigroup e-transformations */
-		Q256( hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15],
+		Q256(hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15],
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			p16,  p17, p18, p19, p20, p21, p22, p23);
-		Q256( p16,  p17, p18, p19, p20, p21, p22, p23,
+		Q256(p16,  p17, p18, p19, p20, p21, p22, p23,
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Third row of quasigroup e-transformations */
-		Q256( p16,  p17, p18, p19, p20, p21, p22, p23,
+		Q256(p16,  p17, p18, p19, p20, p21, p22, p23,
 			hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
 			p16,  p17, p18, p19, p20, p21, p22, p23);
-		Q256( p24, p25, p26, p27, p28, p29, p30, p31,
+		Q256(p24, p25, p26, p27, p28, p29, p30, p31,
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Fourth row of quasigroup e-transformations */
-		Q256( block[ 7], block[ 6], block[ 5], block[ 4], block[ 3], block[ 2], block[ 1], block[ 0],
+		Q256(block[ 7], block[ 6], block[ 5], block[ 4], block[ 3], block[ 2], block[ 1], block[ 0],
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7]);
-		Q256( hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
+		Q256(hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]);
 
@@ -363,39 +363,39 @@ static void rhash_edonr512_process_block(uint64_t hash[16], const uint64_t* bloc
 		uint64_t p24, p25, p26, p27, p28, p29, p30, p31;
 
 		/* First row of quasigroup e-transformations */
-		Q512( block[15], block[14], block[13], block[12], block[11], block[10], block[ 9], block[ 8],
+		Q512(block[15], block[14], block[13], block[12], block[11], block[10], block[ 9], block[ 8],
 			block[ 0], block[ 1], block[ 2], block[ 3], block[ 4], block[ 5], block[ 6], block[ 7],
 			p16, p17, p18, p19, p20, p21, p22, p23);
-		Q512( p16, p17, p18, p19, p20, p21, p22, p23,
+		Q512(p16, p17, p18, p19, p20, p21, p22, p23,
 			block[ 8], block[ 9], block[10], block[11], block[12], block[13], block[14], block[15],
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Second row of quasigroup e-transformations */
-		Q512( hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15],
+		Q512(hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15],
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			p16,  p17, p18, p19, p20, p21, p22, p23);
-		Q512( p16,  p17, p18, p19, p20, p21, p22, p23,
+		Q512(p16,  p17, p18, p19, p20, p21, p22, p23,
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Third row of quasigroup e-transformations */
-		Q512( p16,  p17, p18, p19, p20, p21, p22, p23,
+		Q512(p16,  p17, p18, p19, p20, p21, p22, p23,
 			hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
 			p16,  p17, p18, p19, p20, p21, p22, p23);
-		Q512( p24, p25, p26, p27, p28, p29, p30, p31,
+		Q512(p24, p25, p26, p27, p28, p29, p30, p31,
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			p24, p25, p26, p27, p28, p29, p30, p31);
 
 		/* Fourth row of quasigroup e-transformations */
-		Q512( block[ 7], block[ 6], block[ 5], block[ 4], block[ 3], block[ 2], block[ 1], block[ 0],
+		Q512(block[ 7], block[ 6], block[ 5], block[ 4], block[ 3], block[ 2], block[ 1], block[ 0],
 			p16,  p17, p18, p19, p20, p21, p22, p23,
 			hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7]);
-		Q512( hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
+		Q512(hash[ 0], hash[ 1], hash[ 2], hash[ 3], hash[ 4], hash[ 5], hash[ 6], hash[ 7],
 			p24, p25, p26, p27, p28, p29, p30, p31,
 			hash[ 8], hash[ 9], hash[10], hash[11], hash[12], hash[13], hash[14], hash[15]);
 
 		if (!--count) return;
-		block += edonr256_block_size / sizeof(uint64_t);
+		block += edonr512_block_size / sizeof(uint64_t);
 	};
 }
 

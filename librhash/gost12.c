@@ -841,7 +841,7 @@ void rhash_gost12_update(gost12_ctx* ctx, const unsigned char* msg, size_t size)
 	}
 }
 
-void rhash_gost12_final(gost12_ctx* ctx, unsigned char result[32])
+void rhash_gost12_final(gost12_ctx* ctx, unsigned char* result)
 {
 	uint64_t unprocessed_bits_count[8] = { 0,0,0,0,0,0,0,0 };
 	size_t index_u64 = ctx->index >> 3;
