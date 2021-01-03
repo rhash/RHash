@@ -513,6 +513,37 @@ void free_print_list(print_item* list)
  * Initialization of internal data
  *=========================================================================*/
 
+#define VNUM(v, index) (((unsigned)v >> (24 - index * 8)) & 0xff)
+
+/**
+ * Get text representation of librhash version.
+ */
+static const char* get_librhash_version(void)
+{
+	static char buf[20];
+	rhash_uptr_t v = rhash_get_version();
+	if (v == RHASH_ERROR) {
+		/* test for version-specific librhash features */
+		int algorithm_count = rhash_count();
+		if (rhash_transmit(14, NULL, 0, 0) != RHASH_ERROR)
+			v = 0x01040000;
+		else if (rhash_print(NULL, NULL, RHASH_CRC32, (RHPR_RAW | RHPR_URLENCODE)) != 4)
+			v = 0x01030900;
+		else if (algorithm_count == 29)
+			v = 0x01030800;
+		else if (algorithm_count == 27)
+			v = 0x01030700;
+		else if (rhash_get_openssl_supported_mask() != RHASH_ERROR)
+			v = 0x01030600;
+		else if (algorithm_count == 26)
+			return "1.3.[0-5]";
+		else
+			return "1.2.*";
+	}
+	sprintf(buf, "%d.%d.%d", VNUM(v, 0), VNUM(v, 1), VNUM(v, 2));
+	return buf;
+}
+
 /**
  * Initialize information about message digests, stored in the
  * hash_info_table global variable.
@@ -530,15 +561,12 @@ void init_hash_info_table(void)
 
 	/* prevent crash on incompatible librhash */
 	if (rhash_count() < RHASH_HASH_COUNT) {
-		rsh_fprintf(stderr, "fatal error: incompatible librhash version\n");
+		rsh_fprintf(stderr, "fatal error: incompatible librhash version is loaded: %s\n", get_librhash_version());
 		rsh_exit(2);
-	}
+	} else if (RHASH_HASH_COUNT != rhash_count())
+		log_warning("inconsistent librhash version is loaded: %s\n", get_librhash_version());
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
-	/* check consistency with librhash */
-	if (RHASH_HASH_COUNT != rhash_count())
-		log_warning("old, incompatible version of librhash is loaded\n");
-
 	for (bit = 1; bit && bit <= fullmask; bit = bit << 1) {
 		const char* p;
 		char* e;

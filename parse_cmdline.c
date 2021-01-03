@@ -135,7 +135,7 @@ static void print_help(void)
  */
 static void list_hashes(void)
 {
-	int id;
+	unsigned id;
 	for (id = 1; id < RHASH_ALL_HASHES; id <<= 1) {
 		const char* hash_name = rhash_get_name(id);
 		if (hash_name) rsh_fprintf(rhash_data.out, "%s\n", hash_name);
