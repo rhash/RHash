@@ -1,3 +1,6 @@
+Sun 03 Jan 2021 Aleksey
+	* Bugfix: fix computing of EDON-R 512 by big data chunks
+
 Thu 24 Dec 2020 Aleksey
 	* support --no-detect-by-ext option
 	* speed up verification by detecting hash type from file extension
