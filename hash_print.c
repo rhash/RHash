@@ -552,7 +552,7 @@ void init_hash_info_table(void)
 {
 	unsigned bit;
 	const unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
-	const unsigned custom_bsd_name = RHASH_RIPEMD160 |
+	const unsigned custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512;
 	const unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
@@ -615,6 +615,12 @@ void init_hash_info_table(void)
 					break;
 				case RHASH_SHA512:
 					info->bsd_name = "SHA512";
+					break;
+				case RHASH_BLAKE2S:
+					info->bsd_name = "BLAKE2s";
+					break;
+				case RHASH_BLAKE2B:
+					info->bsd_name = "BLAKE2b";
 					break;
 			}
 		} else

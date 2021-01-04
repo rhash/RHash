@@ -281,9 +281,10 @@ static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
  */
 static unsigned bsd_hash_name_to_id(const char* name, unsigned length)
 {
-#define code2mask_size (18 * 2)
+#define code2mask_size (19 * 2)
 	static unsigned code2mask[code2mask_size] = {
 		FOURC2U('A', 'I', 'C', 'H'), RHASH_AICH,
+		FOURC2U('B', 'L', 'A', 'K'), (RHASH_BLAKE2S | RHASH_BLAKE2B),
 		FOURC2U('B', 'T', 'I', 'H'), RHASH_BTIH,
 		FOURC2U('C', 'R', 'C', '3'), (RHASH_CRC32 | RHASH_CRC32C),
 		FOURC2U('E', 'D', '2', 'K'), RHASH_ED2K,

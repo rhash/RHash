@@ -88,8 +88,9 @@ static void print_help(void)
 	print_help_line("      --gost94-cryptopro ", digest_format, _("GOST R 34.11-94 CryptoPro"));
 	print_help_line("      --ripemd160  ", digest_format, "RIPEMD-160");
 	print_help_line("      --has160     ", digest_format, "HAS-160");
-	print_help_line("      --edonr256, --edonr512  ", digest_format, "EDON-R 256/512");
-	print_help_line("      --snefru128, --snefru256  ", digest_format, "SNEFRU-128/256");
+	print_help_line("      --blake2s,   --blake2b   ", digest_format, "BLAKE2S/BLAKE2B");
+	print_help_line("      --edonr256,  --edonr512  ", digest_format, "EDON-R 256/512");
+	print_help_line("      --snefru128, --snefru256 ", digest_format, "SNEFRU-128/256");
 	print_help_line("  -a, --all        ", _("Calculate all supported hash functions.\n"));
 	print_help_line("  -c, --check      ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
@@ -395,6 +396,8 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "snefru256", &opt.sum_flags, RHASH_SNEFRU256 },
 	{ F_UFLG,   0,   0, "edonr256",  &opt.sum_flags, RHASH_EDONR256 },
 	{ F_UFLG,   0,   0, "edonr512",  &opt.sum_flags, RHASH_EDONR512 },
+	{ F_UFLG,   0,   0, "blake2s",   &opt.sum_flags, RHASH_BLAKE2S },
+	{ F_UFLG,   0,   0, "blake2b",   &opt.sum_flags, RHASH_BLAKE2B },
 	{ F_UFLG, 'L',   0, "ed2k-link", &opt.sum_flags, OPT_ED2K_LINK },
 
 	/* output formats */
@@ -1008,11 +1011,13 @@ static void set_default_sums_flags(const char* progName)
 	else if (strstr(buf, "gost94"))  res |= RHASH_GOST94;
 	if (strstr(buf, "has160"))  res |= RHASH_HAS160;
 	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160"))  res |= RHASH_RIPEMD160;
-	if (strstr(buf, "whirlpool"))  res |= RHASH_WHIRLPOOL;
-	if (strstr(buf, "edonr256"))   res |= RHASH_EDONR256;
-	if (strstr(buf, "edonr512"))   res |= RHASH_EDONR512;
-	if (strstr(buf, "snefru256"))  res |= RHASH_SNEFRU128;
-	if (strstr(buf, "snefru128"))  res |= RHASH_SNEFRU256;
+	if (strstr(buf, "whirlpool")) res |= RHASH_WHIRLPOOL;
+	if (strstr(buf, "edonr256"))  res |= RHASH_EDONR256;
+	if (strstr(buf, "edonr512"))  res |= RHASH_EDONR512;
+	if (strstr(buf, "blake2s"))   res |= RHASH_BLAKE2S;
+	if (strstr(buf, "blake2b"))   res |= RHASH_BLAKE2B;
+	if (strstr(buf, "snefru256")) res |= RHASH_SNEFRU128;
+	if (strstr(buf, "snefru128")) res |= RHASH_SNEFRU256;
 	if (strstr(buf, "ed2k-link")) res |= OPT_ED2K_LINK;
 	else if (strstr(buf, "ed2k")) res |= RHASH_ED2K;
 

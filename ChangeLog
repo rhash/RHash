@@ -1,3 +1,6 @@
+Mon 04 Jan 2021 Aleksey
+	* supported --blake2s, --blake2b options for the BLAKE2 hash functions
+
 Sun 03 Jan 2021 Aleksey
 	* Bugfix: fix computing of EDON-R 512 by big data chunks
 
