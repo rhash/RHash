@@ -2,8 +2,8 @@
 
 include config.mak
 
-HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_timing.h rhash_torrent.h aich.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h sha3.h ripemd-160.h gost12.h gost94.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
-SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c rhash_torrent.c aich.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
+HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_timing.h rhash_torrent.h aich.h blake2b.h blake2s.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha256.h sha512.h sha3.h ripemd-160.h gost12.h gost94.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
+SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_timing.c rhash_torrent.c aich.c blake2b.c blake2s.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
 OBJECTS = $(SOURCES:.c=.o)
 LIB_HEADERS = rhash.h rhash_torrent.h
 SO_HEADERS = $(LIB_HEADERS) $(LEGACY_HEADERS)
@@ -70,6 +70,12 @@ algorithms.o: algorithms.c byte_order.h ustd.h rhash.h algorithms.h \
  aich.h sha1.h crc32.h ed2k.h md4.h edonr.h gost12.h gost94.h has160.h \
  md5.h ripemd-160.h snefru.h sha256.h sha512.h sha3.h tiger.h torrent.h \
  tth.h whirlpool.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+blake2b.o: blake2b.c blake2b.h ustd.h byte_order.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+blake2s.o: blake2s.c blake2s.h ustd.h byte_order.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 byte_order.o: byte_order.c byte_order.h ustd.h

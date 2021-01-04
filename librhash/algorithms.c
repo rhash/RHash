@@ -23,6 +23,8 @@
 
 /* header files of all supported hash sums */
 #include "aich.h"
+#include "blake2b.h"
+#include "blake2s.h"
 #include "crc32.h"
 #include "ed2k.h"
 #include "edonr.h"
@@ -94,6 +96,8 @@ rhash_info info_sha384 = { RHASH_SHA384,     F_BE64, 48, "SHA-384", "sha384" };
 rhash_info info_sha512 = { RHASH_SHA512,     F_BE64, 64, "SHA-512", "sha512" };
 rhash_info info_edr256 = { RHASH_EDONR256,   F_LE32, 32, "EDON-R256", "edon-r256" };
 rhash_info info_edr512 = { RHASH_EDONR512,   F_LE64, 64, "EDON-R512", "edon-r512" };
+rhash_info info_blake2s = { RHASH_BLAKE2S,   F_LE32, 32, "BLAKE2S", "blake2s" };
+rhash_info info_blake2b = { RHASH_BLAKE2B,   F_LE64, 64, "BLAKE2B", "blake2b" };
 rhash_info info_sha3_224 = { RHASH_SHA3_224, F_LE64, 28, "SHA3-224", "sha3-224" };
 rhash_info info_sha3_256 = { RHASH_SHA3_256, F_LE64, 32, "SHA3-256", "sha3-256" };
 rhash_info info_sha3_384 = { RHASH_SHA3_384, F_LE64, 48, "SHA3-384", "sha3-384" };
@@ -107,7 +111,6 @@ rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" 
 #define fin(name) ((pfinal_t)(name##_final))
 #define iuf(name) ini(name), upd(name), fin(name)
 #define iuf2(name1, name2) ini(name1), upd(name2), fin(name2)
-#define diuf(name) dgshft(name), ini(name), upd(name), fin(name)
 
 /* information about all supported hash functions */
 rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
@@ -141,6 +144,8 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
 	{ &info_crc32c, sizeof(uint32_t), 0, iuf(rhash_crc32c), 0 }, /* 32 bit */
 	{ &info_snf128, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru128, rhash_snefru), 0 }, /* 128 bit */
 	{ &info_snf256, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru256, rhash_snefru), 0 }, /* 256 bit */
+	{ &info_blake2s, sizeof(blake2s_ctx),  dgshft(blake2s), iuf(rhash_blake2s), 0 },  /* 256 bit */
+	{ &info_blake2b, sizeof(blake2b_ctx),  dgshft(blake2b), iuf(rhash_blake2b), 0 },  /* 512 bit */
 };
 
 /**
