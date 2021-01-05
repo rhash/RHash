@@ -28,10 +28,10 @@ typedef const file_tchar* ctpath_t;
 /* Generic path functions */
 char* make_path(const char* dir, const char* filename, int user_path_separator);
 #ifdef _WIN32
-tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* filename);
-# define make_tpath(dir_path, filename) make_wpath(dir_path, (size_t)-1, filename)
+tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, ctpath_t sub_path);
+# define make_tpath(dir_path, sub_path) make_wpath(dir_path, (size_t)-1, sub_path)
 #else
-# define make_tpath(dir_path, filename) make_path(dir_path, filename, 0)
+# define make_tpath(dir_path, sub_path) make_path(dir_path, sub_path, 0)
 #endif /* _WIN32 */
 
 int is_regular_file(const char* path); /* shall be deprecated */

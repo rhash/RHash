@@ -553,89 +553,125 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 	}
 }
 
+#ifdef _WIN32
+# define rsh_tgetenv(name) _wgetenv(name)
+#else
+# define rsh_tgetenv(name) getenv(name)
+#endif
+#define COUNTOF(array) (sizeof(array) / sizeof(*array))
+enum ConfigLookupFlags
+{
+	ConfFlagNeedSplit = 8,
+	ConfFlagNoVars = 16
+};
+
+/**
+ * Check if a config file, specified by path subparts, is a regular file.
+ * On success the resulting path is stored as rhash_data.config_file.
+ *
+ * @param path_parts subparts of the path
+ * @param flags check flags
+ * @return 1 if the file is regular, 0 otherwise
+ */
+static int try_config(ctpath_t path_parts[], unsigned flags)
+{
+	const size_t parts_count = flags & 3;
+	tpath_t allocated = NULL;
+	ctpath_t path = NULL;
+	size_t i;
+	for (i = 0; i < parts_count; i++) {
+		ctpath_t sub_path = path_parts[i];
+		if (sub_path[0] == RSH_T('$') && !(flags & ConfFlagNoVars)) {
+			sub_path = rsh_tgetenv(sub_path + 1);
+			if (!sub_path || !sub_path[0]) {
+				free(allocated);
+				return 0;
+			}
+#ifndef _WIN32
+			/* check if the variable should be splitted */
+			if (flags == (2 | ConfFlagNeedSplit) && i == 0) {
+				tpath_t next;
+				ctpath_t parts[2];
+				parts[1] = path_parts[1];
+				sub_path = allocated = strdup(sub_path);
+				do {
+					next = strchr(sub_path, ':');
+					if (next)
+						*(next++) = '\0';
+					if (sub_path[0]) {
+						parts[0] = sub_path;
+						if (try_config(parts, COUNTOF(parts) | ConfFlagNoVars)) {
+							free(allocated);
+							return 1;
+						}
+					}
+					sub_path = next;
+				} while(sub_path);
+				free(allocated);
+				return 0;
+			}
+#endif
+		}
+		if (path) {
+			tpath_t old_allocated = allocated;
+			path = allocated = make_tpath(path, sub_path);
+			free(old_allocated);
+		} else {
+			path = sub_path;
+		}
+	}
+	assert(!rhash_data.config_file.real_path);
+	{
+		unsigned init_flags = FileInitRunFstat | (!allocated ? FileInitReusePath : 0);
+		int res = file_init(&rhash_data.config_file, path, init_flags);
+		free(allocated);
+		if (res == 0 && FILE_ISREG(&rhash_data.config_file))
+			return 1;
+		file_cleanup(&rhash_data.config_file);
+		return 0;
+	}
+}
+
 /**
  * Search for config file.
  *
- * @return the relative path to config file
+ * @return 1 if config file is found, 0 otherwise
  */
-static const char* find_conf_file(void)
+static int find_conf_file(void)
 {
 #ifndef SYSCONFDIR
 # define SYSCONFDIR "/etc"
 #endif
-#define CONFIG_FILENAME "rhashrc"
 
-	char* dir1;
-	char* path;
+#ifndef _WIN32
+	/* Linux/Unix part */
+	static ctpath_t xdg_conf_home[2] = { "$XDG_CONFIG_HOME", "rhash/rhashrc" };
+	static ctpath_t xdg_conf_default[2] = { "$HOME", ".config/rhash/rhashrc" };
+	static ctpath_t xdg_conf_dirs[2] = { "$XDG_CONFIG_DIRS", "rhash/rhashrc" };
+	static ctpath_t home_conf[2] = { "$HOME", ".rhashrc" };
+	static ctpath_t sysconf_dir[1] = { SYSCONFDIR "/rhashrc" };
 
-#ifndef _WIN32 /* Linux/Unix part */
-	/* first check for $XDG_CONFIG_HOME/rhash/rhashrc file */
-	if ( (dir1 = getenv("XDG_CONFIG_HOME")) ) {
-		dir1 = make_path(dir1, "rhash", 0);
-		path = make_path(dir1, CONFIG_FILENAME, 0);
-		free(dir1);
-		if (is_regular_file(path)) {
-			rsh_vector_add_ptr(opt.mem, path);
-			return (conf_opt.config_file = path);
-		}
-		free(path);
-	}
-	/* then check for $HOME/.rhashrc file */
-	if ( (dir1 = getenv("HOME")) ) {
-		path = make_path(dir1, ".rhashrc", 0);
-		if (is_regular_file(path)) {
-			rsh_vector_add_ptr(opt.mem, path);
-			return (conf_opt.config_file = path);
-		}
-		free(path);
-	}
-	/* then check for global config */
-	path = SYSCONFDIR "/" CONFIG_FILENAME;
-	if (is_regular_file(path)) {
-		return (conf_opt.config_file = path);
-	}
+	return (try_config(xdg_conf_home, COUNTOF(xdg_conf_home)) ||
+			try_config(xdg_conf_default, COUNTOF(xdg_conf_default)) ||
+			try_config(xdg_conf_dirs, COUNTOF(xdg_conf_dirs) | ConfFlagNeedSplit) ||
+			try_config(home_conf, COUNTOF(home_conf)) ||
+			try_config(sysconf_dir, COUNTOF(sysconf_dir)));
 
 #else /* _WIN32 */
-	wchar_t* program_dir = get_program_dir();
 
-	/* first check for the %APPDATA%\RHash\rhashrc config */
-	if ( (dir1 = getenv("APPDATA")) ) {
-		dir1 = make_path(dir1, "RHash", 0);
-		path = make_path(dir1, CONFIG_FILENAME, 0);
-		free(dir1);
-		if (is_regular_file(path)) {
-			rsh_vector_add_ptr(opt.mem, path);
-			return (conf_opt.config_file = path);
-		}
-		free(path);
+	static ctpath_t app_data[2] = { L"$APPDATA", L"RHash\\rhashrc" };
+	static ctpath_t home_conf[3] = { L"$HOMEDRIVE", L"$HOMEPATH", L"rhashrc" };
+
+	if (try_config(app_data, COUNTOF(app_data)) || try_config(home_conf, COUNTOF(home_conf))) {
+		return 1;
+	} else {
+		tpath_t prog_dir[2];
+		prog_dir[0] = get_program_dir();
+		prog_dir[1] = L"rhashrc";
+		return try_config((ctpath_t*)prog_dir, COUNTOF(prog_dir));
 	}
 
-	/* then check for %HOMEDRIVE%%HOMEPATH%\rhashrc */
-	/* note that %USERPROFILE% is generally not a user home dir */
-	if ( (dir1 = getenv("HOMEDRIVE")) && (path = getenv("HOMEPATH"))) {
-		dir1 = make_path(dir1, path, 0);
-		path = make_path(dir1, CONFIG_FILENAME, 0);
-		free(dir1);
-		if (is_regular_file(path)) {
-			rsh_vector_add_ptr(opt.mem, path);
-			return (conf_opt.config_file = path);
-		}
-		free(path);
-	}
-
-	/* check for ${PROGRAM_DIR}\rhashrc */
-	if (program_dir && program_dir[0] && (dir1 = convert_wcs_to_str(program_dir, ConvertToPrimaryEncoding))) {
-		path = make_path(dir1, CONFIG_FILENAME, 0);
-		free(dir1);
-		if (is_regular_file(path)) {
-			rsh_vector_add_ptr(opt.mem, path);
-			return (conf_opt.config_file = path);
-		}
-		free(path);
-	}
 #endif /* _WIN32 */
-
-	return (conf_opt.config_file = NULL); /* config file not found */
 }
 
 /**
@@ -647,20 +683,19 @@ static int read_config(void)
 {
 #define LINE_BUF_SIZE 2048
 	char buf[LINE_BUF_SIZE];
-	file_t file;
 	FILE* fd;
 	parsed_option_t option;
 	int res;
 
-	/* initialize conf_opt and opt structures */
+	/* initialize conf_opt */
 	memset(&conf_opt, 0, sizeof(opt));
 	conf_opt.find_max_depth = -1;
 
 	if (!find_conf_file()) return 0;
+	assert(!!rhash_data.config_file.real_path);
+	assert(FILE_ISREG(&rhash_data.config_file));
 
-	file_init_by_print_path(&file, 0, conf_opt.config_file, 0);
-	fd = file_fopen(&file, FOpenRead);
-	file_cleanup(&file);
+	fd = file_fopen(&rhash_data.config_file, FOpenRead);
 	if (!fd) return -1;
 
 	while (fgets(buf, LINE_BUF_SIZE, fd)) {
@@ -675,7 +710,7 @@ static int read_config(void)
 		/* search for '=' */
 		index = strcspn(line, "=");
 		if (line[index] == 0) {
-			log_warning(_("%s: can't parse line \"%s\"\n"), conf_opt.config_file, line);
+			log_warning(_("%s: can't parse line \"%s\"\n"), file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull), line);
 			continue;
 		}
 		line[index] = 0;
@@ -688,7 +723,7 @@ static int read_config(void)
 		}
 
 		if (!t->type) {
-			log_warning(_("%s: unknown option \"%s\"\n"), conf_opt.config_file, line);
+			log_warning(_("%s: unknown option \"%s\"\n"), file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull), line);
 			continue;
 		}
 
@@ -713,7 +748,8 @@ static int read_config(void)
 	res = fclose(fd);
 
 #ifdef _WIN32
-	if ( (opt.flags & OPT_ENCODING) == 0 ) opt.flags |= (conf_opt.flags & OPT_ENCODING);
+	if ( (opt.flags & OPT_ENCODING) == 0 )
+		opt.flags |= (conf_opt.flags & OPT_ENCODING);
 #endif
 	return (res == 0 ? 0 : -1);
 }
@@ -1078,9 +1114,9 @@ static void make_final_options_checks(void)
 {
 	unsigned ext_format_bits = (opt.printf_str ? 0x100 : 0) | (opt.template_file ? 0x200 : 0);
 
-	if ((opt.flags & OPT_VERBOSE) && conf_opt.config_file) {
+	if ((opt.flags & OPT_VERBOSE) && !!rhash_data.config_file.real_path) {
 		/* note that the first log_msg call shall be made after setup_output() */
-		log_msg(_("Config file: %s\n"), conf_opt.config_file);
+		log_msg_file_t(_("Config file: %s\n"), &rhash_data.config_file);
 	}
 
 	if (opt.bt_batch_file)

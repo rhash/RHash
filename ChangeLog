@@ -1,3 +1,6 @@
+Wed 06 Jan 2021 Aleksey
+	* look for config file at $HOME/.config/rhash/rhashrc
+
 Mon 04 Jan 2021 Aleksey
 	* supported --blake2s, --blake2b options for the BLAKE2 hash functions
 

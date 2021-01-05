@@ -204,6 +204,7 @@ void rhash_destroy(struct rhash_t* ptr)
 	file_cleanup(&ptr->out_file);
 	file_cleanup(&ptr->log_file);
 	file_cleanup(&ptr->upd_file);
+	file_cleanup(&ptr->config_file);
 }
 
 static void free_allocated_data(void)

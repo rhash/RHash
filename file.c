@@ -110,7 +110,7 @@ char* make_path(const char* dir_path, const char* sub_path, int user_path_separa
  * @param sub_path the filepath to append to the directory
  * @return concatinated file path
  */
-tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, wchar_t* sub_path)
+tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, ctpath_t sub_path)
 {
 	wchar_t* result;
 	size_t len;

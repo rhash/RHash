@@ -23,6 +23,7 @@ struct rhash_t
 	file_t out_file;
 	file_t log_file;
 	file_t upd_file;
+	file_t config_file;
 
 	char*  printf_str;
 	struct print_item* print_list;
