@@ -29,7 +29,7 @@ Here  hash_id  is one of the constants CRC32, CRC32C, MD4, MD5,
 SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL, RIPEMD160,
 GOST94, GOST94_CRYPTOPRO, GOST12_256, GOST12_512, HAS160,
 SHA224, SHA256, SHA384, SHA512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
-EDONR256, EDONR512, SNEFRU128, SNEFRU256.
+BLAKE2S, BLAKE2B, EDONR256, EDONR512, SNEFRU128, SNEFRU256.
 The first two functions will return the default text representation
 of the message digest they compute.  The latter will return the
 magnet link  for the  file. In this function  you can OR-combine
@@ -74,7 +74,8 @@ __all__ = [
     'BTIH', 'ED2K', 'AICH', 'WHIRLPOOL', 'RIPEMD160', 'GOST94',
     'GOST94_CRYPTOPRO', 'GOST12_256', 'GOST12_512', 'HAS160',
     'SHA224', 'SHA256', 'SHA384', 'SHA512', 'EDONR256', 'EDONR512',
-    'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512', 'SNEFRU128', 'SNEFRU256',
+    'SHA3_224', 'SHA3_256', 'SHA3_384', 'SHA3_512', 'BLAKE2S', 'BLAKE2B',
+    'SNEFRU128', 'SNEFRU256',
     'RHash', 'hash_msg', 'hash_file', 'make_magnet',
     'hash_for_msg', 'hash_for_file', 'magnet_for_file']
 
@@ -163,7 +164,9 @@ SHA3_512 = 0x2000000
 CRC32C   = 0x4000000
 SNEFRU128 = 0x08000000
 SNEFRU256 = 0x10000000
-ALL = SNEFRU256*2 - 1
+BLAKE2S = 0x20000000
+BLAKE2B = 0x40000000
+ALL = 0x7FFFFFFF
 
 #rhash_print values
 RHPR_RAW = 1

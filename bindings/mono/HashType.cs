@@ -81,6 +81,10 @@ namespace RHash {
 		/* Snefru-128 hash. */
 		SNEFRU128 = 1 << 27,
 		/* Snefru-256 hash. */
-		SNEFRU256 = 1 << 28
+		SNEFRU256 = 1 << 28,
+		/* BLAKE2s hash. */
+		BLAKE2S = 1 << 29,
+		/* BLAKE2b hash. */
+		BLAKE2B = 1 << 30
 	}
 }

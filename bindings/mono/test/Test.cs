@@ -53,6 +53,8 @@ class Test {
 		hashes.Add(HashType.SHA3_256,  "f627c8f9355399ef45e1a6b6e5a9e6a3abcb3e1b6255603357bffa9f2211ba7e");
 		hashes.Add(HashType.SHA3_384,  "0529075e85bcdc06da94cbc83c53b7402c5032440210a1a24d9ccca481ddbd6c1309ae0ef23741f13352a4f3382dee51");
 		hashes.Add(HashType.SHA3_512,  "fdd7e7b9655f4f0ef89056e864a2d2dce3602404480281c88455e3a98f728aa08b3f116e6b434200a035e0780d9237ca367c976c5506f7c6f367e6b65447d97c");
+		hashes.Add(HashType.BLAKE2S,   "709dcba6d2db68cdc6d4d3674cf8382755b6f6d673c68ad2d8132d5eac0a54cc");
+		hashes.Add(HashType.BLAKE2B,   "bfc877bc2a258facff21279383039ca6c5e4f98ee78b5cafa209bd3598633443908f9e533676cb38952cd8132241f19735b4929bc249937ec79349132dceac5a");
 
 		Console.WriteLine("\nTests: hashes for message");
 		int errcount1 = 0;

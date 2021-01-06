@@ -379,6 +379,10 @@ end");
 	rb_define_const(cRHash, "SNEFRU128", INT2FIX(RHASH_SNEFRU128));
 	/** Snefru-256 hash. */
 	rb_define_const(cRHash, "SNEFRU256", INT2FIX(RHASH_SNEFRU256));
+	/** BLAKE2s hash. */
+	rb_define_const(cRHash, "BLAKE2S",  INT2FIX(RHASH_BLAKE2S));
+	/** BLAKE2b hash. */
+	rb_define_const(cRHash, "BLAKE2B",  INT2FIX(RHASH_BLAKE2B));
 	/** Compute message digests for all available algorithms. */
 	rb_define_const(cRHash, "ALL",       INT2FIX(RHASH_ALL_HASHES));
 }

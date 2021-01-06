@@ -19,9 +19,9 @@ package org.sf.rhash;
 
 /**
  * Type of hashing algorithm. Supported algorithms are CRC32, CRC32C,
- * MD4, MD5, SHA1/SHA2, Tiger, DC++ TTH, BitTorrent BTIH,
- * AICH, EDonkey 2000 hash, GOST R 34.11-94, GOST R 34.11-2012,
- * RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
+ * MD4, MD5, SHA1/SHA2/SHA3, Tiger, DC++ TTH, BitTorrent BTIH, AICH,
+ * EDonkey 2000 hash, GOST R 34.11-94, GOST R 34.11-2012, RIPEMD-160,
+ * HAS-160, BLAKE2s/BLAKE2b, EDON-R 256/512, Whirlpool and Snefru-128/256.
  */
 public enum HashType {
 	/** CRC32 checksum. */
@@ -80,7 +80,11 @@ public enum HashType {
 	/** Snefru-128 hash. */
 	SNEFRU128(1 << 27),
 	/** Snefru-256 hash. */
-	SNEFRU256(1 << 28);
+	SNEFRU256(1 << 28),
+	/** BLAKE2s hash. */
+	BLAKE2S(1 << 29),
+	/** BLAKE2b hash. */
+	BLAKE2B(1 << 30);
 
 	/** hash_id for the native API */
 	private int hashId;
@@ -126,7 +130,6 @@ public enum HashType {
 	 * @return size of binary digest, in bytes
 	 */
 	public int getDigestSize() {
-		//TODO: rhash_get_digest_size
-		return -1;
+		return Bindings.rhash_get_digest_size(hashId);
 	}
 }

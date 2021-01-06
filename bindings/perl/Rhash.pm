@@ -16,8 +16,8 @@ our %EXPORT_TAGS = (
 		RHASH_GOST94_CRYPTOPRO RHASH_GOST12_256 RHASH_GOST12_512
 		RHASH_SHA224 RHASH_SHA256 RHASH_SHA384 RHASH_SHA512
 		RHASH_SHA3_224 RHASH_SHA3_256 RHASH_SHA3_384 RHASH_SHA3_512
-		RHASH_HAS160 RHASH_EDONR256 RHASH_EDONR512
-		RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_ALL)]
+		RHASH_BLAKE2S RHASH_BLAKE2B RHASH_EDONR256 RHASH_EDONR512
+		RHASH_HAS160 RHASH_SNEFRU128 RHASH_SNEFRU256 RHASH_ALL)]
 );
 
 Exporter::export_tags( );
@@ -59,7 +59,9 @@ use constant RHASH_SHA3_512  => 0x2000000;
 use constant RHASH_CRC32C    => 0x4000000;
 use constant RHASH_SNEFRU128 => 0x8000000;
 use constant RHASH_SNEFRU256 => 0x10000000;
-use constant RHASH_ALL       => 0x1FFFFFFF;
+use constant RHASH_BLAKE2S   => 0x20000000;
+use constant RHASH_BLAKE2B   => 0x40000000;
+use constant RHASH_ALL       => 0x7FFFFFFF;
 
 ##############################################################################
 # Rhash class methods
@@ -279,7 +281,7 @@ binary format or as a magnet link.
 The module supports the following hash functions:
 CRC32, CRC32C, MD4, MD5, SHA1, SHA256, SHA512, SHA3, AICH, ED2K, Tiger,
 DC++ TTH, GOST R 34.11-94, GOST R 34.11-2012, BitTorrent BTIH, RIPEMD-160,
-HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
+HAS-160, BLAKE2s/BLAKE2b, EDON-R 256/512, Whirlpool and Snefru-128/256.
 
 =head1 CONSTRUCTOR
 
@@ -319,6 +321,8 @@ Constructor accepts the following constants as arguments:
   RHASH_EDONR512,
   RHASH_SNEFRU128,
   RHASH_SNEFRU256,
+  RHASH_BLAKE2S,
+  RHASH_BLAKE2B,
   RHASH_ALL
 
 The RHASH_ALL bit mask is bitwise union of all listed above bit-flags.

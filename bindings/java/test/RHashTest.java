@@ -46,6 +46,8 @@ public class RHashTest {
 		assertEquals("697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a", r.getDigest(SHA3_512).toString());
 		assertEquals("bf5ce540ae51bc50399f96746c5a15bd", r.getDigest(SNEFRU128).toString());
 		assertEquals("45161589ac317be0ceba70db2573ddda6e668a31984b39bf65e4b664b584c63d", r.getDigest(SNEFRU256).toString());
+		assertEquals("4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90", r.getDigest(BLAKE2S).toString());
+		assertEquals("333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c", r.getDigest(BLAKE2B).toString());
 
 		r.reset();
 		r.finish();

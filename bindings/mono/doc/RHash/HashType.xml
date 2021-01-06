@@ -12,9 +12,9 @@
     <summary>Type of hashing algorithm.</summary>
     <remarks>
       <para>
-Supported algorithms are MD4, MD5, SHA1/SHA2, Tiger,
-DC++ TTH, BitTorrent BTIH, AICH, EDonkey 2000 hash, GOST R 34.11-94,
-RIPEMD-160, HAS-160, EDON-R 256/512, Whirlpool and Snefru-128/256.
+Supported algorithms are CRC32, CRC32C, MD4, MD5, SHA1/SHA2/SHA3, AICH, ED2K,
+Tiger, DC++ TTH, GOST R 34.11-94, GOST R 34.11-2012, BitTorrent BTIH, RIPEMD-160,
+HAS-160, BLAKE2s/BLAKE2b, EDON-R 256/512, Whirlpool and Snefru-128/256.
 </para>
       <para>
 Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hashes.
@@ -34,6 +34,34 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
       </ReturnValue>
       <Docs>
         <summary>eMule AICH.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="BLAKE2B">
+      <MemberSignature Language="C#" Value="BLAKE2B" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType BLAKE2B = unsigned int32(1073741824)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>BLAKE2b hash.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="BLAKE2S">
+      <MemberSignature Language="C#" Value="BLAKE2S" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType BLAKE2S = unsigned int32(536870912)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>BLAKE2s hash.</summary>
       </Docs>
     </Member>
     <Member MemberName="BTIH">
@@ -62,6 +90,20 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
       </ReturnValue>
       <Docs>
         <summary>CRC32 checksum.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="CRC32C">
+      <MemberSignature Language="C#" Value="CRC32C" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType CRC32C = unsigned int32(67108864)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>CRC32C checksum.</summary>
       </Docs>
     </Member>
     <Member MemberName="ED2K">
@@ -104,6 +146,34 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
       </ReturnValue>
       <Docs>
         <summary>EDON-R 512.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="GOST12_256">
+      <MemberSignature Language="C#" Value="GOST12_256" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST12_256 = unsigned int32(16384)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>GOST R 34.11-2012, 256 bit.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="GOST12_512">
+      <MemberSignature Language="C#" Value="GOST12_512" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType GOST12_512 = unsigned int32(32768)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.1.1</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>RHash.HashType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>GOST R 34.11-2012, 512 bit.</summary>
       </Docs>
     </Member>
     <Member MemberName="GOST94">
@@ -318,7 +388,7 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
     </Member>
     <Member MemberName="SNEFRU128">
       <MemberSignature Language="C#" Value="SNEFRU128" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU128 = unsigned int32(16384)" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU128 = unsigned int32(134217728)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.1.1</AssemblyVersion>
@@ -332,7 +402,7 @@ Constants may be OR-combined to form <see cref="T:System.UInt32" /> mask of hash
     </Member>
     <Member MemberName="SNEFRU256">
       <MemberSignature Language="C#" Value="SNEFRU256" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU256 = unsigned int32(32768)" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype RHash.HashType SNEFRU256 = unsigned int32(268435456)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.1.1</AssemblyVersion>

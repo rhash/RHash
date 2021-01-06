@@ -38,6 +38,8 @@ class TestRHash < Test::Unit::TestCase
 	assert_equal("80084bf2fba02475726feb2cab2d8215eab14bc6bdd8bfb2c8151257032ecd8b", r.to_s(RHash::SHA3_256))
 	assert_equal("1815f774f320491b48569efec794d249eeb59aae46d22bf77dafe25c5edc28d7ea44f93ee1234aa88f61c91912a4ccd9", r.to_s(RHash::SHA3_384))
 	assert_equal("697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a", r.to_s(RHash::SHA3_512))
+	assert_equal("4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90", r.to_s(RHash::BLAKE2S))
+	assert_equal("333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c", r.to_s(RHash::BLAKE2B))
 
 	assert_equal("d41d8cd98f00b204e9800998ecf8427e", r.reset().finish().to_s(RHash::MD5)) # MD5( "" )
     end

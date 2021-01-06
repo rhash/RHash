@@ -1,4 +1,4 @@
-use Test::More tests => 29;
+use Test::More tests => 31;
 use Crypt::Rhash;
 
 #########################
@@ -35,5 +35,7 @@ is( $r->hash(RHASH_SHA3_384), "1815f774f320491b48569efec794d249eeb59aae46d22bf77
 is( $r->hash(RHASH_SHA3_512), "697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a");
 is( $r->hash(RHASH_SNEFRU128), "bf5ce540ae51bc50399f96746c5a15bd");
 is( $r->hash(RHASH_SNEFRU256), "45161589ac317be0ceba70db2573ddda6e668a31984b39bf65e4b664b584c63d");
+is( $r->hash(RHASH_BLAKE2S), "4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90");
+is( $r->hash(RHASH_BLAKE2B), "333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c");
 
 __END__
