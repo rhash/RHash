@@ -32,7 +32,7 @@ extern "C" {
 #define IS_PTR_ALIGNED_BY(ptr, align) IS_SIZE_ALIGNED_BY((char*)(ptr) - (char*)0, (align))
 
 /* define rhash_aligned_alloc() and rhash_aligned_free() */
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32)
 
 # define HAS_WIN32_ALIGNED_ALLOC
 # include <malloc.h>
