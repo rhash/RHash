@@ -87,7 +87,7 @@ typedef struct rhash_context_ext
 	void* callback;
 	void* callback_data;
 	void* bt_ctx;
-	rhash_vector_item vector[1]; /* contexts of contained hash sums */
+	rhash_vector_item vector[]; /* contexts of contained hash sums */
 } rhash_context_ext;
 
 extern rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT];
