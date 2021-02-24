@@ -167,7 +167,8 @@ void rhash_tiger_update(tiger_ctx* ctx, const unsigned char* msg, size_t size)
 	if (index) {
 		size_t left = tiger_block_size - index;
 		if (size < left) {
-			memcpy(ctx->message + index, msg, size);
+			if (size > 0)
+				memcpy(ctx->message + index, msg, size);
 			return;
 		} else {
 			memcpy(ctx->message + index, msg, left);
