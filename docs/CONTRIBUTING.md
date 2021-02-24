@@ -29,12 +29,11 @@ make print-info
 ```
 File new bugs at the [issues] page.
 
+## Bug fixing
+Investigate one of bugs listed at [issues] page, fix it and make a pull request.
+
 ## Packaging RHash to a new distribution
 Check if your OS distribution has the latest RHash. If not, then make a package and publish it into the OS repository.
-
-## Contributing by writing code
-* Fixing bugs and implementing features, check current [issues].
-* Updating documentation
 
 [donating]: http://sourceforge.net/donate/index.php?group_id=205103
 [Launchpad]: https://launchpad.net/
