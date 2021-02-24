@@ -111,7 +111,7 @@ static rhash rhash_init_multi(size_t count, unsigned hash_ids[])
 		return NULL;
 
 	/* initialize common fields of the rhash context */
-	memset(rctx, 0, header_size);
+	memset(rctx, 0, GET_ALIGNED_SIZE(header_size + ctx_size_sum));
 	rctx->rc.hash_id = hash_bitmask;
 	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
