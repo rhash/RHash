@@ -99,7 +99,7 @@ void rhash_edonr384_init(struct edonr_ctx* ctx)
 	};
 
 	ctx->length = 0;
-	ctx->digest_length = edonr224_hash_size;
+	ctx->digest_length = edonr384_hash_size;
 	memcpy(ctx->u.data512.hash, EDONR384_H0, sizeof(EDONR384_H0));
 }
 
