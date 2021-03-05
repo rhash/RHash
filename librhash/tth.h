@@ -20,7 +20,7 @@ typedef struct tth_ctx
 
 void rhash_tth_init(tth_ctx* ctx);
 void rhash_tth_update(tth_ctx* ctx, const unsigned char* msg, size_t size);
-void rhash_tth_final(tth_ctx* ctx, unsigned char result[64]);
+void rhash_tth_final(tth_ctx* ctx, unsigned char result[24]);
 
 #ifdef __cplusplus
 } /* extern "C" */
