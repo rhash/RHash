@@ -27,7 +27,6 @@ extern "C" {
 /* alignment macros */
 #define DEFAULT_ALIGNMENT 64
 #define ALIGN_SIZE_BY(size, align) (((size) + ((align) - 1)) & ~((align) - 1))
-#define ALIGN_PTR_BY(ptr, align) ((char*)(ptr) + (((char*)0 - (char*)(ptr)) & ((align) - 1))))
 #define IS_SIZE_ALIGNED_BY(size, align) (((size) & ((align) - 1)) == 0)
 #define IS_PTR_ALIGNED_BY(ptr, align) IS_SIZE_ALIGNED_BY((uintptr_t)(ptr), (align))
 
