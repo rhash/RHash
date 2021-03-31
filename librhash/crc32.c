@@ -35,7 +35,7 @@ static unsigned calculate_crc_soft(unsigned crcinit, unsigned table[8][256], con
 	const uint32_t* current;
 
 	/* process not aligned message head */
-	for (; (3 & (msg - (unsigned char*)0)) && size > 0; msg++, size--)
+	for (; (3 & (uintptr_t)msg) && size > 0; msg++, size--)
 		crc = table[0][(crc & 0xFF) ^ *msg] ^ (crc >> 8);
 
 	/* process aligned part */
