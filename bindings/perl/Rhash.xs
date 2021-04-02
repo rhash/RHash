@@ -189,12 +189,31 @@ rhash_get_hashed_length(ctx)
 		RETVAL
 
 ##############################################################################
-# Hash information functions
+# Information functions
 
 int
 count()
 	CODE:
 		RETVAL = rhash_count();
+	OUTPUT:
+		RETVAL
+
+SV *
+librhash_version_string()
+	PREINIT:
+		unsigned version;
+	CODE:
+		version = rhash_get_version();
+		RETVAL = allocate_string_buffer(20);
+		sprintf(SvPVX(RETVAL), "%u.%u.%u", (version >> 24) & 255, (version >> 16) & 255, (version >> 8) & 255);
+		SvCUR_set(RETVAL, strlen(SvPVX(RETVAL)));
+	OUTPUT:
+		RETVAL
+
+int
+librhash_version()
+	CODE:
+		RETVAL = rhash_get_version();
 	OUTPUT:
 		RETVAL
 

@@ -1,4 +1,4 @@
-use Test::More tests => 11;
+use Test::More tests => 12;
 use Crypt::Rhash;# qw( :Functions );
 
 #########################
@@ -11,6 +11,7 @@ is(&Crypt::Rhash::get_hash_length(RHASH_CRC32), 8);
 is(&Crypt::Rhash::is_base32(RHASH_CRC32), 0);
 is(&Crypt::Rhash::is_base32(RHASH_TTH), 1);
 is(&Crypt::Rhash::get_name(RHASH_CRC32), "CRC32");
+like(&Crypt::Rhash::librhash_version_string(), qr/^\d+\.\d+\.\d+$/);
 
 # test conversion functions
 is(&raw2hex("test msg"), "74657374206d7367");

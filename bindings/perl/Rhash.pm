@@ -458,6 +458,10 @@ Returns the length of a message digest in default output format for the specifie
 
 Returns the name of the specified hash function.
 
+=item Crypt::Rhash::librhash_version_string()
+
+Returns the version of LibRHash as string.
+
 =back
 
 =head1 ALTERNATIVE WAY TO COMPUTE A MESSAGE DIGEST

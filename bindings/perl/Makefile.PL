@@ -45,6 +45,19 @@ if ($rh_type ne 'custom')
 	$libs = $custom_ld;
 }
 
+sub read_librhash_version($) {
+	my $path = $_[0] . "/version.h";
+	open my $fh, "<", $path or die "could not open $path: $!";
+	chomp(my @lines = <$fh>);
+	close $fh;
+	foreach (@lines) {
+		if (/^#define VERSION "(\d+)\.(\d+)\.(\d+)"/) {
+			return sprintf("0x%02x%02x%02x%02x", $1, $2, $3, 0);
+		}
+	}
+	return '0';
+}
+
 # copy and rename *.c files by prepending underscore '_'
 sub copy_c_files($) {
 	my $from_dir = $_[0];
@@ -67,10 +80,11 @@ sub copy_c_files($) {
 
 if($rh_type eq 'builtin') {
 	# using sources of the builtin librhash
+	my $librhash_version = read_librhash_version($rh_builtin_dir);
 	my @c_files = copy_c_files($rh_builtin_dir);
 	$clean = join(' ', @c_files);
 	$obj = join(' ', map { s/\.c$/\$(OBJ_EXT)/; $_ } @c_files) . ' ';
-	$def = '-DRHASH_XVERSION=0' # QuickFix
+	$def = '-DRHASH_XVERSION=' . $librhash_version;
 }
 
 # make setting optional MakeMaker parameters more readable
