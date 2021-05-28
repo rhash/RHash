@@ -33,7 +33,7 @@
  */
 void rhash_has160_init(has160_ctx* ctx)
 {
-	ctx->length = 0;
+	memset(ctx, 0, sizeof(*ctx));
 
 	/* initialize algorithm state */
 	ctx->hash[0] = 0x67452301;

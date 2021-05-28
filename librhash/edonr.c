@@ -39,7 +39,11 @@ void rhash_edonr256_init(edonr_ctx* ctx)
 	};
 	memcpy(ctx->u.data256.hash, EDONR256_H0, sizeof(EDONR256_H0));
 
+#if FULL_CTX_INITIALIZATION
+	memset(ctx, 0, sizeof(*ctx));
+#else
 	ctx->length = 0;
+#endif
 	ctx->digest_length = edonr256_hash_size;
 }
 
@@ -56,7 +60,11 @@ void rhash_edonr224_init(struct edonr_ctx* ctx)
 		0x30313233, 0x24353637, 0x38393a3b, 0x3c3d3e3f
 	};
 
+#if FULL_CTX_INITIALIZATION
+	memset(ctx, 0, sizeof(*ctx));
+#else
 	ctx->length = 0;
+#endif
 	ctx->digest_length = edonr224_hash_size;
 	memcpy(ctx->u.data256.hash, EDONR224_H0, sizeof(EDONR224_H0));
 }
@@ -77,7 +85,11 @@ void rhash_edonr512_init(edonr_ctx* ctx)
 		I64(0xf8f9fafbfcfdfeff)
 	};
 
+#if FULL_CTX_INITIALIZATION
+	memset(ctx, 0, sizeof(*ctx));
+#else
 	ctx->length = 0;
+#endif
 	ctx->digest_length = edonr512_hash_size;
 	memcpy(ctx->u.data512.hash, EDONR512_H0, sizeof(EDONR512_H0));
 }
@@ -98,7 +110,11 @@ void rhash_edonr384_init(struct edonr_ctx* ctx)
 		I64(0x78797a7b7c7d7e7f)
 	};
 
+#if FULL_CTX_INITIALIZATION
+	memset(ctx, 0, sizeof(*ctx));
+#else
 	ctx->length = 0;
+#endif
 	ctx->digest_length = edonr384_hash_size;
 	memcpy(ctx->u.data512.hash, EDONR384_H0, sizeof(EDONR384_H0));
 }
