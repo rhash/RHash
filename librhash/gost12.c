@@ -622,7 +622,8 @@ static const uint64_t zero_512[8] = { 0,0,0,0,0,0,0,0 };
 static RHASH_INLINE void rhash_gost12_init(gost12_ctx* ctx, size_t hash_size)
 {
 	memset(ctx, 0, sizeof(gost12_ctx));
-	memset(ctx->h, (hash_size == 64 ? 0 : 1), 64);
+	if (hash_size != gost12_512_hash_size)
+		memset(ctx->h, 1, gost12_512_hash_size);
 	ctx->hash_size = hash_size;
 }
 

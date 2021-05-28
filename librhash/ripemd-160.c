@@ -28,6 +28,7 @@
  */
 void rhash_ripemd160_init(ripemd160_ctx* ctx)
 {
+	memset(ctx->message, 0, sizeof(ctx->message));
 	ctx->length = 0;
 
 	/* initialize state */
