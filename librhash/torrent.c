@@ -40,6 +40,7 @@
 #define BT_HASH_SIZE 20
 /** number of SHA1 hashes to store together in one block */
 #define BT_BLOCK_SIZE 256
+#define BT_BLOCK_SIZE_IN_BYTES (BT_BLOCK_SIZE * BT_HASH_SIZE)
 
 /**
  * Initialize torrent context before calculating hash.
@@ -139,7 +140,7 @@ static int bt_store_piece_sha1(torrent_ctx* ctx)
 	unsigned char* hash;
 
 	if ((ctx->piece_count % BT_BLOCK_SIZE) == 0) {
-		block = (unsigned char*)malloc(BT_HASH_SIZE * BT_BLOCK_SIZE);
+		block = (unsigned char*)malloc(BT_BLOCK_SIZE_IN_BYTES);
 		if (block == NULL || !bt_vector_add_ptr(&ctx->hash_blocks, block)) {
 			if (block) free(block);
 			return 0;
@@ -347,8 +348,8 @@ static void bt_bencode_str(torrent_ctx* ctx, const char* name, const char* str)
 static void bt_bencode_pieces(torrent_ctx* ctx)
 {
 	const size_t pieces_length = ctx->piece_count * BT_HASH_SIZE;
+	size_t bytes_left, i;
 	int number_length;
-	int size, i;
 	char* p;
 
 	if (!bt_str_ensure_length(ctx, ctx->content.length + pieces_length + 21))
@@ -360,12 +361,12 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 	*(p++) = ':';
 	p[pieces_length] = '\0'; /* terminate with \0 just in case */
 
-	for (size = (int)ctx->piece_count, i = 0; size > 0;
-		size -= BT_BLOCK_SIZE, i++)
+	for (bytes_left = pieces_length, i = 0; bytes_left > 0; i++)
 	{
-		memcpy(p, ctx->hash_blocks.array[i],
-			(size < BT_BLOCK_SIZE ? size : BT_BLOCK_SIZE) * BT_HASH_SIZE);
-		p += BT_BLOCK_SIZE * BT_HASH_SIZE;
+		size_t size = (bytes_left < BT_BLOCK_SIZE_IN_BYTES ? bytes_left : BT_BLOCK_SIZE_IN_BYTES);
+		memcpy(p, ctx->hash_blocks.array[i], size);
+		bytes_left -= size;
+		p += size;
 	}
 }
 
