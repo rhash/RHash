@@ -282,27 +282,29 @@ static int bt_str_ensure_length(torrent_ctx* ctx, size_t length)
 static void bt_str_append(torrent_ctx* ctx, const char* text)
 {
 	size_t length = strlen(text);
-
-	if (!bt_str_ensure_length(ctx, ctx->content.length + length)) return;
+	if (!bt_str_ensure_length(ctx, ctx->content.length + length + 1))
+		return;
 	assert(ctx->content.str != 0);
-	memcpy(ctx->content.str + ctx->content.length, text, length);
+	memcpy(ctx->content.str + ctx->content.length, text, length + 1);
 	ctx->content.length += length;
-	ctx->content.str[ctx->content.length] = '\0';
 }
 
 /**
  * B-encode given integer.
  *
  * @param ctx the torrent algorithm context
+ * @param name B-encoded string to prepend the number or NULL
  * @param number the integer to output
  */
 static void bt_bencode_int(torrent_ctx* ctx, const char* name, uint64_t number)
 {
 	char* p;
-	if (name) bt_str_append(ctx, name);
+	if (name)
+		bt_str_append(ctx, name);
 
 	/* add up to 20 digits and 2 letters */
-	if (!bt_str_ensure_length(ctx, ctx->content.length + 22)) return;
+	if (!bt_str_ensure_length(ctx, ctx->content.length + 22))
+		return;
 	p = ctx->content.str + ctx->content.length;
 	*(p++) = 'i';
 	p += rhash_sprintI64(p, number);
@@ -316,23 +318,25 @@ static void bt_bencode_int(torrent_ctx* ctx, const char* name, uint64_t number)
  * B-encode a string.
  *
  * @param ctx the torrent algorithm context
+ * @param name B-encoded string to prepend or NULL
  * @param str the string to encode
  */
 static void bt_bencode_str(torrent_ctx* ctx, const char* name, const char* str)
 {
-	size_t len = strlen(str);
-	int num_len;
+	const size_t string_length = strlen(str);
+	int number_length;
 	char* p;
 
-	if (name) bt_str_append(ctx, name);
-	if (!bt_str_ensure_length(ctx, ctx->content.length + len + 21)) return;
-
+	if (name)
+		bt_str_append(ctx, name);
+	if (!bt_str_ensure_length(ctx, ctx->content.length + string_length + 21))
+		return;
 	p = ctx->content.str + ctx->content.length;
-	p += (num_len = rhash_sprintI64(p, len));
-	ctx->content.length += len + num_len + 1;
+	p += (number_length = rhash_sprintI64(p, string_length));
+	ctx->content.length += string_length + number_length + 1;
 
 	*(p++) = ':';
-	memcpy(p, str, len + 1); /* copy with trailing '\0' */
+	memcpy(p, str, string_length + 1); /* copy with trailing '\0' */
 }
 
 /**
@@ -342,17 +346,16 @@ static void bt_bencode_str(torrent_ctx* ctx, const char* name, const char* str)
  */
 static void bt_bencode_pieces(torrent_ctx* ctx)
 {
-	size_t pieces_length = ctx->piece_count * BT_HASH_SIZE;
-	int num_len;
+	const size_t pieces_length = ctx->piece_count * BT_HASH_SIZE;
+	int number_length;
 	int size, i;
 	char* p;
 
 	if (!bt_str_ensure_length(ctx, ctx->content.length + pieces_length + 21))
 		return;
-
 	p = ctx->content.str + ctx->content.length;
-	p += (num_len = rhash_sprintI64(p, pieces_length));
-	ctx->content.length += pieces_length + num_len + 1;
+	p += (number_length = rhash_sprintI64(p, pieces_length));
+	ctx->content.length += pieces_length + number_length + 1;
 
 	*(p++) = ':';
 	p[pieces_length] = '\0'; /* terminate with \0 just in case */
