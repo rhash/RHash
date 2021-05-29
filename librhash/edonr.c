@@ -37,7 +37,6 @@ void rhash_edonr256_init(edonr_ctx* ctx)
 		0x58595a5b, 0x5c5d5e5f, 0x60616263, 0x64656667, 0x68696a6b, 0x6c6d6e6f,
 		0x70717273, 0x74757677, 0x78797a7b, 0x7c7d7e7f
 	};
-	memcpy(ctx->u.data256.hash, EDONR256_H0, sizeof(EDONR256_H0));
 
 #if FULL_CTX_INITIALIZATION
 	memset(ctx, 0, sizeof(*ctx));
@@ -45,6 +44,7 @@ void rhash_edonr256_init(edonr_ctx* ctx)
 	ctx->length = 0;
 #endif
 	ctx->digest_length = edonr256_hash_size;
+	memcpy(ctx->u.data256.hash, EDONR256_H0, sizeof(EDONR256_H0));
 }
 
 /**
