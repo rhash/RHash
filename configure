@@ -28,7 +28,7 @@ for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
   test -d "$DETECT_TMP" && break
 done
 RANDNUM=$RANDOM
-test -z $RANDNUM && jot -r 1 1 32767 &>/dev/null && RANDNUM=$(jot -r 1 1 32767)
+test -z "$RANDNUM" && jot -r 1 2>/dev/null >dev/null && RANDNUM=$(jot -r 1 1 32767) || RANDNUM=0
 BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
 mkdir $BUILD_TMPDIR || die "Unable to create tmp dir."
 TMPC="$BUILD_TMPDIR/tmp.c"
