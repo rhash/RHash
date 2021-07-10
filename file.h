@@ -85,6 +85,7 @@ enum FileModeBits {
 #define FILE_ISSTDIN(file) ((file)->mode & FileIsStdin)
 #define FILE_ISSTDSTREAM(file) ((file)->mode & FileIsStdStream)
 #define FILE_ISSPECIAL(file) ((file)->mode & (FileMaskIsSpecial))
+#define FILE_IS_IN_UTF8(file) ((file)->mode & (FileContentIsUtf8))
 
 /* file functions */
 int file_init(file_t* file, ctpath_t path, unsigned init_flags);

@@ -183,7 +183,7 @@ static int file_set_load_from_crc_file(file_set* set, file_t* file)
 {
 	int result = (DoesExist | IsEmptyFile);
 	char buf[2048];
-	hash_check hc;
+	struct hash_parser hp;
 
 	FILE* fd = file_fopen(file, FOpenRead | FOpenBin);
 	if (!fd) {
@@ -216,9 +216,9 @@ static int file_set_load_from_crc_file(file_set* set, file_t* file)
 		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
 			continue;
 		/* parse a hash file line */
-		if (hash_check_parse_line(line, &hc, opt.sum_flags, !feof(fd))) {
+		if (parse_hash_file_line(line, &hp, opt.sum_flags, !feof(fd))) {
 			/* put file path into the file set */
-			if (hc.file_path) file_set_add_name(set, hc.file_path);
+			if (hp.file_path) file_set_add_name(set, hp.file_path);
 		}
 	}
 	if (ferror(fd)) {

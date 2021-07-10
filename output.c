@@ -246,40 +246,40 @@ static struct percents_t percents;
 /**
  * Print verbose error on a message digest mismatch.
  *
- * @param info file information with path and its message digests.
+ * @param info file information with path and its message digests
  * @return 0 on success, -1 on error
  */
 static int print_verbose_hash_check_error(struct file_info* info)
 {
 	char actual[130], expected[130];
-	assert(HC_FAILED(info->hc.flags));
+	assert(HP_FAILED(info->hp->bit_flags));
 
 	/* TRANSLATORS: printed in the verbose mode on a message digest mismatch */
 	if (rsh_fprintf(rhash_data.out, _("ERROR")) < 0)
 		return -1;
 
-	if ((HC_WRONG_FILESIZE & info->hc.flags)) {
+	if ((HpWrongFileSize & info->hp->bit_flags)) {
 		sprintI64(actual, info->rctx->msg_size, 0);
-		sprintI64(expected, info->hc.file_size, 0);
+		sprintI64(expected, info->hp->file_size, 0);
 		if (rsh_fprintf(rhash_data.out, _(", size is %s should be %s"), actual, expected) < 0)
 			return -1;
 	}
 
-	if (HC_WRONG_EMBCRC32 & info->hc.flags) {
+	if (HpWrongEmbeddedCrc32 & info->hp->bit_flags) {
 		rhash_print(expected, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
 		if (rsh_fprintf(rhash_data.out, _(", embedded CRC32 should be %s"), expected) < 0)
 			return -1;
 	}
 
-	if (HC_WRONG_HASHES & info->hc.flags) {
+	if (HpWrongHashes & info->hp->bit_flags) {
 		unsigned reported = 0;
 		int i;
-		for (i = 0; i < info->hc.hashes_num; i++) {
-			hash_value* hv = &info->hc.hashes[i];
-			char* expected_hash = info->hc.data + hv->offset;
+		for (i = 0; i < info->hp->hashes_num; i++) {
+			struct hash_value* hv = &info->hp->hashes[i];
+			char* expected_hash = info->hp->line_begin + hv->offset;
 			unsigned hid = hv->hash_id;
 			int pflags;
-			if ((info->hc.wrong_hashes & (1 << i)) == 0)
+			if ((info->hp->wrong_hashes & (1 << i)) == 0)
 				continue;
 
 			assert(hid != 0);
@@ -288,7 +288,7 @@ static int print_verbose_hash_check_error(struct file_info* info)
 			if ((hid & (hid - 1)) != 0) {
 				/* guess the hash id */
 				if (hid & opt.sum_flags) hid &= opt.sum_flags;
-				if (hid & ~info->hc.found_hash_ids) hid &= ~info->hc.found_hash_ids;
+				if (hid & ~info->hp->found_hash_ids) hid &= ~info->hp->found_hash_ids;
 				if (hid & ~reported) hid &= ~reported; /* avoid repeating */
 				if (hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
 				hid &= -(int)hid; /* take the lowest bit */
@@ -345,8 +345,8 @@ static int print_check_result(struct file_info* info, int print_name, int print_
 		if (info->processing_result < 0) {
 			/* print error to stdout */
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s\n", strerror(saved_errno)));
-		} else if (!HC_FAILED(info->hc.flags) || !(opt.flags & OPT_VERBOSE)) {
-			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HC_FAILED(info->hc.flags) ?
+		} else if (!HP_FAILED(info->hp->bit_flags) || !(opt.flags & OPT_VERBOSE)) {
+			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HP_FAILED(info->hp->bit_flags) ?
 				/* TRANSLATORS: printed when all message digests match, use at least 3 characters to overwrite "99%" */
 				_("OK \n") :
 				/* TRANSLATORS: ERR (short for 'error') is printed on a message digest mismatch */
@@ -374,7 +374,7 @@ static int print_results_on_check(struct file_info* info, int init)
 		int print_name = (opt.flags & (OPT_PERCENTS | OPT_SKIP_OK) ? !init : init);
 
 		/* print result, but skip OK messages if required */
-		if (init || info->processing_result != 0 || !(opt.flags & OPT_SKIP_OK) || HC_FAILED(info->hc.flags))
+		if (init || info->processing_result != 0 || !(opt.flags & OPT_SKIP_OK) || HP_FAILED(info->hp->bit_flags))
 			return print_check_result(info, print_name, !init);
 	}
 	return 0;
@@ -547,7 +547,7 @@ static void p_update_percents(struct file_info* info, uint64_t offset)
 static int p_finish_percents(struct file_info* info, int process_res)
 {
 	int need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
-		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HC_FAILED(info->hc.flags));
+		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HP_FAILED(info->hp->bit_flags));
 	info->processing_result = process_res;
 
 	if (percents.same_output && need_check_result) {
@@ -575,7 +575,7 @@ struct percents_output_info_t p_perc = {
 /**
  * Initialize given output stream.
  *
- * @param p_stream the stream to initialize.
+ * @param p_stream the stream to initialize
  * @param stream_path the path to the log file, or NULL, to use the default stream
  * @param default_stream the default stream value, for the case of invalid stream_path
  */
@@ -629,7 +629,7 @@ void setup_percents(void)
 /**
  * Print the "Verifying <FILE>" heading line.
  *
- * @param file the file containing message digests to verify.
+ * @param file the file containing message digests to verify
  * @return 0 on success, -1 on fail with error code stored in errno
  */
 int print_verifying_header(file_t* file)
@@ -638,6 +638,8 @@ int print_verifying_header(file_t* file)
 	int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
 	int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
 	int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
+	if (res >= 0)
+		res = fflush(rhash_data.out);
 	return (count < 0 ? count : res);
 }
 
