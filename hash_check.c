@@ -58,25 +58,27 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
  */
 static void urldecode(char* buffer)
 {
-	char* wpos = buffer; /* set writing position */
-	for (; *buffer; wpos++) {
-		*wpos = *(buffer++); /* copy non-escaped characters */
-		if (*wpos == '%') {
-			if (*buffer == '%') {
-				buffer++; /* interpret '%%' as single '%' */
-			} else if (IS_HEX(*buffer)) {
+	char* dst = buffer;
+	const char* src = buffer;
+	const char* src_end = src + strlen(src);
+	for (; src < src_end; dst++) {
+		*dst = *(src++); /* copy non-escaped characters */
+		if (*dst == '%') {
+			if (*src == '%') {
+				src++; /* interpret '%%' as single '%' */
+			} else if (IS_HEX(*src)) {
 				/* decode character from the %<hex-digit><hex-digit> form */
-				int ch = HEX_TO_DIGIT(*buffer);
-				buffer++;
-				if (IS_HEX(*buffer)) {
-					ch = (ch << 4) | HEX_TO_DIGIT(*buffer);
-					buffer++;
+				int ch = HEX_TO_DIGIT(*src);
+				src++;
+				if (IS_HEX(*src)) {
+					ch = (ch << 4) | HEX_TO_DIGIT(*src);
+					src++;
 				}
-				*wpos = (char)ch;
+				*dst = (char)ch;
 			}
 		}
 	}
-	*wpos = '\0'; /* terminate decoded string */
+	*dst = '\0'; /* terminate decoded string */
 }
 
 #ifndef _WIN32
@@ -542,6 +544,99 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 	return ResAllMatched;
 }
 
+ /**
+  * Parse the rest of magnet link.
+  *
+ * @param token tokens parsing context
+  * @return ResAllMatched on success, ResFailed on a bad magnet link
+  */
+static int parse_magnet_url(struct hash_token* token)
+{
+	/* loop by magnet link parameters */
+	while (1) {
+		char* next = strchr(token->begin, '&');
+		char* param_end = (next ? next++ : token->end);
+		char* hf_end;
+
+		if ((token->begin += 3) < param_end) {
+			switch (THREEC2U(token->begin[-3], token->begin[-2], token->begin[-1])) {
+			case THREEC2U('d', 'n', '='): /* URL-encoded file path */
+				token->url_name = token->begin;
+				token->url_length = param_end - token->begin;
+				break;
+			case THREEC2U('x', 'l', '='): /* file size */
+				if (!match_hash_tokens(token, "\5"))
+					return ResFailed;
+				if (token->begin != param_end)
+					return ResFailed;
+				break;
+			case THREEC2U('x', 't', '='): /* a file hash */
+				{
+					int i;
+					/* find last ':' character (hash name can be complex like tree:tiger) */
+					for (hf_end = param_end - 1; *hf_end != ':' && hf_end > token->begin; hf_end--);
+
+					/* test for the "urn:" string */
+					if ((token->begin += 4) >= hf_end)
+						return ResFailed;
+					if (FOURC2U(token->begin[-4], token->begin[-3], token->begin[-2], token->begin[-1]) !=
+							FOURC2U('u', 'r', 'n', ':'))
+						return ResFailed;
+					/* find hash by its magnet link specific URN name  */
+					for (i = 0; i < RHASH_HASH_COUNT; i++) {
+						const char* urn = rhash_get_magnet_name(1 << i);
+						size_t len = hf_end - token->begin;
+						if (strncmp(token->begin, urn, len) == 0 && urn[len] == '\0')
+							break;
+					}
+					if (i >= RHASH_HASH_COUNT) {
+						if (opt.flags & OPT_VERBOSE) {
+							*hf_end = '\0';
+							log_warning(_("unknown hash in magnet link: %s\n"), token->begin);
+						}
+						return ResFailed;
+					}
+					token->begin = hf_end + 1;
+					token->expected_hash_id = 1 << i;
+					token->hash_type = (FmtHex | FmtBase32);
+					if (!match_hash_tokens(token, "\3"))
+						return ResFailed;
+					if (token->begin != param_end)
+						return ResFailed;
+					break;
+				}
+				/* note: this switch () skips all unknown parameters */
+			}
+		}
+		if (next)
+			token->begin = next;
+		else
+			break;
+	}
+	if (!token->url_name || token->hp->hashes_num == 0)
+		return ResFailed;
+	return ResAllMatched;
+}
+
+ /**
+  * Parse the rest of ed2k link.
+  *
+  * @param token the structure to store parsed tokens info
+  * @return ResAllMatched on success, ResFailed on a bad ed2k link
+  */
+static int parse_ed2k_link(struct hash_token* token)
+{
+	token->expected_hash_id = RHASH_ED2K;
+	token->hash_type = FmtHex;
+	if (!match_hash_tokens(token, "\4|\5|\3|"))
+		return ResFailed;
+	/* try to parse optional AICH hash */
+	token->expected_hash_id = RHASH_AICH;
+	token->hash_type = (FmtHex | FmtBase32); /* AICH is usually base32-encoded*/
+	match_hash_tokens(token, "h=\3|");
+	return ResAllMatched;
+}
+
 /**
  * Parse a line of a hash-file. This function accepts five formats.
  * <ul>
@@ -562,7 +657,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expected_hash_mask, int check_eol)
 {
 	struct hash_token token;
-	char* le = strchr(line, '\0'); /* set pointer to the end of line */
+	char* line_end = strchr(line, '\0');
 	char* url_name = NULL;
 	size_t url_length = 0;
 	int single_hash = 0;
@@ -571,95 +666,41 @@ int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expect
 	int i, j;
 
 	/* return if EOL not found at the end of the line */
-	if (line[0] == '\0' || (le[-1] != '\n' && check_eol)) return 0;
+	if (line[0] == '\0' || (line_end[-1] != '\n' && check_eol))
+		return ResFailed;
 
-	/* note: not using str_tim because 'le' is re-used below */
-
-	/* remove trailing white spaces */
-	while (rhash_isspace(le[-1]) && le > line) *(--le) = 0;
+	/* trim line manually, without str_trim(), cause we'll need line_end later */
+	while (rhash_isspace(line_end[-1]) && line_end > line)
+		*(--line_end) = 0;
 	/* skip white spaces at the start of the line */
-	while (rhash_isspace(*line)) line++;
+	while (rhash_isspace(*line))
+		line++;
 
 	memset(&token, 0, sizeof(token));
 	token.begin = line;
-	token.end = le;
+	token.end = line_end;
 	token.hp = parser;
 
 	memset(parser, 0, sizeof(*parser));
 	parser->line_begin = line;
 	parser->file_size = (uint64_t)-1;
 
-	if (strncmp(line, "magnet:?", 8) == 0) {
-		token.begin += 8;
+	/* check for a minimum acceptable message digest length */
+	if ((line + 8) > line_end)
+		return ResFailed;
 
-		/* loop by magnet link parameters */
-		while (1) {
-			char* next = strchr(token.begin, '&');
-			char* param_end = (next ? next++ : token.end);
-			char* hf_end;
-
-			if ((token.begin += 3) < param_end) {
-				switch (THREEC2U(token.begin[-3], token.begin[-2], token.begin[-1])) {
-				case THREEC2U('d', 'n', '='): /* URL-encoded file path */
-					url_name = token.begin;
-					url_length = param_end - token.begin;
-					break;
-				case THREEC2U('x', 'l', '='): /* file size */
-					if (!match_hash_tokens(&token, "\5")) bad = 1;
-					if (token.begin != param_end) bad = 1;
-					break;
-				case THREEC2U('x', 't', '='): /* a file hash */
-					/* find last ':' character (hash name can be complex like tree:tiger) */
-					for (hf_end = param_end - 1; *hf_end != ':' && hf_end > token.begin; hf_end--);
-
-					/* test for the "urn:" string */
-					if ((token.begin += 4) >= hf_end)
-						return 0;
-					if (FOURC2U(token.begin[-4], token.begin[-3], token.begin[-2], token.begin[-1]) !=
-							FOURC2U('u', 'r', 'n', ':'))
-						return 0;
-					/* find hash by its magnet link specific URN name  */
-					for (i = 0; i < RHASH_HASH_COUNT; i++) {
-						const char* urn = rhash_get_magnet_name(1 << i);
-						size_t len = hf_end - token.begin;
-						if (strncmp(token.begin, urn, len) == 0 && urn[len] == '\0')
-							break;
-					}
-					if (i >= RHASH_HASH_COUNT) {
-						if (opt.flags & OPT_VERBOSE) {
-							*hf_end = '\0';
-							log_warning(_("unknown hash in magnet link: %s\n"), token.begin);
-						}
-						return 0;
-					}
-
-					token.begin = hf_end + 1;
-					token.expected_hash_id = 1 << i;
-					token.hash_type = (FmtHex | FmtBase32);
-					if (!match_hash_tokens(&token, "\3")) bad = 1;
-					if (token.begin != param_end) bad = 1;
-					break;
-
-					/* note: this switch () skips all unknown parameters */
-				}
-			}
-			if (!bad && next) token.begin = next;
-			else break;
-		}
-		if (!url_name) bad = 1; /* file path parameter is mandatory */
-	} else if (strncmp(line, "ed2k://|file|", 13) == 0) {
+	if (strncmp(token.begin, "ed2k://|file|", 13) == 0) {
 		token.begin += 13;
-		token.expected_hash_id = RHASH_ED2K;
-		token.hash_type = FmtHex;
-		if (match_hash_tokens(&token, "\4|\5|\3|")) {
+		if (parse_ed2k_link(&token)) {
 			url_name = token.url_name;
 			url_length = token.url_length;
 		} else bad = 1;
-
-		/* try to parse optional AICH hash */
-		token.expected_hash_id = RHASH_AICH;
-		token.hash_type = (FmtHex | FmtBase32); /* AICH is usually base32-encoded*/
-		match_hash_tokens(&token, "h=\3|");
+	} else if (strncmp(token.begin, "magnet:?", 8) == 0) {
+		token.begin += 8;
+		if (parse_magnet_url(&token)) {
+			url_name = token.url_name;
+			url_length = token.url_length;
+		} else bad = 1;
 	} else {
 		if (match_hash_tokens(&token, "\1 ( $ ) = \3")) {
 			/* BSD-formatted line has been processed */
@@ -690,7 +731,7 @@ int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expect
 
 	if (bad) {
 		log_warning(_("can't parse line: %s\n"), line);
-		return 0;
+		return ResFailed;
 	}
 
 	assert(parser->file_path == 0);
@@ -743,7 +784,7 @@ int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expect
 		}
 		parser->hash_mask |= hv->hash_id;
 	}
-	return 1;
+	return ResAllMatched;
 }
 
 /**
