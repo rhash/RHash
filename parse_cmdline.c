@@ -685,6 +685,7 @@ static int read_config(void)
 	char buf[LINE_BUF_SIZE];
 	FILE* fd;
 	parsed_option_t option;
+	unsigned line_number = 0;
 	int res;
 
 	/* initialize conf_opt */
@@ -705,12 +706,16 @@ static int read_config(void)
 		char* name;
 		char* value;
 
-		if (*line == 0 || IS_COMMENT(*line)) continue;
+		line_number++;
+		if (*line == 0 || IS_COMMENT(*line))
+			continue;
 
 		/* search for '=' */
 		index = strcspn(line, "=");
 		if (line[index] == 0) {
-			log_warning(_("%s: can't parse line \"%s\"\n"), file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull), line);
+			log_warning(_("%s:%u: can't parse line \"%s\"\n"),
+				file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull),
+				line_number, line);
 			continue;
 		}
 		line[index] = 0;
@@ -723,7 +728,9 @@ static int read_config(void)
 		}
 
 		if (!t->type) {
-			log_warning(_("%s: unknown option \"%s\"\n"), file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull), line);
+			log_warning(_("%s:%u: unknown option \"%s\"\n"),
+				file_get_print_path(&rhash_data.config_file, FPathUtf8 | FPathNotNull),
+				line_number, line);
 			continue;
 		}
 
@@ -831,7 +838,7 @@ struct parsed_cmd_line_t
 /**
  * Allocate parsed option.
  *
- * @param cmd_line the command line to store the parsed option into.
+ * @param cmd_line the command line to store the parsed option into
  * @return allocated parsed option
  */
 static parsed_option_t* new_option(struct parsed_cmd_line_t* cmd_line)
@@ -1073,7 +1080,7 @@ static void set_default_sums_flags(const char* progName)
 /**
  * Destroy a parsed options object.
  *
- * @param o pointer to the options object to destroy.
+ * @param o pointer to the options object to destroy
  */
 void options_destroy(struct options_t* o)
 {
