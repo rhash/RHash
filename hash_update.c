@@ -182,50 +182,29 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
 static int file_set_load_from_crc_file(file_set* set, file_t* file)
 {
 	int result = (DoesExist | IsEmptyFile);
-	char buf[2048];
-	struct hash_parser hp;
-
-	FILE* fd = file_fopen(file, FOpenRead | FOpenBin);
-	if (!fd) {
+	struct hash_parser *parser = hash_parser_open(file, 0);
+	if (!parser) {
 		/* if file does not exist, it will be created later */
 		if (errno == ENOENT)
 			return IsEmptyFile;
 		log_error_file_t(file);
 		return -1;
 	}
-	while (!feof(fd) && fgets(buf, 2048, fd)) {
-		char* line = buf;
-		if ((result & IsEmptyFile) != 0) {
-			/* skip unicode BOM */
-			if (STARTS_WITH_UTF8_BOM(line)) {
-				line += 3;
-				result |= HasBom;
-				file->mode |= FileContentIsUtf8;
-			}
-			if (*line == 0 && feof(fd))
-				break;
-			result &= ~IsEmptyFile;
-		}
-		if (*line == 0)
-			continue; /* skip empty lines */
-		if (is_binary_string(line)) {
-			log_msg_file_t(_("skipping binary file %s\n"), file);
-			fclose(fd);
-			return -1;
-		}
-		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
-			continue;
-		/* parse a hash file line */
-		if (parse_hash_file_line(line, &hp, opt.sum_flags, !feof(fd))) {
-			/* put file path into the file set */
-			if (hp.file_path) file_set_add_name(set, hp.file_path);
-		}
+	while(hash_parser_process_line(parser) != 0)
+	{
+		/* put file path into the file set */
+		const char* path = file_get_print_path(&parser->parsed_path, FPathUtf8);
+		if (path)
+			file_set_add_name(set, path);
+		result &= ~IsEmptyFile;
 	}
-	if (ferror(fd)) {
+	if (errno != 0) {
 		log_error_file_t(file);
 		result = -1;
 	}
-	fclose(fd);
+	if (hash_parser_has_bom(parser))
+		result |= HasBom;
+	hash_parser_close(parser);
 	return result;
 }
 

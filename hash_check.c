@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <ctype.h>  /* isspace */
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* size of the buffer to receive a hash file line */
@@ -52,15 +53,19 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 }
 
 /**
- * Decode an URL-encoded string in the specified buffer.
+ * Decode an URL-encoded string. The function returns pointer
+ * to its internal static buffer containing decoded string.
  *
- * @param buffer the 0-terminated URL-encoded string
+ * @param src URL-encoded string
+ * @param src_length length of the string to decode
+ * @return decoded string
  */
-static void urldecode(char* buffer)
+static char* urldecode(const char* src, size_t src_length)
 {
+	static char buffer[LINE_BUFFER_SIZE];
 	char* dst = buffer;
-	const char* src = buffer;
-	const char* src_end = src + strlen(src);
+	const char* src_end = src + src_length;
+	assert(src_length < LINE_BUFFER_SIZE);
 	for (; src < src_end; dst++) {
 		*dst = *(src++); /* copy non-escaped characters */
 		if (*dst == '%') {
@@ -78,26 +83,10 @@ static void urldecode(char* buffer)
 			}
 		}
 	}
+	assert(dst < (buffer + LINE_BUFFER_SIZE));
 	*dst = '\0'; /* terminate decoded string */
+	return buffer;
 }
-
-#ifndef _WIN32
-/**
- * Convert a windows file path to a UNIX one, replacing '\\' by '/'.
- *
- * @param path the path to convert
- * @return converted path
- */
-static void convert_backslashes_to_unix(char* path)
-{
-	for (; *path; path++) {
-		if (*path == '\\')
-			*path = '/';
-	}
-}
-#else /* _WIN32 */
-#define convert_backslashes_to_unix(path)
-#endif /* _WIN32 */
 
 /* convert a hash function bit-flag to the index of the bit */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
@@ -369,17 +358,41 @@ static int rhash_isspace(char ch)
 }
 
 /**
+ * Extended hash parser data.
+ */
+struct hash_parser_ext {
+	struct hash_parser hp;
+	file_t* hash_file;
+	file_t parent_dir;
+	FILE* fd;
+	uint64_t expected_hash_mask;
+	unsigned is_sfv;
+	unsigned line_number;
+	char buffer[LINE_BUFFER_SIZE];
+};
+
+/**
  * Information about found token.
  */
 struct hash_token
 {
 	char* begin; /* start of the buffer to parse */
 	char* end;   /* end of the buffer to parse */
-	struct hash_parser* hp;
+	file_t* p_parsed_path;
+	struct hash_parser_ext* parser;
+	struct hash_value* p_hashes;
 	unsigned expected_hash_id;
 	int hash_type;
-	char* url_name;
-	size_t url_length;
+};
+
+static int fstat_path_token(struct hash_token* token, char* path, size_t path_length, int is_url);
+
+/**
+ * Bit-flags for the match_hash_tokens() function.
+ */
+enum MhtOptionsBitFlags {
+	MhtFstatPath = 1,
+	MhtAllowOneHash = 2
 };
 
 /**
@@ -388,6 +401,8 @@ struct hash_token
 enum MhtResults {
 	ResFailed = 0,
 	ResAllMatched = 1,
+	ResPathNotExists = 2,
+	ResOneHashDetected = 3
 };
 
 /**
@@ -395,7 +410,7 @@ enum MhtResults {
  * The format string can contain the following special characters:
  * '\1' - BSD hash function name, '\2' - any hash, '\3' - specified hash,
  * '\4' - an URL-encoded file name, '\5' - a file size,
- * '\6' - a required space, '\7' - a space or line end.
+ * '\6' - a required space or line end.
  * A space ' ' means 0 or more space characters.
  * '$' - parse the rest of the buffer and the format string backward.
  * Other (non-special) symbols mean themselves.
@@ -405,14 +420,16 @@ enum MhtResults {
  * @param format the format string
  * @return one of the MhtResults constants
  */
-static int match_hash_tokens(struct hash_token* token, const char* format)
+static int match_hash_tokens(struct hash_token* token, const char* format, unsigned flags)
 {
 	int backward = 0;
 	char buf[20];
 	const char* fend = strchr(format, '\0');
 	char* begin = token->begin;
 	char* end = token->end;
-	struct hash_parser* hp = token->hp;
+	char* url_path = 0;
+	size_t url_length;
+	struct hash_parser* hp = &token->parser->hp;
 	struct hash_value hv;
 	int unsaved_hashval = 0;
 	memset(&hv, 0, sizeof(hv));
@@ -492,11 +509,11 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 			unsaved_hashval = 1;
 			break;
 		case '\4': /* get URL-encoded name */
-			token->url_name = begin;
-			token->url_length = strcspn(begin, "?&|");
-			if (token->url_length == 0)
+			url_path = begin;
+			url_length = strcspn(begin, "?&|");
+			if (url_length == 0)
 				return ResFailed; /* empty name */
-			begin += token->url_length;
+			begin += url_length;
 			break;
 		case '\5': /* retrieve file size */
 			assert(!backward);
@@ -512,7 +529,6 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 			}
 			break;
 		case '\6':
-		case '\7':
 		case ' ':
 			if (backward)
 				for (; begin < end && rhash_isspace(end[-1]); end--, len++);
@@ -520,9 +536,8 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 				for (; rhash_isspace(*begin) && begin < end; begin++, len++);
 			/* check if space is mandatory */
 			if (*search_str != ' ' && len == 0) {
-				/* for '\6' verify (len > 0) */
-				/* for '\7' verify (len > 0 || begin == end) */
-				if (*search_str == '\6' || begin < end)
+				/* for '\6' verify (len > 0 || (MhtAllowOneHash is set && begin == end)) */
+				if (!(flags & MhtAllowOneHash) || begin < end)
 					return ResFailed;
 			}
 			break;
@@ -536,11 +551,123 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
 	}
 
 	if (unsaved_hashval && hp->hashes_num < HP_MAX_HASHES) {
-		hp->hashes[hp->hashes_num++] = hv;
+		token->p_hashes[hp->hashes_num++] = hv;
 	}
 	token->begin = begin;
 	token->end = end;
+	if ((flags & MhtAllowOneHash) != 0 && hp->hashes_num == 1 && begin == end)
+	{
+		struct hash_parser_ext* const parser = token->parser;
+		file_t* parsed_path = &parser->hp.parsed_path;
 
+		if (file_modify_path(parsed_path, parser->hash_file, NULL, FModifyRemoveExtension) < 0) {
+			/* note: trailing whitespaces were removed from line by hash_parser_parse_line() */
+			return ResFailed;
+		}
+		if ((flags & MhtFstatPath) != 0 && file_stat(parsed_path, 0) < 0)
+			hp->parsed_path_errno = errno;
+		return ResOneHashDetected;
+	}
+
+	if ((flags & MhtFstatPath) != 0) {
+		int fstat_res;
+		if (url_path != 0) {
+			fstat_res = fstat_path_token(token, url_path, url_length, 1);
+		} else {
+			size_t path_length = end - begin;
+			fstat_res = fstat_path_token(token, begin, path_length, 0);
+		}
+		if (fstat_res < 0)
+			return ResPathNotExists;
+	}
+	return ResAllMatched;
+}
+
+/**
+ * Fstat given file path. Optionally prepend it, if needed, by parent directory.
+ * If is_url is non-zero, then path is urldecoded.
+ * Fstat result is stored into token->p_parsed_path.
+ *
+ * @param token current tokens parsing context
+ * @param str pointer to the path start
+ * @param str_length length of the path
+ * @param is_url
+ * @return 0 on success, -1 on fstat fail
+ */
+static int fstat_path_token(struct hash_token* token, char* str, size_t str_length, int is_url)
+{
+	file_t* parent_dir = &token->parser->parent_dir;
+	unsigned init_flags = (FILE_IS_IN_UTF8(token->parser->hash_file) ?
+		FileInitRunFstat | FileInitUtf8PrintPath : FileInitRunFstat);
+	char* path = (is_url ? urldecode(str, str_length) : str);
+	size_t path_length = (is_url ? strlen(path) : str_length);
+
+	int is_absolute = IS_PATH_SEPARATOR(path[0]);
+	int res;
+	char saved_char = path[path_length];
+	path[path_length] = '\0';
+
+	IF_WINDOWS(is_absolute = is_absolute || (path[0] && path[1] == ':'));
+	if (is_absolute || !parent_dir->real_path)
+		parent_dir = NULL;
+
+	res = file_init_by_print_path(token->p_parsed_path, parent_dir, path, init_flags);
+	if (res < 0 && token->p_parsed_path == &token->parser->hp.parsed_path)
+		token->parser->hp.parsed_path_errno = errno;
+	path[path_length] = saved_char;
+	return res;
+}
+
+/**
+ * Fstat given file path. Optionally prepend it, if needed, by parent directory.
+ * If is_url is non-zero, then path is urldecoded.
+ * Fstat result is stored into token->p_parsed_path.
+ *
+ * @param token tokens parsing context
+ * @return ResPathNotExists if path has not been found, ResAllMatched otherwise
+ */
+static int finalize_parsed_data(struct hash_token* token)
+{
+	int i;
+	struct hash_parser* const parser = &token->parser->hp;
+	if (token->p_parsed_path != &parser->parsed_path) {
+		file_cleanup(&parser->parsed_path);
+		parser->parsed_path = *token->p_parsed_path;
+	}
+	if (FILE_ISBAD(&parser->parsed_path) || !parser->parsed_path.real_path)
+		return ResPathNotExists;
+
+	if (token->p_hashes != parser->hashes) {
+		assert(parser->hashes_num == 1);
+		parser->hashes[0] = token->p_hashes[0];
+	}
+
+	/* post-process parsed message digests */
+	for (i = 0; i < parser->hashes_num; i++) {
+		struct hash_value* hv = &parser->hashes[i];
+		char* hash_str = parser->line_begin + hv->offset;
+		hash_str[hv->length] = '\0'; /* terminate the message digest */
+
+		if (hv->hash_id == 0) {
+			/* calculate bit-mask of hash function ids */
+			unsigned mask = 0;
+			if (hv->format & FmtHex) {
+				mask |= hash_bitmask_by_digest_size(hv->length >> 1);
+			}
+			if (hv->format & FmtBase32) {
+				assert(((hv->length * 5 / 8) & 3) == 0);
+				mask |= hash_bitmask_by_digest_size(BASE32_BIT_SIZE(hv->length) / 8);
+			}
+			if (hv->format & FmtBase64) {
+				mask |= hash_bitmask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
+			}
+			assert(mask != 0);
+			if ((mask & token->parser->expected_hash_mask) != 0)
+				mask &= token->parser->expected_hash_mask;
+			hv->hash_id = mask;
+		}
+		parser->hash_mask |= hv->hash_id;
+	}
 	return ResAllMatched;
 }
 
@@ -552,6 +679,9 @@ static int match_hash_tokens(struct hash_token* token, const char* format)
   */
 static int parse_magnet_url(struct hash_token* token)
 {
+	char* url_path = 0;
+	size_t url_length;
+
 	/* loop by magnet link parameters */
 	while (1) {
 		char* next = strchr(token->begin, '&');
@@ -561,11 +691,11 @@ static int parse_magnet_url(struct hash_token* token)
 		if ((token->begin += 3) < param_end) {
 			switch (THREEC2U(token->begin[-3], token->begin[-2], token->begin[-1])) {
 			case THREEC2U('d', 'n', '='): /* URL-encoded file path */
-				token->url_name = token->begin;
-				token->url_length = param_end - token->begin;
+				url_path = token->begin;
+				url_length = param_end - token->begin;
 				break;
 			case THREEC2U('x', 'l', '='): /* file size */
-				if (!match_hash_tokens(token, "\5"))
+				if (!match_hash_tokens(token, "\5", 0))
 					return ResFailed;
 				if (token->begin != param_end)
 					return ResFailed;
@@ -599,7 +729,7 @@ static int parse_magnet_url(struct hash_token* token)
 					token->begin = hf_end + 1;
 					token->expected_hash_id = 1 << i;
 					token->hash_type = (FmtHex | FmtBase32);
-					if (!match_hash_tokens(token, "\3"))
+					if (!match_hash_tokens(token, "\3", 0))
 						return ResFailed;
 					if (token->begin != param_end)
 						return ResFailed;
@@ -613,9 +743,10 @@ static int parse_magnet_url(struct hash_token* token)
 		else
 			break;
 	}
-	if (!token->url_name || token->hp->hashes_num == 0)
+	if (!url_path || token->parser->hp.hashes_num == 0)
 		return ResFailed;
-	return ResAllMatched;
+	fstat_path_token(token, url_path, url_length, 1);
+	return finalize_parsed_data(token);
 }
 
  /**
@@ -628,13 +759,13 @@ static int parse_ed2k_link(struct hash_token* token)
 {
 	token->expected_hash_id = RHASH_ED2K;
 	token->hash_type = FmtHex;
-	if (!match_hash_tokens(token, "\4|\5|\3|"))
+	if (!match_hash_tokens(token, "\4|\5|\3|", MhtFstatPath))
 		return ResFailed;
 	/* try to parse optional AICH hash */
 	token->expected_hash_id = RHASH_AICH;
 	token->hash_type = (FmtHex | FmtBase32); /* AICH is usually base32-encoded*/
-	match_hash_tokens(token, "h=\3|");
-	return ResAllMatched;
+	match_hash_tokens(token, "h=\3|", 0);
+	return finalize_parsed_data(token);
 }
 
 /**
@@ -648,27 +779,23 @@ static int parse_ed2k_link(struct hash_token* token)
  * </ul>
  * For a magnet/ed2k links file size is also parsed.
  *
- * @param line the line to parse
  * @param parser structure to store parsed message digests, file path and file size
- * @param expected_hash_mask hash mask of expected algorithms
  * @param check_eol boolean flag meaning that '\n' at the end of the line is required
- * @return 1 on success, 0 if couldn't parse the line
+ * @return non-zero on success (ResAllMatched, ResOneHashDetected, ResPathNotExists),
+ *         ResFailed if couldn't parse the line
  */
-int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expected_hash_mask, int check_eol)
+static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 {
 	struct hash_token token;
+	char* line = parser->hp.line_begin;
 	char* line_end = strchr(line, '\0');
-	char* url_name = NULL;
-	size_t url_length = 0;
-	int single_hash = 0;
-	int reversed = 0;
-	int bad = 0;
-	int i, j;
+	int res;
+
+	assert(line[0] != '\0');
 
 	/* return if EOL not found at the end of the line */
-	if (line[0] == '\0' || (line_end[-1] != '\n' && check_eol))
+	if (line_end[-1] != '\n' && check_eol)
 		return ResFailed;
-
 	/* trim line manually, without str_trim(), cause we'll need line_end later */
 	while (rhash_isspace(line_end[-1]) && line_end > line)
 		*(--line_end) = 0;
@@ -679,11 +806,13 @@ int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expect
 	memset(&token, 0, sizeof(token));
 	token.begin = line;
 	token.end = line_end;
-	token.hp = parser;
+	token.parser = parser;
+	token.p_parsed_path = &parser->hp.parsed_path;
+	token.p_hashes = parser->hp.hashes;
 
-	memset(parser, 0, sizeof(*parser));
-	parser->line_begin = line;
-	parser->file_size = (uint64_t)-1;
+	memset(&parser->hp, 0, sizeof(parser->hp));
+	parser->hp.line_begin = line;
+	parser->hp.file_size = (uint64_t)-1;
 
 	/* check for a minimum acceptable message digest length */
 	if ((line + 8) > line_end)
@@ -691,100 +820,90 @@ int parse_hash_file_line(char* line, struct hash_parser* parser, unsigned expect
 
 	if (strncmp(token.begin, "ed2k://|file|", 13) == 0) {
 		token.begin += 13;
-		if (parse_ed2k_link(&token)) {
-			url_name = token.url_name;
-			url_length = token.url_length;
-		} else bad = 1;
-	} else if (strncmp(token.begin, "magnet:?", 8) == 0) {
+		return parse_ed2k_link(&token);
+	}
+	if (strncmp(token.begin, "magnet:?", 8) == 0) {
 		token.begin += 8;
-		if (parse_magnet_url(&token)) {
-			url_name = token.url_name;
-			url_length = token.url_length;
-		} else bad = 1;
-	} else {
-		if (match_hash_tokens(&token, "\1 ( $ ) = \3")) {
-			/* BSD-formatted line has been processed */
-		} else if (match_hash_tokens(&token, "$\6\2")) {
-			while (match_hash_tokens(&token, "$\6\2"));
-			if (parser->hashes_num > 1)
-				reversed = 1;
-		} else {
-			token.hash_type = FmtAll;
-			if (match_hash_tokens(&token, "\2\7")) {
-				if (token.begin == token.end) {
-					/* the line contains no file path, only a single hash */
-					single_hash = 1;
-				} else {
-					if (token.hp->hashes_num == 1 && token.hp->hashes[0].format != FmtBase64)
-						token.hash_type &= ~FmtBase64;
-					while (match_hash_tokens(&token, "\2\6"));
-					/* drop an asterisk before filename if present */
-					if (*token.begin == '*')
-						token.begin++;
+		return parse_magnet_url(&token);
+	}
+	/* check for BSD-formatted line has been processed */
+	res = match_hash_tokens(&token, "\1 ( $ ) = \3", MhtFstatPath);
+	if (res != ResFailed)
+		return finalize_parsed_data(&token);
+	token.hash_type = FmtAll;
+
+	{
+		const unsigned is_sfv_format = parser->is_sfv;
+		unsigned valid_direction = 0;
+		unsigned state;
+		unsigned token_flags = (MhtFstatPath | MhtAllowOneHash);
+
+		struct file_t secondary_path;
+		struct hash_token secondary_token;
+		struct hash_token *cur_token = &token;
+		struct hash_value secondary_hash[1];
+
+		memset(&secondary_path, 0, sizeof(secondary_path));
+		memcpy(&secondary_token, &token, sizeof(token));
+		secondary_token.p_hashes = secondary_hash;
+
+		/* parse one hash from each line end */
+		for (state = 0; state < 2; state++)
+		{
+			const unsigned is_backward = (state ^ is_sfv_format);
+			const char* token_format = (is_backward ? "$\6\2" : "\2\6");
+			int res = match_hash_tokens(cur_token, token_format, token_flags);
+			if (res == ResAllMatched || res == ResOneHashDetected)
+			{
+				return finalize_parsed_data(cur_token);
+			}
+			else if (res == ResPathNotExists)
+			{
+				assert(parser->hp.hashes_num == 1);
+				valid_direction |= (1 << state); /* mark the current parsing direction as valid */
+				if (token.p_parsed_path == &parser->hp.parsed_path)
+					token.p_parsed_path = secondary_token.p_parsed_path = &secondary_path;
+				cur_token = &secondary_token;
+				parser->hp.hashes_num = 0;
+			}
+			token_flags &= ~MhtAllowOneHash;
+		}
+
+		/* parse the rest of hashes */
+		for (state = 0; state < 2; state++)
+		{
+			if ((valid_direction & (1 << state)) != 0)
+			{
+				const unsigned is_backward = (state ^ is_sfv_format);
+				const char* token_format = (is_backward ? "$\6\2" : "\2\6");
+
+				/* restore parsing state and a parsed hash */
+				parser->hp.hashes_num = 1;
+				if (state == 1 && valid_direction == 3)
+				{
+					token.begin = secondary_token.begin;
+					token.end = secondary_token.end;
+					token.p_hashes[0] = secondary_token.p_hashes[0];
 				}
-			} else bad = 1;
-		}
-
-		if (token.begin >= token.end && !single_hash)
-			bad = 1;
-	}
-
-	if (bad) {
-		log_warning(_("can't parse line: %s\n"), line);
-		return ResFailed;
-	}
-
-	assert(parser->file_path == 0);
-
-	/* if !single_hash then we shall extract filepath from the line */
-	if (url_name) {
-		parser->file_path = url_name;
-		url_name[url_length] = '\0';
-		urldecode(url_name); /* decode filename from URL */
-		convert_backslashes_to_unix(url_name);
-	} else if (!single_hash) {
-		assert(token.begin < token.end);
-		parser->file_path = token.begin;
-		*token.end = '\0';
-		convert_backslashes_to_unix(token.begin);
-	}
-
-	if (reversed) {
-		/* change reversed order of message digests to the forward order */
-		for (i = 0, j = parser->hashes_num - 1; i < j; i++, j--) {
-			struct hash_value tmp = parser->hashes[i];
-			parser->hashes[i] = parser->hashes[j];
-			parser->hashes[j] = tmp;
-		}
-	}
-
-	/* post-process parsed message digests */
-	for (i = 0; i < parser->hashes_num; i++) {
-		struct hash_value* hv = &parser->hashes[i];
-		char* hash_str = parser->line_begin + hv->offset;
-		hash_str[hv->length] = '\0'; /* terminate the message digest */
-
-		if (hv->hash_id == 0) {
-			/* calculate bit-mask of hash function ids */
-			unsigned mask = 0;
-			if (hv->format & FmtHex) {
-				mask |= hash_bitmask_by_digest_size(hv->length >> 1);
+				/* allow FmtBase64 only if the first hash can be interpreted only as Base64-encoded */
+				token.hash_type = (token.hash_type & ~FmtBase64) |
+					(token.p_hashes[0].format == FmtBase64 ? FmtBase64 : 0);
+				for (;;)
+				{
+					int res = match_hash_tokens(&token, token_format, token_flags);
+					assert(res != ResOneHashDetected);
+					if (res == ResAllMatched)
+						return finalize_parsed_data(&token);
+					else if (res == ResFailed)
+						break;
+				}
 			}
-			if (hv->format & FmtBase32) {
-				assert(((hv->length * 5 / 8) & 3) == 0);
-				mask |= hash_bitmask_by_digest_size(BASE32_BIT_SIZE(hv->length) / 8);
-			}
-			if (hv->format & FmtBase64) {
-				mask |= hash_bitmask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
-			}
-			assert(mask != 0);
-			if ((mask & expected_hash_mask) != 0)
-				mask &= expected_hash_mask;
-			hv->hash_id = mask;
 		}
-		parser->hash_mask |= hv->hash_id;
+		file_cleanup(&secondary_path);
+		if (token.p_parsed_path != &parser->hp.parsed_path)
+			return ResPathNotExists;
 	}
-	return ResAllMatched;
+	return ResFailed; /* could not parse line */
 }
 
 /**
@@ -970,8 +1089,17 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
 	}
 
 	rsh_timer_start(&timer);
-	if (FILE_ISBAD(info.file) || calc_sums(&info) < 0) {
-		return (finish_percents(&info, -1) < 0 ? -2 : -1);
+	if (FILE_ISBAD(info.file)) {
+		/* restore errno */
+		errno = hp->parsed_path_errno;
+		res = -1;
+	} else {
+		res = calc_sums(&info);
+	}
+	if (res < 0) {
+		/* report file error */
+		int output_res = finish_percents(&info, -1);
+		return (output_res < 0 ? -2 : -1);
 	}
 	info.time = rsh_timer_stop(&timer);
 
@@ -1069,16 +1197,146 @@ static int extract_uppercase_file_ext(struct file_ext* fe, file_t* file)
 
 /**
  * Detect expected hash functions from the file extension.
+ * Also detect if the file has "SFV" extension.
  *
- * @param file the file which extension will be checked
- * @return hash_id on success, 0 on fail
+ * @param parser the parser to store hash_mask and sfv flag into
  */
-static unsigned hash_mask_by_file_ext(file_t* file)
+static void set_parser_flags_by_file_extension(struct hash_parser_ext* parser)
 {
 	struct file_ext ext;
-	if (!extract_uppercase_file_ext(&ext, file))
+	if (!extract_uppercase_file_ext(&ext, parser->hash_file))
+		return;
+	parser->expected_hash_mask = bsd_hash_name_to_id(ext.buffer, ext.length);
+	if (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0)
+		parser->is_sfv = 1;
+}
+
+/**
+ * Close and cleanup hash parser.
+ *
+ * @param parser the hash parser to close
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+int hash_parser_close(struct hash_parser* hp)
+{
+	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
+	int res = 0;
+	if (!parser)
 		return 0;
-	return bsd_hash_name_to_id(ext.buffer, ext.length);
+	file_cleanup(&parser->parent_dir);
+	file_cleanup(&parser->hp.parsed_path);
+	if (parser->fd != stdin)
+		res = fclose(parser->fd);
+	free(parser);
+	return res;
+}
+
+/**
+ * Open a hash file and create a hash_parser for it.
+ *
+ * @param file hash file listing other files with message digests
+ * @param chdir true if function should emulate chdir to the parent directory of the hash file
+ * @return created hash_parser on success, NULL on fail with error code stored in errno
+ */
+struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
+{
+	FILE* fd;
+	struct hash_parser_ext* parser;
+
+	/* open file or prepare file descriptor */
+	if (FILE_ISSTDIN(hash_file))
+		fd = stdin;
+	else if ( !(fd = file_fopen(hash_file, FOpenRead | FOpenBin) ))
+		return NULL;
+
+	/* allocate and initialize parser */
+	parser = (struct hash_parser_ext*)rsh_malloc(sizeof(struct hash_parser_ext));
+	memset(parser, 0, sizeof(struct hash_parser_ext));
+	parser->hash_file = hash_file;
+	parser->fd = fd;
+	parser->expected_hash_mask = opt.sum_flags;
+
+	if (chdir) {
+		/* extract the parent directory */
+		file_modify_path(&parser->parent_dir, hash_file, NULL, FModifyGetParentDir);
+	}
+	if((opt.flags & OPT_NO_DETECT_BY_EXT) == 0)
+		set_parser_flags_by_file_extension(parser);
+	if ((opt.fmt & FMT_SFV) != 0)
+		parser->is_sfv = 1;
+
+	return &parser->hp;
+}
+
+/**
+ * Returns non-zero if parsed hash file starts with UTF8 BOM.
+ *
+ * @param hp parser corresponding to an openned hash file
+ * @return non-zero if BOM has been detected, 0 otherwise
+ */
+int hash_parser_has_bom(struct hash_parser* hp)
+{
+	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
+	return FILE_IS_IN_UTF8(parser->hash_file);
+}
+
+/**
+ * Constants returned by hash_parser_process_line() function.
+ */
+enum ProcessLineResults {
+	ResStopParsing = 0,
+	ResSkipLine = 1,
+	ResParsedLine = 2,
+	ResFailedToParse = 3
+};
+
+/**
+ * Parse one line of the openned hash file.
+ *
+ * @param hp parser processing the hash file
+ * @return one of the ProcessLineResults constants
+ */
+int hash_parser_process_line(struct hash_parser* hp)
+{
+	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
+	char *line = parser->buffer;
+
+	if (!fgets(parser->buffer, sizeof(parser->buffer), parser->fd))
+	{
+		if (ferror(parser->fd))
+			log_error_file_t(parser->hash_file);
+		return ResStopParsing;
+	}
+
+	parser->line_number++;
+	if (parser->line_number > 1)
+		file_cleanup(&hp->parsed_path);
+
+	/* skip unicode BOM, if found */
+	if (STARTS_WITH_UTF8_BOM(line)) {
+		line += 3;
+		if (parser->line_number == 1)
+			parser->hash_file->mode |= FileContentIsUtf8;
+	}
+	if (is_binary_string(line)) {
+		log_error(_("file is binary: %s:%u\n"),
+			file_get_print_path(parser->hash_file, FPathPrimaryEncoding | FPathNotNull),
+			parser->line_number);
+		return ResStopParsing;
+	}
+	/* silently skip comments and empty lines */
+	if (*line == '\0' || *line == '\r' || *line == '\n' || IS_COMMENT(*line))
+		return ResSkipLine;
+
+	hp->line_begin = line;
+	if (!parse_hash_file_line(parser, !feof(parser->fd))) {
+		log_msg(_("%s:%u: can't parse line \"%s\"\n"),
+			file_get_print_path(parser->hash_file, FPathPrimaryEncoding | FPathNotNull),
+			parser->line_number, parser->hp.line_begin);
+		return ResFailedToParse;
+	}
+	errno = 0;
+	return ResParsedLine;
 }
 
 /**
@@ -1092,17 +1350,11 @@ static unsigned hash_mask_by_file_ext(file_t* file)
  */
 int check_hash_file(file_t* file, int chdir)
 {
-	FILE* fd;
-	file_t parent_dir;
-	file_t* p_parent_dir = 0;
-	char buf[LINE_BUFFER_SIZE];
+	struct hash_parser* parser;
 	timedelta_t timer;
-	struct hash_parser parser;
-	int res = 0;
-	int line_number = 0;
-	unsigned init_flags = 0;
-	unsigned expected_hash_mask = opt.sum_flags;
 	double time;
+	int parsing_res;
+	int res = 0;
 
 	/* process --check-embedded option */
 	if (opt.mode & MODE_CHECK_EMBEDDED)
@@ -1112,90 +1364,37 @@ int check_hash_file(file_t* file, int chdir)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
-	/* open file / prepare file descriptor */
-	if (FILE_ISSTDIN(file)) {
-		fd = stdin;
-	} else if ( !(fd = file_fopen(file, FOpenRead | FOpenBin) )) {
+	parser = hash_parser_open(file, chdir);
+	if (!parser) {
 		log_error_file_t(file);
 		return -1;
 	}
 
 	if (print_verifying_header(file) < 0) {
 		log_error_file_t(&rhash_data.out_file);
-		if (fd != stdin)
-			fclose(fd);
+		hash_parser_close(parser);
 		return -2;
 	}
 	rsh_timer_start(&timer);
-	memset(&parent_dir, 0, sizeof(parent_dir));
 
-	if (chdir) {
-		/* extract the parent directory */
-		file_modify_path(&parent_dir, file, NULL, FModifyGetParentDir);
-		p_parent_dir = &parent_dir;
-	}
-	if (!expected_hash_mask && !(opt.flags & OPT_NO_DETECT_BY_EXT))
-		expected_hash_mask = hash_mask_by_file_ext(file);
-
-	/* read hash file line by line */
-	for (line_number = 0; fgets(buf, sizeof(buf), fd); line_number++) {
-		char* line = buf;
-		file_t file_to_check;
-
-		/* skip unicode BOM */
-		if (STARTS_WITH_UTF8_BOM(buf)) {
-			line += 3;
-			if (line_number == 0)
-				init_flags = FileInitUtf8PrintPath; /* hash file is in UTF8 */
-		}
-
-		if (*line == 0)
-			continue; /* skip empty lines */
-
-		if (is_binary_string(line)) {
-			log_error(_("file is binary: %s:%d\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line_number + 1);
-			if (fd != stdin)
-				fclose(fd);
-			file_cleanup(&parent_dir);
-			return -1;
-		}
-
+	while((parsing_res = hash_parser_process_line(parser)) != ResStopParsing) {
 		/* skip comments and empty lines */
-		if (IS_COMMENT(*line) || *line == '\r' || *line == '\n')
+		if (parsing_res == ResSkipLine)
 			continue;
-
-		memset(&parser, 0, sizeof(parser));
-
-		if (!parse_hash_file_line(line, &parser, expected_hash_mask, !feof(fd)))
+		if (parsing_res == ResFailedToParse) {
+			/* statistics: count unparsed lines as errors */
+			rhash_data.processed++;
 			continue;
-		if (parser.hash_mask == 0)
-			continue;
-
-		/* check if the hash file contains a message digest without a filename */
-		if (parser.file_path != NULL) {
-			int is_absolute = IS_PATH_SEPARATOR(parser.file_path[0]);
-			IF_WINDOWS(is_absolute = is_absolute || (parser.file_path[0] && parser.file_path[1] == ':'));
-			file_init_by_print_path(&file_to_check, (is_absolute ? NULL : p_parent_dir), parser.file_path, init_flags);
-		} else {
-			if (file_modify_path(&file_to_check, file, NULL, FModifyRemoveExtension) < 0) {
-				/* note: trailing whitespaces were removed from line by parse_hash_file_line() */
-				log_error(_("%s: can't parse line \"%s\"\n"), file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull), line);
-				continue;
-			}
 		}
-
-		file_stat(&file_to_check, 0);
 
 		/* verify message digests of the file */
-		res = verify_hashes(&file_to_check, &parser);
+		res = verify_hashes(&parser->parsed_path, parser);
 
 		if (res >= -1 && fflush(rhash_data.out) < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		}
-		file_cleanup(&file_to_check);
-
-		if (rhash_data.stop_flags || res < -1) {
+		if (rhash_data.stop_flags || res <= -2) {
 			break; /* stop on fatal error */
 		}
 
@@ -1206,7 +1405,11 @@ int check_hash_file(file_t* file, int chdir)
 			rhash_data.miss++;
 		rhash_data.processed++;
 	}
-	file_cleanup(&parent_dir);
+
+	/* check for a hash file reading error */
+	if (res >= 0 && errno != 0)
+		res = -1;
+
 	time = rsh_timer_stop(&timer);
 
 	if (res >= -1 && (print_verifying_footer() < 0 || print_check_stats() < 0)) {
@@ -1219,11 +1422,6 @@ int check_hash_file(file_t* file, int chdir)
 	if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
 		print_time_stats(time, rhash_data.total_size, 1);
 
-	rhash_data.processed = 0;
-	/* check for input errors */
-	if (res >= 0 && ferror(fd))
-		res = -1;
-	if (fd != stdin)
-		fclose(fd);
+	hash_parser_close(parser);
 	return res;
 }

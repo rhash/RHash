@@ -35,8 +35,9 @@ struct hash_value
  * Parsed file info, like the path, size and file message digests.
  */
 struct hash_parser {
-	char* file_path; /* parsed file path */
+	file_t parsed_path; /* parsed file path */
 	uint64_t file_size; /* parsed file size, e.g. from magnet link */
+	int parsed_path_errno;
 	unsigned bit_flags;
 	uint64_t found_hash_ids; /* bit mask for matched hash ids */
 	uint64_t wrong_hashes;   /* bit mask for mismatched message digests */
@@ -47,7 +48,10 @@ struct hash_parser {
 	struct hash_value hashes[HP_MAX_HASHES];
 };
 
-int parse_hash_file_line(char* line, struct hash_parser* hashes, unsigned expected_hash_mask, int check_eol);
+struct hash_parser* hash_parser_open(file_t* hash_file, int chdir);
+int hash_parser_process_line(struct hash_parser* hp);
+int hash_parser_close(struct hash_parser* hp);
+int hash_parser_has_bom(struct hash_parser* hp);
 
 int check_hash_file(struct file_t* file, int chdir);
 

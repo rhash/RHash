@@ -1,3 +1,8 @@
+Sun 11 Jul 2021 Aleksey
+	* Bugfix: fix verification of some hash files containing spaces in file paths
+	* count unparsed lines of a hash file as errors
+	* print line numbers of unparsed lines of a hash file
+
 Thu 07 Jan 2021 Aleksey
 	* === Version 1.4.1 ===
 

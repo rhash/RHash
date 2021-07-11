@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#if defined( _WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32) || defined(__CYGWIN__)
 # include <windows.h>
 #if !defined(__CYGWIN__)
 # include <share.h> /* for _SH_DENYWR */
@@ -184,6 +184,22 @@ int are_paths_equal(ctpath_t path, file_t* file)
 	return (*path == *fpath);
 }
 
+#ifndef _WIN32
+/**
+ * Convert a windows file path to a UNIX one, replacing '\\' by '/'.
+ *
+ * @param path the path to convert
+ * @return converted path
+ */
+static void convert_backslashes_to_unix(char* path)
+{
+	for (; *path; path++) {
+		if (*path == '\\')
+			*path = '/';
+	}
+}
+#endif /* _WIN32 */
+
 /**
  * Check if a path points to a regular file.
  *
@@ -226,7 +242,7 @@ enum FileMemoryModeBits {
  */
 int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 {
-#if _WIN32
+#ifdef _WIN32
 	tpath_t long_path = get_long_path_if_needed(path);
 #endif
 	memset(file, 0, sizeof(*file));
@@ -243,7 +259,7 @@ int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 			return -1;
 		}
 	}
-#if _WIN32
+#ifdef _WIN32
 	if (long_path)
 	{
 		file->real_path = long_path;
@@ -254,8 +270,12 @@ int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 	{
 		if ((init_flags & FileInitReusePath) == 0)
 		{
-			file->real_path = rsh_tstrdup(path);
 			file->mode = init_flags & FileMaskModeBits;
+			file->real_path = rsh_tstrdup(path);
+#ifndef _WIN32
+			if ((init_flags & FileInitUseRealPathAsIs) == 0)
+				convert_backslashes_to_unix(file->real_path);
+#endif
 		}
 	}
 	if ((init_flags & (FileInitRunFstat | FileInitRunLstat)) &&
