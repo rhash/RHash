@@ -51,7 +51,6 @@ struct hash_parser {
 struct hash_parser* hash_parser_open(file_t* hash_file, int chdir);
 int hash_parser_process_line(struct hash_parser* hp);
 int hash_parser_close(struct hash_parser* hp);
-int hash_parser_has_bom(struct hash_parser* hp);
 
 int check_hash_file(struct file_t* file, int chdir);
 

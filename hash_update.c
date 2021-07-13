@@ -24,7 +24,7 @@ typedef struct update_ctx
 	char* cut_dir_path;
 	file_t file;
 	file_set* crc_entries;
-	unsigned flags;
+	unsigned bit_flags;
 } update_ctx;
 
 enum UpdateFlagsBits
@@ -62,7 +62,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 	memset(ctx, 0, sizeof(*ctx));
 	file_clone(&(ctx->file), update_file);
 	ctx->crc_entries = crc_entries;
-	ctx->flags = (unsigned)update_flags;
+	ctx->bit_flags = (unsigned)update_flags;
 	return ctx;
 }
 
@@ -75,27 +75,26 @@ struct update_ctx* update_ctx_new(file_t* update_file)
  * @param file the file to add
  * @return 0 on success, -1 on fail, -2 on fatal error
  */
-int update_ctx_update(struct update_ctx* ctx, file_t* file)
+int update_ctx_update(struct update_ctx* ctx, file_t* hash_file)
 {
 	int res;
-	if ((ctx->flags & ErrorOcurred) != 0)
+	if ((ctx->bit_flags & ErrorOcurred) != 0)
 		return -1;
 
 	/* skip files already present in the hash file */
-	if (file_set_exist(ctx->crc_entries,
-			file_get_print_path(file, (ctx->flags & HasBom ? FPathUtf8 : FPathPrimaryEncoding))))
+	if (file_set_exist(ctx->crc_entries, file_get_print_path(hash_file, FPathUtf8)))
 		return 0;
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
 		log_error_file_t(&ctx->file);
-		ctx->flags |= ErrorOcurred;
+		ctx->bit_flags |= ErrorOcurred;
 		return -2;
 	}
 
 	/* print message digests to the hash file */
-	res = calculate_and_print_sums(ctx->fd, &ctx->file, file);
+	res = calculate_and_print_sums(ctx->fd, &ctx->file, hash_file);
 	if (res < 0)
-		ctx->flags |= ErrorOcurred;
+		ctx->bit_flags |= ErrorOcurred;
 	return res;
 }
 
@@ -116,7 +115,7 @@ int update_ctx_free(struct update_ctx* ctx)
 		if (fclose(ctx->fd) < 0) {
 			log_error_file_t(&ctx->file);
 			res = -1;
-		} else if (!!(ctx->flags & ErrorOcurred)) {
+		} else if (!!(ctx->bit_flags & ErrorOcurred)) {
 			res = -1;
 		} else if (!rhash_data.stop_flags) {
 			if (opt.fmt == FMT_SFV)
@@ -138,13 +137,13 @@ int update_ctx_free(struct update_ctx* ctx)
  */
 static int open_and_prepare_hash_file(struct update_ctx* ctx)
 {
-	int open_mode = (ctx->flags & DoesExist ? FOpenRW : FOpenWrite) | FOpenBin;
+	int open_mode = (ctx->bit_flags & DoesExist ? FOpenRW : FOpenWrite) | FOpenBin;
 	assert(!ctx->fd);
 	/* open the hash file for reading/writing or create it */
 	ctx->fd = file_fopen(&ctx->file, open_mode);
 	if (!ctx->fd)
 		return -1;
-	if (!(ctx->flags & IsEmptyFile)) {
+	if (!(ctx->bit_flags & IsEmptyFile)) {
 		int ch;
 		/* read the last character of the file to check if it is EOL */
 		if (fseek(ctx->fd, -1, SEEK_END) != 0)
@@ -162,7 +161,7 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
 		}
 	} else {
 		/* skip BOM, if present */
-		if ((ctx->flags & HasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
+		if ((ctx->bit_flags & HasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
 			return -1;
 		/* SFV banner will be printed only in SFV mode and only for empty hash files */
 		if (opt.fmt == FMT_SFV)
@@ -176,33 +175,33 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
  * In a case of fail, the error will be logged.
  *
  * @param set the file set to store loaded files
- * @param file the file containing message digests to load
+ * @param hash_file the file containing message digests to load
  * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
  */
-static int file_set_load_from_crc_file(file_set* set, file_t* file)
+static int file_set_load_from_crc_file(file_set* set, file_t* hash_file)
 {
 	int result = (DoesExist | IsEmptyFile);
-	struct hash_parser *parser = hash_parser_open(file, 0);
+	struct hash_parser *parser = hash_parser_open(hash_file, 0);
 	if (!parser) {
-		/* if file does not exist, it will be created later */
+		/* if hash_file does not exist, it will be created later */
 		if (errno == ENOENT)
 			return IsEmptyFile;
-		log_error_file_t(file);
+		log_error_file_t(hash_file);
 		return -1;
 	}
 	while(hash_parser_process_line(parser) != 0)
 	{
-		/* put file path into the file set */
+		/* put UTF8-encoded file path into the file set */
 		const char* path = file_get_print_path(&parser->parsed_path, FPathUtf8);
 		if (path)
 			file_set_add_name(set, path);
 		result &= ~IsEmptyFile;
 	}
 	if (errno != 0) {
-		log_error_file_t(file);
+		log_error_file_t(hash_file);
 		result = -1;
 	}
-	if (hash_parser_has_bom(parser))
+	else if ((hash_file->mode & FileContentIsUtf8) != 0)
 		result |= HasBom;
 	hash_parser_close(parser);
 	return result;

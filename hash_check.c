@@ -418,6 +418,8 @@ enum MhtResults {
  *
  * @param token the structure to store parsed tokens info
  * @param format the format string
+ * @param flags bit flags: MhtFstatPath to run fstat on parsed path,
+ *              MhtAllowOneHash to allow line containing one message digest without a file path
  * @return one of the MhtResults constants
  */
 static int match_hash_tokens(struct hash_token* token, const char* format, unsigned flags)
@@ -1266,18 +1268,6 @@ struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
 		parser->is_sfv = 1;
 
 	return &parser->hp;
-}
-
-/**
- * Returns non-zero if parsed hash file starts with UTF8 BOM.
- *
- * @param hp parser corresponding to an openned hash file
- * @return non-zero if BOM has been detected, 0 otherwise
- */
-int hash_parser_has_bom(struct hash_parser* hp)
-{
-	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
-	return FILE_IS_IN_UTF8(parser->hash_file);
 }
 
 /**
