@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: RHash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2021-07-12 00:22+0300\n"
+"POT-Creation-Date: 2021-07-14 07:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,7 +24,7 @@ msgid "wrong embedded CRC32, should be %s\n"
 msgstr ""
 
 #. TRANSLATORS: printed when a file rename failed
-#: calc_sums.c:228 hash_update.c:279
+#: calc_sums.c:228 hash_update.c:280
 #, c-format
 msgid "can't move %s to %s: %s\n"
 msgstr ""
@@ -40,23 +40,27 @@ msgstr ""
 msgid "can't convert the file path to local encoding: %s\n"
 msgstr ""
 
-#: hash_check.c:725
+#: hash_check.c:727
 #, c-format
 msgid "unknown hash in magnet link: %s\n"
 msgstr ""
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
-#: hash_check.c:1155
+#: hash_check.c:1157
 #, c-format
 msgid "file name doesn't contain a CRC32: %s\n"
 msgstr ""
 
-#: hash_check.c:1322
-#, c-format
-msgid "file is binary: %s:%u\n"
+#. TRANSLATORS: it's printed, when a non-text hash file is encountered in --update mode
+#: hash_check.c:1314
+msgid "skipping binary file"
 msgstr ""
 
-#: hash_check.c:1333 parse_cmdline.c:716
+#: hash_check.c:1315
+msgid "file is binary"
+msgstr ""
+
+#: hash_check.c:1328 parse_cmdline.c:716
 #, c-format
 msgid "%s:%u: can't parse line \"%s\"\n"
 msgstr ""
@@ -72,7 +76,7 @@ msgid ""
 ";\n"
 msgstr ""
 
-#: hash_update.c:125
+#: hash_update.c:124
 #, c-format
 msgid "Updated: %s\n"
 msgstr ""
@@ -133,21 +137,25 @@ msgid ""
 "--( Verifying %s )"
 msgstr ""
 
-#: output.c:667
+#: output.c:668
 msgid "Everything OK\n"
 msgstr ""
 
 #: output.c:669
+msgid "Nothing to verify\n"
+msgstr ""
+
+#: output.c:672
 #, c-format
 msgid "Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"
 msgstr ""
 
-#: output.c:690
+#: output.c:693
 #, c-format
 msgid "Total %.3f sec, %4.2f MBps\n"
 msgstr ""
 
-#: output.c:692
+#: output.c:695
 #, c-format
 msgid "Calculated in %.3f sec, %4.2f MBps\n"
 msgstr ""

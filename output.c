@@ -663,8 +663,11 @@ int print_check_stats(void)
 {
 	int res;
 	if (rhash_data.processed == rhash_data.ok) {
-		/* NOTE: don't use puts() here cause it mess with printf stdout buffering */
-		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Everything OK\n")));
+		/* NOTE: don't use puts() here cause it messes up with fprintf stdout buffering */
+		const char* message = (rhash_data.processed > 0 ?
+			_("Everything OK\n") :
+			_("Nothing to verify\n"));
+		res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s", message));
 	} else {
 		res = PRINTF_RES(rsh_fprintf(rhash_data.out, _("Errors Occurred: Errors:%-3u Miss:%-3u Success:%-3u Total:%-3u\n"),
 			rhash_data.processed - rhash_data.ok - rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed));

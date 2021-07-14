@@ -182,7 +182,7 @@ TEST_RESULT=$( printf "" | $rhash -p "%m" - )
 check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 # test verification of empty file
 TEST_RESULT=$( $rhash -c "$EMPTY_FILE" | grep "^[^-]" )
-check "$TEST_RESULT" "Everything OK"
+check "$TEST_RESULT" "Nothing to verify"
 rm "$EMPTY_FILE"
 
 # Test the SFV format using test1K.data from the previous test
