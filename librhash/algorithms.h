@@ -84,7 +84,7 @@ typedef struct rhash_context_ext
 	unsigned hash_vector_size; /* number of contained hash sums */
 	unsigned flags;
 	volatile unsigned state;
-	void* callback;
+	rhash_callback_t callback;
 	void* callback_data;
 	void* bt_ctx;
 	rhash_vector_item vector[]; /* contexts of contained hash sums */

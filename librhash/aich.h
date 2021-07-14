@@ -13,9 +13,9 @@ typedef struct aich_ctx
 	sha1_ctx sha1_context; /* context used to hash tree leaves */
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for openssl sha1 context */
-	void* sha_init;
-	void* sha_update;
-	void* sha_final;
+	void (*sha_init)(void*);
+	void (*sha_update)(void*, const void*, size_t size);
+	void (*sha_final)(void*, unsigned char*);
 #endif
 	unsigned index;        /* algorithm position in the current ed2k chunk */
 	unsigned char (*block_hashes)[sha1_hash_size];

@@ -191,6 +191,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef _POSIX_VERSION
 	" _POSIX_VERSION=" EXPAND_TO_STRING(_POSIX_VERSION)
 #endif
+#ifdef _POSIX_C_SOURCE
+	" _POSIX_C_SOURCE=" EXPAND_TO_STRING(_POSIX_C_SOURCE)
+#endif
 #ifdef _XOPEN_SOURCE
 	" _XOPEN_SOURCE=" EXPAND_TO_STRING(_XOPEN_SOURCE)
 #endif

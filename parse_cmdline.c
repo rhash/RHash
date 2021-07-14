@@ -319,6 +319,11 @@ static void set_path_separator(options_t* o, char* sep, unsigned param)
 }
 
 /**
+ * Function pointer to store an option handler.
+ */
+typedef void(*opt_handler_t)(void);
+
+/**
  * Information about a command line option.
  */
 typedef struct cmdline_opt_t
@@ -326,6 +331,7 @@ typedef struct cmdline_opt_t
 	unsigned short type;  /* how to process the option, see option_type_t below */
 	char  short1, short2; /* short option names */
 	char* long_name;      /* long option name */
+	opt_handler_t handler; /* option handler */
 	void* ptr;            /* auxiliary pointer, e.g. to an opt field */
 	unsigned param;       /* optional integer parameter */
 } cmdline_opt_t;
@@ -353,107 +359,107 @@ enum option_type_t
 cmdline_opt_t cmdline_opt[] =
 {
 	/* program modes */
-	{ F_UFLG, 'c',   0, "check",  &opt.mode, MODE_CHECK },
-	{ F_UFLG, 'k',   0, "check-embedded",  &opt.mode, MODE_CHECK_EMBEDDED },
-	{ F_TSTR, 'u',   0, "update", &opt.update_file, 0 },
-	{ F_UFLG, 'B',   0, "benchmark", &opt.mode, MODE_BENCHMARK },
-	{ F_UFLG,   0,   0, "torrent", &opt.mode, MODE_TORRENT },
-	{ F_VFNC,   0,   0, "list-hashes", list_hashes, 0 },
-	{ F_VFNC, 'h',   0, "help",   print_help, 0 },
-	{ F_VFNC, 'V',   0, "version", print_version, 0 },
+	{ F_UFLG, 'c',   0, "check",     0, &opt.mode, MODE_CHECK },
+	{ F_UFLG, 'k',   0, "check-embedded", 0, &opt.mode, MODE_CHECK_EMBEDDED },
+	{ F_TSTR, 'u',   0, "update",    0, &opt.update_file, 0 },
+	{ F_UFLG, 'B',   0, "benchmark", 0, &opt.mode, MODE_BENCHMARK },
+	{ F_UFLG,   0,   0, "torrent",   0, &opt.mode, MODE_TORRENT },
+	{ F_VFNC,   0,   0, "list-hashes", (opt_handler_t)list_hashes, 0, 0 },
+	{ F_VFNC, 'h',   0, "help",        (opt_handler_t)print_help, 0, 0 },
+	{ F_VFNC, 'V',   0, "version",     (opt_handler_t)print_version, 0, 0 },
 
 	/* hash functions options */
-	{ F_UFLG, 'a',   0, "all",    &opt.sum_flags, RHASH_ALL_HASHES },
-	{ F_UFLG, 'C',   0, "crc32",  &opt.sum_flags, RHASH_CRC32 },
-	{ F_UFLG,   0,   0, "crc32c", &opt.sum_flags, RHASH_CRC32C },
-	{ F_UFLG,   0,   0, "md4",    &opt.sum_flags, RHASH_MD4 },
-	{ F_UFLG, 'M',   0, "md5",    &opt.sum_flags, RHASH_MD5 },
-	{ F_UFLG, 'H',   0, "sha1",   &opt.sum_flags, RHASH_SHA1 },
-	{ F_UFLG,   0,   0, "sha224", &opt.sum_flags, RHASH_SHA224 },
-	{ F_UFLG,   0,   0, "sha256", &opt.sum_flags, RHASH_SHA256 },
-	{ F_UFLG,   0,   0, "sha384", &opt.sum_flags, RHASH_SHA384 },
-	{ F_UFLG,   0,   0, "sha512", &opt.sum_flags, RHASH_SHA512 },
-	{ F_UFLG,   0,   0, "sha3-224", &opt.sum_flags, RHASH_SHA3_224 },
-	{ F_UFLG,   0,   0, "sha3-256", &opt.sum_flags, RHASH_SHA3_256 },
-	{ F_UFLG,   0,   0, "sha3-384", &opt.sum_flags, RHASH_SHA3_384 },
-	{ F_UFLG,   0,   0, "sha3-512", &opt.sum_flags, RHASH_SHA3_512 },
-	{ F_UFLG,   0,   0, "tiger",  &opt.sum_flags, RHASH_TIGER },
-	{ F_UFLG, 'T',   0, "tth",    &opt.sum_flags, RHASH_TTH },
-	{ F_UFLG,   0,   0, "btih",   &opt.sum_flags, RHASH_BTIH },
-	{ F_UFLG, 'E',   0, "ed2k",   &opt.sum_flags, RHASH_ED2K },
-	{ F_UFLG, 'A',   0, "aich",   &opt.sum_flags, RHASH_AICH },
-	{ F_UFLG, 'G',   0, "gost12-256",   &opt.sum_flags, RHASH_GOST12_256 },
-	{ F_UFLG,   0,   0, "gost12-512",   &opt.sum_flags, RHASH_GOST12_512 },
-	{ F_UFLG,   0,   0, "gost94",   &opt.sum_flags, RHASH_GOST94 },
-	{ F_UFLG,   0,   0, "gost94-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
+	{ F_UFLG, 'a',   0, "all",      0, &opt.sum_flags, RHASH_ALL_HASHES },
+	{ F_UFLG, 'C',   0, "crc32",    0, &opt.sum_flags, RHASH_CRC32 },
+	{ F_UFLG,   0,   0, "crc32c",   0, &opt.sum_flags, RHASH_CRC32C },
+	{ F_UFLG,   0,   0, "md4",      0, &opt.sum_flags, RHASH_MD4 },
+	{ F_UFLG, 'M',   0, "md5",      0, &opt.sum_flags, RHASH_MD5 },
+	{ F_UFLG, 'H',   0, "sha1",     0, &opt.sum_flags, RHASH_SHA1 },
+	{ F_UFLG,   0,   0, "sha224",   0, &opt.sum_flags, RHASH_SHA224 },
+	{ F_UFLG,   0,   0, "sha256",   0, &opt.sum_flags, RHASH_SHA256 },
+	{ F_UFLG,   0,   0, "sha384",   0, &opt.sum_flags, RHASH_SHA384 },
+	{ F_UFLG,   0,   0, "sha512",   0, &opt.sum_flags, RHASH_SHA512 },
+	{ F_UFLG,   0,   0, "sha3-224", 0, &opt.sum_flags, RHASH_SHA3_224 },
+	{ F_UFLG,   0,   0, "sha3-256", 0, &opt.sum_flags, RHASH_SHA3_256 },
+	{ F_UFLG,   0,   0, "sha3-384", 0, &opt.sum_flags, RHASH_SHA3_384 },
+	{ F_UFLG,   0,   0, "sha3-512", 0, &opt.sum_flags, RHASH_SHA3_512 },
+	{ F_UFLG,   0,   0, "tiger",    0, &opt.sum_flags, RHASH_TIGER },
+	{ F_UFLG, 'T',   0, "tth",      0, &opt.sum_flags, RHASH_TTH },
+	{ F_UFLG,   0,   0, "btih",     0, &opt.sum_flags, RHASH_BTIH },
+	{ F_UFLG, 'E',   0, "ed2k",     0, &opt.sum_flags, RHASH_ED2K },
+	{ F_UFLG, 'A',   0, "aich",     0, &opt.sum_flags, RHASH_AICH },
+	{ F_UFLG, 'G',   0, "gost12-256", 0, &opt.sum_flags, RHASH_GOST12_256 },
+	{ F_UFLG,   0,   0, "gost12-512", 0, &opt.sum_flags, RHASH_GOST12_512 },
+	{ F_UFLG,   0,   0, "gost94",   0, &opt.sum_flags, RHASH_GOST94 },
+	{ F_UFLG,   0,   0, "gost94-cryptopro", 0, &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
 	/* legacy: the following two gost options are left for compatibility */
-	{ F_UFLG,   0,   0, "gost",   &opt.sum_flags, RHASH_GOST94 },
-	{ F_UFLG,   0,   0, "gost-cryptopro", &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
-	{ F_UFLG, 'W',   0, "whirlpool", &opt.sum_flags, RHASH_WHIRLPOOL },
-	{ F_UFLG,   0,   0, "ripemd160", &opt.sum_flags, RHASH_RIPEMD160 },
-	{ F_UFLG,   0,   0, "has160",    &opt.sum_flags, RHASH_HAS160 },
-	{ F_UFLG,   0,   0, "snefru128", &opt.sum_flags, RHASH_SNEFRU128 },
-	{ F_UFLG,   0,   0, "snefru256", &opt.sum_flags, RHASH_SNEFRU256 },
-	{ F_UFLG,   0,   0, "edonr256",  &opt.sum_flags, RHASH_EDONR256 },
-	{ F_UFLG,   0,   0, "edonr512",  &opt.sum_flags, RHASH_EDONR512 },
-	{ F_UFLG,   0,   0, "blake2s",   &opt.sum_flags, RHASH_BLAKE2S },
-	{ F_UFLG,   0,   0, "blake2b",   &opt.sum_flags, RHASH_BLAKE2B },
-	{ F_UFLG, 'L',   0, "ed2k-link", &opt.sum_flags, OPT_ED2K_LINK },
+	{ F_UFLG,   0,   0, "gost",   0, &opt.sum_flags, RHASH_GOST94 },
+	{ F_UFLG,   0,   0, "gost-cryptopro", 0, &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
+	{ F_UFLG, 'W',   0, "whirlpool", 0, &opt.sum_flags, RHASH_WHIRLPOOL },
+	{ F_UFLG,   0,   0, "ripemd160", 0, &opt.sum_flags, RHASH_RIPEMD160 },
+	{ F_UFLG,   0,   0, "has160",    0, &opt.sum_flags, RHASH_HAS160 },
+	{ F_UFLG,   0,   0, "snefru128", 0, &opt.sum_flags, RHASH_SNEFRU128 },
+	{ F_UFLG,   0,   0, "snefru256", 0, &opt.sum_flags, RHASH_SNEFRU256 },
+	{ F_UFLG,   0,   0, "edonr256",  0, &opt.sum_flags, RHASH_EDONR256 },
+	{ F_UFLG,   0,   0, "edonr512",  0, &opt.sum_flags, RHASH_EDONR512 },
+	{ F_UFLG,   0,   0, "blake2s",   0, &opt.sum_flags, RHASH_BLAKE2S },
+	{ F_UFLG,   0,   0, "blake2b",   0, &opt.sum_flags, RHASH_BLAKE2B },
+	{ F_UFLG, 'L',   0, "ed2k-link", 0, &opt.sum_flags, OPT_ED2K_LINK },
 
 	/* output formats */
-	{ F_UFLG,   0,   0, "sfv",     &opt.fmt, FMT_SFV },
-	{ F_UFLG,   0,   0, "bsd",     &opt.fmt, FMT_BSD },
-	{ F_UFLG,   0,   0, "simple",  &opt.fmt, FMT_SIMPLE },
-	{ F_UFLG, 'g',   0, "magnet",  &opt.fmt, FMT_MAGNET },
-	{ F_UFLG,   0,   0, "uppercase", &opt.flags, OPT_UPPERCASE },
-	{ F_UFLG,   0,   0, "lowercase", &opt.flags, OPT_LOWERCASE },
-	{ F_TSTR,   0,   0, "template",  &opt.template_file, 0 },
-	{ F_CSTR, 'p',   0, "printf",  &opt.printf_str, 0 },
+	{ F_UFLG,   0,   0, "sfv",       0, &opt.fmt, FMT_SFV },
+	{ F_UFLG,   0,   0, "bsd",       0, &opt.fmt, FMT_BSD },
+	{ F_UFLG,   0,   0, "simple",    0, &opt.fmt, FMT_SIMPLE },
+	{ F_UFLG, 'g',   0, "magnet",    0, &opt.fmt, FMT_MAGNET },
+	{ F_UFLG,   0,   0, "uppercase", 0, &opt.flags, OPT_UPPERCASE },
+	{ F_UFLG,   0,   0, "lowercase", 0, &opt.flags, OPT_LOWERCASE },
+	{ F_TSTR,   0,   0, "template",  0, &opt.template_file, 0 },
+	{ F_CSTR, 'p',   0, "printf",    0, &opt.printf_str, 0 },
 
 	/* other options */
-	{ F_UFLG, 'r', 'R', "recursive", &opt.flags, OPT_RECURSIVE },
-	{ F_TFNC, 'm',   0, "message", add_special_file, FileIsData },
-	{ F_TFNC,   0,   0, "file-list", add_special_file, FileIsList },
-	{ F_UFLG,   0,   0, "follow",  &opt.flags, OPT_FOLLOW },
-	{ F_UFLG, 'v',   0, "verbose", &opt.flags, OPT_VERBOSE },
-	{ F_UFLG,   0,   0, "gost-reverse", &opt.flags, OPT_GOST_REVERSE },
-	{ F_UFLG,   0,   0, "skip-ok", &opt.flags, OPT_SKIP_OK },
-	{ F_UFLG, 'i',   0, "ignore-case", &opt.flags, OPT_IGNORE_CASE },
-	{ F_UENC, 'P',   0, "percents", &opt.flags, OPT_PERCENTS },
-	{ F_UFLG,   0,   0, "speed",  &opt.flags, OPT_SPEED },
-	{ F_UFLG, 'e',   0, "embed-crc",  &opt.flags, OPT_EMBED_CRC },
-	{ F_CSTR,   0,   0, "embed-crc-delimiter", &opt.embed_crc_delimiter, 0 },
-	{ F_PFNC,   0,   0, "path-separator", set_path_separator, 0 },
-	{ F_TOUT, 'o',   0, "output", &opt.output, 0 },
-	{ F_TOUT, 'l',   0, "log",    &opt.log,    0 },
-	{ F_PFNC, 'q',   0, "accept", add_file_suffix, MASK_ACCEPT },
-	{ F_PFNC, 't',   0, "crc-accept", add_file_suffix, MASK_CRC_ACCEPT },
-	{ F_PFNC,   0,   0, "exclude", add_file_suffix, MASK_EXCLUDE },
-	{ F_VFNC,   0,   0, "video",  accept_video, 0 },
-	{ F_VFNC,   0,   0, "nya",  nya, 0 },
-	{ F_PFNC,   0,   0, "maxdepth", set_max_depth, 0 },
-	{ F_UFLG,   0,   0, "bt-private", &opt.flags, OPT_BT_PRIVATE },
-	{ F_PFNC,   0,   0, "bt-piece-length", set_bt_piece_length, 0 },
-	{ F_UFNC,   0,   0, "bt-announce", bt_announce, 0 },
-	{ F_TSTR,   0,   0, "bt-batch", &opt.bt_batch_file, 0 },
-	{ F_UFLG,   0,   0, "benchmark-raw", &opt.flags, OPT_BENCH_RAW },
-	{ F_UFLG,   0,   0, "no-detect-by-ext", &opt.flags, OPT_NO_DETECT_BY_EXT },
-	{ F_UFLG,   0,   0, "hex", &opt.flags, OPT_HEX },
-	{ F_UFLG,   0,   0, "base32", &opt.flags, OPT_BASE32 },
-	{ F_UFLG, 'b',   0, "base64", &opt.flags, OPT_BASE64 },
-	{ F_PFNC,   0,   0, "openssl", openssl_flags, 0 },
+	{ F_UFLG, 'r', 'R', "recursive",     0, &opt.flags, OPT_RECURSIVE },
+	{ F_TFNC, 'm',   0, "message",       (opt_handler_t)add_special_file, 0, FileIsData },
+	{ F_TFNC,   0,   0, "file-list",     (opt_handler_t)add_special_file, 0, FileIsList },
+	{ F_UFLG,   0,   0, "follow",        0, &opt.flags, OPT_FOLLOW },
+	{ F_UFLG, 'v',   0, "verbose",       0, &opt.flags, OPT_VERBOSE },
+	{ F_UFLG,   0,   0, "gost-reverse",  0, &opt.flags, OPT_GOST_REVERSE },
+	{ F_UFLG,   0,   0, "skip-ok",       0, &opt.flags, OPT_SKIP_OK },
+	{ F_UFLG, 'i',   0, "ignore-case",   0, &opt.flags, OPT_IGNORE_CASE },
+	{ F_UENC, 'P',   0, "percents",      0, &opt.flags, OPT_PERCENTS },
+	{ F_UFLG,   0,   0, "speed",         0, &opt.flags, OPT_SPEED },
+	{ F_UFLG, 'e',   0, "embed-crc",     0, &opt.flags, OPT_EMBED_CRC },
+	{ F_CSTR,   0,   0, "embed-crc-delimiter", 0, &opt.embed_crc_delimiter, 0 },
+	{ F_PFNC,   0,   0, "path-separator", (opt_handler_t)set_path_separator, 0, 0 },
+	{ F_TOUT, 'o',   0, "output",        0, &opt.output, 0 },
+	{ F_TOUT, 'l',   0, "log",           0, &opt.log,    0 },
+	{ F_PFNC, 'q',   0, "accept",        (opt_handler_t)add_file_suffix, 0, MASK_ACCEPT },
+	{ F_PFNC, 't',   0, "crc-accept",    (opt_handler_t)add_file_suffix, 0, MASK_CRC_ACCEPT },
+	{ F_PFNC,   0,   0, "exclude",       (opt_handler_t)add_file_suffix, 0, MASK_EXCLUDE },
+	{ F_VFNC,   0,   0, "video",         (opt_handler_t)accept_video, 0, 0 },
+	{ F_VFNC,   0,   0, "nya",           (opt_handler_t)nya, 0, 0 },
+	{ F_PFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
+	{ F_UFLG,   0,   0, "bt-private",    0, &opt.flags, OPT_BT_PRIVATE },
+	{ F_PFNC,   0,   0, "bt-piece-length", (opt_handler_t)set_bt_piece_length, 0, 0 },
+	{ F_UFNC,   0,   0, "bt-announce",   (opt_handler_t)bt_announce, 0, 0 },
+	{ F_TSTR,   0,   0, "bt-batch",      0, &opt.bt_batch_file, 0 },
+	{ F_UFLG,   0,   0, "benchmark-raw", 0, &opt.flags, OPT_BENCH_RAW },
+	{ F_UFLG,   0,   0, "no-detect-by-ext", 0, &opt.flags, OPT_NO_DETECT_BY_EXT },
+	{ F_UFLG,   0,   0, "hex",           0, &opt.flags, OPT_HEX },
+	{ F_UFLG,   0,   0, "base32",        0, &opt.flags, OPT_BASE32 },
+	{ F_UFLG, 'b',   0, "base64",        0, &opt.flags, OPT_BASE64 },
+	{ F_PFNC,   0,   0, "openssl",       (opt_handler_t)openssl_flags, 0, 0 },
 
 #ifdef _WIN32 /* code pages (windows only) */
-	{ F_UENC,   0,   0, "utf8", &opt.flags, OPT_UTF8 },
-	{ F_UENC,   0,   0, "win",  &opt.flags, OPT_ENC_WIN },
-	{ F_UENC,   0,   0, "dos",  &opt.flags, OPT_ENC_DOS },
+	{ F_UENC,   0,   0, "utf8", 0, &opt.flags, OPT_UTF8 },
+	{ F_UENC,   0,   0, "win",  0, &opt.flags, OPT_ENC_WIN },
+	{ F_UENC,   0,   0, "dos",  0, &opt.flags, OPT_ENC_DOS },
 	/* legacy: the following two options are left for compatibility */
-	{ F_UENC,   0,   0, "ansi", &opt.flags, OPT_ENC_WIN },
-	{ F_UENC,   0,   0, "oem",  &opt.flags, OPT_ENC_DOS },
+	{ F_UENC,   0,   0, "ansi", 0, &opt.flags, OPT_ENC_WIN },
+	{ F_UENC,   0,   0, "oem",  0, &opt.flags, OPT_ENC_DOS },
 #endif
-	{ 0,0,0,0,0,0 }
+	{ 0,0,0,0,0,0,0 }
 };
-cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", add_special_file, 0 };
+cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", (opt_handler_t)add_special_file, 0, 0 };
 
 /**
  * Log a message and exit the program.
@@ -539,10 +545,10 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 	case F_TFNC:
 	case F_UFNC:
 		/* call option parameter handler */
-		( (void(*)(options_t*, char*, unsigned))o->ptr )(opts, value, o->param);
+		( (void(*)(options_t*, char*, unsigned))o->handler )(opts, value, o->param);
 		break;
 	case F_VFNC:
-		( (void(*)(options_t*))o->ptr )(opts); /* call option handler */
+		( (void(*)(options_t*))o->handler )(opts); /* call option handler */
 		break;
 	case F_PRNT:
 		log_msg("%s", (char*)o->ptr);
@@ -593,7 +599,7 @@ static int try_config(ctpath_t path_parts[], unsigned flags)
 				tpath_t next;
 				ctpath_t parts[2];
 				parts[1] = path_parts[1];
-				sub_path = allocated = strdup(sub_path);
+				sub_path = allocated = rsh_strdup(sub_path);
 				do {
 					next = strchr(sub_path, ':');
 					if (next)

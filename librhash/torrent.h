@@ -34,9 +34,9 @@ typedef struct torrent_ctx
 	sha1_ctx sha1_context;  /* context for hashing current file piece */
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for OpenSSL SHA1 context */
-	void* sha_init;
-	void* sha_update;
-	void* sha_final;
+	void (*sha_init)(void*);
+	void (*sha_update)(void*, const void*, size_t size);
+	void (*sha_final)(void*, unsigned char*);
 #endif
 	size_t index;             /* byte index in the current piece */
 	size_t piece_length;      /* length of a torrent file piece */

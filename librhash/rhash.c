@@ -302,7 +302,7 @@ static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
 
 RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data)
 {
-	((rhash_context_ext*)ctx)->callback = (void*)callback;
+	((rhash_context_ext*)ctx)->callback = callback;
 	((rhash_context_ext*)ctx)->callback_data = callback_data;
 }
 

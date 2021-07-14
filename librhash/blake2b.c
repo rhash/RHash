@@ -91,7 +91,7 @@ static void rhash_blake2b_process_block(blake2b_ctx* ctx, const uint64_t* m, uin
 	v[ 9] = blake2b_IV[1];
 	v[10] = blake2b_IV[2];
 	v[11] = blake2b_IV[3];
-	v[12] = blake2b_IV[4] ^ ctx->length; // length correction
+	v[12] = blake2b_IV[4] ^ ctx->length; /* length correction */
 	v[13] = blake2b_IV[5];
 	v[14] = blake2b_IV[6] ^ finalization_flag;
 	v[15] = blake2b_IV[7];

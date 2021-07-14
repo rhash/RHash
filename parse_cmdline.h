@@ -23,8 +23,6 @@ typedef char opt_tchar;
  * Options bit flags and constants.
  */
 enum {
-	OPT_ED2K_LINK = 0x80000000,
-
 	/* program modes */
 	MODE_CHECK     = 0x1,
 	MODE_CHECK_EMBEDDED = 0x2,
@@ -64,6 +62,8 @@ enum {
 	FMT_SIMPLE  = 4,
 	FMT_MAGNET  = 8,
 };
+
+#define OPT_ED2K_LINK 0x80000000
 
 struct vector_t;
 
