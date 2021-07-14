@@ -1,5 +1,6 @@
 Wed 14 Jul 2021 Aleksey
-	* print 'Nothing to verify' when verifying a hash file without message digest
+	* === Version 1.4.2 ===
+	* print 'Nothing to verify' when verifying a hash file without a message digest
 
 Wed 14 Jul 2021 Zak Kemble
 	* significantly improve file reading performance on Linux/Unix
