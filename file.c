@@ -17,13 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>  /* _O_RDONLY, _O_BINARY, posix_fadvise */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 # include <windows.h>
 #if !defined(__CYGWIN__)
 # include <share.h> /* for _SH_DENYWR */
 #endif
-# include <fcntl.h>  /* _O_RDONLY, _O_BINARY */
 # include <io.h>
 #endif
 
@@ -762,6 +762,7 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 	const file_tchar* possible_modes[8] = { 0, RSH_T("r"), RSH_T("w"), RSH_T("r+"),
 		0, RSH_T("rb"), RSH_T("wb"), RSH_T("r+b") };
 	const file_tchar* mode = possible_modes[fopen_flags & FOpenMask];
+	FILE* fd;
 	assert((fopen_flags & FOpenRW) != 0);
 	if (!file->real_path) {
 		errno = EINVAL;
@@ -769,13 +770,16 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 	}
 #ifdef _WIN32
 	{
-		FILE* fd = _wfsopen(file->real_path, mode, _SH_DENYNO);
+		fd = _wfsopen(file->real_path, mode, _SH_DENYNO);
 		if (!fd && errno == EINVAL)
 			errno = ENOENT;
 		return fd;
 	}
 #else
-	return fopen(file->real_path, mode);
+	fd = fopen(file->real_path, mode);
+	if(fd)
+		posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL);
+	return fd;
 #endif
 }
 
