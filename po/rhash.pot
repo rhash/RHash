@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: RHash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2021-07-14 07:24+0300\n"
+"POT-Creation-Date: 2021-07-14 20:48+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,7 +60,7 @@ msgstr ""
 msgid "file is binary"
 msgstr ""
 
-#: hash_check.c:1328 parse_cmdline.c:716
+#: hash_check.c:1328 parse_cmdline.c:722
 #, c-format
 msgid "%s:%u: can't parse line \"%s\"\n"
 msgstr ""
@@ -380,34 +380,34 @@ msgstr ""
 msgid "path-separator is neither '/' nor '\\': %s\n"
 msgstr ""
 
-#: parse_cmdline.c:476
+#: parse_cmdline.c:482
 #, c-format
 msgid "unknown option: %s\n"
 msgstr ""
 
-#: parse_cmdline.c:504 parse_cmdline.c:925
+#: parse_cmdline.c:510 parse_cmdline.c:931
 #, c-format
 msgid "argument is required for option %s\n"
 msgstr ""
 
-#: parse_cmdline.c:731
+#: parse_cmdline.c:737
 #, c-format
 msgid "%s:%u: unknown option \"%s\"\n"
 msgstr ""
 
-#: parse_cmdline.c:866
+#: parse_cmdline.c:872
 msgid "CommandLineToArgvW failed\n"
 msgstr ""
 
-#: parse_cmdline.c:1112
+#: parse_cmdline.c:1118
 msgid "incompatible program modes\n"
 msgstr ""
 
-#: parse_cmdline.c:1113
+#: parse_cmdline.c:1119
 msgid "incompatible formatting options\n"
 msgstr ""
 
-#: parse_cmdline.c:1126
+#: parse_cmdline.c:1132
 #, c-format
 msgid "Config file: %s\n"
 msgstr ""
