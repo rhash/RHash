@@ -13,7 +13,8 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
   librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
   librhash/rhash_timing.c librhash/rhash_timing.h \
-  librhash/aich.c librhash/aich.h librhash/crc32.c librhash/crc32.h \
+  librhash/aich.c librhash/aich.h librhash/blake2b.c librhash/blake2b.h \
+  librhash/blake2s.c librhash/blake2s.h librhash/crc32.c librhash/crc32.h \
   librhash/ed2k.c librhash/ed2k.h librhash/edonr.c librhash/edonr.h \
   librhash/gost12.c librhash/gost12.h librhash/gost94.c librhash/gost94.h \
   librhash/has160.c librhash/has160.h librhash/hex.c librhash/hex.h librhash/md4.c \
@@ -260,12 +261,15 @@ xz: check clean-bindings
 	tar cJf $(ARCHIVE_XZ) --owner=root:0 --group=root:0 $(PACKAGE_NAME)/
 	rm -rf $(PACKAGE_NAME)
 
-$(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
+win-dir: $(WIN_DIST_FILES) dist/rhash.1.win.html
 	test -s dist/rhash.1.win.html && test -x $(RHASH_BINARY)
 	-rm -rf $(WIN_ZIP_DIR)
 	mkdir $(WIN_ZIP_DIR)
 	cp $(RHASH_BINARY) ChangeLog $(WIN_DIST_FILES) $(WIN_ZIP_DIR)/
 	cp dist/rhash.1.win.html $(WIN_ZIP_DIR)/rhash-doc.html
+
+$(ARCHIVE_ZIP): $(WIN_DIST_FILES) dist/rhash.1.win.html
+	+$(MAKE) win-dir
 	zip -9r $(ARCHIVE_ZIP) $(WIN_ZIP_DIR)
 	rm -rf $(WIN_ZIP_DIR)
 
@@ -330,4 +334,4 @@ uninstall-gmo:
 	install-symlinks install-pkg-config uninstall-gmo uninstall-pkg-config \
 	uninstall uninstall-binary uninstall-data uninstall-lib uninstall-symlinks \
 	print-info check copy-dist update-po compile-gmo mkdir-bin permissions \
-	dgz dist tgz tgz-bindings tgz-core rpm win-dist xz zip
+	dgz dist tgz tgz-bindings tgz-core rpm win-dist win-dir xz zip
