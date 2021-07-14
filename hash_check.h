@@ -14,7 +14,8 @@ enum HpBitFlags {
 	HpHasEmbeddedCrc32 = 0x02,
 	HpWrongFileSize = 0x10,
 	HpWrongEmbeddedCrc32 = 0x20,
-	HpWrongHashes = 0x40
+	HpWrongHashes = 0x40,
+	HpIsBinaryFile = 0x100
 };
 
 #define HP_FAILED(flags) ((flags) & (HpWrongFileSize | HpWrongEmbeddedCrc32 | HpWrongHashes))

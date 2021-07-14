@@ -201,6 +201,8 @@ static int file_set_load_from_crc_file(file_set* set, file_t* hash_file)
 		log_error_file_t(hash_file);
 		result = -1;
 	}
+	else if ((parser->bit_flags & HpIsBinaryFile) != 0)
+		result = -1;
 	else if ((hash_file->mode & FileContentIsUtf8) != 0)
 		result |= HasBom;
 	hash_parser_close(parser);

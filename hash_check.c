@@ -1309,9 +1309,14 @@ int hash_parser_process_line(struct hash_parser* hp)
 			parser->hash_file->mode |= FileContentIsUtf8;
 	}
 	if (is_binary_string(line)) {
-		log_error(_("file is binary: %s:%u\n"),
+		const char* message = (opt.mode & MODE_UPDATE ?
+		/* TRANSLATORS: it's printed, when a non-text hash file is encountered in --update mode */
+			_("skipping binary file") :
+			_("file is binary"));
+		log_msg("%s:%u: %s\n",
 			file_get_print_path(parser->hash_file, FPathPrimaryEncoding | FPathNotNull),
-			parser->line_number);
+			parser->line_number, message);
+		hp->bit_flags |= HpIsBinaryFile;
 		return ResStopParsing;
 	}
 	/* silently skip comments and empty lines */
