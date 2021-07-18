@@ -71,7 +71,7 @@ RHASH_API int rhash_count(void)
  * Allocate and initialize RHash context for calculating a single or multiple hash functions.
  * The context after usage must be freed by calling rhash_free().
  *
- * @param count the size of the hash_ids array, count must be greater than zero.
+ * @param count the size of the hash_ids array, count must be greater than zero
  * @param hash_ids array of identifiers of hash functions. Each element must
  *        be an identifier of one hash function.
  * @return initialized rhash context, NULL on error and errno is set

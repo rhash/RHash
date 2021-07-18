@@ -653,7 +653,7 @@ void rsh_str_ensure_size(strbuf_t* str, size_t new_size)
  *
  * @param str pointer to the string buffer
  * @param text the text to append
- * @param length number of character to append.
+ * @param length number of character to append
  */
 void rsh_str_append_n(strbuf_t* str, const char* text, size_t length)
 {

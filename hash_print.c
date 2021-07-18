@@ -634,7 +634,7 @@ void init_hash_info_table(void)
  * The function is called only when a printf format string is not specified
  * from command line, so it should be constructed from other options.
  *
- * @param out a string buffer to place the resulting format string into.
+ * @param out a string buffer to place the resulting format string into
  */
 void init_printf_format(strbuf_t* out)
 {

@@ -313,7 +313,7 @@ static dir_entry* dir_entry_insert(dir_entry** at, tstr_t filename, unsigned typ
 /**
  * Free the first entry of the list of dir_entry elements.
  *
- * @param p pointer to the list.
+ * @param p pointer to the list
  */
 static void dir_entry_drop_head(dir_entry** p)
 {

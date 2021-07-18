@@ -155,9 +155,9 @@ int calc_sums(struct file_info* info)
 /**
  * Search for a crc32 checksum in the given file name.
  *
- * @param file the file, which filename is checked.
- * @param crc32 pointer to integer to receive parsed checksum.
- * @return non zero if crc32 was found, zero otherwise.
+ * @param file the file, which filename is checked
+ * @param crc32 pointer to integer to receive parsed checksum
+ * @return non zero if crc32 was found, zero otherwise
  */
 int find_embedded_crc32(file_t* file, unsigned* crc32)
 {
@@ -186,7 +186,7 @@ int find_embedded_crc32(file_t* file, unsigned* crc32)
  * Rename the given file by inserting its crc32 sum enclosed into square braces
  * and placing it right before the file extension.
  *
- * @param info pointer to the data of the file to rename.
+ * @param info pointer to the data of the file to rename
  * @return 0 on success, -1 on fail with error code stored in errno
  */
 int rename_file_by_embeding_crc32(struct file_info* info)

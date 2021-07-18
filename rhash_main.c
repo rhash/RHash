@@ -46,7 +46,7 @@ static int must_skip_file(file_t* file)
  * It hashes, checks or updates a file according to the current work mode.
  *
  * @param file the file to process
- * @param preprocess non-zero when preprocessing files, zero for actual processing.
+ * @param preprocess non-zero when preprocessing files, zero for actual processing
  */
 static int scan_files_callback(file_t* file, int preprocess)
 {

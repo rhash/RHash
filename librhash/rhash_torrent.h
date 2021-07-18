@@ -111,8 +111,7 @@ RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total
  * Get the content of the generated torrent file.
  *
  * @param ctx rhash context
- * @return binary string with the torrent file content, if successful.
- *         On fail the function returns NULL.
+ * @return binary string with the torrent file content on success, NULL on fail
  */
 RHASH_API const rhash_str* rhash_torrent_generate_content(rhash ctx);
 

@@ -259,7 +259,7 @@ int rhash_plug_openssl(void)
 /**
  * Returns bit-mask of OpenSSL algorithms supported by the plugin.
  *
- * @return the bit-mask of available OpenSSL algorithms.
+ * @return the bit-mask of available OpenSSL algorithms
  */
 unsigned rhash_get_openssl_supported_hash_mask(void)
 {
@@ -271,7 +271,7 @@ unsigned rhash_get_openssl_supported_hash_mask(void)
  * been successfully loaded, zero otherwise. Only supported by the plugin
  * algorithms are listed.
  *
- * @return the bit-mask of available OpenSSL algorithms.
+ * @return the bit-mask of available OpenSSL algorithms
  */
 unsigned rhash_get_openssl_available_hash_mask(void)
 {

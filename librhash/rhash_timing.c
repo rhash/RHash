@@ -57,7 +57,7 @@ static uint64_t read_tsc(void) {
  * stored in the given timeval structure.
  * The function is used with timers, when printing time statistics.
  *
- * @deprecated This function shall be removed soon.
+ * @deprecated This function shall be removed soon
  *
  * @param delta time delta to be converted
  * @return number of seconds
@@ -96,7 +96,7 @@ double rhash_timer_stop(timedelta_t* timer)
  * Set process priority and affinity to use all cpu's but the first one.
  * This improves benchmark results on a multi-cpu systems.
  *
- * @deprecated This function shall be removed soon.
+ * @deprecated This function shall be removed soon
  */
 static void benchmark_cpu_init(void)
 {
@@ -118,7 +118,7 @@ static void benchmark_cpu_init(void)
 /**
  * Hash a repeated message chunk by specified hash function.
  *
- * @deprecated This function shall be removed soon.
+ * @deprecated This function shall be removed soon
  *
  * @param hash_id hash function identifier
  * @param message a message chunk to hash

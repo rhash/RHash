@@ -152,7 +152,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
  * Allocate and initialize RHash context for calculating message digests.
  * The context after usage must be freed by calling rhash_free().
  *
- * @param hash_id union of bit-flags, containing ids of hash functions to calculate.
+ * @param hash_id union of bit-flags, containing ids of hash functions to calculate
  * @return initialized rhash context, NULL on error and errno is set
  */
 RHASH_API rhash rhash_init(unsigned hash_id);
@@ -201,7 +201,7 @@ RHASH_API void rhash_reset(rhash ctx);
 /**
  * Free RHash context memory.
  *
- * @param ctx the context to free.
+ * @param ctx the context to free
  */
 RHASH_API void rhash_free(rhash ctx);
 
