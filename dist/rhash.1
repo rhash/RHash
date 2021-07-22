@@ -122,14 +122,14 @@ List names of all supported hash functions, one per line.
 .SH MISCELLANEOUS OPTIONS
 .IP "\-r, \-\-recursive"
 Recursively process directories, specified by command line.
+.IP "\-\-follow"
+Follow symbolic links when processing files or directories recursively.
+.IP "\-m, \-\-message=<text>"
+Calculate message digests of the given text message.
 .IP "\-\-file\-list=<file>"
 Process given file as a file-list. Lines of this file are
 interpreted as paths to files to be processed. Multiple
 file lists can be specified at command line.
-.IP "\-m, \-\-message=<text>"
-Calculate message digests of the given text message.
-.IP "\-\-follow"
-Follow symbolic links when processing files or directories recursively.
 .IP "\-v, \-\-verbose"
 Be verbose.
 .IP "\-P, \-\-percents"
@@ -188,7 +188,7 @@ Switch benchmark output format to be a machine\(hyreadable tab\(hydelimited text
 with hash function name, speed, cpu clocks per byte.
 This option works only if the \-\-benchmark option was specified.
 .IP "\-\-no\-detect\-by\-ext"
-Disable hash function detection from a hash file extension in the \-\-check mode.
+Do not detect hash function by an extension of hash file, in the \-\-check mode.
 .IP "\-\- (double dash)"
 Mark the end of command line options. All parameters following the
 double dash are interpreted as files or directories. It is typically used
@@ -213,7 +213,7 @@ filename and message digests specified by options.
 Print message digests in hexadecimal format.
 .IP "\-\-base32"
 Print message digests in Base32 format.
-.IP "\-\-base64"
+.IP "\-b, \-\-base64"
 Print message digests in Base64 format.
 .IP "\-\-uppercase"
 Print message digests in upper case.
