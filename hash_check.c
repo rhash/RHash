@@ -53,20 +53,21 @@ void rhash_hex_to_byte(const char* str, unsigned char* bin, int len)
 }
 
 /**
- * Decode an URL-encoded string. The function returns pointer
- * to its internal static buffer containing decoded string.
+ * Decode an URL-encoded string into the specified buffer.
  *
+ * @param buffer buffer to decode string into
+ * @param buffer_size buffer size
  * @param src URL-encoded string
  * @param src_length length of the string to decode
- * @return decoded string
+ * @return length of the decoded string
  */
-static char* urldecode(const char* src, size_t src_length)
+static size_t urldecode(char* buffer, size_t buffer_size, const char* src, size_t src_length)
 {
-	static char buffer[LINE_BUFFER_SIZE];
 	char* dst = buffer;
+	char* dst_back = dst + buffer_size - 1;
 	const char* src_end = src + src_length;
-	assert(src_length < LINE_BUFFER_SIZE);
-	for (; src < src_end; dst++) {
+	assert(src_length < buffer_size);
+	for (; src < src_end && dst < dst_back; dst++) {
 		*dst = *(src++); /* copy non-escaped characters */
 		if (*dst == '%') {
 			if (*src == '%') {
@@ -83,9 +84,9 @@ static char* urldecode(const char* src, size_t src_length)
 			}
 		}
 	}
-	assert(dst < (buffer + LINE_BUFFER_SIZE));
+	assert(dst <= dst_back);
 	*dst = '\0'; /* terminate decoded string */
-	return buffer;
+	return (dst - buffer);
 }
 
 /* convert a hash function bit-flag to the index of the bit */
@@ -418,11 +419,11 @@ enum MhtResults {
  *
  * @param token the structure to store parsed tokens info
  * @param format the format string
- * @param flags bit flags: MhtFstatPath to run fstat on parsed path,
+ * @param bit_flags MhtFstatPath flag to run fstat on parsed path,
  *              MhtAllowOneHash to allow line containing one message digest without a file path
  * @return one of the MhtResults constants
  */
-static int match_hash_tokens(struct hash_token* token, const char* format, unsigned flags)
+static int match_hash_tokens(struct hash_token* token, const char* format, unsigned bit_flags)
 {
 	int backward = 0;
 	char buf[20];
@@ -539,7 +540,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			/* check if space is mandatory */
 			if (*search_str != ' ' && len == 0) {
 				/* for '\6' verify (len > 0 || (MhtAllowOneHash is set && begin == end)) */
-				if (!(flags & MhtAllowOneHash) || begin < end)
+				if (!(bit_flags & MhtAllowOneHash) || begin < end)
 					return ResFailed;
 			}
 			break;
@@ -557,7 +558,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 	}
 	token->begin = begin;
 	token->end = end;
-	if ((flags & MhtAllowOneHash) != 0 && hp->hashes_num == 1 && begin == end)
+	if ((bit_flags & MhtAllowOneHash) != 0 && hp->hashes_num == 1 && begin == end)
 	{
 		struct hash_parser_ext* const parser = token->parser;
 		file_t* parsed_path = &parser->hp.parsed_path;
@@ -566,12 +567,12 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			/* note: trailing whitespaces were removed from line by hash_parser_parse_line() */
 			return ResFailed;
 		}
-		if ((flags & MhtFstatPath) != 0 && file_stat(parsed_path, 0) < 0)
+		if ((bit_flags & MhtFstatPath) != 0 && file_stat(parsed_path, 0) < 0)
 			hp->parsed_path_errno = errno;
 		return ResOneHashDetected;
 	}
 
-	if ((flags & MhtFstatPath) != 0) {
+	if ((bit_flags & MhtFstatPath) != 0) {
 		int fstat_res;
 		if (url_path != 0) {
 			fstat_res = fstat_path_token(token, url_path, url_length, 1);
@@ -598,14 +599,15 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
  */
 static int fstat_path_token(struct hash_token* token, char* str, size_t str_length, int is_url)
 {
+	static char buffer[LINE_BUFFER_SIZE];
 	file_t* parent_dir = &token->parser->parent_dir;
 	unsigned init_flags = (FILE_IS_IN_UTF8(token->parser->hash_file) ?
 		FileInitRunFstat | FileInitUtf8PrintPath : FileInitRunFstat);
-	char* path = (is_url ? urldecode(str, str_length) : str);
-	size_t path_length = (is_url ? strlen(path) : str_length);
-
-	int is_absolute = IS_PATH_SEPARATOR(path[0]);
+	char* path = (!is_url ? str : buffer);
+	size_t path_length = (!is_url ? str_length :
+		urldecode(buffer, LINE_BUFFER_SIZE, str, str_length));
 	int res;
+	int is_absolute = IS_PATH_SEPARATOR(path[0]);
 	char saved_char = path[path_length];
 	path[path_length] = '\0';
 
@@ -621,11 +623,9 @@ static int fstat_path_token(struct hash_token* token, char* str, size_t str_leng
 }
 
 /**
- * Fstat given file path. Optionally prepend it, if needed, by parent directory.
- * If is_url is non-zero, then path is urldecoded.
- * Fstat result is stored into token->p_parsed_path.
+ * Cleanup token context and fill hash_mask of the parser.
  *
- * @param token tokens parsing context
+ * @param token token parsing context
  * @return ResPathNotExists if path has not been found, ResAllMatched otherwise
  */
 static int finalize_parsed_data(struct hash_token* token)
@@ -870,6 +870,7 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 			}
 			token_flags &= ~MhtAllowOneHash;
 		}
+		token_flags = MhtFstatPath;
 
 		/* parse the rest of hashes */
 		for (state = 0; state < 2; state++)

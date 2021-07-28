@@ -47,10 +47,10 @@ and that significally slows down files verification. To speed up verification,
 in such case, explicitly specify the hash algorithm in the command line.
 .IP "\-u, \-\-update=<hash-file>"
 Update the hash file specified by the option.
-Checksums will be calculated for all files specified by command and not present
-in this hash file. The calculated checksums will be appended to the
-updated hash file in the format specified by formatting options.
-This option can be combined with \-\-recursive, to update a hash file for
+Message digests will be calculated for all files specified by the command line and
+not present in this hash file. The calculated Message digests will be appended to
+the updated hash file in the format specified by formatting options.
+The \-\-update option can be combined with \-\-recursive to update a hash file for
 whole directory trees.
 .IP "\-k, \-\-check\-embedded"
 Verify files by crc32 sum embedded in their names.

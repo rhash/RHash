@@ -48,6 +48,18 @@ enum {
 	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
 };
 
+/**
+ * An element of a list specifying an output format.
+ */
+typedef struct print_item
+{
+	struct print_item* next;
+	unsigned flags;
+	unsigned hash_id;
+	unsigned width;
+	const char* data;
+} print_item;
+
 /* parse a token following a percent sign '%' */
 static print_item* parse_percent_item(const char** str);
 
