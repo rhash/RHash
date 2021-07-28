@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2021-07-14 20:48+0300\n"
-"PO-Revision-Date: 2019-12-11 02:51+0000\n"
+"PO-Revision-Date: 2021-07-15 00:30+0000\n"
 "Last-Translator: Joel Pickett <jlkpcktt@gmail.com>\n"
 "Language-Team: English (Australia) <en_AU@li.org>\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2020-05-05 20:20+0000\n"
-"X-Generator: Launchpad (build fbdff7602bd10fb883bf7e2ddcc7fd5a16f60398)\n"
+"X-Launchpad-Export-Date: 2021-07-28 16:04+0000\n"
+"X-Generator: Launchpad (build 228e757cb3b375380f0eca5a56429016b9e11790)\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:212
@@ -152,7 +152,7 @@ msgstr "Everything OK\n"
 
 #: output.c:669
 msgid "Nothing to verify\n"
-msgstr ""
+msgstr "Nothing to verify\n"
 
 #: output.c:672
 #, c-format

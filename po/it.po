@@ -325,19 +325,16 @@ msgid "Print message digests, using simple format.\n"
 msgstr "Mostra le somme hash, utilizzando il formato semplice.\n"
 
 #: parse_cmdline.c:117
-#, fuzzy
 msgid "Print message digests in hexadecimal format.\n"
-msgstr "Mostra le somme hash, utilizzando il formato semplice.\n"
+msgstr ""
 
 #: parse_cmdline.c:118
-#, fuzzy
 msgid "Print message digests in Base32 format.\n"
-msgstr "Mostra le somme hash, utilizzando il formato semplice.\n"
+msgstr ""
 
 #: parse_cmdline.c:119
-#, fuzzy
 msgid "Print message digests in Base64 format.\n"
-msgstr "Mostra le somme hash, utilizzando il formato semplice.\n"
+msgstr ""
 
 #: parse_cmdline.c:121
 #, fuzzy

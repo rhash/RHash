@@ -182,7 +182,7 @@ msgid ""
 msgstr ""
 "%s\n"
 "Uso: %s [OPCIÓN...] [ARCHIVO | -]...\n"
-"       %s --printf=<cadena de formato> [ARCHIVO | -]...\n"
+"     %s --printf=<cadena de formato> [ARCHIVO | -]...\n"
 "\n"
 
 #: parse_cmdline.c:63
