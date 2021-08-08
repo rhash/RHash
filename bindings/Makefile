@@ -44,7 +44,7 @@ build-php: configure-php
 	+$(MAKE) -C php
 
 build-python:
-# not required
+	cd python && $(PYTHON) -m build
 
 build-ruby: configure-ruby
 	+$(MAKE) -C ruby
@@ -122,4 +122,4 @@ clean-perl:
 clean-php:
 	[ ! -f php/configure ] || (cd php && phpize --clean)
 clean-python:
-	rm -rf python/tests/__pycache__/
+	rm -rf python/dist/ python/rhash_Rhash.egg-info/ python/tests/__pycache__/
