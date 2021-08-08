@@ -17,6 +17,7 @@ import os
 import unittest
 import rhash
 
+
 # pylint: disable=too-many-public-methods, pointless-statement
 class TestRHash(unittest.TestCase):
     """The test-case class for the rhash module."""
@@ -186,6 +187,12 @@ class TestRHash(unittest.TestCase):
             rhash.make_magnet(path, rhash.TTH),
         )
         os.remove(path)
+
+    def test_librhash_version(self):
+        """Test get_librhash_version() function."""
+        version = rhash.get_librhash_version()
+        self.assertTrue(isinstance(version, str))
+        self.assertRegex(version, r"^[1-9]\d*\.\d+\.\d+$")
 
 
 if __name__ == "__main__":

@@ -50,6 +50,7 @@ from .rhash import (
     hash_msg,
     hash_file,
     make_magnet,
+    get_librhash_version,
 )
 
 # Import deprecated constants and functions
@@ -94,6 +95,7 @@ __all__ = [
     "hash_msg",
     "hash_file",
     "make_magnet",
+    "get_librhash_version",
     "SHA224",
     "SHA256",
     "SHA384",

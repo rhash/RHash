@@ -185,6 +185,7 @@ RHPR_NO_MAGNET = 0x20
 RHPR_FILESIZE = 0x40
 
 RMSG_SET_AUTOFINAL = 5
+RMSG_GET_LIBRHASH_VERSION = 20
 
 
 class RHash(object):
@@ -309,6 +310,12 @@ def make_magnet(filepath, hash_mask):
     handle = RHash(hash_mask)
     handle.update_file(filepath).finish()
     return handle.magnet(filepath)
+
+
+def get_librhash_version():
+    """Return the version of the loaded LibRHash library."""
+    ver = _LIBRHASH.rhash_transmit(RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
+    return "{}.{}.{}".format(ver >> 24, (ver >> 16) & 255, (ver >> 8) & 255)
 
 
 # deprecated functions
