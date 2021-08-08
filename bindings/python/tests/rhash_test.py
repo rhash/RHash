@@ -1,5 +1,3 @@
-# UnitTest for Librhash Python Bindings
-#
 # Copyright (c) 2011, Aleksey Kravchenko <rhash.admin@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -15,9 +13,9 @@
 
 """Unit-tests for the rhash module."""
 
-import rhash
 import os
 import unittest
+import rhash
 
 # pylint: disable=too-many-public-methods, pointless-statement
 class TestRHash(unittest.TestCase):
@@ -75,19 +73,19 @@ class TestRHash(unittest.TestCase):
         )
         self.assertEqual(
             "abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5",
-            ctx.hash(rhash.SHA224),
+            ctx.hash(rhash.SHA2_224),
         )
         self.assertEqual(
             "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
-            ctx.hash(rhash.SHA256),
+            ctx.hash(rhash.SHA2_256),
         )
         self.assertEqual(
             "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31",
-            ctx.hash(rhash.SHA384),
+            ctx.hash(rhash.SHA2_384),
         )
         self.assertEqual(
             "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75",
-            ctx.hash(rhash.SHA512),
+            ctx.hash(rhash.SHA2_512),
         )
         self.assertEqual(
             "943aa9225a2cf154ec2e4dd81237720ba538ca8df2fd83c0b893c5d265f353a0",
@@ -122,12 +120,13 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.BLAKE2B),
         )
         # test reset
+        ctx.reset().finish()
         self.assertEqual(
-            "d41d8cd98f00b204e9800998ecf8427e", ctx.reset().finish().hash(rhash.MD5)
+            "d41d8cd98f00b204e9800998ecf8427e", ctx.hash(rhash.MD5)
         )  # MD5( '' )
 
     def test_update(self):
-        """Test the sequential update calls."""
+        """Test sequential updates."""
         ctx = rhash.RHash(rhash.CRC32 | rhash.MD5)
         ctx.update("Hello, ").update("world!").finish()
         self.assertEqual("EBE6C6E6", ctx.HEX(rhash.CRC32))
@@ -141,7 +140,7 @@ class TestRHash(unittest.TestCase):
         self.assertEqual("900150983cd24fb0d6963f7d28e17f72", str(ctx.finish()))
 
     def test_hash_msg(self):
-        """Test the hash_msg() function."""
+        """Test hash_msg() function."""
         self.assertEqual(
             "900150983cd24fb0d6963f7d28e17f72", rhash.hash_msg("abc", rhash.MD5)
         )
@@ -169,7 +168,7 @@ class TestRHash(unittest.TestCase):
         )
 
     def test_update_file(self):
-        """Test the update_file() method."""
+        """Test update_file() method."""
         path = "python_test_input_123.txt"
         file = open(path, "wb")
         file.write(b"\0\1\2\n")

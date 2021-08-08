@@ -1,5 +1,3 @@
-# Python Bindings for Librhash
-#
 # Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com> and
 #                     Aleksey Kravchenko <rhash.admin@gmail.com>
 #
@@ -14,7 +12,7 @@
 # OR OTHER TORTIOUS ACTION,  ARISING OUT OF  OR IN CONNECTION  WITH THE USE  OR
 # PERFORMANCE OF THIS SOFTWARE.
 
-"""Python bindings for librhash.
+"""Python bindings for LibRHash.
 
 Librhash  is  a library  for  computing  message digests  and
 magnet links for various hash functions. The simplest  way to
@@ -27,8 +25,8 @@ make_magnet(filepath, hash_ids)
 
 Here  hash_id  is one of the constants CRC32, CRC32C, MD4, MD5,
 SHA1, TIGER, TTH, BTIH, ED2K, AICH,  WHIRLPOOL, RIPEMD160,
-GOST94, GOST94_CRYPTOPRO, GOST12_256, GOST12_512, HAS160,
-SHA224, SHA256, SHA384, SHA512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
+GOST94, GOST94_CRYPTOPRO, GOST12_256, GOST12_512, HAS160, SHA2_224,
+SHA2_256, SHA2_384, SHA2_512, SHA3_224, SHA3_256, SHA3_384, SHA3_512,
 BLAKE2S, BLAKE2B, EDONR256, EDONR512, SNEFRU128, SNEFRU256.
 The first two functions will return the default text representation
 of the message digest they compute.  The latter will return the
@@ -68,50 +66,8 @@ Method  magnet(filepath) will generate magnet link containing
 message digests computed by the RHash object.
 """
 
-# public API
-__all__ = [
-    "ALL",
-    "CRC32",
-    "CRC32C",
-    "MD4",
-    "MD5",
-    "SHA1",
-    "TIGER",
-    "TTH",
-    "BTIH",
-    "ED2K",
-    "AICH",
-    "WHIRLPOOL",
-    "RIPEMD160",
-    "GOST94",
-    "GOST94_CRYPTOPRO",
-    "GOST12_256",
-    "GOST12_512",
-    "HAS160",
-    "SHA224",
-    "SHA256",
-    "SHA384",
-    "SHA512",
-    "EDONR256",
-    "EDONR512",
-    "SHA3_224",
-    "SHA3_256",
-    "SHA3_384",
-    "SHA3_512",
-    "BLAKE2S",
-    "BLAKE2B",
-    "SNEFRU128",
-    "SNEFRU256",
-    "RHash",
-    "hash_msg",
-    "hash_file",
-    "make_magnet",
-    "hash_for_msg",
-    "hash_for_file",
-    "magnet_for_file",
-]
-
 import sys
+import warnings
 from ctypes import (
     CDLL,
     c_char_p,
@@ -124,30 +80,30 @@ from ctypes import (
 
 # initialization
 if sys.platform == "win32":
-    LIBNAME = "librhash.dll"
+    _LIBNAME = "librhash.dll"
 elif sys.platform == "darwin":
-    LIBNAME = "librhash.0.dylib"
+    _LIBNAME = "librhash.0.dylib"
 elif sys.platform == "cygwin":
-    LIBNAME = "cygrhash.dll"
+    _LIBNAME = "cygrhash.dll"
 elif sys.platform == "msys":
-    LIBNAME = "msys-rhash.dll"
+    _LIBNAME = "msys-rhash.dll"
 else:
-    LIBNAME = "librhash.so.0"
-LIBRHASH = CDLL(LIBNAME)
-LIBRHASH.rhash_library_init()
+    _LIBNAME = "librhash.so.0"
+_LIBRHASH = CDLL(_LIBNAME)
+_LIBRHASH.rhash_library_init()
 
 # function prototypes
-LIBRHASH.rhash_init.argtypes = [c_uint]
-LIBRHASH.rhash_init.restype = c_void_p
-LIBRHASH.rhash_free.argtypes = [c_void_p]
-LIBRHASH.rhash_reset.argtypes = [c_void_p]
-LIBRHASH.rhash_update.argtypes = [c_void_p, c_char_p, c_size_t]
-LIBRHASH.rhash_final.argtypes = [c_void_p, c_char_p]
-LIBRHASH.rhash_print.argtypes = [c_char_p, c_void_p, c_uint, c_int]
-LIBRHASH.rhash_print.restype = c_size_t
-LIBRHASH.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_int]
-LIBRHASH.rhash_print_magnet.restype = c_size_t
-LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
+_LIBRHASH.rhash_init.argtypes = [c_uint]
+_LIBRHASH.rhash_init.restype = c_void_p
+_LIBRHASH.rhash_free.argtypes = [c_void_p]
+_LIBRHASH.rhash_reset.argtypes = [c_void_p]
+_LIBRHASH.rhash_update.argtypes = [c_void_p, c_char_p, c_size_t]
+_LIBRHASH.rhash_final.argtypes = [c_void_p, c_char_p]
+_LIBRHASH.rhash_print.argtypes = [c_char_p, c_void_p, c_uint, c_int]
+_LIBRHASH.rhash_print.restype = c_size_t
+_LIBRHASH.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_int]
+_LIBRHASH.rhash_print_magnet.restype = c_size_t
+_LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
 
 # conversion of a string to binary data with Python 2/3 compatibility
 if sys.version < "3":
@@ -196,10 +152,10 @@ GOST94_CRYPTOPRO = 0x1000
 HAS160 = 0x2000
 GOST12_256 = 0x4000
 GOST12_512 = 0x8000
-SHA224 = 0x10000
-SHA256 = 0x20000
-SHA384 = 0x40000
-SHA512 = 0x80000
+SHA2_224 = 0x10000
+SHA2_256 = 0x20000
+SHA2_384 = 0x40000
+SHA2_512 = 0x80000
 EDONR256 = 0x100000
 EDONR512 = 0x200000
 SHA3_224 = 0x0400000
@@ -212,6 +168,12 @@ SNEFRU256 = 0x10000000
 BLAKE2S = 0x20000000
 BLAKE2B = 0x40000000
 ALL = 0x7FFFFFFF
+
+# four deprecated constants
+SHA224 = 0x10000
+SHA256 = 0x20000
+SHA384 = 0x40000
+SHA512 = 0x80000
 
 # rhash_print values
 RHPR_RAW = 1
@@ -233,24 +195,24 @@ class RHash(object):
         if hash_ids == 0:
             self._ctx = None
             raise ValueError("Invalid argument")
-        self._ctx = LIBRHASH.rhash_init(hash_ids)
+        self._ctx = _LIBRHASH.rhash_init(hash_ids)
         # switching off the autofinal feature
-        LIBRHASH.rhash_transmit(RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
+        _LIBRHASH.rhash_transmit(RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
 
     def __del__(self):
         """Cleanup allocated resources."""
-        if self._ctx != None:
-            LIBRHASH.rhash_free(self._ctx)
+        if self._ctx is not None:
+            _LIBRHASH.rhash_free(self._ctx)
 
     def reset(self):
         """Reset this object to initial state."""
-        LIBRHASH.rhash_reset(self._ctx)
+        _LIBRHASH.rhash_reset(self._ctx)
         return self
 
     def update(self, message):
         """Update this object with new data chunk."""
         data = _msg_to_bytes(message)
-        LIBRHASH.rhash_update(self._ctx, data, len(data))
+        _LIBRHASH.rhash_update(self._ctx, data, len(data))
         return self
 
     def __lshift__(self, message):
@@ -269,17 +231,16 @@ class RHash(object):
 
     def finish(self):
         """Flush buffered data and calculate message digests."""
-        LIBRHASH.rhash_final(self._ctx, None)
+        _LIBRHASH.rhash_final(self._ctx, None)
         return self
 
     def _print(self, hash_id, flags):
         """Retrieve the message digest in the specified format."""
         buf = create_string_buffer(130)
-        size = LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
+        size = _LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
         if (flags & 3) == RHPR_RAW:
             return buf[0:size]
-        else:
-            return buf[0:size].decode()
+        return buf[0:size].decode()
 
     def raw(self, hash_id=0):
         """Return the message digest as raw binary data."""
@@ -310,15 +271,15 @@ class RHash(object):
 
     def magnet(self, filepath):
         """Return magnet link with all message digests computed by this object."""
-        size = LIBRHASH.rhash_print_magnet(
+        size = _LIBRHASH.rhash_print_magnet(
             None, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE
         )
         buf = create_string_buffer(size)
-        LIBRHASH.rhash_print_magnet(buf, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE)
+        _LIBRHASH.rhash_print_magnet(buf, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE)
         return buf[0 : size - 1].decode("utf-8")
 
     def hash(self, hash_id=0):
-        """Return the message digest for the given hash function as a string in the default format."""
+        """Return the message digest for the given hash function in its default format."""
         return self._print(hash_id, 0)
 
     def __str__(self):
@@ -350,9 +311,7 @@ def make_magnet(filepath, hash_mask):
     return handle.magnet(filepath)
 
 
-# depricated functions
-
-
+# deprecated functions
 def _deprecation(message):
     warnings.warn(message, category=DeprecationWarning, stacklevel=2)
 
