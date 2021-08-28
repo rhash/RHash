@@ -128,7 +128,7 @@ class TestRHash(unittest.TestCase):
 
     def test_update(self):
         """Test sequential updates."""
-        ctx = rhash.RHash(rhash.CRC32 | rhash.MD5)
+        ctx = rhash.RHash(rhash.CRC32, rhash.MD5)
         ctx.update("Hello, ").update("world!").finish()
         self.assertEqual("EBE6C6E6", ctx.HEX(rhash.CRC32))
         self.assertEqual("6cd3556deb0da54bca060b4c39479839", ctx.hex(rhash.MD5))
@@ -148,7 +148,7 @@ class TestRHash(unittest.TestCase):
 
     def test_output_formats(self):
         """Test all output formats of a message digest."""
-        ctx = rhash.RHash(rhash.MD5 | rhash.TTH).finish()
+        ctx = rhash.RHash(rhash.MD5, rhash.TTH).finish()
         self.assertEqual(
             "5d9ed00a030e638bdb753a6a24fb900e5a63b8e73e6c25b6", ctx.hex(rhash.TTH)
         )
@@ -161,7 +161,7 @@ class TestRHash(unittest.TestCase):
 
     def test_magnet(self):
         """Test calculation of a magnet link."""
-        ctx = rhash.RHash(rhash.MD5 | rhash.TTH)
+        ctx = rhash.RHash(rhash.MD5, rhash.TTH)
         ctx.update("abc").finish()
         self.assertEqual(
             "magnet:?xl=3&dn=file.txt&xt=urn:md5:900150983cd24fb0d6963f7d28e17f72&xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia",
@@ -183,8 +183,8 @@ class TestRHash(unittest.TestCase):
             rhash.hash_file(path, rhash.SHA1),
         )
         self.assertEqual(
-            "magnet:?xl=4&dn=python_test_input_123.txt&xt=urn:tree:tiger:c6docz63fpef5pdfpz35z7mw2iozshxlpr4erza",
-            rhash.make_magnet(path, rhash.TTH),
+            "magnet:?xl=4&dn=python_test_input_123.txt&xt=urn:crc32:f2653eb7&xt=urn:tree:tiger:c6docz63fpef5pdfpz35z7mw2iozshxlpr4erza",
+            rhash.make_magnet(path, rhash.CRC32, rhash.TTH),
         )
         os.remove(path)
 

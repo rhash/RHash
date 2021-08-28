@@ -10,7 +10,7 @@ EDON-R, and Whirlpool.
 RHash requires LibRHash library. The LibRHash sources or Windows binaries can
 be downloaded from:
 
-  * https://rhash.sf.net/
+  * http://rhash.sf.net/
 
 Linux and BSD users should install LibRHash from the official repository.
 
@@ -25,7 +25,7 @@ variable.
 
 To install the RHash Python module use the package manager [pip]
 
-    $ pip install rhash
+    $ pip install rhash-Rhash
 
 You can also build the module from source
 
@@ -38,7 +38,7 @@ Hashing a file or a text message can be done using RHash hi-level interface
     >>> import rhash
     >>> rhash.hash_file("input-file.txt", rhash.SHA3_256)
     'a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a'
-    >>> rhash.make_magnet("input-file.txt", rhash.CRC32 | rhash.TTH)
+    >>> rhash.make_magnet("input-file.txt", rhash.CRC32, rhash.TTH)
     'magnet:?xl=0&dn=input-file.txt&xt=urn:crc32:00000000&xt=urn:tree:tiger:lwpnacqdbzryxw3vhjvcj64qbznghohhhzwclnq'
     >>> message_digest = rhash.hash_msg("abc", rhash.SHA1)
     >>> print("SHA1 (\"abc\") = {}".format(message_digest))
@@ -49,7 +49,7 @@ The Low-level interface allows to calculate several message digests at once
 and output them in different formats
 
     >>> import rhash
-    >>> h = rhash.RHash(rhash.MD5 | rhash.SHA1 | rhash.BLAKE2S)
+    >>> h = rhash.RHash(rhash.MD5, rhash.SHA1, rhash.BLAKE2S)
     >>> h.update("abc")
     <rhash.rhash.RHash object at 0x7fc512d90670>
     >>> h.finish()

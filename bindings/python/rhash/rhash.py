@@ -1,4 +1,4 @@
-# Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com> and
+# Copyright (c) 2011, Sergey Basalaev <sbasalaev@gmail.com>,
 #                     Aleksey Kravchenko <rhash.admin@gmail.com>
 #
 # Permission to use, copy, modify, and/or distribute this software for any
@@ -33,14 +33,14 @@ of the message digest they compute.  The latter will return the
 magnet link  for the  file. In this function  you can OR-combine
 several hash_ids, like
 
->>> print make_magnet('rhash.py', CRC32 | MD5)
+>>> print make_magnet('rhash.py', CRC32, MD5)
 magnet:?xl=6041&dn=rhash.py&xt=urn:crc32:f5866f7a&xt=urn:md5:
 f88e6c1620361da9d04e2a2a1c788059
 
 Next, this module provides a class to calculate several message digests
 simultaneously in an incremental way. Example of using it:
 
->>> hasher = RHash(CRC32 | MD5)
+>>> hasher = RHash(CRC32, MD5)
 >>> hasher.update('Hello, ')
 >>> hasher << 'world' << '!'
 >>> hasher.finish()
@@ -191,13 +191,16 @@ RMSG_GET_LIBRHASH_VERSION = 20
 class RHash(object):
     """Class to compute message digests and magnet links."""
 
-    def __init__(self, hash_ids):
+    def __init__(self, *hash_ids):
         """Construct RHash object."""
-        if hash_ids == 0:
+        hash_mask = 0
+        for hash_id in hash_ids:
+            hash_mask = hash_mask | hash_id
+        if hash_mask == 0:
             self._ctx = None
             raise ValueError("Invalid argument")
-        self._ctx = _LIBRHASH.rhash_init(hash_ids)
-        # switching off the autofinal feature
+        self._ctx = _LIBRHASH.rhash_init(hash_mask)
+        # switching off the auto-final feature
         _LIBRHASH.rhash_transmit(RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
 
     def __del__(self):
@@ -305,9 +308,9 @@ def hash_file(filepath, hash_id):
     return str(handle)
 
 
-def make_magnet(filepath, hash_mask):
+def make_magnet(filepath, *hash_ids):
     """Compute and return the magnet link for the file."""
-    handle = RHash(hash_mask)
+    handle = RHash(*hash_ids)
     handle.update_file(filepath).finish()
     return handle.magnet(filepath)
 
@@ -324,19 +327,19 @@ def _deprecation(message):
 
 
 def hash_for_msg(message, hash_id):
-    """Depricated function to compute a hash of a message."""
+    """Deprecated function to compute a hash of a message."""
     _deprecation("Call to deprecated function hash_for_msg(), should use hash_msg().")
     return hash_msg(message, hash_id)
 
 
 def hash_for_file(filepath, hash_id):
-    """Depricated function to compute a hash of a file."""
+    """Deprecated function to compute a hash of a file."""
     _deprecation("Call to deprecated function hash_for_file(), should use hash_file().")
     return hash_file(filepath, hash_id)
 
 
 def magnet_for_file(filepath, hash_mask):
-    """Depricated function to compute a magnet link for a file."""
+    """Deprecated function to compute a magnet link for a file."""
     _deprecation(
         "Call to deprecated function magnet_for_file(), should use make_magnet()."
     )
