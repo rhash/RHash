@@ -25,7 +25,7 @@ ALLLDFLAGS = $(LDFLAGS) -lrhash $(LIBRHASH_LD)
 ALLCFLAGS = $(CFLAGS) $(LIBRHASH_INC) -fPIC
 
 #Platform dependent
-JAVAC_PATH = $(shell readlink -f $(shell which $(JAVAC)))
+JAVAC_PATH = $(shell readlink -f $(shell command -v $(JAVAC)))
 JDK_HOME ?=$(realpath $(dir $(JAVAC_PATH))/..)
 JNI_CFLAGS1 = $(shell test -d "$(JDK_HOME)/include" && echo -I$(JDK_HOME)/include)
 JNI_CFLAGS2 = $(shell test -d "$(JDK_HOME)/include/linux" && echo -I$(JDK_HOME)/include/linux)

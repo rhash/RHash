@@ -13,7 +13,7 @@ while [ "$#" -gt 0 ]; do
       OPT_SHARED=1
       ;;
     *)
-      [ -x "$1" -a -z "$rhash" -a -x "$1" ] && rhash="$(cd $(dirname $1) && echo $PWD/${1##*/})"
+      test -z "$rhash" && rhash="$1"
       ;;
   esac
   shift
@@ -22,14 +22,26 @@ _sdir="$(dirname "$0")"
 SCRIPT_DIR="$(cd "$_sdir" && pwd)"
 UPPER_DIR="$(cd "$_sdir/.." && pwd)"
 
-# detect binary if not specified by command line
-[ -x "$rhash" ] || rhash="$UPPER_DIR/rhash";
-[ -x "$rhash" ] || rhash="`which rhash`"
-if [ ! -x "$rhash" ]; then
-  echo "Fatal: $rhash not found"
+# find the path of rhash binary
+if test -x "$rhash"; then
+  rhash="$(cd $(dirname $rhash) && echo $PWD/${rhash##*/})"
+elif test -z "$rhash"; then
+  command -v rhash 2>/dev/null >/dev/null && _path="$(command -v rhash 2>/dev/null)"
+  if test -x "$_path"; then
+    rhash="$_path"
+  elif test -x /usr/bin/rhash; then
+    rhash=/usr/bin/rhash
+  elif test -x /usr/local/bin/rhash; then
+    rhash=/usr/local/bin/rhash
+  fi
+fi
+if [ ! -f "$rhash" ]; then
+  echo "Fatal: file $rhash not found"
+  exit 1
+elif [ ! -x "$rhash" ]; then
+  echo "Fatal: $rhash is not an executable file"
   exit 1
 fi
-echo "Testing $rhash"
 
 win32()
 {
@@ -74,7 +86,7 @@ for _tmp in "$TMPDIR" "$TEMPDIR" "/tmp" ; do
   [ -d "$_tmp" ] && break
 done
 RANDNUM=$RANDOM
-[ -z $RANDNUM ] && which jot >/dev/null && RANDNUM=$(jot -r 1 1 32767)
+test -z "$RANDNUM" && jot -r 1 2>/dev/null >dev/null && RANDNUM=$(jot -r 1 1 32767) || RANDNUM=0
 RHASH_TMP="$_tmp/rhash-test-$RANDNUM-$$"
 remove_tmpdir()
 {

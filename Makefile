@@ -227,10 +227,10 @@ dist/rhash.1.win.html: dist/rhash.1 dist/rhash.1.win.sed
 	grep -q "APPDATA" dist/rhash.1.win.html
 
 dist/rhash.1.html: dist/rhash.1
-	-which rman 2>/dev/null && (rman -fHTML -roff dist/rhash.1 | sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > $@)
+	-rman --version 2>/dev/null && (rman -fHTML -roff dist/rhash.1 | sed -e '/<BODY/s/\(bgcolor=\)"[^"]*"/\1"white"/i' > $@)
 
 dist/rhash.1.txt: dist/rhash.1
-	-which groff &>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
+	-groff --version 2>/dev/null && (groff -t -e -mandoc -Tascii dist/rhash.1 | sed -e 's/.\[[0-9]*m//g' > $@)
 
 permissions:
 	find . build dist docs librhash po tests -maxdepth 1 -type f -exec chmod -x '{}' \;
