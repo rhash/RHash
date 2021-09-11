@@ -1147,7 +1147,7 @@ static int check_embedded_crc32(file_t* file)
 			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		} else if (!rhash_data.stop_flags) {
-			if (res >= 0)
+			if (res == 0)
 				rhash_data.ok++;
 			else if (res == -1 && errno == ENOENT)
 				rhash_data.miss++;
