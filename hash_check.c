@@ -624,7 +624,10 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 		if (url_path != 0) {
 			fstat_res = fstat_path_token(token, url_path, url_length, PathUrlDecode);
 		} else {
-			size_t path_length = end - begin;
+			size_t path_length;
+			if (begin[0] == '*' && unescape_flag == 0)
+				begin++;
+			path_length = end - begin;
 			fstat_res = fstat_path_token(token, begin, path_length, unescape_flag);
 		}
 		if (fstat_res < 0)

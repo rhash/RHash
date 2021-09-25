@@ -1,3 +1,6 @@
+Sun 26 Sep 2021 Aleksey
+	* Bugfix: star character at the start of filepath must be ignored
+
 Wed 14 Jul 2021 Aleksey
 	* === Version 1.4.2 ===
 	* print 'Nothing to verify' when verifying a hash file without a message digest
