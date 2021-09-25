@@ -444,6 +444,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_TSTR,   0,   0, "bt-batch",      0, &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", 0, &opt.flags, OPT_BENCH_RAW },
 	{ F_UFLG,   0,   0, "no-detect-by-ext", 0, &opt.flags, OPT_NO_DETECT_BY_EXT },
+	{ F_UFLG,   0,   0, "no-path-escaping", 0, &opt.flags, OPT_NO_PATH_ESCAPING },
 	{ F_UFLG,   0,   0, "hex",           0, &opt.flags, OPT_HEX },
 	{ F_UFLG,   0,   0, "base32",        0, &opt.flags, OPT_BASE32 },
 	{ F_UFLG, 'b',   0, "base64",        0, &opt.flags, OPT_BASE64 },

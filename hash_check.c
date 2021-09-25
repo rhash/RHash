@@ -89,6 +89,37 @@ static size_t urldecode(char* buffer, size_t buffer_size, const char* src, size_
 	return (dst - buffer);
 }
 
+/**
+ * Decode a string with escaped characters into the specified buffer.
+ *
+ * @param buffer buffer to decode string into
+ * @param buffer_size buffer size
+ * @param src string with escaped characters
+ * @param src_length length of the source string
+ * @return length of the decoded string
+ */
+static size_t unescape_characters(char* buffer, size_t buffer_size, const char* src, size_t src_length)
+{
+	char* dst = buffer;
+	char* dst_back = dst + buffer_size - 1;
+	const char* src_end = src + src_length;
+	assert(src_length < buffer_size);
+	for (; src < src_end && dst < dst_back; dst++) {
+		*dst = *(src++); /* copy non-escaped characters */
+		if (*dst == '\\') {
+			if (*src == '\\') {
+				src++; /* interpret '\\' as a single '\' */
+			} else if (*src == 'n') {
+				*dst = '\n';
+				src++;
+			}
+		}
+	}
+	assert(dst <= dst_back);
+	*dst = '\0'; /* terminate decoded string */
+	return (dst - buffer);
+}
+
 /* convert a hash function bit-flag to the index of the bit */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
 # define get_ctz(x) __builtin_ctz(x)
@@ -386,14 +417,23 @@ struct hash_token
 	int hash_type;
 };
 
+/**
+ * Bit-flags for the fstat_path_token().
+ */
+enum FstatPathBitFlags {
+	PathUrlDecode = 1,
+	PathUnescape = 2
+};
+
 static int fstat_path_token(struct hash_token* token, char* path, size_t path_length, int is_url);
 
 /**
- * Bit-flags for the match_hash_tokens() function.
+ * Bit-flags for the match_hash_tokens().
  */
 enum MhtOptionsBitFlags {
 	MhtFstatPath = 1,
-	MhtAllowOneHash = 2
+	MhtAllowOneHash = 2,
+	MhtAllowEscapedPath = 4
 };
 
 /**
@@ -435,7 +475,14 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 	struct hash_parser* hp = &token->parser->hp;
 	struct hash_value hv;
 	int unsaved_hashval = 0;
+	int unescape_flag = 0;
 	memset(&hv, 0, sizeof(hv));
+
+	if ((bit_flags & MhtAllowEscapedPath) && (opt.flags & OPT_NO_PATH_ESCAPING) == 0 &&
+			begin[0] == '\\' && !(begin[1] == '\\' && begin[2] == '?' && begin[3] == '\\')) {
+		begin++;
+		unescape_flag = PathUnescape;
+	}
 
 	while (format < fend) {
 		const char* search_str;
@@ -575,10 +622,10 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 	if ((bit_flags & MhtFstatPath) != 0) {
 		int fstat_res;
 		if (url_path != 0) {
-			fstat_res = fstat_path_token(token, url_path, url_length, 1);
+			fstat_res = fstat_path_token(token, url_path, url_length, PathUrlDecode);
 		} else {
 			size_t path_length = end - begin;
-			fstat_res = fstat_path_token(token, begin, path_length, 0);
+			fstat_res = fstat_path_token(token, begin, path_length, unescape_flag);
 		}
 		if (fstat_res < 0)
 			return ResPathNotExists;
@@ -588,24 +635,25 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 
 /**
  * Fstat given file path. Optionally prepend it, if needed, by parent directory.
- * If is_url is non-zero, then path is urldecoded.
+ * Depending on bit_flags, the path is url-decoded or decoded using escape sequences.
  * Fstat result is stored into token->p_parsed_path.
  *
  * @param token current tokens parsing context
  * @param str pointer to the path start
  * @param str_length length of the path
- * @param is_url
+ * @param bit_flags PathUrlDecode or PathUnescape to decode path
  * @return 0 on success, -1 on fstat fail
  */
-static int fstat_path_token(struct hash_token* token, char* str, size_t str_length, int is_url)
+static int fstat_path_token(struct hash_token* token, char* str, size_t str_length, int bit_flags)
 {
 	static char buffer[LINE_BUFFER_SIZE];
 	file_t* parent_dir = &token->parser->parent_dir;
 	unsigned init_flags = (FILE_IS_IN_UTF8(token->parser->hash_file) ?
 		FileInitRunFstat | FileInitUtf8PrintPath : FileInitRunFstat);
-	char* path = (!is_url ? str : buffer);
-	size_t path_length = (!is_url ? str_length :
-		urldecode(buffer, LINE_BUFFER_SIZE, str, str_length));
+	char* path = (bit_flags == 0 ? str : buffer);
+	size_t path_length = (bit_flags == 0 ? str_length : (bit_flags & PathUrlDecode ?
+		urldecode(buffer, LINE_BUFFER_SIZE, str, str_length) :
+		unescape_characters(buffer, LINE_BUFFER_SIZE, str, str_length)));
 	int res;
 	int is_absolute = IS_PATH_SEPARATOR(path[0]);
 	char saved_char = path[path_length];
@@ -614,6 +662,8 @@ static int fstat_path_token(struct hash_token* token, char* str, size_t str_leng
 	IF_WINDOWS(is_absolute = is_absolute || (path[0] && path[1] == ':'));
 	if (is_absolute || !parent_dir->real_path)
 		parent_dir = NULL;
+	if ((bit_flags & PathUnescape) != 0)
+		init_flags |= FileInitUseRealPathAsIs;
 
 	res = file_init_by_print_path(token->p_parsed_path, parent_dir, path, init_flags);
 	if (res < 0 && token->p_parsed_path == &token->parser->hp.parsed_path)
@@ -747,7 +797,7 @@ static int parse_magnet_url(struct hash_token* token)
 	}
 	if (!url_path || token->parser->hp.hashes_num == 0)
 		return ResFailed;
-	fstat_path_token(token, url_path, url_length, 1);
+	fstat_path_token(token, url_path, url_length, PathUrlDecode);
 	return finalize_parsed_data(token);
 }
 
@@ -829,7 +879,7 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 		return parse_magnet_url(&token);
 	}
 	/* check for BSD-formatted line has been processed */
-	res = match_hash_tokens(&token, "\1 ( $ ) = \3", MhtFstatPath);
+	res = match_hash_tokens(&token, "\1 ( $ ) = \3", MhtFstatPath | MhtAllowEscapedPath);
 	if (res != ResFailed)
 		return finalize_parsed_data(&token);
 	token.hash_type = FmtAll;
@@ -838,7 +888,7 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 		const unsigned is_sfv_format = parser->is_sfv;
 		unsigned valid_direction = 0;
 		unsigned state;
-		unsigned token_flags = (MhtFstatPath | MhtAllowOneHash);
+		unsigned token_flags = (MhtFstatPath | MhtAllowEscapedPath | MhtAllowOneHash);
 
 		struct file_t secondary_path;
 		struct hash_token secondary_token;
