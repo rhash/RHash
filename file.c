@@ -27,10 +27,6 @@
 # include <io.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define IS_ANY_SLASH(c) ((c) == '/' || (c) == '\\')
 #define IS_ANY_TSLASH(c) ((c) == RSH_T('/') || (c) == RSH_T('\\'))
 #define IS_DOT_STR(s) ((s)[0] == '.' && (s)[1] == 0)
@@ -650,22 +646,32 @@ static tpath_t get_modified_tpath(ctpath_t path, const char* str, int operation)
  * @param str the string to insert into/append to the source file path
  * @param operation the operation to do on src file, can be one of the values
  *                  FModifyAppendSuffix, FModifyInsertBeforeExtension, FModifyRemoveExtension, FModifyGetParentDir
- * @return 0 on success, -1 on fail
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 int file_modify_path(file_t* dst, file_t* src, const char* str, int operation)
 {
-	if ((src->mode & (FileIsStdStream | FileIsData)) != 0)
-		return -1;
 	assert(operation == FModifyRemoveExtension || operation == FModifyGetParentDir || str);
 	assert(operation == FModifyAppendSuffix || operation == FModifyInsertBeforeExtension || !str);
 	memcpy(dst, src, sizeof(file_t));
-	dst->mode &= ~FileMemoryModeMask;
+	dst->mode = 0;
 	dst->print_path = NULL;
 	IF_WINDOWS(dst->native_path = NULL);
-	dst->real_path = get_modified_tpath(src->real_path, str, operation);
-	if (!dst->real_path)
-		return -1;
 	dst->print_path = get_modified_path(src->print_path, str, operation);
+	if (!src->real_path)
+	{
+		if (!FILE_ISSPECIAL(src) || !dst->print_path)
+		{
+			errno = EINVAL;
+			return -1;
+		}
+#ifdef _WIN32
+		dst->real_path = convert_str_to_wcs(dst->print_path, ConvertUtf8ToWcs);
+#else
+		dst->real_path = rsh_tstrdup(dst->print_path);
+#endif /* _WIN32 */
+	}
+	else
+		dst->real_path = get_modified_tpath(src->real_path, str, operation);
 	IF_WINDOWS(dst->native_path = get_modified_path(src->native_path, str, operation));
 	return 0;
 }
@@ -815,7 +821,9 @@ int file_rename(const file_t* from, const file_t* to)
  */
 int file_move_to_bak(file_t* file)
 {
-	if (file_stat(file, 0) >= 0) {
+	if (FILE_ISSPECIAL(file))
+		return 0;
+	else if (file_stat(file, 0) >= 0) {
 		int res;
 		int save_errno;
 		file_t bak_file;
@@ -1094,8 +1102,3 @@ struct win_dirent* win_readdir(WIN_DIR* d)
 	}
 }
 #endif /* _WIN32 */
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
-

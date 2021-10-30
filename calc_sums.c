@@ -289,7 +289,9 @@ static int save_torrent(struct file_info* info)
 	/* append .torrent extension to the file path */
 	file_t torrent_file;
 	file_modify_path(&torrent_file, info->file, ".torrent", FModifyAppendSuffix);
-	res = save_torrent_to(&torrent_file, info->rctx);
+	res = file_modify_path(&torrent_file, info->file, ".torrent", FModifyAppendSuffix);
+	if (res >= 0)
+		res = save_torrent_to(&torrent_file, info->rctx);
 	file_cleanup(&torrent_file);
 	return res;
 }
