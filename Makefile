@@ -293,7 +293,7 @@ clean-bindings:
 
 clean-local:
 	rm -f *.o $(RHASH_SHARED) $(RHASH_STATIC)
-	rm -f po/*.gmo po/*.po~
+	rm -f po/*.gmo po/*.po~ po/compile-gmo.tag
 
 distclean: clean-local
 	rm -f config.log config.mak $(SPECFILE) $(LIBRHASH_PC)
@@ -309,11 +309,14 @@ update-po:
 		msgmerge -U $$f po/rhash.pot; \
 	done
 
-compile-gmo:
+po/compile-gmo.tag: $(I18N_FILES)
 	for f in $(I18N_FILES); do \
 		g=`basename $$f .po`; \
 		msgfmt -o po/$$g.gmo $$f; \
 	done
+	touch $@
+
+compile-gmo: po/compile-gmo.tag
 
 install-gmo: compile-gmo
 	for f in $(I18N_FILES); do \
