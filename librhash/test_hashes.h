@@ -197,6 +197,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef _XOPEN_SOURCE
 	" _XOPEN_SOURCE=" EXPAND_TO_STRING(_XOPEN_SOURCE)
 #endif
+#ifdef __ANDROID_API__
+	" __ANDROID_API__=" EXPAND_TO_STRING(__ANDROID_API__)
+#endif
 #ifdef __STRICT_ANSI__
 	" __STRICT_ANSI__"
 #endif
