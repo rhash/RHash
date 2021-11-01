@@ -35,7 +35,7 @@
 #define SHA1_FINAL(ctx, result) rhash_sha1_final(&ctx->sha1_context, (result))
 #endif
 
-#define BT_MIN_HASH_LENGTH 16384
+#define BT_MIN_PIECE_LENGTH 16384
 /** size of a SHA1 hash in bytes */
 #define BT_HASH_SIZE 20
 /** number of SHA1 hashes to store together in one block */
@@ -50,8 +50,8 @@
 void bt_init(torrent_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(torrent_ctx));
-	ctx->piece_length = BT_MIN_HASH_LENGTH;
-	assert(BT_MIN_HASH_LENGTH == bt_default_piece_length(0));
+	ctx->piece_length = BT_MIN_PIECE_LENGTH;
+	assert(BT_MIN_PIECE_LENGTH == bt_default_piece_length(0, 0));
 
 #ifdef USE_OPENSSL
 	{
@@ -191,7 +191,7 @@ int bt_add_file(torrent_ctx* ctx, const char* path, uint64_t filesize)
 	/* recalculate piece length (but only if hashing not started yet) */
 	if (ctx->piece_count == 0 && ctx->index == 0) {
 		/* note: in case of batch of files should use a total batch size */
-		ctx->piece_length = bt_default_piece_length(filesize);
+		ctx->piece_length = bt_default_piece_length(filesize, ctx->options & BT_OPT_TRANSMISSION);
 	}
 	return 1;
 }
@@ -373,20 +373,45 @@ static void bt_bencode_pieces(torrent_ctx* ctx)
 /**
  * Calculate default torrent piece length, using uTorrent algorithm.
  * Algorithm:
- *  length = 16K for total_size < 16M,
- *  length = 8M for total_size >= 4G,
- *  length = top_bit(total_size) / 1024 otherwise.
+ *   piece_length = 16K for total_size < 16M,
+ *   piece_length = 8M for total_size >= 4G,
+ *   piece_length = top_bit(total_size) / 512 otherwise.
  *
- * @param total_size total hashed batch size of torrent file
+ * @param total_size total torrent batch size
  * @return piece length used by torrent file
  */
-size_t bt_default_piece_length(uint64_t total_size)
+static size_t utorr_piece_length(uint64_t total_size)
 {
-	uint64_t hi_bit;
-	if (total_size < 16777216) return BT_MIN_HASH_LENGTH;
-	if (total_size >= I64(4294967296) ) return 8388608;
-	for (hi_bit = 16777216 << 1; hi_bit <= total_size; hi_bit <<= 1);
-	return (size_t)(hi_bit >> 10);
+	size_t size = (size_t)(total_size >> 9) | 16384;
+	size_t hi_bit;
+	for (hi_bit = 8388608; hi_bit > size; hi_bit >>= 1);
+	return hi_bit;
+}
+
+#define MB I64(1048576)
+
+/**
+ * Calculate default torrent piece length, using transmission algorithm.
+ * Algorithm:
+ *   piece_length = (size >= 2G ? 2M : size >= 1G ? 1M :
+ *       size >= 512M ? 512K : size >= 350M ? 256K :
+ *       size >= 150M ? 128K : size >= 50M ? 64K : 32K);
+ *
+ * @param total_size total torrent batch size
+ * @return piece length used by torrent file
+ */
+static size_t transmission_piece_length(uint64_t total_size)
+{
+	uint64_t sizes[6] = { 50 * MB, 150 * MB, 350 * MB, 512 * MB, 1024 * MB, 2048 * MB };
+	int i;
+	for (i = 0; i < 6 && total_size >= sizes[i]; i++);
+	return (32 * 1024) << i;
+}
+
+size_t bt_default_piece_length(uint64_t total_size, int transmission)
+{
+	return (transmission ?
+		transmission_piece_length(total_size) : utorr_piece_length(total_size));
 }
 
 /* get file basename */
@@ -432,7 +457,7 @@ static void bt_generate_torrent(torrent_ctx* ctx)
 		if (ctx->files.size == 1) {
 			total_size = ((bt_file_info*)ctx->files.array[0])->size;
 		}
-		ctx->piece_length = bt_default_piece_length(total_size);
+		ctx->piece_length = bt_default_piece_length(total_size, ctx->options & BT_OPT_TRANSMISSION);
 	}
 
 	if ((ctx->options & BT_OPT_INFOHASH_ONLY) == 0) {
@@ -499,6 +524,8 @@ static void bt_generate_torrent(torrent_ctx* ctx)
 
 	if (ctx->options & BT_OPT_PRIVATE) {
 		bt_str_append(ctx, "7:privatei1e");
+	} else if (ctx->options & BT_OPT_TRANSMISSION) {
+		bt_str_append(ctx, "7:privatei0e");
 	}
 	bt_str_append(ctx, "ee");
 
@@ -568,6 +595,17 @@ int bt_set_program_name(torrent_ctx* ctx, const char* name)
 void bt_set_piece_length(torrent_ctx* ctx, size_t piece_length)
 {
 	ctx->piece_length = piece_length;
+}
+
+/**
+ * Set length of a file piece by the total batch size.
+ *
+ * @param ctx the torrent algorithm context
+ * @param total_size total batch size
+ */
+void bt_set_total_batch_size(torrent_ctx* ctx, uint64_t total_size)
+{
+	ctx->piece_length = bt_default_piece_length(total_size, ctx->options & BT_OPT_TRANSMISSION);
 }
 
 /**

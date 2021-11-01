@@ -1,3 +1,6 @@
+Mon 01 Nov 2021 Aleksey
+	* Add --bt-transmission option to create Transmission compatible torrent files
+
 Sun 26 Sep 2021 Aleksey
 	* Bugfix: star character at the start of filepath must be ignored
 

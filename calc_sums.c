@@ -28,12 +28,14 @@ static void init_btih_data(struct file_info* info)
 {
 	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
 
+	if (opt.flags & (OPT_BT_PRIVATE | OPT_BT_TRANSMISSION)) {
+		unsigned options = (opt.flags & OPT_BT_PRIVATE ? RHASH_TORRENT_OPT_PRIVATE : 0)
+			| (opt.flags & OPT_BT_TRANSMISSION ? RHASH_TORRENT_OPT_TRANSMISSION : 0);
+		rhash_torrent_set_options(info->rctx, options);
+	}
+
 	rhash_torrent_add_file(info->rctx, file_get_print_path(info->file, FPathUtf8 | FPathNotNull), info->size);
 	rhash_torrent_set_program_name(info->rctx, get_bt_program_name());
-
-	if (opt.flags & OPT_BT_PRIVATE) {
-		rhash_torrent_set_options(info->rctx, RHASH_TORRENT_OPT_PRIVATE);
-	}
 
 	if (opt.bt_announce) {
 		size_t i;

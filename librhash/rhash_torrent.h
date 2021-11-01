@@ -40,6 +40,10 @@ typedef struct rhash_str
  * Torrent option: calculate infohash without torrent file body.
  */
 #define RHASH_TORRENT_OPT_INFOHASH_ONLY 2
+/**
+ * Torrent option: generate transmiision-compatible torrent file.
+ */
+#define RHASH_TORRENT_OPT_TRANSMISSION 4
 
 /* torrent functions */
 
@@ -97,15 +101,13 @@ RHASH_API void rhash_torrent_set_piece_length(rhash ctx, size_t piece_length);
  */
 RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total_size);
 
-/*
- * Macro to set a torrent batch size (the total size of files included into this torrent).
- * It's defined as rhash_torrent_set_piece_length(ctx, rhash_torrent_get_default_piece_length(total_size))
+/**
+ * Set a torrent batch size (the total size of files included into this torrent).
  *
  * @param ctx rhash context
  * @param total_size total size of files included into the torrent file
  */
-#define rhash_torrent_set_batch_size(ctx, total_size) \
-	rhash_torrent_set_piece_length((ctx), rhash_torrent_get_default_piece_length(total_size))
+RHASH_API void rhash_torrent_set_batch_size(rhash ctx, unsigned long long total_size);
 
 /**
  * Get the content of the generated torrent file.

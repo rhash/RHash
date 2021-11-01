@@ -61,13 +61,15 @@ size_t bt_get_text(torrent_ctx* ctx, char** pstr);
 /* possible options */
 #define BT_OPT_PRIVATE 1
 #define BT_OPT_INFOHASH_ONLY 2
+#define BT_OPT_TRANSMISSION 4
 
 void bt_set_options(torrent_ctx* ctx, unsigned options);
 int  bt_add_file(torrent_ctx* ctx, const char* path, uint64_t filesize);
 int  bt_add_announce(torrent_ctx* ctx, const char* announce_url);
 int  bt_set_program_name(torrent_ctx* ctx, const char* name);
 void bt_set_piece_length(torrent_ctx* ctx, size_t piece_length);
-size_t bt_default_piece_length(uint64_t total_size);
+void bt_set_total_batch_size(torrent_ctx* ctx, uint64_t total_size);
+size_t bt_default_piece_length(uint64_t total_size, int transmission);
 
 #ifdef __cplusplus
 } /* extern "C" */

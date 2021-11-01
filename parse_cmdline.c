@@ -439,6 +439,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_VFNC,   0,   0, "nya",           (opt_handler_t)nya, 0, 0 },
 	{ F_PFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
 	{ F_UFLG,   0,   0, "bt-private",    0, &opt.flags, OPT_BT_PRIVATE },
+	{ F_UFLG,   0,   0, "bt-transmission", 0, &opt.flags, OPT_BT_TRANSMISSION },
 	{ F_PFNC,   0,   0, "bt-piece-length", (opt_handler_t)set_bt_piece_length, 0, 0 },
 	{ F_UFNC,   0,   0, "bt-announce",   (opt_handler_t)bt_announce, 0, 0 },
 	{ F_TSTR,   0,   0, "bt-batch",      0, &opt.bt_batch_file, 0 },

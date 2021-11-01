@@ -59,7 +59,13 @@ RHASH_API void rhash_torrent_set_piece_length(rhash ctx, size_t piece_length)
 
 RHASH_API size_t rhash_torrent_get_default_piece_length(unsigned long long total_size)
 {
-	return bt_default_piece_length(total_size);
+	return bt_default_piece_length(total_size, 0);
+}
+
+RHASH_API void rhash_torrent_set_batch_size(rhash ctx, unsigned long long total_size)
+{
+	if (!BT_CTX(ctx)) return;
+	bt_set_total_batch_size(BT_CTX(ctx), total_size);
 }
 
 RHASH_API const rhash_str* rhash_torrent_generate_content(rhash ctx)
