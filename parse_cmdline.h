@@ -24,11 +24,12 @@ typedef char opt_tchar;
  */
 enum {
 	/* program modes */
-	MODE_CHECK     = 0x1,
-	MODE_CHECK_EMBEDDED = 0x2,
-	MODE_UPDATE    = 0x4,
-	MODE_BENCHMARK = 0x8,
-	MODE_TORRENT   = 0x10,
+	MODE_DEFAULT   = 0x1,
+	MODE_CHECK     = 0x2,
+	MODE_CHECK_EMBEDDED = 0x4,
+	MODE_UPDATE    = 0x8,
+	MODE_BENCHMARK = 0x10,
+	MODE_TORRENT   = 0x20,
 
 	/* misc options */
 	OPT_EMBED_CRC  = 0x20,
@@ -100,6 +101,8 @@ struct options_t
 	struct vector_t* mem; /* allocated memory blocks that must be freed on exit */
 };
 extern struct options_t opt;
+
+#define IS_MODE(mode_bits) (opt.mode & (mode_bits))
 
 void read_options(int argc, char* argv[]);
 void options_destroy(struct options_t*);

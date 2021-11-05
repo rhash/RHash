@@ -60,7 +60,7 @@ static void init_btih_data(struct file_info* info)
 static void re_init_rhash_context(struct file_info* info)
 {
 	if (rhash_data.rctx != 0) {
-		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			/* a set of hash algorithms can change from file to file */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
@@ -109,7 +109,7 @@ int calc_sums(struct file_info* info)
 			return -1;
 #endif
 	} else {
-		if ((opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) && FILE_ISDIR(info->file)) {
+		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED) && FILE_ISDIR(info->file)) {
 			errno = EISDIR;
 			return -1;
 		}
@@ -352,12 +352,12 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 		rename_file_by_embeding_crc32(&info);
 	}
 
-	if ((opt.mode & MODE_TORRENT) && !opt.bt_batch_file && res == 0) {
+	if (IS_MODE(MODE_TORRENT) && !opt.bt_batch_file && res == 0) {
 		if (save_torrent(&info) < 0)
 			res = -2;
 	}
 
-	if ((opt.mode & MODE_UPDATE) && opt.fmt == FMT_SFV && res == 0) {
+	if (IS_MODE(MODE_UPDATE) && opt.fmt == FMT_SFV && res == 0) {
 		/* updating SFV file: print SFV header line */
 		if (print_sfv_header_line(out, out_file->mode, file) < 0) {
 			log_error_file_t(out_file);
@@ -376,7 +376,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 				res = -2;
 			}
 			/* print the calculated line to stderr/log-file if verbose */
-			else if ((opt.mode & MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
+			else if (IS_MODE(MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
 				print_line(rhash_data.log, rhash_data.log_file.mode, rhash_data.print_list, &info);
 			}
 		}

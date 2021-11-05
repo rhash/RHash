@@ -370,7 +370,7 @@ static int print_check_result(struct file_info* info, int print_name, int print_
  */
 static int print_results_on_check(struct file_info* info, int init)
 {
-	if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+	if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 		int print_name = (opt.flags & (OPT_PERCENTS | OPT_SKIP_OK) ? !init : init);
 
 		/* print result, but skip OK messages if required */
@@ -457,7 +457,7 @@ static void dots_update_percents(struct file_info* info, uint64_t offset)
 	if ( (offset % pt_size) != 0 ) return;
 
 	if (percents.points == 0) {
-		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
+		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED)) {
 			rsh_fprintf(rhash_data.log, _("\nChecking %s\n"), file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull));
 		} else {
 			rsh_fprintf(rhash_data.log, _("\nProcessing %s\n"), file_get_print_path(info->file, FPathPrimaryEncoding | FPathNotNull));
@@ -546,7 +546,7 @@ static void p_update_percents(struct file_info* info, uint64_t offset)
  */
 static int p_finish_percents(struct file_info* info, int process_res)
 {
-	int need_check_result = (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) &&
+	int need_check_result = IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED) &&
 		!((opt.flags & OPT_SKIP_OK) && process_res == 0 && !HP_FAILED(info->hp->bit_flags));
 	info->processing_result = process_res;
 

@@ -1183,7 +1183,7 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
  * @param file the file to verify
  * @return 0 on success, -1 on input error, -2 on results output error
  */
-static int check_embedded_crc32(file_t* file)
+int check_embedded_crc32(file_t* file)
 {
 	int res = 0;
 	unsigned crc32;
@@ -1363,7 +1363,7 @@ int hash_parser_process_line(struct hash_parser* hp)
 			parser->hash_file->mode |= FileContentIsUtf8;
 	}
 	if (is_binary_string(line)) {
-		const char* message = (opt.mode & MODE_UPDATE ?
+		const char* message = (IS_MODE(MODE_UPDATE) ?
 		/* TRANSLATORS: it's printed, when a non-text hash file is encountered in --update mode */
 			_("skipping binary file") :
 			_("file is binary"));
@@ -1404,10 +1404,6 @@ int check_hash_file(file_t* file, int chdir)
 	double time;
 	int parsing_res;
 	int res = 0;
-
-	/* process --check-embedded option */
-	if (opt.mode & MODE_CHECK_EMBEDDED)
-		return check_embedded_crc32(file);
 
 	/* initialize statistics */
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;

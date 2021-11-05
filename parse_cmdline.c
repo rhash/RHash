@@ -1080,9 +1080,12 @@ static void set_default_sums_flags(const char* progName)
 
 	/* change program flags only if opt.sum_flags was not set */
 	if (!opt.sum_flags) {
-		opt.sum_flags = (res ? res : (opt.fmt == FMT_MAGNET ? RHASH_TTH | RHASH_ED2K | RHASH_AICH :
-			(!(opt.mode & MODE_CHECK) ? RHASH_CRC32 : 0)));
+		opt.sum_flags = (res ? res :
+			(opt.fmt == FMT_MAGNET ? RHASH_TTH | RHASH_ED2K | RHASH_AICH :
+			(opt.mode != MODE_CHECK ? RHASH_CRC32 : 0)));
 	}
+	if (!opt.mode)
+		opt.mode = MODE_DEFAULT;
 }
 
 /**
@@ -1136,7 +1139,7 @@ static void make_final_options_checks(void)
 
 	if (opt.bt_batch_file)
 		opt.mode |= MODE_TORRENT;
-	if (opt.mode & MODE_TORRENT)
+	if (IS_MODE(MODE_TORRENT))
 		opt.sum_flags |= RHASH_BTIH;
 
 	/* check options compatibility for program mode and output format */

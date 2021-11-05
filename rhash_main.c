@@ -78,8 +78,8 @@ static int scan_files_callback(file_t* file, int preprocess)
 
 		if (!FILE_ISSPECIAL(file)) {
 			if (not_root) {
-				if ((opt.mode & MODE_CHECK) != 0) {
-					/* check and update modes use the crc_accept list */
+				if (opt.mode == MODE_CHECK) {
+					/* use crc_accept list in the plain recursive check mode, but not in -uc mode */
 					if (!file_mask_match(opt.crc_accept, file)) {
 						return 0;
 					}
@@ -92,15 +92,17 @@ static int scan_files_callback(file_t* file, int preprocess)
 			}
 			if (must_skip_file(file))
 				return 0;
-		} else if (FILE_ISDATA(file) && (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED | MODE_UPDATE | MODE_TORRENT))) {
+		} else if (FILE_ISDATA(file) && IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED | MODE_UPDATE | MODE_TORRENT)) {
 			log_warning(_("skipping: %s\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull));
 			return 0;
 		}
 
-		if (opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			res = check_hash_file(file, not_root);
-		} else if (opt.mode & MODE_UPDATE) {
+		if (IS_MODE(MODE_UPDATE)) {
 			res = update_ctx_update(rhash_data.update_context, file);
+		} else if (IS_MODE(MODE_CHECK)) {
+			res = check_hash_file(file, not_root);
+		} else if (IS_MODE(MODE_CHECK_EMBEDDED)) {
+			res = check_embedded_crc32(file);
 		} else {
 			/* default mode: calculate hash */
 			res = calculate_and_print_sums(rhash_data.out, &rhash_data.out_file, file);
@@ -254,7 +256,7 @@ int main(int argc, char* argv[])
 	setup_percents();
 
 	/* in benchmark mode just run benchmark and exit */
-	if (opt.mode & MODE_BENCHMARK) {
+	if (IS_MODE(MODE_BENCHMARK)) {
 		unsigned flags = (opt.flags & OPT_BENCH_RAW ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
 		if ((opt.flags & OPT_BENCH_RAW) == 0) {
 			rsh_fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
@@ -289,7 +291,7 @@ int main(int argc, char* argv[])
 
 	if (opt.template_file) {
 		if (!load_printf_template()) rsh_exit(2);
-	} else if (!rhash_data.printf_str && !(opt.mode & (MODE_CHECK | MODE_CHECK_EMBEDDED))) {
+	} else if (!rhash_data.printf_str && IS_MODE(MODE_DEFAULT | MODE_UPDATE | MODE_TORRENT)) {
 		/* initialize printf output format according to '--<hashname>' options */
 		init_printf_format( (rhash_data.template_text = rsh_str_new()) );
 		rhash_data.printf_str = rhash_data.template_text->str;
@@ -309,7 +311,7 @@ int main(int argc, char* argv[])
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->callback = scan_files_callback;
 
-	sfv = (opt.fmt == FMT_SFV && !opt.mode);
+	sfv = (opt.fmt == FMT_SFV && IS_MODE(MODE_DEFAULT));
 	if (sfv && print_sfv_banner(rhash_data.out) < 0) {
 		log_error_file_t(&rhash_data.out_file);
 		rhash_data.stop_flags |= FatalErrorFlag;
@@ -338,12 +340,12 @@ int main(int argc, char* argv[])
 	opt.search_data->callback_data = 0;
 	scan_files(opt.search_data);
 
-	if ((opt.mode & MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
+	if (IS_MODE(MODE_CHECK_EMBEDDED) && rhash_data.processed > 1) {
 		if (print_check_stats() < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			rhash_data.stop_flags |= FatalErrorFlag;
 		}
-	} else if ((opt.mode & MODE_UPDATE) != 0 && rhash_data.update_context) {
+	} else if (IS_MODE(MODE_UPDATE) && rhash_data.update_context) {
 		/* finalize hash file and check for errors */
 		if (update_ctx_free(rhash_data.update_context) < 0)
 				rhash_data.stop_flags |= FatalErrorFlag;
@@ -361,7 +363,7 @@ int main(int argc, char* argv[])
 			file_cleanup(&batch_torrent_file);
 		}
 
-		if ((opt.flags & OPT_SPEED) && !(opt.mode & (MODE_CHECK | MODE_UPDATE)) &&
+		if ((opt.flags & OPT_SPEED) && !IS_MODE(MODE_CHECK | MODE_UPDATE) &&
 				rhash_data.processed > 1) {
 			double time = rsh_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);

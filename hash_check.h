@@ -54,6 +54,7 @@ int hash_parser_process_line(struct hash_parser* hp);
 int hash_parser_close(struct hash_parser* hp);
 
 int check_hash_file(struct file_t* file, int chdir);
+int check_embedded_crc32(struct file_t* file);
 
 void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);
 void rhash_hex_to_byte(const char* str, unsigned char* bin, int len);
