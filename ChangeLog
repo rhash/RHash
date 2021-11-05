@@ -1,3 +1,9 @@
+Fri 05 Nov 2021 Aleksey
+	* Honor --lowercase option while --embed-crc is in action
+
+Mon 01 Nov 2021 And Sch
+	* Improve ripemd160 performance
+
 Mon 01 Nov 2021 Aleksey
 	* Add --bt-transmission option to create Transmission compatible torrent files
 

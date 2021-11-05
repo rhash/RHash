@@ -203,7 +203,8 @@ int rename_file_by_embeding_crc32(struct file_info* info)
 		return 0; /* do nothing on stdin or a command-line message */
 
 	assert((info->rctx->hash_id & RHASH_CRC32) != 0);
-	rhash_print(suffix + 2, info->rctx, RHASH_CRC32, RHPR_UPPERCASE);
+	rhash_print(suffix + 2, info->rctx, RHASH_CRC32,
+		(opt.flags & OPT_LOWERCASE ? 0 : RHPR_UPPERCASE));
 
 	/* check if filename already contains a CRC32 sum */
 	if (find_embedded_crc32(info->file, &crc32)) {
