@@ -1,19 +1,19 @@
 # Contribution guidelines for the RHash project
 
 There are many ways of contributing to the project.
-* Donations
+* Sponsor the project
 * Translating to other languages
 * Hunting bugs
 * Packaging RHash to a new distribution
 * Contributing by writing code
 
-## Donations
-Click the image to the right to support the project by money.
-<a href="http://sourceforge.net/donate/index.php?group_id=205103"><img src="http://images.sourceforge.net/images/project-support.jpg" width="88" height="32" border="0" valign="middle" alt="Support RHash" title="Please donate to support RHash development!"/></a>
+## Sponsor the project
+<a href="https://opencollective.com/rhash"><img src="http://rhash.sourceforge.net/img/sponsor-button-36.png" width="136" height="36" border="0" valign="middle" alt="Sponsor RHash"/></a>
+&nbsp;Support the project by money.
 
 ## Translating to other languages
-For online translation you need to register at the [Launchpad] platform.
-Then visit [RHash translations] and translate untranslated strings.
+For online translation you need to register at the [Launchpad] platform,
+then visit [RHash translations] and translate untranslated strings.
 
 Alternatively, you can translate one of the [po files](../po/) and create a [Pull Request] or send a patch.
 
@@ -30,7 +30,7 @@ make print-info
 File new bugs at the [issues] page.
 
 ## Bug fixing
-Investigate one of bugs listed at [issues] page, fix it and make a pull request.
+Investigate one of the bugs listed at [issues] page, fix it and make a pull request.
 
 ## Packaging RHash to a new distribution
 Check if your OS distribution has the latest RHash. If not, then make a package and publish it into the OS repository.
