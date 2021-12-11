@@ -1143,7 +1143,8 @@ static void make_final_options_checks(void)
 		opt.sum_flags |= RHASH_BTIH;
 
 	/* check options compatibility for program mode and output format */
-	check_compatibility(ChkMode, opt.mode);
+	if (opt.mode & ~(MODE_CHECK | MODE_UPDATE))
+		check_compatibility(ChkMode, opt.mode);
 	check_compatibility(ChkFmt, (opt.fmt | ext_format_bits));
 	check_compatibility(ChkFmt, ((opt.flags & OPT_FMT_MODIFIERS) | ext_format_bits));
 

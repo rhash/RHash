@@ -3,6 +3,7 @@
 #define HASH_CHECK_H
 
 #include "file.h"
+#include "file_set.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,10 +50,16 @@ struct hash_parser {
 	struct hash_value hashes[HP_MAX_HASHES];
 };
 
-struct hash_parser* hash_parser_open(file_t* hash_file, int chdir);
-int hash_parser_process_line(struct hash_parser* hp);
-int hash_parser_close(struct hash_parser* hp);
+enum HashFileBits {
+	HashFileExist = 0x01,
+	HashFileIsEmpty = 0x02,
+	HashFileHasBom = 0x04,
+	HashFileHasWrongHashes = 0x08,
+	HashFileHasMissedFiles = 0x10,
+	HashFileHasUnparsedLines = 0x20
+};
 
+int load_updated_hash_file(file_set* set, struct file_t* hash_file);
 int check_hash_file(struct file_t* file, int chdir);
 int check_embedded_crc32(struct file_t* file);
 

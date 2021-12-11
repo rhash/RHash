@@ -27,16 +27,12 @@ typedef struct update_ctx
 	unsigned bit_flags;
 } update_ctx;
 
-enum UpdateFlagsBits
+enum HashFileExtraBits
 {
-	DoesExist = 1,
-	IsEmptyFile = 2,
-	HasBom = 4,
-	ErrorOcurred = 8
+	HashFileErrorOcurred = 0x100
 };
 
 /* define some internal functions, implemented later in this file */
-static int file_set_load_from_crc_file(file_set* set, file_t* file);
 static int fix_sfv_header(file_t* file);
 static int open_and_prepare_hash_file(struct update_ctx* ctx);
 
@@ -51,7 +47,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 {
 	struct update_ctx* ctx;
 	file_set* crc_entries = file_set_new();
-	int update_flags = file_set_load_from_crc_file(crc_entries, update_file);
+	int update_flags = load_updated_hash_file(crc_entries, update_file);
 	if (update_flags < 0) {
 		file_set_free(crc_entries);
 		return NULL;
@@ -79,7 +75,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 int update_ctx_update(struct update_ctx* ctx, file_t* hash_file)
 {
 	int res;
-	if ((ctx->bit_flags & ErrorOcurred) != 0)
+	if ((ctx->bit_flags & HashFileErrorOcurred) != 0)
 		return -1;
 
 	/* skip files already present in the hash file */
@@ -88,14 +84,14 @@ int update_ctx_update(struct update_ctx* ctx, file_t* hash_file)
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
 		log_error_file_t(&ctx->file);
-		ctx->bit_flags |= ErrorOcurred;
+		ctx->bit_flags |= HashFileErrorOcurred;
 		return -2;
 	}
 
 	/* print message digests to the hash file */
 	res = calculate_and_print_sums(ctx->fd, &ctx->file, hash_file);
 	if (res < 0)
-		ctx->bit_flags |= ErrorOcurred;
+		ctx->bit_flags |= HashFileErrorOcurred;
 	return res;
 }
 
@@ -116,7 +112,7 @@ int update_ctx_free(struct update_ctx* ctx)
 		if (fclose(ctx->fd) < 0) {
 			log_error_file_t(&ctx->file);
 			res = -1;
-		} else if (!!(ctx->bit_flags & ErrorOcurred)) {
+		} else if (!!(ctx->bit_flags & HashFileErrorOcurred)) {
 			res = -1;
 		} else if (!rhash_data.stop_flags) {
 			if (opt.fmt == FMT_SFV)
@@ -138,13 +134,13 @@ int update_ctx_free(struct update_ctx* ctx)
  */
 static int open_and_prepare_hash_file(struct update_ctx* ctx)
 {
-	int open_mode = (ctx->bit_flags & DoesExist ? FOpenRW : FOpenWrite) | FOpenBin;
+	int open_mode = (ctx->bit_flags & HashFileExist ? FOpenRW : FOpenWrite) | FOpenBin;
 	assert(!ctx->fd);
 	/* open the hash file for reading/writing or create it */
 	ctx->fd = file_fopen(&ctx->file, open_mode);
 	if (!ctx->fd)
 		return -1;
-	if (!(ctx->bit_flags & IsEmptyFile)) {
+	if (!(ctx->bit_flags & HashFileIsEmpty)) {
 		int ch;
 		/* read the last character of the file to check if it is EOL */
 		if (fseek(ctx->fd, -1, SEEK_END) != 0)
@@ -162,52 +158,13 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
 		}
 	} else {
 		/* skip BOM, if present */
-		if ((ctx->bit_flags & HasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
+		if ((ctx->bit_flags & HashFileHasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
 			return -1;
 		/* SFV banner will be printed only in SFV mode and only for empty hash files */
 		if (opt.fmt == FMT_SFV)
 			return print_sfv_banner(ctx->fd);
 	}
 	return 0;
-}
-
-/**
- * Load a set of files from the specified hash file.
- * In a case of fail, the error will be logged.
- *
- * @param set the file set to store loaded files
- * @param hash_file the file containing message digests to load
- * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
- */
-static int file_set_load_from_crc_file(file_set* set, file_t* hash_file)
-{
-	int result = (DoesExist | IsEmptyFile);
-	struct hash_parser *parser = hash_parser_open(hash_file, 0);
-	if (!parser) {
-		/* if hash_file does not exist, it will be created later */
-		if (errno == ENOENT)
-			return IsEmptyFile;
-		log_error_file_t(hash_file);
-		return -1;
-	}
-	while(hash_parser_process_line(parser) != 0)
-	{
-		/* put UTF8-encoded file path into the file set */
-		const char* path = file_get_print_path(&parser->parsed_path, FPathUtf8);
-		if (path)
-			file_set_add_name(set, path);
-		result &= ~IsEmptyFile;
-	}
-	if (errno != 0) {
-		log_error_file_t(hash_file);
-		result = -1;
-	}
-	else if ((parser->bit_flags & HpIsBinaryFile) != 0)
-		result = -1;
-	else if ((hash_file->mode & FileContentIsUtf8) != 0)
-		result |= HasBom;
-	hash_parser_close(parser);
-	return result;
 }
 
 /**

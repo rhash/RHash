@@ -1273,7 +1273,7 @@ static void set_parser_flags_by_file_extension(struct hash_parser_ext* parser)
  * @param parser the hash parser to close
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int hash_parser_close(struct hash_parser* hp)
+static int hash_parser_close(struct hash_parser* hp)
 {
 	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
 	int res = 0;
@@ -1294,7 +1294,7 @@ int hash_parser_close(struct hash_parser* hp)
  * @param chdir true if function should emulate chdir to the parent directory of the hash file
  * @return created hash_parser on success, NULL on fail with error code stored in errno
  */
-struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
+static struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
 {
 	FILE* fd;
 	struct hash_parser_ext* parser;
@@ -1328,6 +1328,7 @@ struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
  * Constants returned by hash_parser_process_line() function.
  */
 enum ProcessLineResults {
+	ResReadError = -1,
 	ResStopParsing = 0,
 	ResSkipLine = 1,
 	ResParsedLine = 2,
@@ -1340,15 +1341,16 @@ enum ProcessLineResults {
  * @param hp parser processing the hash file
  * @return one of the ProcessLineResults constants
  */
-int hash_parser_process_line(struct hash_parser* hp)
+static int hash_parser_process_line(struct hash_parser* hp)
 {
 	struct hash_parser_ext* parser = (struct hash_parser_ext*)hp;
 	char *line = parser->buffer;
 
-	if (!fgets(parser->buffer, sizeof(parser->buffer), parser->fd))
-	{
-		if (ferror(parser->fd))
+	if (!fgets(parser->buffer, sizeof(parser->buffer), parser->fd)) {
+		if (ferror(parser->fd)) {
 			log_error_file_t(parser->hash_file);
+			return ResReadError;
+		}
 		return ResStopParsing;
 	}
 
@@ -1371,7 +1373,7 @@ int hash_parser_process_line(struct hash_parser* hp)
 			file_get_print_path(parser->hash_file, FPathPrimaryEncoding | FPathNotNull),
 			parser->line_number, message);
 		hp->bit_flags |= HpIsBinaryFile;
-		return ResStopParsing;
+		return ResReadError;
 	}
 	/* silently skip comments and empty lines */
 	if (*line == '\0' || *line == '\r' || *line == '\n' || IS_COMMENT(*line))
@@ -1389,6 +1391,93 @@ int hash_parser_process_line(struct hash_parser* hp)
 }
 
 /**
+ * Parse content of the openned hash file.
+ *
+ * @param parser hash parser, controlling parsing process
+ * @param files pointer to the vector to load parsed file paths into
+ */
+static int process_hash_file(struct hash_parser *parser, file_set* files)
+{
+	timedelta_t timer;
+	uint64_t time;
+	int parsing_res;
+	int result = (HashFileExist | HashFileIsEmpty);
+
+	if (IS_MODE(MODE_CHECK) && print_verifying_header(((struct hash_parser_ext*)parser)->hash_file) < 0) {
+		log_error_file_t(&rhash_data.out_file);
+		return -2;
+	}
+	rsh_timer_start(&timer);
+
+	/* initialize statistics */
+	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
+	rhash_data.total_size = 0;
+
+	while((parsing_res = hash_parser_process_line(parser)) > ResStopParsing) {
+		result &= ~HashFileIsEmpty;
+		/* skip comments and empty lines */
+		if (parsing_res == ResSkipLine)
+			continue;
+		if (parsing_res == ResFailedToParse) {
+			result |= HashFileHasUnparsedLines;
+		} else {
+			if (files)
+			{
+				/* put UTF8-encoded file path into the file set */
+				const char* path = file_get_print_path(&parser->parsed_path, FPathUtf8);
+				if (path)
+					file_set_add_name(files, path);
+			}
+			if (IS_MODE(MODE_CHECK)) {
+				/* verify message digests of the file */
+				int res = verify_hashes(&parser->parsed_path, parser);
+
+				if (res >= -1 && fflush(rhash_data.out) < 0) {
+					log_error_file_t(&rhash_data.out_file);
+					return -2;
+				}
+				if (rhash_data.stop_flags || res <= -2) {
+					return res; /* stop on fatal error */
+				}
+
+				/* update statistics */
+				if (res == 0)
+					rhash_data.ok++;
+				else
+				{
+					if (res == -1 && errno == ENOENT)
+					{
+						result |= HashFileHasMissedFiles;
+						rhash_data.miss++;
+					}
+					else
+						result |= HashFileHasWrongHashes;
+				}
+			}
+		}
+		rhash_data.processed++;
+	}
+	if (parsing_res == ResReadError)
+		return -1;
+
+	time = rsh_timer_stop(&timer);
+
+	if (IS_MODE(MODE_CHECK)) {
+		/* check for a hash file errors */
+		if (result >= 0 && (result & (HashFileHasWrongHashes | HashFileHasMissedFiles | HashFileHasUnparsedLines)) != 0)
+			rhash_data.non_fatal_error = 1;
+
+		if (result >= -1 && (print_verifying_footer() < 0 || print_check_stats() < 0)) {
+			log_error_file_t(&rhash_data.out_file);
+			result = -2;
+		}
+		if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
+			print_time_stats(time, rhash_data.total_size, 1);
+	}
+	return result;
+}
+
+/**
  * Verify message digests of the files listed in the given hash file.
  * Lines beginning with ';' and '#' are ignored.
  * In a case of fail, obtained error will be logged.
@@ -1400,73 +1489,43 @@ int hash_parser_process_line(struct hash_parser* hp)
 int check_hash_file(file_t* file, int chdir)
 {
 	struct hash_parser* parser;
-	timedelta_t timer;
-	uint64_t time;
-	int parsing_res;
-	int res = 0;
-
-	/* initialize statistics */
-	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
-	rhash_data.total_size = 0;
+	int res;
 
 	parser = hash_parser_open(file, chdir);
 	if (!parser) {
 		log_error_file_t(file);
 		return -1;
 	}
-
-	if (print_verifying_header(file) < 0) {
-		log_error_file_t(&rhash_data.out_file);
-		hash_parser_close(parser);
-		return -2;
-	}
-	rsh_timer_start(&timer);
-
-	while((parsing_res = hash_parser_process_line(parser)) != ResStopParsing) {
-		/* skip comments and empty lines */
-		if (parsing_res == ResSkipLine)
-			continue;
-		if (parsing_res == ResFailedToParse) {
-			/* statistics: count unparsed lines as errors */
-			rhash_data.processed++;
-			continue;
-		}
-
-		/* verify message digests of the file */
-		res = verify_hashes(&parser->parsed_path, parser);
-
-		if (res >= -1 && fflush(rhash_data.out) < 0) {
-			log_error_file_t(&rhash_data.out_file);
-			res = -2;
-		}
-		if (rhash_data.stop_flags || res <= -2) {
-			break; /* stop on fatal error */
-		}
-
-		/* update statistics */
-		if (res == 0)
-			rhash_data.ok++;
-		else if (res == -1 && errno == ENOENT)
-			rhash_data.miss++;
-		rhash_data.processed++;
-	}
-
-	/* check for a hash file reading error */
-	if (res >= 0 && errno != 0)
-		res = -1;
-
-	time = rsh_timer_stop(&timer);
-
-	if (res >= -1 && (print_verifying_footer() < 0 || print_check_stats() < 0)) {
-		log_error_file_t(&rhash_data.out_file);
-		res = -2;
-	}
-	if (rhash_data.processed != rhash_data.ok)
-		rhash_data.non_fatal_error = 1;
-
-	if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
-		print_time_stats(time, rhash_data.total_size, 1);
+	res = process_hash_file(parser, 0);
 
 	hash_parser_close(parser);
 	return res;
+}
+
+/**
+ * Load a set of files from the specified hash file.
+ * In a case of fail, errors will be logged.
+ *
+ * @param files pointer to the vector to load parsed file paths into
+ * @param hash_file the file containing message digests to load
+ * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
+ */
+int load_updated_hash_file(file_set* files, file_t* hash_file)
+{
+	int result;
+	struct hash_parser *parser = hash_parser_open(hash_file, 0);
+	if (!parser) {
+		/* if hash_file does not exist, it will be created later */
+		if (errno == ENOENT)
+			return HashFileIsEmpty;
+		log_error_file_t(hash_file);
+		return -1;
+	}
+	result = process_hash_file(parser, files);
+
+	if (result >= 0 && (hash_file->mode & FileContentIsUtf8) != 0)
+			result |= HashFileHasBom;
+
+	hash_parser_close(parser);
+	return result;
 }

@@ -1,3 +1,6 @@
+Sun 12 Dec 2021 Aleksey
+	* Allow simultaneous usage of --update and --check options
+
 Fri 05 Nov 2021 Aleksey
 	* Honor --lowercase option while --embed-crc is in action
 
