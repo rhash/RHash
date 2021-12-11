@@ -365,7 +365,7 @@ int main(int argc, char* argv[])
 
 		if ((opt.flags & OPT_SPEED) && !IS_MODE(MODE_CHECK | MODE_UPDATE) &&
 				rhash_data.processed > 1) {
-			double time = rsh_timer_stop(&timer);
+			uint64_t time = rsh_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);
 		}
 	} else

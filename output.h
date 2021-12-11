@@ -55,7 +55,7 @@ int print_verifying_header(struct file_t* file);
 int print_verifying_footer(void);
 int print_check_stats(void);
 
-void print_time_stats(double time, uint64_t size, int total);
+void print_time_stats(uint64_t time, uint64_t size, int total);
 void print_file_time_stats(struct file_info* info);
 
 #ifdef __cplusplus

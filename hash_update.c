@@ -57,6 +57,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 		return NULL;
 	}
 	file_set_sort(crc_entries);
+	opt.mode &= ~MODE_CHECK;
 
 	ctx = (update_ctx*)rsh_malloc(sizeof(update_ctx));
 	memset(ctx, 0, sizeof(*ctx));

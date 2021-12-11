@@ -685,14 +685,19 @@ void print_file_time_stats(struct file_info* info)
 
 /**
  * Print processing time statistics.
+ *
+ * @param time time in milliseconds
+ * @param size total size of the processed data
+ * @param total boolean flag, to print total or per-file result
  */
-void print_time_stats(double time, uint64_t size, int total)
+void print_time_stats(uint64_t time, uint64_t size, int total)
 {
-	double speed = (time == 0 ? 0 : (double)(int64_t)size / 1048576.0 / time);
+	double seconds = (double)(int64_t)time / 1000.0;
+	double speed = (time == 0 ? 0 : (double)(int64_t)size / 1048576.0 / seconds);
 	if (total) {
-		rsh_fprintf(rhash_data.log, _("Total %.3f sec, %4.2f MBps\n"), time, speed);
+		rsh_fprintf(rhash_data.log, _("Total %.3f sec, %4.2f MBps\n"), seconds, speed);
 	} else {
-		rsh_fprintf(rhash_data.log, _("Calculated in %.3f sec, %4.2f MBps\n"), time, speed);
+		rsh_fprintf(rhash_data.log, _("Calculated in %.3f sec, %4.2f MBps\n"), seconds, speed);
 	}
 	fflush(rhash_data.log);
 }

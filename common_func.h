@@ -104,9 +104,9 @@ void rsh_timer_start(timedelta_t* timer);
  * Stop given timer.
  *
  * @param timer the timer to stop
- * @return number of seconds timed
+ * @return timer value in milliseconds
  */
-double rsh_timer_stop(timedelta_t* timer);
+uint64_t rsh_timer_stop(timedelta_t* timer);
 
 /**
  * Return ticks in milliseconds for time intervals measurement.

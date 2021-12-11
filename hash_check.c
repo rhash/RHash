@@ -1401,7 +1401,7 @@ int check_hash_file(file_t* file, int chdir)
 {
 	struct hash_parser* parser;
 	timedelta_t timer;
-	double time;
+	uint64_t time;
 	int parsing_res;
 	int res = 0;
 

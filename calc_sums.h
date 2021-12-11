@@ -16,7 +16,7 @@ extern "C" {
 struct file_info {
 	uint64_t size;          /* the size of the hashed file */
 	uint64_t msg_offset;    /* rctx->msg_size before hashing this file */
-	double time;            /* file processing time in seconds */
+	uint64_t time;          /* file processing time in milliseconds */
 	file_t* file;           /* the file being processed */
 	struct rhash_context* rctx; /* state of hash algorithms */
 	struct hash_parser* hp;  /* parsed line of a hash file */
