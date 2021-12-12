@@ -193,7 +193,7 @@ check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 TEST_RESULT=$( printf "" | $rhash -p "%m" - )
 check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 # test verification of empty file
-TEST_RESULT=$( $rhash -c "$EMPTY_FILE" | tr -d '\r' | grep "^[^-]" )
+TEST_RESULT=$( $rhash --brief -c "$EMPTY_FILE" | tr -d '\r' )
 check "$TEST_RESULT" "Nothing to verify"
 rm "$EMPTY_FILE"
 
@@ -276,13 +276,13 @@ TEST_EXPECTED="^test1K.data *OK"
 match "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test bsd format checking:   "
-TEST_RESULT=$( $rhash --bsd -a test1K.data | $rhash -c --skip-ok - 2>&1 | grep '^[^-].' )
+TEST_RESULT=$( $rhash --bsd -a test1K.data | $rhash -c --skip-ok --brief - 2>&1 )
 check "$TEST_RESULT" "Everything OK"
 
 new_test "test checking w/o filename: "
-$rhash -p '%c\n%m\n%e\n%h\n%g\n%t\n%a\n' test1K.data > t.sum
-TEST_RESULT=$( $rhash -vc t.sum 2>&1 | grep '^test1K.data' | grep -v ' OK *$' )
-check "$TEST_RESULT" ""
+$rhash -p '%c\n%m\n%e\n%h\n%g\n%t\n%a\n' test1K.data > test1K.data.sum
+TEST_RESULT=$( $rhash -vc --brief test1K.data.sum 2>&1 | grep -v '^test1K.data.*OK' )
+check "$TEST_RESULT" "Everything OK"
 
 new_test "test checking embedded crc: "
 printf 'A' > 'test_[D3D99E8B].data' && printf 'A' > 'test_[D3D99E8C].data'

@@ -1,4 +1,5 @@
 Sun 12 Dec 2021 Aleksey
+	* Support --brief option to show verification report without header and footer
 	* Bugfix: hash options were sometimes ignored in the --check mode
 	* Allow simultaneous usage of --update and --check options
 

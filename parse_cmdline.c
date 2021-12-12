@@ -99,6 +99,7 @@ static void print_help(void)
 	print_help_line("      --list-hashes  ", _("List the names of supported hash functions, one per line.\n"));
 	print_help_line("  -B, --benchmark  ", _("Benchmark selected algorithm.\n"));
 	print_help_line("  -v, --verbose    ", _("Be verbose.\n"));
+	print_help_line("      --brief      ", _("Use brief form of hash file verification report.\n"));
 	print_help_line("  -r, --recursive  ", _("Process directories recursively.\n"));
 	print_help_line("      --file-list=<file> ", _("Process a list of files.\n"));
 	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
@@ -422,6 +423,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_TFNC,   0,   0, "file-list",     (opt_handler_t)add_special_file, 0, FileIsList },
 	{ F_UFLG,   0,   0, "follow",        0, &opt.flags, OPT_FOLLOW },
 	{ F_UFLG, 'v',   0, "verbose",       0, &opt.flags, OPT_VERBOSE },
+	{ F_UFLG,   0,   0, "brief",         0, &opt.flags, OPT_BRIEF },
 	{ F_UFLG,   0,   0, "gost-reverse",  0, &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok",       0, &opt.flags, OPT_SKIP_OK },
 	{ F_UFLG, 'i',   0, "ignore-case",   0, &opt.flags, OPT_IGNORE_CASE },

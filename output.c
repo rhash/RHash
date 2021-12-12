@@ -634,13 +634,18 @@ void setup_percents(void)
  */
 int print_verifying_header(file_t* file)
 {
-	char dash_line[84];
-	int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
-	int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
-	int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
-	if (res >= 0)
-		res = fflush(rhash_data.out);
-	return (count < 0 ? count : res);
+	if ((opt.flags & OPT_BRIEF) == 0)
+	{
+		char dash_line[84];
+		/* TRANSLATORS: the line printed before a hash file is verified */
+		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
+		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
+		int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
+		if (res >= 0)
+			res = fflush(rhash_data.out);
+		return (count < 0 ? count : res);
+	}
+	return 0;
 }
 
 /**
@@ -651,7 +656,8 @@ int print_verifying_header(file_t* file)
 int print_verifying_footer(void)
 {
 	char dash_line[84];
-	return rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', 80));
+	return (opt.flags & OPT_BRIEF ? 0 :
+		rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', 80)));
 }
 
 /**
