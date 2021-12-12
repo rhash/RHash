@@ -1262,7 +1262,8 @@ static void set_parser_flags_by_file_extension(struct hash_parser_ext* parser)
 	struct file_ext ext;
 	if (!extract_uppercase_file_ext(&ext, parser->hash_file))
 		return;
-	parser->expected_hash_mask = bsd_hash_name_to_id(ext.buffer, ext.length);
+	if (!parser->expected_hash_mask)
+		parser->expected_hash_mask = bsd_hash_name_to_id(ext.buffer, ext.length);
 	if (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0)
 		parser->is_sfv = 1;
 }
