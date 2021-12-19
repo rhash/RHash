@@ -1133,6 +1133,9 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
 	timedelta_t timer;
 	int res = 0;
 
+	if (FILE_ISBAD(file) && (opt.flags & OPT_IGNORE_MISSING) != 0)
+		return -1;
+
 	memset(&info, 0, sizeof(info));
 	info.file = file;
 	info.sums_flags = hp->hash_mask;
@@ -1446,6 +1449,8 @@ static int process_hash_file(struct hash_parser *parser, file_set* files)
 					rhash_data.ok++;
 				else
 				{
+					if (FILE_ISBAD(&parser->parsed_path) && (opt.flags & OPT_IGNORE_MISSING) != 0)
+						continue;
 					if (res == -1 && errno == ENOENT)
 					{
 						result |= HashFileHasMissedFiles;

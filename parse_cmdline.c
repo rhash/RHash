@@ -104,6 +104,7 @@ static void print_help(void)
 	print_help_line("      --file-list=<file> ", _("Process a list of files.\n"));
 	print_help_line("  -m, --message=<text> ", _("Process the text message.\n"));
 	print_help_line("      --skip-ok    ", _("Don't print OK messages for successfully verified files.\n"));
+	print_help_line("      --ignore-missing ", _("Ignore missing files, while verifying a hash file.\n"));
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
 	print_help_line("  -P, --percents   ", _("Show percents, while calculating or verifying message digests.\n"));
 	print_help_line("      --speed      ", _("Output per-file and total processing speed.\n"));
@@ -426,6 +427,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "brief",         0, &opt.flags, OPT_BRIEF },
 	{ F_UFLG,   0,   0, "gost-reverse",  0, &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok",       0, &opt.flags, OPT_SKIP_OK },
+	{ F_UFLG,   0,   0, "ignore-missing",   0, &opt.flags, OPT_IGNORE_MISSING },
 	{ F_UFLG, 'i',   0, "ignore-case",   0, &opt.flags, OPT_IGNORE_CASE },
 	{ F_UENC, 'P',   0, "percents",      0, &opt.flags, OPT_PERCENTS },
 	{ F_UFLG,   0,   0, "speed",         0, &opt.flags, OPT_SPEED },

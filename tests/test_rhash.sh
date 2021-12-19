@@ -195,7 +195,6 @@ check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 # test verification of empty file
 TEST_RESULT=$( $rhash --brief -c "$EMPTY_FILE" | tr -d '\r' )
 check "$TEST_RESULT" "Nothing to verify"
-rm "$EMPTY_FILE"
 
 # Test the SFV format using test1K.data from the previous test
 new_test "test default format:        "
@@ -354,11 +353,17 @@ $rhash -H none-existent.file 2>/dev/null
 check "$?" "1" .
 $rhash -c none-existent.file 2>/dev/null
 check "$?" "1" .
+A_SFV="$RHASH_TMP/a.sfv"
+printf "00000000 none-existent.file\\n00000000 test-empty.file\\n" > "$A_SFV"
+$rhash -c "$A_SFV" >/dev/null
+check "$?" "1" .
+$rhash -c --ignore-missing "$A_SFV" >/dev/null
+check "$?" "0" .
 $rhash -H test1K.data >/dev/null
 check "$?" "0"
 UNWRITABLE_FILE="$RHASH_TMP/test-unwritable.file"
 printf "" > "$UNWRITABLE_FILE" && chmod a-w "$UNWRITABLE_FILE"
-# check if really unwritable, since superuser still can write
+# check if the file is really unwritable, since the superuser still can write to it
 if ! test -w "$UNWRITABLE_FILE" ; then
  $rhash -o "$UNWRITABLE_FILE" -H test1K.data 2>/dev/null
  check "$?" "2" .
