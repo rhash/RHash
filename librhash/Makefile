@@ -180,7 +180,8 @@ $(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
 
 # build static library
 $(LIBRHASH_STATIC): $(OBJECTS)
-	$(AR) cqs $@ $(OBJECTS)
+	rm -f $@
+	$(AR) -cqs $@ $(OBJECTS)
 
 # test targets
 $(TEST_SHARED): $(LIBRHASH_SHARED) test_hashes.o
