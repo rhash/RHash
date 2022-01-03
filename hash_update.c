@@ -47,7 +47,7 @@ struct update_ctx* update_ctx_new(file_t* update_file)
 {
 	struct update_ctx* ctx;
 	file_set* crc_entries = file_set_new();
-	int update_flags = load_updated_hash_file(crc_entries, update_file);
+	int update_flags = load_updated_hash_file(update_file, crc_entries);
 	if (update_flags < 0) {
 		file_set_free(crc_entries);
 		return NULL;
@@ -115,7 +115,7 @@ int update_ctx_free(struct update_ctx* ctx)
 		} else if (!!(ctx->bit_flags & HashFileErrorOcurred)) {
 			res = -1;
 		} else if (!rhash_data.stop_flags) {
-			if (opt.fmt == FMT_SFV)
+			if (rhash_data.is_sfv)
 				res = fix_sfv_header(&ctx->file); /* finalize the hash file */
 			if (res == 0)
 				log_msg_file_t(_("Updated: %s\n"), &ctx->file);
@@ -161,7 +161,7 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx)
 		if ((ctx->bit_flags & HashFileHasBom) && fseek(ctx->fd, 0, SEEK_END) != 0)
 			return -1;
 		/* SFV banner will be printed only in SFV mode and only for empty hash files */
-		if (opt.fmt == FMT_SFV)
+		if (rhash_data.is_sfv)
 			return print_sfv_banner(ctx->fd);
 	}
 	return 0;

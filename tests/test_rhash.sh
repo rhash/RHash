@@ -196,7 +196,7 @@ check "$TEST_RESULT" "d41d8cd98f00b204e9800998ecf8427e" .
 TEST_RESULT=$( $rhash --brief -c "$EMPTY_FILE" | tr -d '\r' )
 check "$TEST_RESULT" "Nothing to verify"
 
-# Test the SFV format using test1K.data from the previous test
+# Test the SFV format using test1K.data
 new_test "test default format:        "
 MATCH_LOG="$RHASH_TMP/match_err.log"
 $rhash test1K.data | tr -d '\r' | (
@@ -267,7 +267,14 @@ match "$TEST_RESULT" "^test1K.data *OK" .
 TEST_RESULT=$( echo "b70b4c26 *test1K.data" | $rhash -Cc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
-new_test "test checking magnet link:  "
+new_test "test magnet links:          "
+TEST_RESULT=$( $rhash --magnet --crc32c test1K.data )
+TEST_EXPECTED="magnet:?xl=1024&dn=test1K.data&xt=urn:crc32c:2cdf6e8f"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+# test magnet default format
+TEST_RESULT=$( $rhash --magnet test1K.data )
+TEST_EXPECTED="magnet:?xl=1024&dn=test1K.data&xt=urn:tree:tiger:4oqy25un2xhidqpv5u6bxaz47inucygibk7lfni&xt=urn:ed2k:5ae257c47e9be1243ee32aabe408fb6b&xt=urn:aich:lmagnhcibvop7pp2rpn2tflbcyhs2g3x"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
 # also test that '--check' verifies files in the current directory
 mkdir magnet_dir && $rhash --magnet -a test1K.data > magnet_dir/t.magnet
 TEST_RESULT=$( $rhash -vc magnet_dir/t.magnet 2>&1 | grep test1K.data )

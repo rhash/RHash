@@ -28,7 +28,7 @@ struct strbuf_t;
 
 /* initialization of static data */
 void init_hash_info_table(void);
-void init_printf_format(struct strbuf_t* out);
+struct strbuf_t* init_printf_format(void);
 
 /* formatted output of message digests and file information */
 struct print_item* parse_print_string(const char* format, unsigned* sum_mask);

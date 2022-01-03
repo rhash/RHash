@@ -976,8 +976,9 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		opt.printf_str = conf_opt.printf_str;
 		opt.template_file = conf_opt.template_file;
 	}
+	opt.fmt |= (opt.printf_str ? FMT_PRINTF : 0) | (opt.template_file ? FMT_FILE_TEMPLATE : 0);
 
-	if (!opt.printf_str && !opt.template_file) {
+	if (!(opt.fmt & FMT_PRINTF_MASK)) {
 		if (!opt.fmt) opt.fmt = conf_opt.fmt;
 		if (!opt.sum_flags) opt.sum_flags = conf_opt.sum_flags;
 	}
@@ -1029,67 +1030,65 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
  */
 static void set_default_sums_flags(const char* progName)
 {
+	const char* p;
 	char* buf;
-	int res = 0;
 
-	/* remove directory name from path */
-	const char* p = strrchr(progName, '/');
+	/* do nothing if hash functions are already selected by command line or config */
+	if (opt.sum_flags != 0)
+		return;
+
+	/* remove directory name from the path */
+	p = strrchr(progName, '/');
 	if (p) progName = p + 1;
 #ifdef _WIN32
 	p = strrchr(progName, '\\');
 	if (p) progName = p + 1;
 #endif
 
-	/* convert progName to lowercase */
+	/* convert the progName to lowercase */
 	buf = str_tolower(progName);
-
-	if (strstr(buf, "crc32c")) res |= RHASH_CRC32C;
-	else if (strstr(buf, "crc32")) res |= RHASH_CRC32;
-	if (strstr(buf, "md4"))   res |= RHASH_MD4;
-	if (strstr(buf, "md5"))   res |= RHASH_MD5;
-	if (strstr(buf, "sha1"))  res |= RHASH_SHA1;
-	if (strstr(buf, "sha256")) res |= RHASH_SHA256;
-	if (strstr(buf, "sha512")) res |= RHASH_SHA512;
-	if (strstr(buf, "sha224")) res |= RHASH_SHA224;
-	if (strstr(buf, "sha384")) res |= RHASH_SHA384;
-	if (strstr(buf, "sha3-256")) res |= RHASH_SHA3_256;
-	if (strstr(buf, "sha3-512")) res |= RHASH_SHA3_512;
-	if (strstr(buf, "sha3-224")) res |= RHASH_SHA3_224;
-	if (strstr(buf, "sha3-384")) res |= RHASH_SHA3_384;
-	if (strstr(buf, "tiger")) res |= RHASH_TIGER;
-	if (strstr(buf, "tth"))   res |= RHASH_TTH;
-	if (strstr(buf, "btih"))  res |= RHASH_BTIH;
-	if (strstr(buf, "aich"))  res |= RHASH_AICH;
-	if (strstr(buf, "gost12-256"))  res |= RHASH_GOST12_256;
-	if (strstr(buf, "gost12-512"))  res |= RHASH_GOST12_512;
-	if (strstr(buf, "gost94-cryptopro"))  res |= RHASH_GOST94_CRYPTOPRO;
-	else if (strstr(buf, "gost94"))  res |= RHASH_GOST94;
-	if (strstr(buf, "has160"))  res |= RHASH_HAS160;
-	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160"))  res |= RHASH_RIPEMD160;
-	if (strstr(buf, "whirlpool")) res |= RHASH_WHIRLPOOL;
-	if (strstr(buf, "edonr256"))  res |= RHASH_EDONR256;
-	if (strstr(buf, "edonr512"))  res |= RHASH_EDONR512;
-	if (strstr(buf, "blake2s"))   res |= RHASH_BLAKE2S;
-	if (strstr(buf, "blake2b"))   res |= RHASH_BLAKE2B;
-	if (strstr(buf, "snefru256")) res |= RHASH_SNEFRU128;
-	if (strstr(buf, "snefru128")) res |= RHASH_SNEFRU256;
-	if (strstr(buf, "ed2k-link")) res |= OPT_ED2K_LINK;
-	else if (strstr(buf, "ed2k")) res |= RHASH_ED2K;
 
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
 	if (strstr(buf, "bsd") && opt.fmt == 0) opt.fmt = FMT_BSD;
 	if (strstr(buf, "magnet") && opt.fmt == 0) opt.fmt = FMT_MAGNET;
 
-	free(buf);
+	if (strstr(buf, "crc32c")) opt.sum_flags |= RHASH_CRC32C;
+	else if (strstr(buf, "crc32")) opt.sum_flags |= RHASH_CRC32;
+	if (strstr(buf, "md4"))   opt.sum_flags |= RHASH_MD4;
+	if (strstr(buf, "md5"))   opt.sum_flags |= RHASH_MD5;
+	if (strstr(buf, "sha1"))  opt.sum_flags |= RHASH_SHA1;
+	if (strstr(buf, "sha256")) opt.sum_flags |= RHASH_SHA256;
+	if (strstr(buf, "sha512")) opt.sum_flags |= RHASH_SHA512;
+	if (strstr(buf, "sha224")) opt.sum_flags |= RHASH_SHA224;
+	if (strstr(buf, "sha384")) opt.sum_flags |= RHASH_SHA384;
+	if (strstr(buf, "sha3-256")) opt.sum_flags |= RHASH_SHA3_256;
+	if (strstr(buf, "sha3-512")) opt.sum_flags |= RHASH_SHA3_512;
+	if (strstr(buf, "sha3-224")) opt.sum_flags |= RHASH_SHA3_224;
+	if (strstr(buf, "sha3-384")) opt.sum_flags |= RHASH_SHA3_384;
+	if (strstr(buf, "tiger")) opt.sum_flags |= RHASH_TIGER;
+	if (strstr(buf, "tth"))   opt.sum_flags |= RHASH_TTH;
+	if (strstr(buf, "btih"))  opt.sum_flags |= RHASH_BTIH;
+	if (strstr(buf, "aich"))  opt.sum_flags |= RHASH_AICH;
+	if (strstr(buf, "gost12-256"))  opt.sum_flags |= RHASH_GOST12_256;
+	if (strstr(buf, "gost12-512"))  opt.sum_flags |= RHASH_GOST12_512;
+	if (strstr(buf, "gost94-cryptopro"))  opt.sum_flags |= RHASH_GOST94_CRYPTOPRO;
+	else if (strstr(buf, "gost94"))  opt.sum_flags |= RHASH_GOST94;
+	if (strstr(buf, "has160"))  opt.sum_flags |= RHASH_HAS160;
+	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160"))  opt.sum_flags |= RHASH_RIPEMD160;
+	if (strstr(buf, "whirlpool")) opt.sum_flags |= RHASH_WHIRLPOOL;
+	if (strstr(buf, "edonr256"))  opt.sum_flags |= RHASH_EDONR256;
+	if (strstr(buf, "edonr512"))  opt.sum_flags |= RHASH_EDONR512;
+	if (strstr(buf, "blake2s"))   opt.sum_flags |= RHASH_BLAKE2S;
+	if (strstr(buf, "blake2b"))   opt.sum_flags |= RHASH_BLAKE2B;
+	if (strstr(buf, "snefru256")) opt.sum_flags |= RHASH_SNEFRU128;
+	if (strstr(buf, "snefru128")) opt.sum_flags |= RHASH_SNEFRU256;
+	if (strstr(buf, "ed2k-link")) opt.sum_flags |= OPT_ED2K_LINK;
+	else if (strstr(buf, "ed2k")) opt.sum_flags |= RHASH_ED2K;
 
-	/* change program flags only if opt.sum_flags was not set */
-	if (!opt.sum_flags) {
-		opt.sum_flags = (res ? res :
-			(opt.fmt == FMT_MAGNET ? RHASH_TTH | RHASH_ED2K | RHASH_AICH :
-			(opt.mode != MODE_CHECK ? RHASH_CRC32 : 0)));
-	}
-	if (!opt.mode)
-		opt.mode = MODE_DEFAULT;
+	if (!opt.sum_flags && opt.fmt == FMT_MAGNET)
+		opt.sum_flags = RHASH_TTH | RHASH_ED2K | RHASH_AICH;
+
+	free(buf);
 }
 
 /**
@@ -1134,8 +1133,6 @@ static void check_compatibility(int what, unsigned bit_mask)
  */
 static void make_final_options_checks(void)
 {
-	unsigned ext_format_bits = (opt.printf_str ? 0x100 : 0) | (opt.template_file ? 0x200 : 0);
-
 	if ((opt.flags & OPT_VERBOSE) && !!rhash_data.config_file.real_path) {
 		/* note that the first log_msg call shall be made after setup_output() */
 		log_msg_file_t(_("Config file: %s\n"), &rhash_data.config_file);
@@ -1143,14 +1140,16 @@ static void make_final_options_checks(void)
 
 	if (opt.bt_batch_file)
 		opt.mode |= MODE_TORRENT;
+	else if (!opt.mode)
+		opt.mode = MODE_DEFAULT;
 	if (IS_MODE(MODE_TORRENT))
 		opt.sum_flags |= RHASH_BTIH;
 
 	/* check options compatibility for program mode and output format */
 	if (opt.mode & ~(MODE_CHECK | MODE_UPDATE))
 		check_compatibility(ChkMode, opt.mode);
-	check_compatibility(ChkFmt, (opt.fmt | ext_format_bits));
-	check_compatibility(ChkFmt, ((opt.flags & OPT_FMT_MODIFIERS) | ext_format_bits));
+	check_compatibility(ChkFmt, opt.fmt);
+	check_compatibility(ChkFmt, (opt.flags & OPT_FMT_MODIFIERS) | (opt.fmt & FMT_PRINTF_MASK));
 
 	if (!opt.crc_accept)
 		opt.crc_accept = file_mask_new_from_list(".sfv");

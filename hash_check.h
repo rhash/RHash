@@ -59,8 +59,8 @@ enum HashFileBits {
 	HashFileHasUnparsedLines = 0x20
 };
 
-int load_updated_hash_file(file_set* set, struct file_t* hash_file);
-int check_hash_file(struct file_t* file, int chdir);
+int load_updated_hash_file(struct file_t* hash_file, file_set* set);
+int check_hash_file(struct file_t* hash_file, int chdir);
 int check_embedded_crc32(struct file_t* file);
 
 void rhash_base32_to_byte(const char* str, unsigned char* bin, int len);

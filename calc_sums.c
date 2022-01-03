@@ -357,7 +357,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 			res = -2;
 	}
 
-	if (IS_MODE(MODE_UPDATE) && opt.fmt == FMT_SFV && res == 0) {
+	if (IS_MODE(MODE_UPDATE) && rhash_data.is_sfv && res == 0) {
 		/* updating SFV file: print SFV header line */
 		if (print_sfv_header_line(out, out_file->mode, file) < 0) {
 			log_error_file_t(out_file);

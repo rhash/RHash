@@ -356,9 +356,11 @@ static unsigned bsd_hash_name_to_id(const char* name, unsigned length)
 	{
 		const char* a;
 		const char* b;
-		if ((hash_id & hash_mask) == 0) continue;
-		assert(length > 4 && strlen(hash_info_table[i].name) > 4);
-		/* check the name tail, start from name[3] to detect names like "SHA-1" or "SHA256" */
+		if ((hash_id & hash_mask) == 0)
+			continue;
+		assert(length > 4);
+		assert(strlen(hash_info_table[i].name) >= 4);
+		/* check the name tail, starting from &name[3] to detect names like "SHA-1" or "SHA256" */
 		for (a = hash_info_table[i].name + 3, b = name + 3; *a; a++, b++)
 		{
 			if (*a == *b)
@@ -1255,20 +1257,29 @@ static int extract_uppercase_file_ext(struct file_ext* fe, file_t* file)
 }
 
 /**
- * Detect expected hash functions from the file extension.
- * Also detect if the file has "SFV" extension.
+ * Detect SFV format and hash functions by the hash file extension.
  *
+ * @param hash_file the file, which extension is checked
  * @param parser the parser to store hash_mask and sfv flag into
  */
-static void set_parser_flags_by_file_extension(struct hash_parser_ext* parser)
+static void set_flags_by_hash_file_extension(file_t* hash_file, struct hash_parser_ext* parser)
 {
 	struct file_ext ext;
-	if (!extract_uppercase_file_ext(&ext, parser->hash_file))
+	unsigned hash_mask;
+	int is_sfv;
+	if(HAS_OPTION(OPT_NO_DETECT_BY_EXT) || !extract_uppercase_file_ext(&ext, hash_file))
 		return;
-	if (!parser->expected_hash_mask)
-		parser->expected_hash_mask = bsd_hash_name_to_id(ext.buffer, ext.length);
-	if (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0)
-		parser->is_sfv = 1;
+	hash_mask = (opt.sum_flags ? opt.sum_flags : bsd_hash_name_to_id(ext.buffer, ext.length));
+	is_sfv = (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0);
+	if (parser != NULL) {
+		parser->expected_hash_mask = hash_mask;
+		parser->is_sfv = is_sfv;
+	}
+	if (IS_MODE(MODE_UPDATE)) {
+		opt.sum_flags = hash_mask;
+		if (!opt.fmt)
+			rhash_data.is_sfv = is_sfv;
+	}
 }
 
 /**
@@ -1294,7 +1305,7 @@ static int hash_parser_close(struct hash_parser* hp)
 /**
  * Open a hash file and create a hash_parser for it.
  *
- * @param file hash file listing other files with message digests
+ * @param hash_file the hash file to open
  * @param chdir true if function should emulate chdir to the parent directory of the hash file
  * @return created hash_parser on success, NULL on fail with error code stored in errno
  */
@@ -1315,16 +1326,13 @@ static struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
 	parser->hash_file = hash_file;
 	parser->fd = fd;
 	parser->expected_hash_mask = opt.sum_flags;
+	parser->is_sfv = rhash_data.is_sfv;
 
-	if (chdir) {
-		/* extract the parent directory */
+	/* extract the parent directory of the hash file, if required */
+	if (chdir)
 		file_modify_path(&parser->parent_dir, hash_file, NULL, FModifyGetParentDir);
-	}
 	if((opt.flags & OPT_NO_DETECT_BY_EXT) == 0)
-		set_parser_flags_by_file_extension(parser);
-	if ((opt.fmt & FMT_SFV) != 0)
-		parser->is_sfv = 1;
-
+		set_flags_by_hash_file_extension(hash_file, parser);
 	return &parser->hp;
 }
 
@@ -1399,8 +1407,9 @@ static int hash_parser_process_line(struct hash_parser* hp)
  *
  * @param parser hash parser, controlling parsing process
  * @param files pointer to the vector to load parsed file paths into
+ * @return HashFileBits bit mask on success, -1 on input error, -2 on results output error
  */
-static int process_hash_file(struct hash_parser *parser, file_set* files)
+static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 {
 	timedelta_t timer;
 	uint64_t time;
@@ -1480,6 +1489,36 @@ static int process_hash_file(struct hash_parser *parser, file_set* files)
 		if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
 			print_time_stats(time, rhash_data.total_size, 1);
 	}
+
+	return result;
+}
+
+
+/**
+ * Open the given hash file and process its content.
+ *
+ * @param hash_file the hash file to process
+ * @param files pointer to the vector to load parsed file paths into
+ * @param chdir true if function should emulate chdir to the parent directory of the hash file
+ * @return HashFileBits bit mask on success, -1 on input error, -2 on results output error
+ */
+static int process_hash_file(file_t* hash_file, file_set* files, int chdir)
+{
+	int result;
+	struct hash_parser *parser = hash_parser_open(hash_file, chdir);
+	if (!parser) {
+		/* in the update mode, a non-existent hash file will be created later */
+		if (IS_MODE(MODE_UPDATE) && errno == ENOENT) {
+			set_flags_by_hash_file_extension(hash_file, 0);
+			return HashFileIsEmpty;
+		}
+		log_error_file_t(hash_file);
+		return -1;
+	}
+	result = hash_parser_process_file(parser, files);
+	if (result >= 0 && (hash_file->mode & FileContentIsUtf8) != 0)
+		result |= HashFileHasBom;
+	hash_parser_close(parser);
 	return result;
 }
 
@@ -1488,50 +1527,24 @@ static int process_hash_file(struct hash_parser *parser, file_set* files)
  * Lines beginning with ';' and '#' are ignored.
  * In a case of fail, obtained error will be logged.
  *
- * @param file the file containing message digests to verify
+ * @param hash_file the hash file, containing message digests to verify
  * @param chdir true if function should emulate chdir to directory of filepath before checking it
- * @return 0 on success, -1 on input error, -2 on results output error
+ * @return HashFileBits bit mask on success, -1 on input error, -2 on results output error
  */
-int check_hash_file(file_t* file, int chdir)
+int check_hash_file(file_t* hash_file, int chdir)
 {
-	struct hash_parser* parser;
-	int res;
-
-	parser = hash_parser_open(file, chdir);
-	if (!parser) {
-		log_error_file_t(file);
-		return -1;
-	}
-	res = process_hash_file(parser, 0);
-
-	hash_parser_close(parser);
-	return res;
+	return process_hash_file(hash_file, 0, chdir);
 }
 
 /**
  * Load a set of files from the specified hash file.
  * In a case of fail, errors will be logged.
  *
+ * @param hash_file the hash file, containing message digests to load
  * @param files pointer to the vector to load parsed file paths into
- * @param hash_file the file containing message digests to load
- * @return bit-mask containg UpdateFlagsBits on success, -1 on fail
+ * @return HashFileBits bit mask on success, -1 on input error, -2 on results output error
  */
-int load_updated_hash_file(file_set* files, file_t* hash_file)
+int load_updated_hash_file(file_t* hash_file, file_set* files)
 {
-	int result;
-	struct hash_parser *parser = hash_parser_open(hash_file, 0);
-	if (!parser) {
-		/* if hash_file does not exist, it will be created later */
-		if (errno == ENOENT)
-			return HashFileIsEmpty;
-		log_error_file_t(hash_file);
-		return -1;
-	}
-	result = process_hash_file(parser, files);
-
-	if (result >= 0 && (hash_file->mode & FileContentIsUtf8) != 0)
-			result |= HashFileHasBom;
-
-	hash_parser_close(parser);
-	return result;
+	return process_hash_file(hash_file, files, 0);
 }

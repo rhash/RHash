@@ -62,10 +62,13 @@ enum {
 	OPT_ENCODING = OPT_UTF8 | OPT_ENC_WIN | OPT_ENC_DOS,
 #endif
 
-	FMT_BSD     = 1,
-	FMT_SFV     = 2,
-	FMT_SIMPLE  = 4,
-	FMT_MAGNET  = 8,
+	FMT_BSD    = 0x01,
+	FMT_SFV    = 0x02,
+	FMT_SIMPLE = 0x04,
+	FMT_MAGNET = 0x08,
+	FMT_PRINTF = 0x10,
+	FMT_FILE_TEMPLATE = 0x20,
+	FMT_PRINTF_MASK = FMT_PRINTF | FMT_FILE_TEMPLATE,
 };
 
 #define OPT_ED2K_LINK 0x80000000
@@ -105,6 +108,7 @@ struct options_t
 extern struct options_t opt;
 
 #define IS_MODE(mode_bits) (opt.mode & (mode_bits))
+#define HAS_OPTION(option_bits) (opt.flags & (option_bits))
 
 void read_options(int argc, char* argv[]);
 void options_destroy(struct options_t*);

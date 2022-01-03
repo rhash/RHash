@@ -30,8 +30,9 @@ struct rhash_t
 	struct strbuf_t* template_text;
 	struct update_ctx* update_context;
 	struct rhash_context* rctx;
-	unsigned stop_flags;
+	int is_sfv;
 	int non_fatal_error;
+	unsigned stop_flags;
 
 	/* missed, ok and processed files statistics */
 	unsigned processed;

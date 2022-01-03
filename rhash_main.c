@@ -67,7 +67,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 				must_skip_file(file))
 			return 0;
 
-		if ((opt.fmt & FMT_SFV) && print_sfv_header_line(rhash_data.out, rhash_data.out_file.mode, file) < 0) {
+		if (rhash_data.is_sfv && print_sfv_header_line(rhash_data.out, rhash_data.out_file.mode, file) < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			res = -2;
 		}
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 {
 	timedelta_t timer;
 	int exit_code;
-	int sfv;
+	int need_sfv_banner;
 
 	memset(&rhash_data, 0, sizeof(rhash_data));
 	memset(&opt, 0, sizeof(opt));
@@ -288,12 +288,17 @@ int main(int argc, char* argv[])
 
 	/* setup printf formatting string */
 	rhash_data.printf_str = opt.printf_str;
+	/* print SFV header if CRC32 or no hash function has been selected */
+	rhash_data.is_sfv = (opt.fmt == FMT_SFV ||
+		(!opt.fmt && (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags)));
+	if (!opt.sum_flags && opt.mode != MODE_CHECK)
+		opt.sum_flags = RHASH_CRC32;
 
 	if (opt.template_file) {
 		if (!load_printf_template()) rsh_exit(2);
 	} else if (!rhash_data.printf_str && IS_MODE(MODE_DEFAULT | MODE_UPDATE | MODE_TORRENT)) {
 		/* initialize printf output format according to '--<hashname>' options */
-		init_printf_format( (rhash_data.template_text = rsh_str_new()) );
+		rhash_data.template_text = init_printf_format();
 		rhash_data.printf_str = rhash_data.template_text->str;
 
 		if (opt.flags & OPT_VERBOSE) {
@@ -311,14 +316,14 @@ int main(int argc, char* argv[])
 	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->callback = scan_files_callback;
 
-	sfv = (opt.fmt == FMT_SFV && IS_MODE(MODE_DEFAULT));
-	if (sfv && print_sfv_banner(rhash_data.out) < 0) {
+	need_sfv_banner = (rhash_data.is_sfv && IS_MODE(MODE_DEFAULT));
+	if (need_sfv_banner && print_sfv_banner(rhash_data.out) < 0) {
 		log_error_file_t(&rhash_data.out_file);
 		rhash_data.stop_flags |= FatalErrorFlag;
 	}
 
 	/* preprocess files */
-	if (sfv || opt.bt_batch_file) {
+	if (need_sfv_banner || opt.bt_batch_file) {
 		/* note: errors are not reported on preprocessing */
 		opt.search_data->callback_data = 1;
 		scan_files(opt.search_data);

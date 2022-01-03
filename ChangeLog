@@ -1,5 +1,6 @@
 Mon 03 Jan 2022 Aleksey
 	* Bugfix: fix building of the LibRHash static library on Solaris
+	* Honor hash file extension in --update mode
 
 Sun 19 Dec 2021 Aleksey
 	* Support --ignore-missing option, to ignore missing files in --check mode

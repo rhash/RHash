@@ -4,6 +4,7 @@
 #include "calc_sums.h"
 #include "output.h"
 #include "parse_cmdline.h"
+#include "rhash_main.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
 #include <assert.h>
@@ -643,13 +644,14 @@ void init_hash_info_table(void)
 
 /**
  * Initialize printf string according to program options.
- * The function is called only when a printf format string is not specified
- * from command line, so it should be constructed from other options.
+ * The function is called only when a printf format string is not specified by
+ * the command line, so the format string must be constructed from other options.
  *
- * @param out a string buffer to place the resulting format string into
+ * @return the string buffer with format string
  */
-void init_printf_format(strbuf_t* out)
+strbuf_t* init_printf_format(void)
 {
+	strbuf_t* out;
 	const char* fmt;
 	const char* tail = 0;
 	unsigned bit, index = 0;
@@ -658,23 +660,20 @@ void init_printf_format(strbuf_t* out)
 	char up_flag;
 	char fmt_modifier = 'b';
 
-	if (!opt.fmt) {
-		/* print SFV header for CRC32 or if no hash functions options has been specified */
-		opt.fmt = (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags ? FMT_SFV : FMT_SIMPLE);
-	}
 	uppercase = ((opt.flags & OPT_UPPERCASE) ||
-		(!(opt.flags & OPT_LOWERCASE) && (opt.fmt & FMT_SFV)));
+		(!(opt.flags & OPT_LOWERCASE) && rhash_data.is_sfv));
 	up_flag = (uppercase ? ~0x20 : 0xFF);
 
+	out = rsh_str_new();
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
 	if ((opt.sum_flags & OPT_ED2K_LINK) != 0) {
 		rsh_str_append_n(out, "%l\\n", 4);
 		out->str[1] &= up_flag;
-		return;
+		return out;
 	}
 	if (opt.sum_flags == 0)
-		return;
+		return out;
 
 	if (opt.fmt == FMT_BSD) {
 		fmt = "\003(%p) = \001\\n";
@@ -684,11 +683,11 @@ void init_printf_format(strbuf_t* out)
 		fmt = "&xt=urn:\002:\001";
 		need_modifier = RHASH_SHA1;
 		tail = "\\n";
-	} else if (opt.fmt == FMT_SIMPLE && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
+	} else if (!rhash_data.is_sfv && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
 		fmt = "\001  %p\\n";
 	} else {
 		rsh_str_append_n(out, "%p", 2);
-		fmt = (opt.fmt == FMT_SFV ? " \001" : "  \001");
+		fmt = (rhash_data.is_sfv ? " \001" : "  \001");
 		tail = "\\n";
 	}
 	if ((opt.flags & OPT_FMT_MODIFIERS) != 0)
@@ -748,6 +747,7 @@ void init_printf_format(strbuf_t* out)
 	if (tail)
 		rsh_str_append(out, tail);
 	out->str[out->len] = '\0';
+	return out;
 }
 
 /*=========================================================================
