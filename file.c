@@ -765,8 +765,15 @@ int file_stat(file_t* file, int fstat_flags)
  */
 FILE* file_fopen(file_t* file, int fopen_flags)
 {
-	const file_tchar* possible_modes[8] = { 0, RSH_T("r"), RSH_T("w"), RSH_T("r+"),
-		0, RSH_T("rb"), RSH_T("wb"), RSH_T("r+b") };
+	const file_tchar* possible_modes[8] = {
+		0, RSH_T("r"), RSH_T("w"), RSH_T("r+"), 0,
+#ifdef _WIN32
+		RSH_T("rbS"), /* open with _O_SEQUENTIAL */
+#else
+		"rb",
+#endif
+		RSH_T("wb"), RSH_T("r+b")
+	};
 	const file_tchar* mode = possible_modes[fopen_flags & FOpenMask];
 	FILE* fd;
 	assert((fopen_flags & FOpenRW) != 0);

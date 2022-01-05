@@ -357,6 +357,12 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	return res;
 }
 
+#ifdef _WIN32
+# define FOPEN_MODE "rbS"
+#else
+# define FOPEN_MODE "rb"
+#endif
+
 RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result)
 {
 	FILE* fd;
@@ -368,9 +374,13 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
 		errno = EINVAL;
 		return -1;
 	}
-	if ((fd = fopen(filepath, "rb")) == NULL)
+
+	fd = fopen(filepath, FOPEN_MODE);
+	if (!fd)
 		return -1;
-	if ((ctx = rhash_init(hash_id)) == NULL) {
+
+	ctx = rhash_init(hash_id);
+	if (!ctx) {
 		fclose(fd);
 		return -1;
 	}
@@ -397,13 +407,15 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 		return -1;
 	}
 
-	if ((fd = _wfsopen(filepath, L"rb", _SH_DENYWR)) == NULL) return -1;
+	fd = _wfsopen(filepath, L"rbS", _SH_DENYWR);
+	if (!fd)
+		return -1;
 
-	if ((ctx = rhash_init(hash_id)) == NULL) {
+	ctx = rhash_init(hash_id);
+	if (!ctx) {
 		fclose(fd);
 		return -1;
 	}
-
 	res = rhash_file_update(ctx, fd); /* hash the file */
 	fclose(fd);
 	if (res >= 0)
