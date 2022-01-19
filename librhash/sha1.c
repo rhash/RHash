@@ -47,12 +47,10 @@ static const uint32_t K3 = 0xca62c1d6;
 #define PAR(X,Y,Z) ((X)^(Y)^(Z))
 #define MAJ(X,Y,Z) (((X)&(Y))|((X)&(Z))|((Y)&(Z)))
 
-#define ROUND(a,b,c,d,e, FF, k, w)              \
-	do {                                    \
-		e += FF(b,c,d)+ROTL32(a,5)+k+w; \
-		b = ROTL32(b,30);               \
-	} while (0)
-
+#define ROUND_0(a,b,c,d,e, FF, k, w) e +=              FF(b,       c,           d    )+ROTL32(a,5)+k+w
+#define ROUND_1(a,b,c,d,e, FF, k, w) e +=              FF(b,ROTL32(c,30),       d    )+ROTL32(a,5)+k+w
+#define ROUND_2(a,b,c,d,e, FF, k, w) e +=              FF(b,ROTL32(c,30),ROTL32(d,30))+ROTL32(a,5)+k+w
+#define ROUND(a,b,c,d,e, FF, k, w) e  = ROTL32(e,30)+FF(b,ROTL32(c,30),ROTL32(d,30))+ROTL32(a,5)+k+w
 
 
 /**
@@ -76,11 +74,11 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 
 	/* 0..19 */
 	W[ 0] = be2me_32(block[ 0]);
-	ROUND(A,B,C,D,E, CHO, K0, W[ 0]);
+	ROUND_0(A,B,C,D,E, CHO, K0, W[ 0]);
 	W[ 1] = be2me_32(block[ 1]);
-	ROUND(E,A,B,C,D, CHO, K0, W[ 1]);
+	ROUND_1(E,A,B,C,D, CHO, K0, W[ 1]);
 	W[ 2] = be2me_32(block[ 2]);
-	ROUND(D,E,A,B,C, CHO, K0, W[ 2]);
+	ROUND_2(D,E,A,B,C, CHO, K0, W[ 2]);
 	W[ 3] = be2me_32(block[ 3]);
 	ROUND(C,D,E,A,B, CHO, K0, W[ 3]);
 	W[ 4] = be2me_32(block[ 4]);
@@ -254,9 +252,9 @@ static void rhash_sha1_process_block(unsigned* hash, const unsigned* block)
 
 	hash[0] += A;
 	hash[1] += B;
-	hash[2] += C;
-	hash[3] += D;
-	hash[4] += E;
+	hash[2] += ROTL32(C,30);
+	hash[3] += ROTL32(D,30);
+	hash[4] += ROTL32(E,30);
 }
 
 /**
