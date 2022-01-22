@@ -67,16 +67,7 @@ RHASH_API int rhash_count(void)
 
 /* LOW-LEVEL LIBRHASH INTERFACE */
 
-/**
- * Allocate and initialize RHash context for calculating a single or multiple hash functions.
- * The context after usage must be freed by calling rhash_free().
- *
- * @param count the size of the hash_ids array, count must be greater than zero
- * @param hash_ids array of identifiers of hash functions. Each element must
- *        be an identifier of one hash function.
- * @return initialized rhash context, NULL on error and errno is set
- */
-static rhash rhash_init_multi(size_t count, unsigned hash_ids[])
+RHASH_API rhash rhash_init_multi(size_t count, unsigned hash_ids[])
 {
 	struct rhash_hash_info* info;   /* hash algorithm information */
 	rhash_context_ext* rctx = NULL; /* allocated rhash context */

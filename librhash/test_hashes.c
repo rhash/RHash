@@ -941,6 +941,33 @@ static void test_chunk_size_consistency(void)
 }
 
 /**
+ * Verify alignment of a hash function context, which is located inside of rhash context.
+ */
+static void test_context_alignment(void)
+{
+	const size_t aligner = 63;
+	int i;
+	unsigned hash_ids[32];
+	for (i = 0; i < 32; i++)
+	{
+		size_t count = i + 1;
+		rhash ctx;
+		char* context_ptr;
+		hash_ids[i] = RHASH_MD5;
+		ctx = rhash_init_multi(count, hash_ids);
+		assert(!!ctx);
+		context_ptr = (char*)rhash_get_context_ptr(ctx, RHASH_MD5);
+		if (((context_ptr - (char*)0) & aligner) != 0) {
+			log_message("error: wrong aligment %d of pointer %p for the %2d-th context (rhash = %p)\n",
+				(int)((context_ptr - (char*)0) & aligner), context_ptr, i, ctx);
+			g_errors++;
+		}
+		rhash_free(ctx);
+		hash_ids[i] = RHASH_CRC32;
+	}
+}
+
+/**
  * Verify processor endianness detected at compile-time against
  * with the actual CPU endianness in runtime.
  */
@@ -1120,6 +1147,7 @@ int main(int argc, char* argv[])
 		test_results_consistency();
 		test_unaligned_messages_consistency();
 		test_chunk_size_consistency();
+		test_context_alignment();
 		test_magnet();
 		if (g_errors == 0)
 			printf("All sums are working properly!\n");

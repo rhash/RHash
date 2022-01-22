@@ -69,6 +69,9 @@ enum rhash_ids
 	RHASH_GOST = RHASH_GOST94, /* deprecated constant name */
 	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO, /* deprecated constant name */
 
+	/* bit-flag for extra hash identifiers */
+  RHASH_EXTENDED_BIT = (int)0x80000000,
+
 	/**
 	 * The number of supported hash functions.
 	 */
@@ -129,7 +132,7 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
  * @param hash_id id of hash function to compute
  * @param filepath path to the file to process
  * @param result buffer to receive message digest
- * @return 0 on success, -1 on error and errno is set
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result);
 
@@ -140,7 +143,7 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
  * @param hash_id id of hash function to compute
  * @param filepath path to the file to process
  * @param result buffer to receive the binary message digest value
- * @return 0 on success, -1 on error and errno is set
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
 #endif
@@ -149,11 +152,26 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 /* LOW-LEVEL LIBRHASH INTERFACE */
 
 /**
- * Allocate and initialize RHash context for calculating message digests.
+ * Allocate and initialize RHash context for calculating a single or multiple hash functions.
  * The context after usage must be freed by calling rhash_free().
  *
- * @param hash_id union of bit-flags, containing ids of hash functions to calculate
- * @return initialized rhash context, NULL on error and errno is set
+ * @param count the size of the hash_ids array, the count must be greater than zero
+ * @param hash_ids array of identifiers of hash functions. Each element must
+ *        be an identifier of one hash function
+ * @return initialized rhash context, NULL on fail with error code stored in errno
+ */
+RHASH_API rhash rhash_init_multi(size_t count, unsigned hash_ids[]);
+
+/**
+ * Allocate and initialize RHash context for calculating a single hash function.
+ *
+ * This function also supports a depricated way to initialize rhash context
+ * for multiple hash functions, by passing a bitwise union of several hash
+ * identifiers. Only single-bit identifiers (not greater than RHASH_SNEFRU256)
+ * can be used in such bitwise union.
+ *
+ * @param hash_id identifier of a hash function
+ * @return initialized rhash context, NULL on fail with error code stored in errno
  */
 RHASH_API rhash rhash_init(unsigned hash_id);
 
@@ -164,7 +182,7 @@ RHASH_API rhash rhash_init(unsigned hash_id);
  * @param ctx the rhash context
  * @param message message chunk
  * @param length length of the message chunk
- * @return 0 on success; On fail return -1 and set errno
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
 
@@ -177,7 +195,7 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
  *
  * @param ctx rhash context
  * @param fd descriptor of the file to hash
- * @return 0 on success, -1 on error and errno is set
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd);
 
@@ -186,7 +204,7 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd);
  *
  * @param ctx the rhash context
  * @param first_result optional buffer to store a calculated message digest with the lowest available id
- * @return 0 on success; On fail return -1 and set errno
+ * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_final(rhash ctx, unsigned char* first_result);
 
