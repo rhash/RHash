@@ -34,20 +34,20 @@ typedef struct torrent_ctx
 	sha1_ctx sha1_context;  /* context for hashing current file piece */
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for OpenSSL SHA1 context */
-	void (*sha_init)(void*);
-	void (*sha_update)(void*, const void*, size_t size);
-	void (*sha_final)(void*, unsigned char*);
 #endif
 	size_t index;             /* byte index in the current piece */
 	size_t piece_length;      /* length of a torrent file piece */
 	size_t piece_count;       /* the number of pieces processed */
+	size_t error;             /* non-zero if error occurred, zero otherwise */
 	torrent_vect hash_blocks; /* array of blocks storing SHA1 hashes */
 	torrent_vect files;       /* names of files in a torrent batch */
 	torrent_vect announce;    /* announce URLs */
 	char* program_name;       /* the name of the program */
 
 	torrent_str content;      /* the content of generated torrent file */
-	int error; /* non-zero if error occurred, zero otherwise */
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
+	rhash_hashing_methods sha1_methods;
+#endif
 } torrent_ctx;
 
 void bt_init(torrent_ctx* ctx);

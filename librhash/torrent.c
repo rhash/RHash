@@ -16,7 +16,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
 #include <time.h>  /* time() */
 
@@ -26,9 +25,9 @@
 #include "torrent.h"
 
 #ifdef USE_OPENSSL
-#define SHA1_INIT(ctx) ((pinit_t)ctx->sha_init)(&ctx->sha1_context)
-#define SHA1_UPDATE(ctx, msg, size) ((pupdate_t)ctx->sha_update)(&ctx->sha1_context, (msg), (size))
-#define SHA1_FINAL(ctx, result) ((pfinal_t)ctx->sha_final)(&ctx->sha1_context, (result))
+#define SHA1_INIT(ctx) ((pinit_t)ctx->sha1_methods.init)(&ctx->sha1_context)
+#define SHA1_UPDATE(ctx, msg, size) ((pupdate_t)ctx->sha1_methods.update)(&ctx->sha1_context, (msg), (size))
+#define SHA1_FINAL(ctx, result) ((pfinal_t)ctx->sha1_methods.final)(&ctx->sha1_context, (result))
 #else
 #define SHA1_INIT(ctx) rhash_sha1_init(&ctx->sha1_context)
 #define SHA1_UPDATE(ctx, msg, size) rhash_sha1_update(&ctx->sha1_context, (msg), (size))
@@ -54,15 +53,10 @@ void bt_init(torrent_ctx* ctx)
 	assert(BT_MIN_PIECE_LENGTH == bt_default_piece_length(0, 0));
 
 #ifdef USE_OPENSSL
-	{
-		/* get the methods of the selected SHA1 algorithm */
-		rhash_hash_info* sha1_info = &rhash_info_table[3];
-		assert(sha1_info->info->hash_id == RHASH_SHA1);
-		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
-		ctx->sha_init = sha1_info->init;
-		ctx->sha_update = sha1_info->update;
-		ctx->sha_final = sha1_info->final;
-	}
+	/* get the methods of the selected SHA1 algorithm */
+	assert(rhash_info_table[3].info->hash_id == RHASH_SHA1);
+	assert(rhash_info_table[3].context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
+	rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_SELECTED);
 #endif
 
 	SHA1_INIT(ctx);
@@ -141,8 +135,10 @@ static int bt_store_piece_sha1(torrent_ctx* ctx)
 
 	if ((ctx->piece_count % BT_BLOCK_SIZE) == 0) {
 		block = (unsigned char*)malloc(BT_BLOCK_SIZE_IN_BYTES);
-		if (block == NULL || !bt_vector_add_ptr(&ctx->hash_blocks, block)) {
-			if (block) free(block);
+		if (!block)
+			return 0;
+		if (!bt_vector_add_ptr(&ctx->hash_blocks, block)) {
+			free(block);
 			return 0;
 		}
 	} else {
@@ -161,7 +157,7 @@ static int bt_store_piece_sha1(torrent_ctx* ctx)
 typedef struct bt_file_info
 {
 	uint64_t size;
-	char path[1];
+	char path[];
 } bt_file_info;
 
 /**
@@ -402,7 +398,7 @@ static size_t utorr_piece_length(uint64_t total_size)
  */
 static size_t transmission_piece_length(uint64_t total_size)
 {
-	uint64_t sizes[6] = { 50 * MB, 150 * MB, 350 * MB, 512 * MB, 1024 * MB, 2048 * MB };
+	static const uint64_t sizes[6] = { 50 * MB, 150 * MB, 350 * MB, 512 * MB, 1024 * MB, 2048 * MB };
 	int i;
 	for (i = 0; i < 6 && total_size >= sizes[i]; i++);
 	return (32 * 1024) << i;

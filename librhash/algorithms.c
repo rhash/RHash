@@ -14,14 +14,11 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdio.h>
-#include <assert.h>
-
+#include "algorithms.h"
 #include "byte_order.h"
 #include "rhash.h"
-#include "algorithms.h"
 
-/* header files of all supported hash sums */
+/* header files of all supported hash functions */
 #include "aich.h"
 #include "blake2b.h"
 #include "blake2s.h"
@@ -45,6 +42,11 @@
 #include "whirlpool.h"
 
 #ifdef USE_OPENSSL
+# include "plug_openssl.h"
+#endif /* USE_OPENSSL */
+#include <assert.h>
+
+#ifdef USE_OPENSSL
 /* note: BTIH and AICH depends on the used SHA1 algorithm */
 # define NEED_OPENSSL_INIT (RHASH_MD4 | RHASH_MD5 | \
 	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 | \
@@ -52,6 +54,7 @@
 #else
 # define NEED_OPENSSL_INIT 0
 #endif /* USE_OPENSSL */
+
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
 # define NEED_GOST94_INIT (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)
 #else
@@ -263,3 +266,31 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
 	result[2] = (unsigned char)(*crc32c >> 8), result[3] = (unsigned char)(*crc32c);
 #endif
 }
+
+#ifdef USE_OPENSSL
+void rhash_load_sha1_methods(rhash_hashing_methods* methods, int methods_type)
+{
+	int use_openssl;
+	switch (methods_type) {
+		case METHODS_OPENSSL:
+			use_openssl = 1;
+			break;
+		case METHODS_SELECTED:
+			assert(rhash_info_table[3].info->hash_id == RHASH_SHA1);
+			use_openssl = ARE_OPENSSL_METHODS(rhash_info_table[3]);
+			break;
+		default:
+			use_openssl = 0;
+			break;
+	}
+	if (use_openssl) {
+		methods->init = rhash_ossl_sha1_init();
+		methods->update = rhash_ossl_sha1_update();
+		methods->final = rhash_ossl_sha1_final();
+	} else {
+		methods->init = (pinit_t)&rhash_sha1_init;
+		methods->update = (pupdate_t)&rhash_sha1_update;
+		methods->final = (pfinal_t)&rhash_sha1_final;
+	}
+}
+#endif

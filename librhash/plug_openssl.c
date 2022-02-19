@@ -16,7 +16,6 @@
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 
 #include "plug_openssl.h"
-#include "algorithms.h"
 #include <string.h>
 #include <assert.h>
 #include <openssl/opensslconf.h>

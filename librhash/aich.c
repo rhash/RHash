@@ -34,36 +34,36 @@
 #include "algorithms.h"
 #include "aich.h"
 
+#if defined(USE_OPENSSL)
+#define SHA1_INIT(ctx) ((pinit_t)ctx->sha1_methods.init)(&ctx->sha1_context)
+#define SHA1_UPDATE(ctx, msg, size) ((pupdate_t)ctx->sha1_methods.update)(&ctx->sha1_context, (msg), (size))
+#define SHA1_FINAL(ctx, result) ((pfinal_t)ctx->sha1_methods.final)(&ctx->sha1_context, (result))
+#else
+# define SHA1_INIT(ctx) rhash_sha1_init(&ctx->sha1_context)
+# define SHA1_UPDATE(ctx, msg, size) rhash_sha1_update(&ctx->sha1_context, (msg), (size))
+# define SHA1_FINAL(ctx, result) rhash_sha1_final(&ctx->sha1_context, (result))
+#endif
+
 #define ED2K_CHUNK_SIZE  9728000
 #define FULL_BLOCK_SIZE  184320
 #define LAST_BLOCK_SIZE  143360
 #define BLOCKS_PER_CHUNK 53
+#define BLOCK_HASHES_SIZE (BLOCKS_PER_CHUNK * sha1_hash_size)
 
 /*
- * The Algorithm could be a little faster if it knows a
- * hashed message size beforehand. This would allow
+ * AICH algorithm could be implemented a bit faster if it knows
+ * a hashed message size beforehand. It would allow
  * to build balanced tree while hashing the message.
  *
- * But this AICH implementation works with unknown
- * message size like other well-known hash algorithms
- * (it was fun to write a such one).
+ * This AICH implementation works with unknown
+ * message size like other well-known hash algorithms.
  * So, it just stores sha1 hashes and builds balanced tree
  * only on the last step, when the full message processed
- * and its size is already known.
+ * and its size got to be known.
  */
 
-#ifdef USE_OPENSSL
-#define SHA1_INIT(ctx) ((pinit_t)ctx->sha_init)(&ctx->sha1_context)
-#define SHA1_UPDATE(ctx, msg, size) ((pupdate_t)ctx->sha_update)(&ctx->sha1_context, (msg), (size))
-#define SHA1_FINAL(ctx, result) ((pfinal_t)ctx->sha_final)(&ctx->sha1_context, (result))
-#else
-#define SHA1_INIT(ctx) rhash_sha1_init(&ctx->sha1_context)
-#define SHA1_UPDATE(ctx, msg, size) rhash_sha1_update(&ctx->sha1_context, (msg), (size))
-#define SHA1_FINAL(ctx, result) rhash_sha1_final(&ctx->sha1_context, (result))
-#endif
-
 /**
- * Initialize algorithm context before calculaing hash.
+ * Initialize algorithm context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -71,15 +71,10 @@ void rhash_aich_init(aich_ctx* ctx)
 {
 	memset(ctx, 0, sizeof(aich_ctx));
 
-#ifdef USE_OPENSSL
-	{
-		rhash_hash_info* sha1_info = &rhash_info_table[3];
-		assert(sha1_info->info->hash_id == RHASH_SHA1);
-		assert(sha1_info->context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
-		ctx->sha_init = sha1_info->init;
-		ctx->sha_update = sha1_info->update;
-		ctx->sha_final = sha1_info->final;
-	}
+#if defined(USE_OPENSSL)
+	assert(rhash_info_table[3].info->hash_id == RHASH_SHA1);
+	assert(rhash_info_table[3].context_size <= (sizeof(sha1_ctx) + sizeof(unsigned long)));
+	rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_SELECTED);
 #endif
 
 	SHA1_INIT(ctx);
@@ -141,7 +136,8 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 	assert(ctx->chunk_table[index] == 0);
 
 	ctx->chunk_table[index] = malloc(sizeof(hash_pairs_group_t));
-	if (ctx->chunk_table[index] == 0) ctx->error = 1;
+	if (ctx->chunk_table[index] == 0)
+		ctx->error = 1;
 }
 
 /**
@@ -153,12 +149,13 @@ static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 void rhash_aich_cleanup(aich_ctx* ctx)
 {
 	size_t i;
-	size_t table_size = (ctx->chunks_number + CT_GROUP_SIZE - 1) / CT_GROUP_SIZE;
+	size_t table_size = (ctx->chunks_count + CT_GROUP_SIZE - 1) / CT_GROUP_SIZE;
 
 	if (ctx->chunk_table != 0) {
 		assert(table_size <= ctx->allocated);
 		assert(table_size == ctx->allocated || ctx->chunk_table[table_size] == 0);
-		for (i = 0;  i < table_size; i++) free(ctx->chunk_table[i]);
+		for (i = 0;  i < table_size; i++)
+			free(ctx->chunk_table[i]);
 		free(ctx->chunk_table);
 		ctx->chunk_table = 0;
 	}
@@ -190,13 +187,14 @@ static void rhash_aich_hash_tree(aich_ctx* ctx, unsigned char* result, int type)
 	unsigned blocks_stack[56];
 	unsigned char sha1_stack[56][sha1_hash_size];
 
-	if (ctx->error) return;
+	if (ctx->error)
+		return;
 	assert(ctx->index <= ED2K_CHUNK_SIZE);
 	assert(type == AICH_HASH_FULL_TREE ? ctx->chunk_table != 0 : ctx->block_hashes != 0);
 
 	/* calculate number of leafs in the tree */
 	blocks_stack[0] = blocks = (unsigned)(type == AICH_HASH_FULL_TREE ?
-		ctx->chunks_number : (ctx->index + FULL_BLOCK_SIZE - 1) / FULL_BLOCK_SIZE);
+		ctx->chunks_count : (ctx->index + FULL_BLOCK_SIZE - 1) / FULL_BLOCK_SIZE);
 
 	while (1) {
 		unsigned char sha1_message[sha1_hash_size];
@@ -268,7 +266,7 @@ static void rhash_aich_process_block(aich_ctx* ctx, int type)
 	{
 		/* ensure that the block_hashes array is allocated to save the result */
 		if (ctx->block_hashes == NULL) {
-			ctx->block_hashes = (unsigned char (*)[sha1_hash_size])malloc(BLOCKS_PER_CHUNK * sha1_hash_size);
+			ctx->block_hashes = (unsigned char (*)[sha1_hash_size])malloc(BLOCK_HASHES_SIZE);
 			if (ctx->block_hashes == NULL) {
 				ctx->error = 1;
 				return;
@@ -285,30 +283,31 @@ static void rhash_aich_process_block(aich_ctx* ctx, int type)
 		unsigned char (*pair)[sha1_hash_size];
 
 		/* ensure, that we have the space to store tree hash */
-		if (CT_INDEX(ctx->chunks_number) == 0) {
-			rhash_aich_chunk_table_extend(ctx, (unsigned)ctx->chunks_number);
-			if (ctx->error) return;
+		if (CT_INDEX(ctx->chunks_count) == 0) {
+			rhash_aich_chunk_table_extend(ctx, (unsigned)ctx->chunks_count);
+			if (ctx->error)
+				return;
 		}
 		assert(ctx->chunk_table  != 0);
 		assert(ctx->block_hashes != 0);
 
 		/* calculate tree hash and save results to chunk_table */
-		pair = GET_HASH_PAIR(ctx, ctx->chunks_number);
+		pair = GET_HASH_PAIR(ctx, ctx->chunks_count);
 
 		/* small optimization: skip a left-branch-hash for the last chunk */
-		if (!(type & AICH_PROCESS_FINAL_BLOCK) || ctx->chunks_number == 0) {
+		if (!(type & AICH_PROCESS_FINAL_BLOCK) || ctx->chunks_count == 0) {
 			/* calculate a tree hash to be used in left branch */
 			rhash_aich_hash_tree(ctx, pair[1], AICH_HASH_LEFT_BRANCH);
 		}
 
 		/* small optimization: skip right-branch-hash for the very first chunk */
-		if (ctx->chunks_number > 0) {
+		if (ctx->chunks_count > 0) {
 			/* calculate a tree hash to be used in right branch */
 			rhash_aich_hash_tree(ctx, pair[0], AICH_HASH_RIGHT_BRANCH);
 		}
 
-		ctx->index = 0; /* mark that the whole ed2k chunk was processed */
-		ctx->chunks_number++;
+		ctx->index = 0; /* mark that the entire ed2k chunk has been processed */
+		ctx->chunks_count++;
 	}
 }
 
@@ -322,8 +321,8 @@ static void rhash_aich_process_block(aich_ctx* ctx, int type)
  */
 void rhash_aich_update(aich_ctx* ctx, const unsigned char* msg, size_t size)
 {
-	if (ctx->error) return;
-
+	if (ctx->error)
+		return;
 	while (size > 0) {
 		unsigned left_in_chunk = ED2K_CHUNK_SIZE - ctx->index;
 		unsigned block_left = (left_in_chunk <= LAST_BLOCK_SIZE ? left_in_chunk :
@@ -358,12 +357,12 @@ void rhash_aich_update(aich_ctx* ctx, const unsigned char* msg, size_t size)
 void rhash_aich_final(aich_ctx* ctx, unsigned char result[20])
 {
 	uint64_t total_size =
-		((uint64_t)ctx->chunks_number * ED2K_CHUNK_SIZE) + ctx->index;
+		((uint64_t)ctx->chunks_count * ED2K_CHUNK_SIZE) + ctx->index;
 	unsigned char* const hash = (unsigned char*)ctx->sha1_context.hash;
 
-	if (ctx->chunks_number == 0 && ctx->block_hashes == NULL) {
+	if (ctx->chunks_count == 0 && ctx->block_hashes == NULL) {
 		assert(ctx->index < FULL_BLOCK_SIZE);
-#ifdef USE_OPENSSL
+#if defined(USE_OPENSSL)
 		SHA1_FINAL(ctx, hash); /* return just sha1 hash */
 #else
 		SHA1_FINAL(ctx, 0); /* return just sha1 hash */
@@ -383,7 +382,7 @@ void rhash_aich_final(aich_ctx* ctx, unsigned char result[20])
 	}
 
 	/* if processed message was shorter than a ed2k chunk */
-	if (ctx->chunks_number == 0) {
+	if (ctx->chunks_count == 0) {
 		/* then return the aich hash for the first chunk */
 		rhash_aich_hash_tree(ctx, hash, AICH_HASH_LEFT_BRANCH);
 	} else {
@@ -391,7 +390,7 @@ void rhash_aich_final(aich_ctx* ctx, unsigned char result[20])
 			/* process the last block of the message */
 			rhash_aich_process_block(ctx, AICH_PROCESS_FINAL_BLOCK);
 		}
-		assert(ctx->chunks_number > 0);
+		assert(ctx->chunks_count > 0);
 		assert(ctx->block_hashes != NULL);
 
 		rhash_aich_hash_tree(ctx, hash, AICH_HASH_FULL_TREE);

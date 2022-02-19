@@ -13,17 +13,16 @@ typedef struct aich_ctx
 	sha1_ctx sha1_context; /* context used to hash tree leaves */
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	unsigned long reserved; /* need more space for openssl sha1 context */
-	void (*sha_init)(void*);
-	void (*sha_update)(void*, const void*, size_t size);
-	void (*sha_final)(void*, unsigned char*);
 #endif
 	unsigned index;        /* algorithm position in the current ed2k chunk */
-	unsigned char (*block_hashes)[sha1_hash_size];
-
-	void** chunk_table;    /* table of chunk hashes */
-	size_t allocated;      /* allocated size of the chunk_table */
-	size_t chunks_number;  /* number of ed2k chunks hashed */
 	int error;             /* non-zero if a memory error occurred, 0 otherwise */
+	size_t chunks_count;   /* the number of ed2k chunks hashed */
+	size_t allocated;      /* allocated size of the chunk_table */
+	unsigned char (*block_hashes)[sha1_hash_size];
+	void** chunk_table;    /* table of chunk hashes */
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
+	rhash_hashing_methods sha1_methods;
+#endif
 } aich_ctx;
 
 /* hash functions */

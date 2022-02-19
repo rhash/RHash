@@ -47,10 +47,10 @@ typedef struct rhash_info
 	const char* magnet_name;
 } rhash_info;
 
-typedef void (*pinit_t)(void*);
+typedef void (*pinit_t)(void* ctx);
 typedef void (*pupdate_t)(void* ctx, const void* msg, size_t size);
-typedef void (*pfinal_t)(void*, unsigned char*);
-typedef void (*pcleanup_t)(void*);
+typedef void (*pfinal_t)(void* ctx, unsigned char* result);
+typedef void (*pcleanup_t)(void* ctx);
 
 /**
  * Information about a hash function
@@ -125,7 +125,7 @@ extern rhash_info info_edr512;
 
 /* rhash_info flags */
 #define F_BS32 1   /* default output in base32 */
-#define F_SWAP32 2 /* Big endian flag */
+#define F_SWAP32 2 /* big endian flag */
 #define F_SWAP64 4
 
 /* define endianness flags */
@@ -146,6 +146,26 @@ const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by ha
 
 #if defined(OPENSSL_RUNTIME) && !defined(USE_OPENSSL)
 # define USE_OPENSSL
+#endif
+
+#ifdef USE_OPENSSL
+typedef struct rhash_hashing_methods
+{
+	pinit_t    init;
+	pupdate_t  update;
+	pfinal_t   final;
+} rhash_hashing_methods;
+
+enum rhash_methods_type
+{
+	METHODS_RHASH,
+	METHODS_OPENSSL,
+	METHODS_SELECTED,
+};
+
+void rhash_load_sha1_methods(rhash_hashing_methods* methods, int methods_type);
+
+#define ARE_OPENSSL_METHODS(methods) ((methods).init != (void (*)(void*))&rhash_sha1_init)
 #endif
 
 #ifdef __cplusplus
