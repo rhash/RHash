@@ -27,12 +27,11 @@
  * when releasing.
  */
 
+#include "aich.h"
+#include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include "byte_order.h"
-#include "algorithms.h"
-#include "aich.h"
 
 #if defined(USE_OPENSSL)
 #define SHA1_INIT(ctx) ((pinit_t)ctx->sha1_methods.init)(&ctx->sha1_context)
@@ -400,3 +399,129 @@ void rhash_aich_final(aich_ctx* ctx, unsigned char result[20])
 	ctx->sha1_context.length = total_size; /* store total message size  */
 	if (result) memcpy(result, hash, sha1_hash_size);
 }
+
+#if !defined(NO_IMPORT_EXPORT)
+# define AICH_CTX_OSSL_FLAG 0x10
+
+/**
+ * Export aich context to a memory region, or calculate the
+ * size required for context export.
+ *
+ * @param ctx the algorithm context containing current hashing state
+ * @param out pointer to the memory region or NULL
+ * @param size size of memory region
+ * @return the size of the exported data on success, 0 on fail.
+ */
+size_t rhash_aich_export(const aich_ctx* ctx, void* out, size_t size)
+{
+	const size_t head_size = sizeof(size_t);
+	const size_t ctx_head_size = offsetof(aich_ctx, block_hashes);
+	const size_t block_hashes_size = (ctx->block_hashes ? BLOCK_HASHES_SIZE : 0);
+	const size_t chunk_table_size = sizeof(hash_pair_t) * ctx->chunks_count;
+	const size_t exported_size = head_size + ctx_head_size + block_hashes_size + chunk_table_size;
+	char* out_ptr = (char*)out;
+	if (!out)
+		return exported_size;
+	if (size < exported_size)
+		return 0;
+	*(size_t*)out_ptr = sizeof(aich_ctx);
+	out_ptr += head_size;
+	memcpy(out_ptr, ctx, ctx_head_size);
+	out_ptr += ctx_head_size;
+	if (ctx->block_hashes) {
+		memcpy(out_ptr, ctx->block_hashes, BLOCK_HASHES_SIZE);
+		out_ptr += BLOCK_HASHES_SIZE;
+	}
+	if (chunk_table_size > 0) {
+		size_t left_size = chunk_table_size;
+		size_t index;
+		assert(ctx->chunk_table != NULL);
+		for (index = 0; left_size > 0; index++) {
+			size_t group_size = (left_size < sizeof(hash_pairs_group_t) ?
+				left_size : sizeof(hash_pairs_group_t));
+			memcpy(out_ptr, ctx->chunk_table[index], group_size);
+			out_ptr += group_size;
+			left_size -= group_size;
+		}
+		assert(left_size == 0);
+	}
+	assert(!out || (size_t)(out_ptr - (char*)out) == exported_size);
+#if defined(USE_OPENSSL)
+	if (out_ptr && ARE_OPENSSL_METHODS(ctx->sha1_methods)) {
+		int* error_ptr = (int*)((char*)out + head_size + offsetof(aich_ctx, error));
+		*error_ptr |= AICH_CTX_OSSL_FLAG;
+	}
+#endif
+	return exported_size;
+}
+
+/**
+ * Import aich context from a memory region.
+ *
+ * @param ctx pointer to the algorithm context
+ * @param in pointer to the data to import
+ * @param size size of data to import
+ * @return the size of the imported data on success, 0 on fail.
+ */
+size_t rhash_aich_import(aich_ctx* ctx, const void* in, size_t size)
+{
+	const size_t head_size = sizeof(size_t);
+	const size_t ctx_head_size = offsetof(aich_ctx, block_hashes);
+	const char* in_ptr = (const char*)in;
+	size_t imported_size = head_size + ctx_head_size;
+	size_t block_hashes_size;
+	size_t chunk_table_size;
+	if (size < imported_size)
+		return 0;
+	if(*(size_t*)in_ptr != sizeof(aich_ctx))
+		return 0;
+	in_ptr += head_size;
+	memset(ctx, 0, sizeof(aich_ctx));
+	memcpy(ctx, in_ptr, ctx_head_size);
+	in_ptr += ctx_head_size;
+	block_hashes_size = (ctx->block_hashes ? BLOCK_HASHES_SIZE : 0);
+	chunk_table_size = sizeof(hash_pair_t) * ctx->chunks_count;
+	imported_size += block_hashes_size + chunk_table_size;
+	if (size < imported_size)
+		return 0;
+	if (ctx->block_hashes != NULL) {
+		ctx->block_hashes = (unsigned char (*)[sha1_hash_size])malloc(BLOCK_HASHES_SIZE);
+		if (!ctx->block_hashes)
+			return 0;
+		memcpy(ctx->block_hashes, in_ptr, BLOCK_HASHES_SIZE);
+		in_ptr += BLOCK_HASHES_SIZE;
+	}
+	if (ctx->allocated > 0) {
+		size_t index;
+		ctx->chunk_table = (void**)malloc(ctx->allocated * sizeof(void*));
+		if (!ctx->chunk_table) {
+			ctx->error = 1;
+			return 0;
+		}
+		memset(ctx->chunk_table, 0, ctx->allocated * sizeof(void*));
+		for (index = 0; chunk_table_size > 0; index++) {
+			size_t group_size = (chunk_table_size < sizeof(hash_pairs_group_t) ?
+				chunk_table_size : sizeof(hash_pairs_group_t));
+			assert(index < ctx->allocated);
+			ctx->chunk_table[index] = malloc(sizeof(hash_pairs_group_t));
+			if (ctx->chunk_table[index] == 0) {
+				ctx->error = 1;
+				return 0;
+			}
+			memcpy(ctx->chunk_table[index], in_ptr, group_size);
+			chunk_table_size -= group_size;
+			in_ptr += group_size;
+		}
+	}
+	assert((size_t)(in_ptr - (char*)in) == imported_size);
+#if defined(USE_OPENSSL)
+	if ((ctx->error & AICH_CTX_OSSL_FLAG) != 0) {
+		ctx->error &= ~AICH_CTX_OSSL_FLAG;
+		rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_OPENSSL);
+	} else {
+		rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_RHASH);
+	}
+#endif
+	return imported_size;
+}
+#endif /* !defined(NO_IMPORT_EXPORT) */

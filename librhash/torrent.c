@@ -14,15 +14,13 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <time.h>  /* time() */
-
-#include "byte_order.h"
-#include "algorithms.h"
-#include "hex.h"
 #include "torrent.h"
+#include "hex.h"
+#include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>  /* time() */
 
 #ifdef USE_OPENSSL
 #define SHA1_INIT(ctx) ((pinit_t)ctx->sha1_methods.init)(&ctx->sha1_context)
@@ -636,3 +634,266 @@ size_t bt_get_text(torrent_ctx* ctx, char** pstr)
 	*pstr = ctx->content.str;
 	return ctx->content.length;
 }
+
+#if !defined(NO_IMPORT_EXPORT)
+
+# define EXPORT_ALIGNER 7
+# define GET_EXPORT_ALIGNED(size) (((size) + EXPORT_ALIGNER) & ~EXPORT_ALIGNER)
+# define GET_EXPORT_PADDING(size) (-(size) & EXPORT_ALIGNER)
+# define GET_EXPORT_STR_LEN(length) GET_EXPORT_ALIGNED((length) + 1)
+# define GET_EXPORT_SIZED_STR_LEN(length) GET_EXPORT_STR_LEN((length) + sizeof(size_t))
+# define IS_EXPORT_ALIGNED(size) (((size) & EXPORT_ALIGNER) == 0)
+# define BT_CTX_OSSL_FLAG 0x10
+
+static void bt_export_str(char* out, const char* str, size_t length)
+{
+	assert(!!out);
+	*(size_t*)(out) = length;
+	out += sizeof(size_t);
+	memcpy(out, str, length + 1);
+}
+
+typedef struct bt_export_header {
+	size_t torrent_ctx_size;
+	size_t files_size;
+	size_t announce_size;
+	size_t program_name_length;
+	size_t content_length;
+} bt_export_header;
+
+/**
+ * Export algorithm context to a memory region, or calculate the
+ * size required for context export.
+ *
+ * @param ctx the algorithm context containing current hashing state
+ * @param out pointer to the memory region or NULL
+ * @param size size of memory region
+ * @return the size of the exported data on success, 0 on fail.
+ */
+size_t bt_export(const torrent_ctx* ctx, void* out, size_t size)
+{
+	const size_t head_size = sizeof(bt_export_header);
+	const size_t ctx_head_size = offsetof(torrent_ctx, hash_blocks);
+	const size_t hashes_size = ctx->piece_count * BT_HASH_SIZE;
+	size_t exported_size = head_size + ctx_head_size + hashes_size;
+	const size_t padding_size = GET_EXPORT_PADDING(exported_size);
+	const size_t program_name_length = (ctx->program_name ? strlen(ctx->program_name) : 0);
+	char* out_ptr = (char*)out;
+	size_t i;
+	assert((exported_size + padding_size) == GET_EXPORT_ALIGNED(exported_size));
+	if (out_ptr) {
+		bt_export_header* header = (bt_export_header*)out_ptr;
+		size_t hash_data_left = hashes_size;
+		if (size < exported_size)
+			return 0;
+		header->torrent_ctx_size = sizeof(torrent_ctx);
+		header->files_size = ctx->files.size;
+		header->announce_size = ctx->announce.size;
+		header->program_name_length = program_name_length;
+		header->content_length = ctx->content.length;
+		out_ptr += head_size;
+
+		memcpy(out_ptr, ctx, ctx_head_size);
+		out_ptr += ctx_head_size;
+
+		for (i = 0; i < ctx->hash_blocks.size && hash_data_left; i++) {
+			size_t left = (hash_data_left < BT_BLOCK_SIZE_IN_BYTES ? hash_data_left : BT_BLOCK_SIZE_IN_BYTES);
+			memcpy(out_ptr, ctx->hash_blocks.array[i], left);
+			out_ptr += left;
+		}
+		out_ptr += padding_size;
+	}
+	exported_size += padding_size;
+	assert(IS_EXPORT_ALIGNED(exported_size));
+
+	for (i = 0; i < ctx->files.size; i++) {
+		bt_file_info* info = (bt_file_info*)(ctx->files.array[i]);
+		size_t length = strlen(info->path);
+		const size_t aligned_length = GET_EXPORT_SIZED_STR_LEN(length);
+		if (!length)
+			continue;
+		exported_size += sizeof(uint64_t) + aligned_length;
+		if (out_ptr) {
+			if (size < exported_size)
+				return 0;
+			*(uint64_t*)out_ptr = info->size;
+			out_ptr += sizeof(uint64_t);
+			bt_export_str(out_ptr, info->path, length);
+			out_ptr += aligned_length;
+		}
+	}
+	assert(IS_EXPORT_ALIGNED(exported_size));
+
+	for (i = 0; i < ctx->announce.size; i++) {
+		size_t length = strlen(ctx->announce.array[i]);
+		const size_t aligned_length = GET_EXPORT_SIZED_STR_LEN(length);
+		if (!length)
+			continue;
+		exported_size += aligned_length;
+		if (out_ptr) {
+			if (size < exported_size)
+				return 0;
+			bt_export_str(out_ptr, ctx->announce.array[i], length);
+			out_ptr += aligned_length;
+		}
+	}
+	assert(IS_EXPORT_ALIGNED(exported_size));
+
+	if (program_name_length > 0) {
+		const size_t aligned_length = GET_EXPORT_STR_LEN(program_name_length);
+		exported_size += aligned_length;
+		if (out_ptr) {
+			if (size < exported_size)
+				return 0;
+			strcpy(out_ptr, ctx->program_name);
+			out_ptr += aligned_length;
+		}
+		assert(IS_EXPORT_ALIGNED(exported_size));
+	}
+
+	if (ctx->content.length > 0) {
+		const size_t aligned_length = GET_EXPORT_STR_LEN(ctx->content.length);
+		exported_size += aligned_length;
+		if (out_ptr) {
+			if (size < exported_size)
+				return 0;
+			memcpy(out_ptr, ctx->content.str, ctx->content.length + 1);
+			out_ptr += aligned_length;
+		}
+		assert(IS_EXPORT_ALIGNED(exported_size));
+	}
+	assert(!out || (size_t)(out_ptr - (char*)out) == exported_size);
+
+#if defined(USE_OPENSSL)
+	if (out_ptr && ARE_OPENSSL_METHODS(ctx->sha1_methods)) {
+		int* error_ptr = (int*)((char*)out + head_size + offsetof(torrent_ctx, error));
+		*error_ptr |= BT_CTX_OSSL_FLAG;
+	}
+#endif
+	return exported_size;
+}
+
+/**
+ * Import algorithm context from a memory region.
+ *
+ * @param ctx pointer to the algorithm context
+ * @param in pointer to the data to import
+ * @param size size of data to import
+ * @return the size of the imported data on success, 0 on fail.
+ */
+size_t bt_import(torrent_ctx* ctx, const void* in, size_t size)
+{
+	const size_t head_size = sizeof(bt_export_header);
+	const size_t ctx_head_size = offsetof(torrent_ctx, hash_blocks);
+	size_t imported_size = head_size + ctx_head_size;
+	const char* in_ptr = (const char*)in;
+	size_t padding_size;
+	size_t hash_data_left;
+	size_t length;
+	size_t i;
+	const bt_export_header* header = (const bt_export_header*)in_ptr;
+	if (size < imported_size)
+		return 0;
+	if (header->torrent_ctx_size != sizeof(torrent_ctx))
+		return 0;
+	in_ptr += sizeof(bt_export_header);
+
+	memset(ctx, 0, sizeof(torrent_ctx));
+	memcpy(ctx, in_ptr, ctx_head_size);
+	in_ptr += ctx_head_size;
+
+	hash_data_left = ctx->piece_count * BT_HASH_SIZE;
+	imported_size += hash_data_left;
+	padding_size = GET_EXPORT_PADDING(imported_size);
+	imported_size += padding_size;
+	assert(IS_EXPORT_ALIGNED(imported_size));
+	if (size < imported_size)
+		return 0;
+
+	for (i = 0; i < ctx->hash_blocks.size && hash_data_left; i++) {
+		size_t left = (hash_data_left < BT_BLOCK_SIZE_IN_BYTES ? hash_data_left : BT_BLOCK_SIZE_IN_BYTES);
+		unsigned char* block = (unsigned char*)malloc(BT_BLOCK_SIZE_IN_BYTES);
+		if (!block)
+			return 0;
+		if (!bt_vector_add_ptr(&ctx->hash_blocks, block)) {
+			free(block);
+			return 0;
+		}
+		memcpy(block, in_ptr, left);
+		in_ptr += left;
+	}
+	in_ptr += padding_size;
+	assert((size_t)(in_ptr - (char*)in) == imported_size);
+	assert(IS_EXPORT_ALIGNED(imported_size));
+
+	for (i = 0; i < header->files_size; i++) {
+		uint64_t filesize;
+		imported_size += sizeof(uint64_t) + sizeof(size_t);
+		if (size < imported_size)
+			return 0;
+		filesize = *(uint64_t*)in_ptr;
+		in_ptr += sizeof(uint64_t);
+		length = *(size_t*)in_ptr;
+		in_ptr += sizeof(size_t);
+		imported_size += GET_EXPORT_STR_LEN(length);
+		if (!length || size < imported_size)
+			return 0;
+		if (!bt_add_file(ctx, in_ptr, filesize))
+			return 0;
+		in_ptr += GET_EXPORT_STR_LEN(length);
+	}
+	assert((size_t)(in_ptr - (char*)in) == imported_size);
+	assert(IS_EXPORT_ALIGNED(imported_size));
+
+	for (i = 0; i < header->announce_size; i++) {
+		imported_size += sizeof(size_t);
+		if (size < imported_size)
+			return 0;
+		length = *(size_t*)in_ptr;
+		in_ptr += sizeof(size_t);
+		imported_size += GET_EXPORT_STR_LEN(length);
+		if (!length || size < imported_size)
+			return 0;
+		if (!bt_add_announce(ctx, in_ptr))
+			return 0;
+		in_ptr += GET_EXPORT_STR_LEN(length);
+	}
+	assert((size_t)(in_ptr - (char*)in) == imported_size);
+	assert(IS_EXPORT_ALIGNED(imported_size));
+
+	length = header->program_name_length;
+	if (length) {
+		imported_size += GET_EXPORT_STR_LEN(length);
+		if (size < imported_size)
+			return 0;
+		if (!bt_set_program_name(ctx, in_ptr))
+			return 0;
+		in_ptr += GET_EXPORT_STR_LEN(length);
+		assert((size_t)(in_ptr - (char*)in) == imported_size);
+		assert(IS_EXPORT_ALIGNED(imported_size));
+	}
+
+	length = header->content_length;
+	if (length) {
+		imported_size += GET_EXPORT_STR_LEN(length);
+		if (size < imported_size)
+			return 0;
+		if (!bt_str_ensure_length(ctx, length))
+			return 0;
+		memcpy(ctx->content.str, in_ptr, length);
+		in_ptr += GET_EXPORT_STR_LEN(length);
+		assert((size_t)(in_ptr - (char*)in) == imported_size);
+		assert(IS_EXPORT_ALIGNED(imported_size));
+	}
+
+#if defined(USE_OPENSSL)
+	if ((ctx->error & BT_CTX_OSSL_FLAG) != 0) {
+		ctx->error &= ~BT_CTX_OSSL_FLAG;
+		rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_OPENSSL);
+	} else {
+		rhash_load_sha1_methods(&ctx->sha1_methods, METHODS_RHASH);
+	}
+#endif
+	return imported_size;
+}
+#endif /* !defined(NO_IMPORT_EXPORT) */

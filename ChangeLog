@@ -1,3 +1,6 @@
+Sat 19 Feb 2022 Aleksey
+	* LibRHash: add rhash_import() and rhash_export() functions
+
 Mon 03 Jan 2022 Aleksey
 	* Bugfix: fix building of the LibRHash static library on Solaris
 	* Honor hash file extension in --update mode

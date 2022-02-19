@@ -80,10 +80,10 @@ rhash_info info_md4 = { RHASH_MD4, F_LE32, 16, "MD4", "md4" };
 rhash_info info_md5 = { RHASH_MD5, F_LE32, 16, "MD5", "md5" };
 rhash_info info_sha1 = { RHASH_SHA1,      F_BE32, 20, "SHA1", "sha1" };
 rhash_info info_tiger = { RHASH_TIGER,    F_LE64, 24, "TIGER", "tiger" };
-rhash_info info_tth  = { RHASH_TTH,       F_BS32, 24, "TTH", "tree:tiger" };
-rhash_info info_btih = { RHASH_BTIH,      0, 20, "BTIH", "btih" };
+rhash_info info_tth  = { RHASH_TTH,       F_BS32 | F_SPCEXP, 24, "TTH", "tree:tiger" };
+rhash_info info_btih = { RHASH_BTIH,      F_SPCEXP, 20, "BTIH", "btih" };
 rhash_info info_ed2k = { RHASH_ED2K,      F_LE32, 16, "ED2K", "ed2k" };
-rhash_info info_aich = { RHASH_AICH,      F_BS32, 20, "AICH", "aich" };
+rhash_info info_aich = { RHASH_AICH,      F_BS32 | F_SPCEXP, 20, "AICH", "aich" };
 rhash_info info_whirlpool = { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL", "whirlpool" };
 rhash_info info_rmd160 = { RHASH_RIPEMD160,  F_LE32, 20, "RIPEMD-160", "ripemd160" };
 rhash_info info_gost12_256 = { RHASH_GOST12_256, F_LE64, 32, "GOST12-256", "gost12-256" };
@@ -266,6 +266,55 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
 	result[2] = (unsigned char)(*crc32c >> 8), result[3] = (unsigned char)(*crc32c);
 #endif
 }
+
+#if !defined(NO_IMPORT_EXPORT)
+/**
+ * Export a hash function context to a memory region,
+ * or calculate the size required for context export.
+ *
+ * @param hash_id identifier of the hash function
+ * @param ctx the algorithm context containing current hashing state
+ * @param out pointer to the memory region or NULL
+ * @param size size of memory region
+ * @return the size of the exported data on success, 0 on fail.
+ */
+size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size)
+{
+	switch (hash_id)
+	{
+		case RHASH_TTH:
+			return rhash_tth_export((const tth_ctx*)ctx, out, size);
+		case RHASH_BTIH:
+			return bt_export((const torrent_ctx*)ctx, out, size);
+		case RHASH_AICH:
+			return rhash_aich_export((const aich_ctx*)ctx, out, size);
+	}
+	return 0;
+}
+
+/**
+ * Import a hash function context from a memory region.
+ *
+ * @param hash_id identifier of the hash function
+ * @param ctx pointer to the algorithm context
+ * @param in pointer to the data to import
+ * @param size size of data to import
+ * @return the size of the imported data on success, 0 on fail.
+ */
+size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size)
+{
+	switch (hash_id)
+	{
+		case RHASH_TTH:
+			return rhash_tth_import((tth_ctx*)ctx, in, size);
+		case RHASH_BTIH:
+			return bt_import((torrent_ctx*)ctx, in, size);
+		case RHASH_AICH:
+			return rhash_aich_import((aich_ctx*)ctx, in, size);
+	}
+	return 0;
+}
+#endif /* !defined(NO_IMPORT_EXPORT) */
 
 #ifdef USE_OPENSSL
 void rhash_load_sha1_methods(rhash_hashing_methods* methods, int methods_type)

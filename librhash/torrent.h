@@ -1,7 +1,7 @@
 /* torrent.h */
 #ifndef TORRENT_H
 #define TORRENT_H
-#include "ustd.h"
+#include "algorithms.h"
 #include "sha1.h"
 
 #ifdef __cplusplus
@@ -54,6 +54,11 @@ void bt_init(torrent_ctx* ctx);
 void bt_update(torrent_ctx* ctx, const void* msg, size_t size);
 void bt_final(torrent_ctx* ctx, unsigned char result[20]);
 void bt_cleanup(torrent_ctx* ctx);
+
+#if !defined(NO_IMPORT_EXPORT)
+size_t bt_export(const torrent_ctx* ctx, void* out, size_t size);
+size_t bt_import(torrent_ctx* ctx, const void* in, size_t size);
+#endif /* !defined(NO_IMPORT_EXPORT) */
 
 unsigned char* bt_get_btih(torrent_ctx* ctx);
 size_t bt_get_text(torrent_ctx* ctx, char** pstr);

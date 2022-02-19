@@ -127,6 +127,7 @@ extern rhash_info info_edr512;
 #define F_BS32 1   /* default output in base32 */
 #define F_SWAP32 2 /* big endian flag */
 #define F_SWAP64 4
+#define F_SPCEXP 8 /* needs special import/export logic */
 
 /* define endianness flags */
 #if IS_LITTLE_ENDIAN
@@ -143,6 +144,11 @@ extern rhash_info info_edr512;
 
 void rhash_init_algorithms(unsigned mask);
 const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
+
+#if !defined(NO_IMPORT_EXPORT)
+size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size);
+size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size);
+#endif /* !defined(NO_IMPORT_EXPORT) */
 
 #if defined(OPENSSL_RUNTIME) && !defined(USE_OPENSSL)
 # define USE_OPENSSL

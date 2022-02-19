@@ -1,6 +1,7 @@
 /* aich.h */
 #ifndef AICH_H
 #define AICH_H
+#include "algorithms.h"
 #include "sha1.h"
 
 #ifdef __cplusplus
@@ -30,6 +31,11 @@ typedef struct aich_ctx
 void rhash_aich_init(aich_ctx* ctx);
 void rhash_aich_update(aich_ctx* ctx, const unsigned char* msg, size_t size);
 void rhash_aich_final(aich_ctx* ctx, unsigned char result[20]);
+
+#if !defined(NO_IMPORT_EXPORT)
+size_t rhash_aich_export(const aich_ctx* ctx, void* out, size_t size);
+size_t rhash_aich_import(aich_ctx* ctx, const void* in, size_t size);
+#endif /* !defined(NO_IMPORT_EXPORT) */
 
 /* Clean up context by freeing allocated memory.
  * The function is called automatically by rhash_aich_final.

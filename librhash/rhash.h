@@ -235,6 +235,31 @@ RHASH_API void rhash_free(rhash ctx);
  */
 RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
 
+/**
+ * Export RHash context data to a memory region.
+ * The size of the memory required for export
+ * is returned by rhash_export(ctx, NULL, 0).
+ *
+ * @param ctx the rhash context to export
+ * @param out pointer to a memory region, or NULL
+ * @param size the size of a memory region
+ * @return the size of exported data on success export.
+ *         The size of memory required for export if out is NULL.
+ *         0 on fail with error code stored in errno
+ */
+RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size);
+
+/**
+ * Import rhash context from a memory region.
+ * The returned rhash context must be released after usage
+ * by rhash_free().
+ *
+ * @param in pointer to a memory region
+ * @param size the size of a memory region
+ * @return imported rhash context on success,
+ *         NULL on fail with error code stored in errno
+ */
+RHASH_API rhash rhash_import(const void* in, size_t size);
 
 /* INFORMATION FUNCTIONS */
 

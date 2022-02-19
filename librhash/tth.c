@@ -14,9 +14,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <string.h>
-#include "byte_order.h"
 #include "tth.h"
+#include "byte_order.h"
+#include <stddef.h>
+#include <string.h>
 
 /**
  * Initialize context before calculating hash.
@@ -123,3 +124,57 @@ void rhash_tth_final(tth_ctx* ctx, unsigned char result[24])
 	memcpy(ctx->tiger.hash, last_message, tiger_hash_length);
 	if (result) memcpy(result, last_message, tiger_hash_length);
 }
+
+static size_t tth_get_stack_size(uint64_t block_count)
+{
+	size_t stack_size = 0;
+	for (; block_count; block_count >>= 1)
+		stack_size += 24;
+	return stack_size;
+}
+
+#if !defined(NO_IMPORT_EXPORT)
+/**
+ * Export tth context to a memory region, or calculate the
+ * size required for context export.
+ *
+ * @param ctx the algorithm context containing current hashing state
+ * @param out pointer to the memory region or NULL
+ * @param size size of memory region
+ * @return the size of the exported data on success, 0 on fail.
+ */
+size_t rhash_tth_export(const tth_ctx* ctx, void* out, size_t size)
+{
+	size_t export_size = offsetof(tth_ctx, stack) +
+		tth_get_stack_size(ctx->block_count);
+	if (out != NULL) {
+		if (size < export_size)
+			return 0;
+		memcpy(out, ctx, export_size);
+	}
+	return export_size;
+}
+
+/**
+ * Import tth context from a memory region.
+ *
+ * @param ctx pointer to the algorithm context
+ * @param in pointer to the data to import
+ * @param size size of data to import
+ * @return the size of the imported data on success, 0 on fail.
+ */
+size_t rhash_tth_import(tth_ctx* ctx, const void* in, size_t size)
+{
+	const size_t head_size = offsetof(tth_ctx, stack);
+	size_t stack_size;
+	if (size < head_size)
+		return 0;
+	memset(ctx, 0, sizeof(tth_ctx));
+	memcpy(ctx, in, head_size);
+	stack_size = tth_get_stack_size(ctx->block_count);
+	if (size < (head_size + stack_size))
+		return 0;
+	memcpy(ctx->stack, (const char*)in + head_size, stack_size);
+	return head_size + stack_size;
+}
+#endif /* !defined(NO_IMPORT_EXPORT) */

@@ -68,7 +68,17 @@ RHASH_API int rhash_count(void)
 
 /* LOW-LEVEL LIBRHASH INTERFACE */
 
-RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
+/**
+ * Allocate and initialize RHash context for calculating a single or multiple hash functions.
+ * The context after usage must be freed by calling rhash_free().
+ *
+ * @param count the size of the hash_ids array, the count must be greater than zero
+ * @param hash_ids array of identifiers of hash functions. Each element must
+ *        be an identifier of one hash function
+ * @param need_init initialize context for each hash function
+ * @return initialized rhash context, NULL on fail with error code stored in errno
+ */
+static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_ids[], int need_init)
 {
 	struct rhash_hash_info* info;   /* hash algorithm information */
 	rhash_context_ext* rctx = NULL; /* allocated rhash context */
@@ -130,10 +140,16 @@ RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
 		phash_ctx += GET_ALIGNED_SIZE(info->context_size);
 
 		/* initialize the i-th hash context */
-		info->init(rctx->vector[i].context);
+		if (need_init)
+			info->init(rctx->vector[i].context);
 	}
+	return rctx;
+}
 
-	return &rctx->rc; /* return initialized rhash context */
+RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
+{
+	rhash_context_ext* ectx = rhash_alloc_multi(count, hash_ids, 1);
+	return &ectx->rc; /* return initialized rhash context */
 }
 
 RHASH_API rhash rhash_init(unsigned hash_id)
@@ -240,6 +256,152 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 	}
 	ectx->flags |= RCTX_FINALIZED;
 	return 0; /* no error processing at the moment */
+}
+
+/**
+ * Header block for rhash context import/export.
+ */
+typedef struct export_header
+{
+	uint32_t state;
+	uint16_t hash_vector_size;
+	uint16_t flags;
+	uint64_t msg_size;
+} export_header;
+
+/**
+ * Process export error. Returns 0 and set errno to EINVAL.
+ *
+ * @return NULL
+ */
+static size_t export_error_einval(void)
+{
+	errno = EINVAL;
+	return 0;
+}
+
+/**
+ * Process import error. Returns NULL and set errno to EINVAL.
+ *
+ * @return NULL
+ */
+static rhash import_error_einval(void)
+{
+	errno = EINVAL;
+	return NULL;
+}
+
+RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
+{
+#if !defined(NO_IMPORT_EXPORT)
+	size_t export_size;
+	size_t i;
+	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
+	export_header* header = (export_header*)out;
+	unsigned* hash_ids = NULL;
+	if (!ctx || (out && size < sizeof(export_header)) || IS_BAD_STATE(ectx->state))
+		return export_error_einval();
+	export_size = sizeof(export_header) + sizeof(unsigned) * ectx->hash_vector_size;
+	if (out != NULL) {
+		memset(out, 0, size);
+		header->state = ectx->state;
+		header->hash_vector_size = (uint16_t)(ectx->hash_vector_size);
+		header->flags = (uint16_t)(ectx->flags);
+		header->msg_size = ctx->msg_size;
+		hash_ids = (unsigned*)(void*)(header + 1);
+	}
+	for (i = 0; i < ectx->hash_vector_size; i++) {
+		void* src_context = ectx->vector[i].context;
+		struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
+		unsigned is_special = (hash_info->info->flags & F_SPCEXP);
+		size_t item_size;
+		if (out != NULL) {
+			char* dst_item = (char*)out + export_size;
+			if (size <= export_size)
+				return export_error_einval();
+			hash_ids[i] = hash_info->info->hash_id;
+			if (is_special) {
+				size_t left_size = size - export_size;
+				item_size = rhash_export_alg(hash_info->info->hash_id, src_context, dst_item, left_size);
+				if (!item_size)
+					return export_error_einval();
+			} else {
+				item_size = hash_info->context_size;
+				if (size < (export_size + item_size))
+					return export_error_einval();
+				memcpy(dst_item, src_context, item_size);
+			}
+		} else {
+			if (is_special)
+				item_size = rhash_export_alg(hash_info->info->hash_id, src_context, NULL, 0);
+			else
+				item_size = hash_info->context_size;
+		}
+		export_size += item_size;
+	}
+	if (export_size < size)
+		return export_error_einval();
+	return export_size;
+#else
+	return export_error_einval();
+#endif /* !defined(NO_IMPORT_EXPORT) */
+}
+
+RHASH_API rhash rhash_import(const void* in, size_t size)
+{
+#if !defined(NO_IMPORT_EXPORT)
+	const export_header* header = (const export_header*)in;
+	size_t i;
+	size_t imported_size;
+	const unsigned* hash_ids;
+	const char* src_item;
+	rhash_context_ext* ectx;
+	if (!header || IS_BAD_STATE(header->state) || size < sizeof(export_header))
+		return import_error_einval();
+	imported_size = sizeof(export_header) + sizeof(unsigned) * header->hash_vector_size;
+	if (!header->hash_vector_size || size < imported_size)
+		return import_error_einval();
+	hash_ids = (const unsigned*)(const void*)(header + 1);
+	ectx = (rhash_context_ext*)rhash_alloc_multi(header->hash_vector_size, hash_ids, 0);
+	if (!ectx)
+		return NULL; /* errno must be set by the previous function */
+	ectx->state = header->state;
+	ectx->hash_vector_size = header->hash_vector_size;
+	ectx->flags = header->flags;
+	ectx->rc.msg_size = header->msg_size;
+	src_item = (const char*)in + imported_size;
+	for (i = 0; i < ectx->hash_vector_size; i++) {
+		void* dst_context = ectx->vector[i].context;
+		struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
+		unsigned is_special = (hash_info->info->flags & F_SPCEXP);
+		size_t item_size;
+
+		if (is_special) {
+			size_t left_size = size - imported_size;
+			assert(size >= imported_size);
+			item_size = rhash_import_alg(hash_ids[i], dst_context, src_item, left_size);
+			imported_size += item_size;
+			if (!item_size || size < imported_size) {
+				ectx->hash_vector_size = i + 1; /* clean only initialized contextes */
+				rhash_free(&ectx->rc);
+				return import_error_einval();
+			}
+		} else {
+			item_size = hash_info->context_size;
+			imported_size += item_size;
+			if (size < imported_size) {
+				ectx->hash_vector_size = i + 1;
+				rhash_free(&ectx->rc);
+				return import_error_einval();
+			}
+			memcpy(dst_context, src_item, item_size);
+		}
+		src_item += item_size;
+	}
+	return &ectx->rc;
+#else
+	return import_error_einval();
+#endif /* !defined(NO_IMPORT_EXPORT) */
 }
 
 /**
