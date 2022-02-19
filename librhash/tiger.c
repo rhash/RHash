@@ -20,21 +20,41 @@
 #include "byte_order.h"
 #include "tiger.h"
 
+#ifdef NO_TIGER2
+# define TIGER2_FLAG I64(0)
+#else
+# define TIGER2_FLAG I64(0x8000000000000000)
+#endif /* NO_TIGER2 */
+
+#define LENGTH_MASK (~TIGER2_FLAG)
+#define INITIALIZE_TIGER_STATE(state) \
+	state[0] = I64(0x0123456789ABCDEF); \
+	state[1] = I64(0xFEDCBA9876543210); \
+	state[2] = I64(0xF096A5B4C3B2E187);
+
 /**
- * Initialize algorithm context before calculaing hash.
+ * Initialize Tiger context before calculating hash.
  *
  * @param ctx context to initialize
  */
 void rhash_tiger_init(tiger_ctx* ctx)
 {
 	ctx->length = 0;
-	ctx->tiger2 = 0;
-
-	/* initialize algorithm state */
-	ctx->hash[0] = I64(0x0123456789ABCDEF);
-	ctx->hash[1] = I64(0xFEDCBA9876543210);
-	ctx->hash[2] = I64(0xF096A5B4C3B2E187);
+	INITIALIZE_TIGER_STATE(ctx->hash);
 }
+
+#ifndef NO_TIGER2
+/**
+ * Initialize Tiger2 context before calculating hash.
+ *
+ * @param ctx context to initialize
+ */
+void rhash_tiger2_init(tiger_ctx* ctx)
+{
+	ctx->length = TIGER2_FLAG;
+	INITIALIZE_TIGER_STATE(ctx->hash);
+}
+#endif /* NO_TIGER2 */
 
 /* lookup tables */
 extern uint64_t rhash_tiger_sboxes[4][256];
@@ -210,7 +230,7 @@ void rhash_tiger_final(tiger_ctx* ctx, unsigned char result[24])
 	/* pad message and run for last block */
 
 	/* append the byte 0x01 to the message */
-	ctx->message[index++] = (ctx->tiger2 ? 0x80 : 0x01);
+	ctx->message[index++] = (ctx->length & TIGER2_FLAG ? 0x80 : 0x01);
 
 	/* if no room left in the message to store 64-bit message length */
 	if (index > 56) {
@@ -224,7 +244,7 @@ void rhash_tiger_final(tiger_ctx* ctx, unsigned char result[24])
 	while (index < 56) {
 		ctx->message[index++] = 0;
 	}
-	msg64[7] = le2me_64(ctx->length << 3);
+	msg64[7] = le2me_64((ctx->length & LENGTH_MASK) << 3);
 	rhash_tiger_process_block(ctx->hash, msg64);
 
 	/* save result hash */
