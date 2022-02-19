@@ -6,6 +6,9 @@
 extern "C" {
 #endif
 
+/* compile-time assert */
+#define RHASH_ASSERT(cond) (void)sizeof(char[1 - 2 * !(cond)])
+
 #if (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ > 4 || __GNUC_MINOR__ >= 1) \
 	&& defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) \
 	|| (defined(__INTEL_COMPILER) && !defined(_WIN32))

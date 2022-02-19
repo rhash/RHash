@@ -28,6 +28,7 @@
  */
 
 #include "aich.h"
+#include "util.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -99,10 +100,10 @@ typedef hash_pair_t hash_pairs_group_t[CT_GROUP_SIZE];
 static void rhash_aich_chunk_table_extend(aich_ctx* ctx, unsigned chunk_num)
 {
 	unsigned index = (chunk_num >> CT_BITS);
-	assert(sizeof(hash_pair_t) == 40);
-	assert(sizeof(hash_pairs_group_t) == (40 * CT_GROUP_SIZE)); /* 10KiB */
-	assert(CT_GROUP_SIZE == 256);
 	assert(CT_INDEX(chunk_num) == 0);
+	RHASH_ASSERT(sizeof(hash_pair_t) == 40);
+	RHASH_ASSERT(sizeof(hash_pairs_group_t) == (40 * CT_GROUP_SIZE)); /* 10KiB */
+	RHASH_ASSERT(CT_GROUP_SIZE == 256);
 
 	/* check main assumptions */
 	assert(ctx->chunk_table == 0 || ctx->chunk_table[index - 1] != 0); /* table is empty or full */

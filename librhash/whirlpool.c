@@ -20,7 +20,6 @@
  * The algorithm is named after the Whirlpool Galaxy in Canes Venatici.
  */
 
-#include <assert.h>
 #include <string.h>
 #include "byte_order.h"
 #include "whirlpool.h"
