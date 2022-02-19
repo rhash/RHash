@@ -35,7 +35,7 @@
 #define ED2K_CHUNK_SIZE 9728000
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */

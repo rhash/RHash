@@ -734,7 +734,7 @@ static const unsigned rhash_snefru_sbox[SNEFRU_NUMBER_OF_ROUNDS * 512] = {
 };
 
 /**
- * Initialize algorithm context before calculaing hash.
+ * Initialize algorithm context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -745,7 +745,7 @@ void rhash_snefru128_init(struct snefru_ctx* ctx)
 }
 
 /**
- * Initialize algorithm context before calculaing hash.
+ * Initialize algorithm context before calculating hash.
  *
  * @param ctx context to initialize
  */

@@ -100,7 +100,7 @@ void rhash_sha512_init(sha512_ctx* ctx)
 }
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */

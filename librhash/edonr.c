@@ -26,7 +26,7 @@
 #include "edonr.h"
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -48,7 +48,7 @@ void rhash_edonr256_init(edonr_ctx* ctx)
 }
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -70,7 +70,7 @@ void rhash_edonr224_init(struct edonr_ctx* ctx)
 }
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -95,7 +95,7 @@ void rhash_edonr512_init(edonr_ctx* ctx)
 }
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */

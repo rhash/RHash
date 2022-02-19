@@ -22,7 +22,7 @@
 #include "ripemd-160.h"
 
 /**
- * Initialize algorithm context before calculaing hash.
+ * Initialize algorithm context before calculating hash.
  *
  * @param ctx context to initialize
  */

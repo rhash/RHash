@@ -70,7 +70,7 @@ enum rhash_ids
 	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO, /* deprecated constant name */
 
 	/* bit-flag for extra hash identifiers */
-  RHASH_EXTENDED_BIT = (int)0x80000000,
+	RHASH_EXTENDED_BIT = (int)0x80000000,
 
 	/**
 	 * The number of supported hash functions.
@@ -160,7 +160,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
  *        be an identifier of one hash function
  * @return initialized rhash context, NULL on fail with error code stored in errno
  */
-RHASH_API rhash rhash_init_multi(size_t count, unsigned hash_ids[]);
+RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[]);
 
 /**
  * Allocate and initialize RHash context for calculating a single hash function.
@@ -233,7 +233,7 @@ RHASH_API void rhash_free(rhash ctx);
  * @param callback pointer to the callback function
  * @param callback_data pointer to data passed to the callback
  */
-RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
+RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* callback_data);
 
 
 /* INFORMATION FUNCTIONS */
@@ -243,7 +243,7 @@ RHASH_API void  rhash_set_callback(rhash ctx, rhash_callback_t callback, void* c
  *
  * @return the number of supported hash functions
  */
-RHASH_API int  rhash_count(void);
+RHASH_API int rhash_count(void);
 
 /**
  * Returns the size of binary message digest for given hash function.
@@ -251,7 +251,7 @@ RHASH_API int  rhash_count(void);
  * @param hash_id the id of the hash function
  * @return the size of the message digest in bytes
  */
-RHASH_API int  rhash_get_digest_size(unsigned hash_id);
+RHASH_API int rhash_get_digest_size(unsigned hash_id);
 
 /**
  * Returns the length of message digest string in its default output format.
@@ -259,7 +259,7 @@ RHASH_API int  rhash_get_digest_size(unsigned hash_id);
  * @param hash_id the id of the hash function
  * @return the length of the message digest
  */
-RHASH_API int  rhash_get_hash_length(unsigned hash_id);
+RHASH_API int rhash_get_hash_length(unsigned hash_id);
 
 /**
  * Detect default message digest output format for the given hash algorithm.
@@ -267,7 +267,7 @@ RHASH_API int  rhash_get_hash_length(unsigned hash_id);
  * @param hash_id the id of hash algorithm
  * @return 1 for base32 format, 0 for hexadecimal
  */
-RHASH_API int  rhash_is_base32(unsigned hash_id);
+RHASH_API int rhash_is_base32(unsigned hash_id);
 
 /**
  * Returns the name of the given hash function.

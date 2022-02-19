@@ -37,8 +37,9 @@
 #include <string.h>
 
 #define STATE_ACTIVE  0xb01dbabe
-#define STATE_STOPED  0xdeadbeef
+#define STATE_STOPPED 0xdeadbeef
 #define STATE_DELETED 0xdecea5ed
+#define IS_BAD_STATE(s) ((s) != STATE_ACTIVE && (s) != STATE_STOPPED)
 #define RCTX_AUTO_FINAL 0x1
 #define RCTX_FINALIZED  0x2
 #define RCTX_FINALIZED_MASK (RCTX_AUTO_FINAL | RCTX_FINALIZED)
@@ -67,7 +68,7 @@ RHASH_API int rhash_count(void)
 
 /* LOW-LEVEL LIBRHASH INTERFACE */
 
-RHASH_API rhash rhash_init_multi(size_t count, unsigned hash_ids[])
+RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
 {
 	struct rhash_hash_info* info;   /* hash algorithm information */
 	rhash_context_ext* rctx = NULL; /* allocated rhash context */
@@ -674,11 +675,11 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 
 	case RMSG_CANCEL:
 		/* mark rhash context as canceled, in a multithreaded program */
-		atomic_compare_and_swap(&ctx->state, STATE_ACTIVE, STATE_STOPED);
+		atomic_compare_and_swap(&ctx->state, STATE_ACTIVE, STATE_STOPPED);
 		return 0;
 
 	case RMSG_IS_CANCELED:
-		return (ctx->state == STATE_STOPED);
+		return (ctx->state == STATE_STOPPED);
 
 	case RMSG_GET_FINALIZED:
 		return ((ctx->flags & RCTX_FINALIZED) != 0);

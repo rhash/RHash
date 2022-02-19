@@ -19,7 +19,7 @@
 #include "md4.h"
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */

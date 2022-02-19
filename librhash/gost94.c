@@ -30,7 +30,7 @@ extern unsigned rhash_gost94_sbox[4][256];
 extern unsigned rhash_gost94_sbox_cryptpro[4][256];
 
 /**
- * Initialize algorithm context before calculaing hash
+ * Initialize algorithm context before calculating hash
  * with test parameters set.
  *
  * @param ctx context to initialize

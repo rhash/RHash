@@ -61,7 +61,7 @@ static const unsigned rhash_k256[64] = {
 	ROUND(a,b,c,d,e,f,g,h, k[n], RECALCULATE_W(W, n))
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */
@@ -83,7 +83,7 @@ void rhash_sha256_init(sha256_ctx* ctx)
 }
 
 /**
- * Initialize context before calculaing hash.
+ * Initialize context before calculating hash.
  *
  * @param ctx context to initialize
  */

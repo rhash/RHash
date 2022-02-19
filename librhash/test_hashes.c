@@ -35,8 +35,8 @@
  *                              Test vectors                               *
  *=========================================================================*/
 
- /* verified by cksfv */
- const char* crc32_tests[] = {
+/* verified by cksfv */
+const char* crc32_tests[] = {
 	"", "00000000",
 	"a", "E8B7BE43",
 	"abc", "352441C2",
@@ -48,7 +48,7 @@
 	0
 };
 
- const char* crc32c_tests[] = {
+const char* crc32c_tests[] = {
 	"", "00000000",
 	"a", "C1D04330",
 	"abc", "364B3FB7",
@@ -1153,8 +1153,7 @@ int main(int argc, char* argv[])
 			printf("All sums are working properly!\n");
 		fflush(stdout);
 	}
-
-	if (g_errors > 0) printf("%s", compiler_flags);
-
+	if (g_errors > 0)
+		printf("%s", compiler_flags);
 	return (g_errors == 0 ? 0 : 1);
 }
