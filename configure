@@ -501,7 +501,7 @@ if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
       cc_version="v. ?.??, bad"
       cc_fail=yes
       ;;
-    10.1|11.1|12.*|13.*)
+    10.1|11.1|12.*|13.*|20*)
       cc_version="$cc_version, ok"
       ;;
     *)
