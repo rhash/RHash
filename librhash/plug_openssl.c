@@ -212,6 +212,7 @@ static int load_openssl_runtime(void)
 #else
 	static const char* libNames[] = {
 		"libcrypto.so",
+		"libcrypto.so.3",
 		"libcrypto.so.1.1",
 		"libcrypto.so.1.0.2",
 		"libcrypto.so.1.0.0",
