@@ -301,14 +301,22 @@ static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
 	return hash_type;
 }
 
+enum HashNameMatchModes {
+	ExactMatch,
+	PrefixMatch
+};
+
 /**
  * Detect a hash-function id by its BSD name.
  *
  * @param name an uppercase string, a possible name of a hash-function
  * @param length length of the name string
+ * @param match_mode whether the name parameter must match the name of a
+ *                   known hash algorithm exactly, or trailing chars are
+ *                   allowed.
  * @return id of hash function if found, zero otherwise
  */
-static unsigned bsd_hash_name_to_id(const char* name, unsigned length)
+static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum HashNameMatchModes match_mode)
 {
 #define code2mask_size (19 * 2)
 	static unsigned code2mask[code2mask_size] = {
@@ -372,7 +380,8 @@ static unsigned bsd_hash_name_to_id(const char* name, unsigned length)
 			else
 				break;
 		}
-		if (!*a && !*b) return hash_id;
+		if (!*a && (match_mode == PrefixMatch || !*b))
+			return hash_id;
 	}
 	return 0;
 }
@@ -526,7 +535,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 				buf[len] = toupper(begin[len]);
 			}
 			buf[len] = '\0';
-			token->expected_hash_id = bsd_hash_name_to_id(buf, len);
+			token->expected_hash_id = bsd_hash_name_to_id(buf, len, ExactMatch);
 			if (!token->expected_hash_id)
 				return ResFailed;
 			token->hash_type = FmtAll;
@@ -1240,9 +1249,16 @@ static int extract_uppercase_file_ext(struct file_ext* fe, file_t* file)
 	char* buffer;
 	const char* basename = file_get_print_path(file, FPathUtf8 | FPathBaseName);
 	const char* ext;
-	if (!basename || !(ext = strrchr(basename, '.')))
+	if (!basename)
 		return 0;
-	ext++;
+	ext = strrchr(basename, '.');
+	if (!ext)
+		/* If there is no extension, then consider the whole filename
+		 * as extension, so callers can do the right thing when
+		 * encountering a file called e.g. "SHA256". */
+		ext = basename;
+	else
+		ext++;
 	buffer = fe->buffer;
 	for (length = 0; '-' <= ext[length] && ext[length] <= 'z'; length++) {
 		if (length >= sizeof(fe->buffer))
@@ -1269,7 +1285,7 @@ static void set_flags_by_hash_file_extension(file_t* hash_file, struct hash_pars
 	int is_sfv;
 	if(HAS_OPTION(OPT_NO_DETECT_BY_EXT) || !extract_uppercase_file_ext(&ext, hash_file))
 		return;
-	hash_mask = (opt.sum_flags ? opt.sum_flags : bsd_hash_name_to_id(ext.buffer, ext.length));
+	hash_mask = (opt.sum_flags ? opt.sum_flags : bsd_hash_name_to_id(ext.buffer, ext.length, PrefixMatch));
 	is_sfv = (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0);
 	if (parser != NULL) {
 		parser->expected_hash_mask = hash_mask;
