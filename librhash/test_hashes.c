@@ -1031,25 +1031,25 @@ static void test_import_export(void)
 			rhash_torrent_add_file(ctx, "file1", 1);
 			rhash_torrent_add_file(ctx, "file2", 22);
 			rhash_torrent_set_options(ctx, RHASH_TORRENT_OPT_PRIVATE);
-			if (!(i & 1))
-				(void)rhash_torrent_generate_content(ctx);
+			if ((i & 1) != 0)
+				rhash_final(ctx, 0);
 		}
 		required_size = rhash_export(ctx, NULL, 0);
 		if (!required_size) {
-			log_message("error: export failed for block size=%u\n", (unsigned)size);
+			log_message("error: rhash_export failed for block size=%u\n", (unsigned)size);
 			g_errors++;
 			return;
 		}
 		exported_data = malloc(required_size);
 		exported_size = rhash_export(ctx, exported_data, required_size);
 		if (exported_size != required_size) {
-			log_message("error: export failed: %u != %u\n", (unsigned)exported_size, (unsigned)required_size);
+			log_message("error: rhash_export failed: %u != %u\n", (unsigned)exported_size, (unsigned)required_size);
 			g_errors++;
 			return;
 		}
 		imported_ctx = rhash_import(exported_data, required_size);
 		if (!imported_ctx) {
-			log_message("error: import failed for block size=%u\n", (unsigned)size);
+			log_message("error: rhash_import failed for block size=%u\n", (unsigned)size);
 			g_errors++;
 			return;
 		}
