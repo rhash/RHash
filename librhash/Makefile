@@ -141,8 +141,8 @@ sha512.o: sha512.c byte_order.h ustd.h sha512.h
 snefru.o: snefru.c byte_order.h ustd.h snefru.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-test_hashes.o: test_hashes.c byte_order.h ustd.h rhash_timing.h \
- rhash_torrent.h rhash.h test_hashes.h util.h
+test_lib.o: test_lib.c byte_order.h ustd.h rhash_timing.h \
+ rhash_torrent.h rhash.h test_lib.h util.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 tiger.o: tiger.c byte_order.h ustd.h tiger.h
@@ -184,11 +184,11 @@ $(LIBRHASH_STATIC): $(OBJECTS)
 	$(AR) -cqs $@ $(OBJECTS)
 
 # test targets
-$(TEST_SHARED): $(LIBRHASH_SHARED) test_hashes.o
-	$(CC) $(CFLAGS) test_hashes.o $(LIBRHASH_SHARED) $(LDFLAGS) -o $@
+$(TEST_SHARED): $(LIBRHASH_SHARED) test_lib.o
+	$(CC) $(CFLAGS) test_lib.o $(LIBRHASH_SHARED) $(LDFLAGS) -o $@
 
-$(TEST_STATIC): $(LIBRHASH_STATIC) test_hashes.o
-	$(CC) $(CFLAGS) test_hashes.o $(LIBRHASH_STATIC) $(BIN_STATIC_LDFLAGS) -o $@
+$(TEST_STATIC): $(LIBRHASH_STATIC) test_lib.o
+	$(CC) $(CFLAGS) test_lib.o $(LIBRHASH_STATIC) $(BIN_STATIC_LDFLAGS) -o $@
 
 test: $(TEST_TARGETS)
 test-static: $(TEST_STATIC)

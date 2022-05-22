@@ -249,7 +249,7 @@
     <ClCompile Include="..\..\librhash\sha512.c" />
     <ClCompile Include="..\..\librhash\sha3.c" />
     <ClCompile Include="..\..\librhash\snefru.c" />
-    <ClCompile Include="..\..\librhash\test_hashes.c">
+    <ClCompile Include="..\..\librhash\test_lib.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -272,7 +272,7 @@
     <ClInclude Include="..\..\librhash\rhash_torrent.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
-    <ClInclude Include="..\..\librhash\test_hashes.h" />
+    <ClInclude Include="..\..\librhash\test_lib.h" />
     <ClInclude Include="..\..\librhash\aich.h" />
     <ClInclude Include="..\..\librhash\blake2b.h" />
     <ClInclude Include="..\..\librhash\blake2s.h" />

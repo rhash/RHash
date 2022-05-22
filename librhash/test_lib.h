@@ -1,6 +1,6 @@
-/* test_hashes.h - detect compiler defines */
-#ifndef TEST_HASHES_H
-#define TEST_HASHES_H
+/* test_lib.h - detect compiler defines */
+#ifndef TEST_LIB_H
+#define TEST_LIB_H
 
 #include "byte_order.h"
 #include "util.h"
@@ -314,4 +314,4 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 	"\n";
 
-#endif /* TEST_HASHES_H */
+#endif /* TEST_LIB_H */
