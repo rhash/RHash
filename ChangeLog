@@ -1,3 +1,6 @@
+Sun 12 Jun 2022 Aleksey
+	* Bugfix: Show total speed in the update mode
+
 Sat 19 Feb 2022 Aleksey
 	* LibRHash: add rhash_import() and rhash_export() functions
 

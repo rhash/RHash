@@ -257,8 +257,8 @@ int main(int argc, char* argv[])
 
 	/* in benchmark mode just run benchmark and exit */
 	if (IS_MODE(MODE_BENCHMARK)) {
-		unsigned flags = (opt.flags & OPT_BENCH_RAW ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
-		if ((opt.flags & OPT_BENCH_RAW) == 0) {
+		unsigned flags = (HAS_OPTION(OPT_BENCH_RAW) ? BENCHMARK_CPB | BENCHMARK_RAW : BENCHMARK_CPB);
+		if (!HAS_OPTION(OPT_BENCH_RAW)) {
 			rsh_fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
 		}
 		run_benchmark(opt.sum_flags, flags);
@@ -278,14 +278,6 @@ int main(int argc, char* argv[])
 	}
 	assert(opt.search_data != 0);
 
-	if (opt.update_file)
-	{
-		file_init(&rhash_data.upd_file, opt.update_file, FileInitReusePath);
-		rhash_data.update_context = update_ctx_new(&rhash_data.upd_file);
-		if (!rhash_data.update_context)
-			rsh_exit(0);
-	}
-
 	/* setup printf formatting string */
 	rhash_data.printf_str = opt.printf_str;
 	/* print SFV header if CRC32 or no hash function has been selected */
@@ -301,7 +293,7 @@ int main(int argc, char* argv[])
 		rhash_data.template_text = init_printf_format();
 		rhash_data.printf_str = rhash_data.template_text->str;
 
-		if (opt.flags & OPT_VERBOSE) {
+		if (HAS_OPTION(OPT_VERBOSE)) {
 			char* str = rsh_strdup(rhash_data.printf_str);
 			log_msg(_("Format string is: %s\n"), str_trim(str));
 			free(str);
@@ -313,7 +305,7 @@ int main(int argc, char* argv[])
 	}
 
 	opt.search_data->options = FIND_SKIP_DIRS;
-	opt.search_data->options |= (opt.flags & OPT_FOLLOW ? FIND_FOLLOW_SYMLINKS : 0);
+	opt.search_data->options |= (HAS_OPTION(OPT_FOLLOW) ? FIND_FOLLOW_SYMLINKS : 0);
 	opt.search_data->callback = scan_files_callback;
 
 	need_sfv_banner = (rhash_data.is_sfv && IS_MODE(MODE_DEFAULT));
@@ -339,6 +331,14 @@ int main(int argc, char* argv[])
 	/* measure total processing time */
 	rsh_timer_start(&timer);
 	rhash_data.processed = 0;
+
+	if (opt.update_file)
+	{
+		file_init(&rhash_data.upd_file, opt.update_file, FileInitReusePath);
+		rhash_data.update_context = update_ctx_new(&rhash_data.upd_file);
+		if (!rhash_data.update_context)
+			rsh_exit(0);
+	}
 
 	/* process files */
 	opt.search_data->options |= FIND_LOG_ERRORS;
@@ -368,8 +368,7 @@ int main(int argc, char* argv[])
 			file_cleanup(&batch_torrent_file);
 		}
 
-		if ((opt.flags & OPT_SPEED) && !IS_MODE(MODE_CHECK | MODE_UPDATE) &&
-				rhash_data.processed > 1) {
+		if (HAS_OPTION(OPT_SPEED) && opt.mode != MODE_CHECK && rhash_data.total_size != 0) {
 			uint64_t time = rsh_timer_stop(&timer);
 			print_time_stats(time, rhash_data.total_size, 1);
 		}

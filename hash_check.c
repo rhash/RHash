@@ -1502,7 +1502,7 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 			log_error_file_t(&rhash_data.out_file);
 			result = -2;
 		}
-		if ((opt.flags & OPT_SPEED) && rhash_data.processed > 1)
+		if (HAS_OPTION(OPT_SPEED) && !IS_MODE(MODE_UPDATE) && rhash_data.processed > 1)
 			print_time_stats(time, rhash_data.total_size, 1);
 	}
 
