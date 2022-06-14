@@ -1,31 +1,37 @@
-Sun 12 Jun 2022 Aleksey
+Tue 14 Jun 2022 Aleksey Kravchenko
+	* === Version 1.4.3 ===
+
+Tue 14 Jun 2022 Michael Hudson-Doyle
+	* Support runtime loading of OpenSSL 3.0
+
+Sun 12 Jun 2022 Aleksey Kravchenko
 	* Bugfix: Show total speed in the update mode
 
-Sat 19 Feb 2022 Aleksey
+Sat 19 Feb 2022 Aleksey Kravchenko
 	* LibRHash: add rhash_import() and rhash_export() functions
 
-Mon 03 Jan 2022 Aleksey
+Mon 03 Jan 2022 Aleksey Kravchenko
 	* Bugfix: fix building of the LibRHash static library on Solaris
 	* Honor hash file extension in --update mode
 
-Sun 19 Dec 2021 Aleksey
+Sun 19 Dec 2021 Aleksey Kravchenko
 	* Support --ignore-missing option, to ignore missing files in --check mode
 
-Sun 12 Dec 2021 Aleksey
+Sun 12 Dec 2021 Aleksey Kravchenko
 	* Support --brief option to show verification report without header and footer
 	* Bugfix: hash options were sometimes ignored in the --check mode
 	* Allow simultaneous usage of --update and --check options
 
-Fri 05 Nov 2021 Aleksey
+Fri 05 Nov 2021 Aleksey Kravchenko
 	* Honor --lowercase option while --embed-crc is in action
 
 Mon 01 Nov 2021 And Sch
 	* Improve ripemd160 performance
 
-Mon 01 Nov 2021 Aleksey
+Mon 01 Nov 2021 Aleksey Kravchenko
 	* Add --bt-transmission option to create Transmission compatible torrent files
 
-Sun 26 Sep 2021 Aleksey
+Sun 26 Sep 2021 Aleksey Kravchenko
 	* Bugfix: star character at the start of filepath must be ignored
 
 Wed 14 Jul 2021 Aleksey
