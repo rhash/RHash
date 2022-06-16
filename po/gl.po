@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
-"POT-Creation-Date: 2021-12-13 15:51+0300\n"
+"POT-Creation-Date: 2022-06-16 18:57+0300\n"
 "PO-Revision-Date: 2012-06-15 18:23+0000\n"
 "Last-Translator: Miguel Anxo Bouzada <mbouzada@gmail.com>\n"
 "Language-Team: Galician <gl@li.org>\n"
@@ -41,27 +41,27 @@ msgstr "%s gardado\n"
 msgid "can't convert the file path to local encoding: %s\n"
 msgstr ""
 
-#: hash_check.c:780
+#: hash_check.c:791
 #, c-format
 msgid "unknown hash in magnet link: %s\n"
 msgstr "hash descoñecido na ligazón magnética: %s\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
-#: hash_check.c:1214
+#: hash_check.c:1225
 #, c-format
 msgid "file name doesn't contain a CRC32: %s\n"
 msgstr "o nome do ficheiro non conten un CRC32: %s\n"
 
 #. TRANSLATORS: it's printed, when a non-text hash file is encountered in --update mode
-#: hash_check.c:1374
+#: hash_check.c:1398
 msgid "skipping binary file"
 msgstr "omitindo o ficheiro binario"
 
-#: hash_check.c:1375
+#: hash_check.c:1399
 msgid "file is binary"
 msgstr "o ficheiro é binario"
 
-#: hash_check.c:1388 parse_cmdline.c:728
+#: hash_check.c:1412 parse_cmdline.c:728
 #, c-format
 msgid "%s:%u: can't parse line \"%s\"\n"
 msgstr "%s:%u: non é posíbel analizar a liña «%s»\n"
@@ -424,15 +424,15 @@ msgstr "%s:%u: opción «%s» descoñecida\n"
 msgid "CommandLineToArgvW failed\n"
 msgstr "Produciuse un fallo en CommandLineToArgvW\n"
 
-#: parse_cmdline.c:1127
+#: parse_cmdline.c:1126
 msgid "incompatible program modes\n"
 msgstr "modos de programa incompatíbeis\n"
 
-#: parse_cmdline.c:1128
+#: parse_cmdline.c:1127
 msgid "incompatible formatting options\n"
 msgstr ""
 
-#: parse_cmdline.c:1141
+#: parse_cmdline.c:1138
 #, c-format
 msgid "Config file: %s\n"
 msgstr "Ficheiro de configuración: %s\n"
@@ -467,7 +467,7 @@ msgstr ""
 "\n"
 "Execute «%s --help» para obter máis axuda.\n"
 
-#: rhash_main.c:301
+#: rhash_main.c:298
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "A cadea de formato é: %s\n"
