@@ -224,12 +224,12 @@ static int load_openssl_runtime(void)
 	SetErrorMode(oldErrorMode); /* restore error mode */
 #else
 	static const char* libNames[] = {
-		"libcrypto.so",
 		"libcrypto.so.3",
 		"libcrypto.so.1.1",
 		"libcrypto.so.1.0.2",
 		"libcrypto.so.1.0.0",
 		"libcrypto.so.0.9.8",
+		"libcrypto.so",
 	};
 	void* handle = 0;
 	size_t i;
