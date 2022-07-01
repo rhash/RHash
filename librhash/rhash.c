@@ -51,7 +51,8 @@
 #define IS_VALID_HASH_ID(id) (IS_VALID_HASH_MASK(id) && HAS_ZERO_OR_ONE_BIT(id))
 
 /* each hash function context must be aligned to DEFAULT_ALIGNMENT bytes */
-#define GET_ALIGNED_SIZE(size) ALIGN_SIZE_BY((size), DEFAULT_ALIGNMENT)
+#define GET_CTX_ALIGNED(size) ALIGN_SIZE_BY((size), DEFAULT_ALIGNMENT)
+#define GET_EXPORT_ALIGNED(size) ALIGN_SIZE_BY((size), 8)
 
 RHASH_API void rhash_library_init(void)
 {
@@ -82,7 +83,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 {
 	struct rhash_hash_info* info;   /* hash algorithm information */
 	rhash_context_ext* rctx = NULL; /* allocated rhash context */
-	const size_t header_size = GET_ALIGNED_SIZE(sizeof(rhash_context_ext) + sizeof(rhash_vector_item) * count);
+	const size_t header_size = GET_CTX_ALIGNED(sizeof(rhash_context_ext) + sizeof(rhash_vector_item) * count);
 	size_t ctx_size_sum = 0;   /* size of hash contexts to store in rctx */
 	size_t i;
 	char* phash_ctx;
@@ -104,7 +105,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 		info = &rhash_info_table[hash_index];
 
 		/* align context sizes and sum up */
-		ctx_size_sum += GET_ALIGNED_SIZE(info->context_size);
+		ctx_size_sum += GET_CTX_ALIGNED(info->context_size);
 	}
 
 	/* allocate rhash context with enough memory to store contexts of all selected hash functions */
@@ -137,7 +138,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 		/* BTIH initialization is a bit complicated, so store the context pointer for later usage */
 		if ((hash_ids[i] & RHASH_BTIH) != 0)
 			rctx->bt_ctx = phash_ctx;
-		phash_ctx += GET_ALIGNED_SIZE(info->context_size);
+		phash_ctx += GET_CTX_ALIGNED(info->context_size);
 
 		/* initialize the i-th hash context */
 		if (need_init)
@@ -316,25 +317,32 @@ RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
 		unsigned is_special = (hash_info->info->flags & F_SPCEXP);
 		size_t item_size;
 		if (out != NULL) {
-			char* dst_item = (char*)out + export_size;
 			if (size <= export_size)
 				return export_error_einval();
 			hash_ids[i] = hash_info->info->hash_id;
 			if (is_special) {
-				size_t left_size = size - export_size;
-				item_size = rhash_export_alg(hash_info->info->hash_id, src_context, dst_item, left_size);
+				char* dst_item;
+				size_t left_size;
+				export_size = GET_EXPORT_ALIGNED(export_size);
+				dst_item = (char*)out + export_size;
+				left_size = size - export_size;
+				item_size = rhash_export_alg(hash_info->info->hash_id,
+					src_context, dst_item, left_size);
 				if (!item_size)
 					return export_error_einval();
 			} else {
+				char* dst_item = (char*)out + export_size;
 				item_size = hash_info->context_size;
 				if (size < (export_size + item_size))
 					return export_error_einval();
 				memcpy(dst_item, src_context, item_size);
 			}
 		} else {
-			if (is_special)
-				item_size = rhash_export_alg(hash_info->info->hash_id, src_context, NULL, 0);
-			else
+			if (is_special) {
+				export_size = GET_EXPORT_ALIGNED(export_size);
+				item_size = rhash_export_alg(
+					hash_info->info->hash_id, src_context, NULL, 0);
+			} else
 				item_size = hash_info->context_size;
 		}
 		export_size += item_size;
@@ -369,7 +377,6 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 	ectx->hash_vector_size = header->hash_vector_size;
 	ectx->flags = header->flags;
 	ectx->rc.msg_size = header->msg_size;
-	src_item = (const char*)in + imported_size;
 	for (i = 0; i < ectx->hash_vector_size; i++) {
 		void* dst_context = ectx->vector[i].context;
 		struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
@@ -377,7 +384,10 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 		size_t item_size;
 
 		if (is_special) {
-			size_t left_size = size - imported_size;
+			size_t left_size;
+			imported_size = GET_EXPORT_ALIGNED(imported_size);
+			src_item = (const char*)in + imported_size;
+			left_size = size - imported_size;
 			assert(size >= imported_size);
 			item_size = rhash_import_alg(hash_ids[i], dst_context, src_item, left_size);
 			imported_size += item_size;
@@ -387,6 +397,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 				return import_error_einval();
 			}
 		} else {
+			src_item = (const char*)in + imported_size;
 			item_size = hash_info->context_size;
 			imported_size += item_size;
 			if (size < imported_size) {
@@ -396,7 +407,6 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 			}
 			memcpy(dst_context, src_item, item_size);
 		}
-		src_item += item_size;
 	}
 	return &ectx->rc;
 #else
