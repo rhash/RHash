@@ -558,6 +558,57 @@ struct test_vectors_t short_test_vectors[] = {
 };
 
 /*=========================================================================*
+ *                         Debug output and logging                        *
+ *=========================================================================*/
+static int g_verbose = 0;
+
+static void log_va(int level, const char* format, va_list args)
+{
+	if (g_verbose >= level) {
+		vprintf(format, args);
+		fflush(stdout);
+	}
+}
+
+/**
+ * Print a formatted message.
+ * @param format the format of the message
+ */
+static void log_message(char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	log_va(0, format, vl);
+	va_end(vl);
+}
+
+/**
+ * Print a formatted debug message.
+ * The message is shown only in verbose mode (-v).
+ * @param format the format of the message
+ */
+static void dbg(const char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	log_va(1, format, vl);
+	va_end(vl);
+}
+
+/**
+ * Print a formatted debug message.
+ * The message is shown only in very verbose mode (-v -v).
+ * @param format the format of the message
+ */
+static void dbg2(const char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	log_va(2, format, vl);
+	va_end(vl);
+}
+
+/*=========================================================================*
  *               Functions for calculating a message digest                *
  *=========================================================================*/
 
@@ -565,19 +616,6 @@ struct test_vectors_t short_test_vectors[] = {
  * The total number of errors
  */
 static int g_errors = 0;
-
-/**
- * Print a formatted message to the message log.
- * @param format the format of the message
- */
-static void log_message(char* format, ...)
-{
-	va_list vl;
-	va_start(vl, format);
-	vprintf(format, vl);
-	fflush(stdout);
-	va_end(vl);
-}
 
 enum ChunkedDataBitFlags {
 	CHDT_NO_FLAGS = 0,
@@ -740,6 +778,7 @@ static void test_known_strings_pairs(unsigned hash_id, const char** ptr, unsigne
 static void test_known_strings(unsigned hash_id)
 {
 	int i;
+	dbg("test known strings\n");
 	for (i = 0; short_test_vectors[i].tests != 0; i++) {
 		if (hash_id == short_test_vectors[i].hash_id) {
 			unsigned flags = (short_test_vectors[i].tests == btih_with_filename_tests ? CHDT_SET_FILENAME : CHDT_NO_FLAGS);
@@ -755,6 +794,7 @@ static void test_known_strings(unsigned hash_id)
 static void test_all_known_strings(void)
 {
 	int i;
+	dbg("test all known strings\n");
 	for (i = 0; short_test_vectors[i].tests != 0; i++) {
 		unsigned flags = (short_test_vectors[i].tests == btih_with_filename_tests ? CHDT_SET_FILENAME : CHDT_NO_FLAGS);
 		test_known_strings_pairs(short_test_vectors[i].hash_id, short_test_vectors[i].tests, flags);
@@ -816,6 +856,7 @@ static void test_long_strings(void)
 #endif
 		{ RHASH_BTIH, "90AE73EE72A12B5A3A39DCA4C5E24BE1F39B6A1B" } /* BTIH with filename="test.txt", verified using uTorrent */
 	};
+	dbg("test long strings\n");
 
 	/* test all algorithms on 1,000,000 characters of 'a' */
 	for (count = 0; count < (sizeof(tests) / sizeof(id_to_hash_t)); count++) {
@@ -857,6 +898,7 @@ static void test_results_consistency(void)
 	unsigned char res1[70];
 	char res2[70];
 	unsigned i, hash_id;
+	dbg("test results consistency\n");
 
 	for (i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
 		digest_size = rhash_get_digest_size(hash_id);
@@ -889,6 +931,7 @@ static void test_unaligned_messages_consistency(void)
 {
 	int start, alignment_size;
 	unsigned hash_id;
+	dbg("test unaligned messages consistency\n");
 
 	/* loop by hash algorithms */
 	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
@@ -924,6 +967,8 @@ static void test_chunk_size_consistency(void)
 	char buffer[8192];
 	unsigned hash_id;
 	size_t i;
+	dbg("test chunk size consistency\n");
+
 	for (i = 0; i < sizeof(buffer); i++)
 		buffer[i] = (char)(unsigned char)(i % 255);
 
@@ -948,6 +993,8 @@ static void test_context_alignment(void)
 	const size_t aligner = 63;
 	int i;
 	unsigned hash_ids[32];
+	dbg("test context alignment\n");
+
 	for (i = 0; i < 32; i++)
 	{
 		size_t count = i + 1;
@@ -995,6 +1042,7 @@ static void test_version_sanity(void)
 static void test_generic_assumptions(void)
 {
 	unsigned mask = (1u << RHASH_HASH_COUNT) - 1u;
+	dbg("test generic assumptions\n");
 	if (mask != RHASH_ALL_HASHES) {
 		log_message("error: wrong algorithms count %d for the mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
 		g_errors++;
@@ -1011,6 +1059,7 @@ static void test_import_export(void)
 	uint8_t data[241];
 	size_t i;
 	size_t min_sizes[3] = { 0, 1024, 8192 };
+	dbg("test import/export\n");
 	for (i = 0; i < sizeof(data); i++)
 		data[i] = (uint8_t)i;
 	for(i = 0; i < 3; i++) {
@@ -1034,12 +1083,14 @@ static void test_import_export(void)
 			if ((i & 1) != 0)
 				rhash_final(ctx, 0);
 		}
+		dbg2("- call rhash_export NULL\n");
 		required_size = rhash_export(ctx, NULL, 0);
 		if (!required_size) {
 			log_message("error: rhash_export failed for block size=%u\n", (unsigned)size);
 			g_errors++;
 			return;
 		}
+		dbg2("- call rhash_export ctx\n");
 		exported_data = malloc(required_size);
 		exported_size = rhash_export(ctx, exported_data, required_size);
 		if (exported_size != required_size) {
@@ -1047,6 +1098,7 @@ static void test_import_export(void)
 			g_errors++;
 			return;
 		}
+		dbg2("- call rhash_import\n");
 		imported_ctx = rhash_import(exported_data, required_size);
 		if (!imported_ctx) {
 			log_message("error: rhash_import failed for block size=%u\n", (unsigned)size);
@@ -1054,8 +1106,11 @@ static void test_import_export(void)
 			return;
 		}
 		free(exported_data);
+		dbg2("- call rhash_final ctx\n");
 		rhash_final(ctx, 0);
+		dbg2("- call rhash_final imported_ctx\n");
 		rhash_final(imported_ctx, 0);
+		dbg2("- verify results\n");
 		exported_data = NULL;
 		for (hash_id = 1; hash_id < hash_mask; hash_id <<= 1) {
 			if ((hash_id & hash_mask) != 0) {
@@ -1112,8 +1167,9 @@ static void assert_magnet(const char* expected,
 static void test_magnet(void)
 {
 	unsigned bit;
-
-	rhash ctx = rhash_init(RHASH_ALL_HASHES);
+	rhash ctx;
+	dbg("test magnet link\n");
+	ctx	= rhash_init(RHASH_ALL_HASHES);
 	rhash_update(ctx, "a", 1);
 	rhash_final(ctx, 0);
 
@@ -1193,27 +1249,47 @@ static void print_openssl_status(void)
  */
 int main(int argc, char* argv[])
 {
+	int test_speed = 0, print_info = 0;
+	unsigned hash_id = RHASH_SHA1;
+	int i;
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--info") == 0) {
+			print_info = 1;
+		}
+		else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+			g_verbose++;
+		}
+		else if (strcmp(argv[i], "--speed") == 0) {
+			test_speed = 1;
+			if ((i + 1) < argc && argv[i + 1][0] != '-') {
+				hash_id = find_hash(argv[i + 1]);
+				if (hash_id == 0) {
+					fprintf(stderr, "error: unknown hash_id: %s\n", argv[i + 1]);
+					return 1;
+				}
+				i++;
+			}
+		}
+		else {
+			printf("Options:\n"
+				"--verbose Be verbose.\n"
+				"--info Print library info\n"
+				"--speed [HASH_NAME] Benchmark given hash algorithm\n");
+			return 1;
+		}
+	}
+
 #ifndef USE_RHASH_DLL
 	rhash_library_init();
 #endif
-
 	test_generic_assumptions();
-	if (argc > 1) {
-		if (strcmp(argv[1], "--speed") == 0) {
-			unsigned hash_id = (argc > 2 ? find_hash(argv[2]) : RHASH_SHA1);
-			if (hash_id == 0) {
-				fprintf(stderr, "error: unknown hash_id: %s\n", argv[2]);
-				return 1;
-			}
-			test_known_strings(hash_id);
-
-			rhash_run_benchmark(hash_id, 0, stdout);
-		} else if (strcmp(argv[1], "--info") == 0) {
-			printf("%s", compiler_flags);
-			print_openssl_status();
-		} else {
-			printf("Options: [--speed [HASH_NAME] | --info]\n");
-		}
+	if (print_info) {
+		printf("%s", compiler_flags);
+		print_openssl_status();
+	} else if (test_speed) {
+		test_known_strings(hash_id);
+		rhash_run_benchmark(hash_id, 0, stdout);
 	} else {
 		test_all_known_strings();
 		test_long_strings();
