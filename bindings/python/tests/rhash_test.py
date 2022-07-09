@@ -42,7 +42,8 @@ class TestRHash(unittest.TestCase):
         self.assertEqual("bde52cb31de33e46245e05fbdbd6fb24", ctx.hash(rhash.ED2K))
         self.assertEqual("q336in72uwt7zyk5dxolt2xk5i3xmz5y", ctx.hash(rhash.AICH))
         self.assertEqual(
-            "8aca2602792aec6f11a67206531fb7d7f0dff59413145e6973c45001d0087b42d11bc645413aeff63a42391a39145a591a92200d560195e53b478584fdae231a",
+            "8aca2602792aec6f11a67206531fb7d7f0dff59413145e6973c45001d0087b42"
+            "d11bc645413aeff63a42391a39145a591a92200d560195e53b478584fdae231a",
             ctx.hash(rhash.WHIRLPOOL),
         )
         self.assertEqual(
@@ -61,13 +62,16 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.GOST12_256),
         )
         self.assertEqual(
-            "8b2a40ecab7b7496bc4cc0f773595452baf658849b495acc3ba017206810efb00420ccd73fb3297e0f7890941b84ac4a8bc27e3c95e1f97c094609e2136abb7e",
+            "8b2a40ecab7b7496bc4cc0f773595452baf658849b495acc3ba017206810efb0"
+            "0420ccd73fb3297e0f7890941b84ac4a8bc27e3c95e1f97c094609e2136abb7e",
             ctx.hash(rhash.GOST12_512),
         )
         self.assertEqual(
             "4872bcbc4cd0f0a9dc7c2f7045e5b43b6c830db8", ctx.hash(rhash.HAS160)
         )
-        self.assertEqual("bf5ce540ae51bc50399f96746c5a15bd", ctx.hash(rhash.SNEFRU128))
+        self.assertEqual(
+            "bf5ce540ae51bc50399f96746c5a15bd", ctx.hash(rhash.SNEFRU128)
+        )
         self.assertEqual(
             "45161589ac317be0ceba70db2573ddda6e668a31984b39bf65e4b664b584c63d",
             ctx.hash(rhash.SNEFRU256),
@@ -81,11 +85,13 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.SHA2_256),
         )
         self.assertEqual(
-            "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31",
+            "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035d"
+            "ce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31",
             ctx.hash(rhash.SHA2_384),
         )
         self.assertEqual(
-            "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75",
+            "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f53"
+            "02860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75",
             ctx.hash(rhash.SHA2_512),
         )
         self.assertEqual(
@@ -93,7 +99,8 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.EDONR256),
         )
         self.assertEqual(
-            "b59ec44f7beef8a04ceed38a973d77c65e22e9458d5f67b497948da34986c093b5efc5483fbee55f2f740fcad31f18d80db44bb6b8843e7fd599188e7c07233b",
+            "b59ec44f7beef8a04ceed38a973d77c65e22e9458d5f67b497948da34986c093"
+            "b5efc5483fbee55f2f740fcad31f18d80db44bb6b8843e7fd599188e7c07233b",
             ctx.hash(rhash.EDONR512),
         )
         self.assertEqual(
@@ -105,11 +112,13 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.SHA3_256),
         )
         self.assertEqual(
-            "1815f774f320491b48569efec794d249eeb59aae46d22bf77dafe25c5edc28d7ea44f93ee1234aa88f61c91912a4ccd9",
+            "1815f774f320491b48569efec794d249eeb59aae46d22bf7"
+            "7dafe25c5edc28d7ea44f93ee1234aa88f61c91912a4ccd9",
             ctx.hash(rhash.SHA3_384),
         )
         self.assertEqual(
-            "697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa803f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a",
+            "697f2d856172cb8309d6b8b97dac4de344b549d4dee61edfb4962d8698b7fa80"
+            "3f4f93ff24393586e28b5b957ac3d1d369420ce53332712f997bd336d09ab02a",
             ctx.hash(rhash.SHA3_512),
         )
         self.assertEqual(
@@ -117,14 +126,14 @@ class TestRHash(unittest.TestCase):
             ctx.hash(rhash.BLAKE2S),
         )
         self.assertEqual(
-            "333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c",
+            "333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34"
+            "d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c",
             ctx.hash(rhash.BLAKE2B),
         )
-        # test reset
+        # Test reset
         ctx.reset().finish()
-        self.assertEqual(
-            "d41d8cd98f00b204e9800998ecf8427e", ctx.hash(rhash.MD5)
-        )  # MD5( '' )
+        # Verify MD5( "" )
+        self.assertEqual("d41d8cd98f00b204e9800998ecf8427e", ctx.hash(rhash.MD5))
 
     def test_update(self):
         """Test sequential updates."""
@@ -137,7 +146,7 @@ class TestRHash(unittest.TestCase):
         """Test the << operator."""
         ctx = rhash.RHash(rhash.MD5)
         ctx << "a" << "bc"
-        # MD5( 'abc' )
+        # Verify MD5( "abc" )
         self.assertEqual("900150983cd24fb0d6963f7d28e17f72", str(ctx.finish()))
 
     def test_hash_msg(self):
@@ -164,17 +173,17 @@ class TestRHash(unittest.TestCase):
         ctx = rhash.RHash(rhash.MD5, rhash.TTH)
         ctx.update("abc").finish()
         self.assertEqual(
-            "magnet:?xl=3&dn=file.txt&xt=urn:md5:900150983cd24fb0d6963f7d28e17f72&xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia",
+            "magnet:?xl=3&dn=file.txt&"
+            "xt=urn:md5:900150983cd24fb0d6963f7d28e17f72&"
+            "xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia",
             ctx.magnet("file.txt"),
         )
 
     def test_update_file(self):
         """Test update_file() method."""
         path = "python_test_input_123.txt"
-        file = open(path, "wb")
-        file.write(b"\0\1\2\n")
-        file.close()
-
+        with open(path, "wb") as file:
+            file.write(b"\0\1\2\n")
         ctx = rhash.RHash(rhash.SHA1)
         ctx.update_file(path).finish()
         self.assertEqual("e3869ec477661fad6b9fc25914bb2eee5455b483", str(ctx))
@@ -183,7 +192,9 @@ class TestRHash(unittest.TestCase):
             rhash.hash_file(path, rhash.SHA1),
         )
         self.assertEqual(
-            "magnet:?xl=4&dn=python_test_input_123.txt&xt=urn:crc32:f2653eb7&xt=urn:tree:tiger:c6docz63fpef5pdfpz35z7mw2iozshxlpr4erza",
+            "magnet:?xl=4&dn=python_test_input_123.txt&"
+            "xt=urn:crc32:f2653eb7&"
+            "xt=urn:tree:tiger:c6docz63fpef5pdfpz35z7mw2iozshxlpr4erza",
             rhash.make_magnet(path, rhash.CRC32, rhash.TTH),
         )
         os.remove(path)

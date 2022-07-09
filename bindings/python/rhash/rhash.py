@@ -176,16 +176,16 @@ SHA384 = 0x40000
 SHA512 = 0x80000
 
 # rhash_print values
-RHPR_RAW = 1
-RHPR_HEX = 2
-RHPR_BASE32 = 3
-RHPR_BASE64 = 4
-RHPR_UPPERCASE = 8
-RHPR_NO_MAGNET = 0x20
-RHPR_FILESIZE = 0x40
+_RHPR_RAW = 1
+_RHPR_HEX = 2
+_RHPR_BASE32 = 3
+_RHPR_BASE64 = 4
+_RHPR_UPPERCASE = 8
+_RHPR_NO_MAGNET = 0x20
+_RHPR_FILESIZE = 0x40
 
-RMSG_SET_AUTOFINAL = 5
-RMSG_GET_LIBRHASH_VERSION = 20
+_RMSG_SET_AUTOFINAL = 5
+_RMSG_GET_LIBRHASH_VERSION = 20
 
 
 class RHash(object):
@@ -193,20 +193,29 @@ class RHash(object):
 
     def __init__(self, *hash_ids):
         """Construct RHash object."""
-        hash_mask = 0
-        for hash_id in hash_ids:
-            hash_mask = hash_mask | hash_id
-        if hash_mask == 0:
-            self._ctx = None
-            raise ValueError("Invalid argument")
-        self._ctx = _LIBRHASH.rhash_init(hash_mask)
+        self._ctx = _LIBRHASH.rhash_init(RHash._get_hash_mask(hash_ids))
+        if not self._ctx:
+            raise RuntimeError("No RHash context")
         # switching off the auto-final feature
-        _LIBRHASH.rhash_transmit(RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
+        _LIBRHASH.rhash_transmit(_RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
 
     def __del__(self):
         """Cleanup allocated resources."""
         if self._ctx is not None:
             _LIBRHASH.rhash_free(self._ctx)
+
+    def __str__(self):
+        """Return the message digest."""
+        return self._print(0, 0)
+
+    @staticmethod
+    def _get_hash_mask(hash_ids):
+        hash_mask = 0
+        for hash_id in hash_ids:
+            hash_mask = hash_mask | hash_id
+        if hash_mask > 0:
+            return hash_mask
+        raise ValueError("Invalid argument")
 
     def reset(self):
         """Reset this object to initial state."""
@@ -225,12 +234,11 @@ class RHash(object):
 
     def update_file(self, filepath):
         """Update this object with data from the given file."""
-        file = open(filepath, "rb")
-        buf = file.read(8192)
-        while len(buf) > 0:
-            self.update(buf)
+        with open(filepath, "rb") as file:
             buf = file.read(8192)
-        file.close()
+            while len(buf) > 0:
+                self.update(buf)
+                buf = file.read(8192)
         return self
 
     def finish(self):
@@ -242,53 +250,49 @@ class RHash(object):
         """Retrieve the message digest in the specified format."""
         buf = create_string_buffer(130)
         size = _LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
-        if (flags & 3) == RHPR_RAW:
+        if (flags & 3) == _RHPR_RAW:
             return buf[0:size]
         return buf[0:size].decode()
 
     def raw(self, hash_id=0):
         """Return the message digest as raw binary data."""
-        return self._print(hash_id, RHPR_RAW)
+        return self._print(hash_id, _RHPR_RAW)
 
     def hex(self, hash_id=0):
         """Return the message digest as a hexadecimal lower-case string."""
-        return self._print(hash_id, RHPR_HEX)
+        return self._print(hash_id, _RHPR_HEX)
 
     def base32(self, hash_id=0):
         """Return the message digest as a Base32 lower-case string."""
-        return self._print(hash_id, RHPR_BASE32)
+        return self._print(hash_id, _RHPR_BASE32)
 
     def base64(self, hash_id=0):
         """Return the message digest as a Base64 string."""
-        return self._print(hash_id, RHPR_BASE64)
+        return self._print(hash_id, _RHPR_BASE64)
 
     # pylint: disable=invalid-name
     def HEX(self, hash_id=0):
         """Return the message digest as a hexadecimal upper-case string."""
-        return self._print(hash_id, RHPR_HEX | RHPR_UPPERCASE)
+        return self._print(hash_id, _RHPR_HEX | _RHPR_UPPERCASE)
 
     def BASE32(self, hash_id=0):
         """Return the message digest as a Base32 upper-case string."""
-        return self._print(hash_id, RHPR_BASE32 | RHPR_UPPERCASE)
+        return self._print(hash_id, _RHPR_BASE32 | _RHPR_UPPERCASE)
 
     # pylint: enable=invalid-name
 
     def magnet(self, filepath):
         """Return magnet link with all message digests computed by this object."""
         size = _LIBRHASH.rhash_print_magnet(
-            None, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE
+            None, _s2b(filepath), self._ctx, ALL, _RHPR_FILESIZE
         )
         buf = create_string_buffer(size)
-        _LIBRHASH.rhash_print_magnet(buf, _s2b(filepath), self._ctx, ALL, RHPR_FILESIZE)
-        return buf[0 : size - 1].decode("utf-8")
+        _LIBRHASH.rhash_print_magnet(buf, _s2b(filepath), self._ctx, ALL, _RHPR_FILESIZE)
+        return buf[0:size - 1].decode("utf-8")
 
     def hash(self, hash_id=0):
         """Return the message digest for the given hash function in its default format."""
         return self._print(hash_id, 0)
-
-    def __str__(self):
-        """Return the message digest."""
-        return self._print(0, 0)
 
 
 # simplified interface functions
@@ -317,7 +321,7 @@ def make_magnet(filepath, *hash_ids):
 
 def get_librhash_version():
     """Return the version of the loaded LibRHash library."""
-    ver = _LIBRHASH.rhash_transmit(RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
+    ver = _LIBRHASH.rhash_transmit(_RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
     return "{}.{}.{}".format(ver >> 24, (ver >> 16) & 255, (ver >> 8) & 255)
 
 
