@@ -214,6 +214,24 @@ class TestRHash(unittest.TestCase):
         self.assertTrue(isinstance(version, str))
         self.assertRegex(version, r"^[1-9]\d*\.\d+\.\d+$")
 
+    def test_store_and_load(self):
+        """Test store/load methods."""
+        try:
+            with rhash.RHash(rhash.CRC32, rhash.MD5) as ctx1:
+                ctx1.update("a")
+                data = ctx1.store()
+                self.assertTrue(data)
+                self.assertTrue(isinstance(data, bytes))
+                ctx2 = rhash.RHash.load(data)
+                self.assertEqual(data, ctx2.store())
+                ctx1.update("bc").finish()
+                ctx2.update("bc").finish()
+                self.assertEqual("352441c2", ctx2.hash(rhash.CRC32))
+                self.assertEqual("900150983cd24fb0d6963f7d28e17f72", ctx2.hash(rhash.MD5))
+                self.assertEqual(ctx1.store(), ctx2.store())
+        except NotImplementedError:
+            pass
+
 
 if __name__ == "__main__":
     unittest.main()

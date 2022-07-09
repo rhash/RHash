@@ -70,6 +70,7 @@ import sys
 import warnings
 from ctypes import (
     CDLL,
+    POINTER,
     c_char_p,
     c_int,
     c_size_t,
@@ -104,6 +105,15 @@ _LIBRHASH.rhash_print.restype = c_size_t
 _LIBRHASH.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_int]
 _LIBRHASH.rhash_print_magnet.restype = c_size_t
 _LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
+
+_HAS_INIT_MULTI = hasattr(_LIBRHASH, "rhash_init_multi")
+if _HAS_INIT_MULTI:
+    _LIBRHASH.rhash_init_multi.argtypes = [c_size_t, POINTER(c_uint)]
+    _LIBRHASH.rhash_init_multi.restype = c_void_p
+    _LIBRHASH.rhash_export.argtypes = [c_void_p, c_char_p, c_size_t]
+    _LIBRHASH.rhash_export.restype = c_size_t
+    _LIBRHASH.rhash_import.argtypes = [c_char_p, c_size_t]
+    _LIBRHASH.rhash_import.restype = c_void_p
 
 # conversion of a string to binary data with Python 2/3 compatibility
 if sys.version < "3":
@@ -191,9 +201,17 @@ _RMSG_GET_LIBRHASH_VERSION = 20
 class RHash(object):
     """Class to compute message digests and magnet links."""
 
+    __context_key = object()
+
     def __init__(self, *hash_ids):
         """Construct RHash object."""
-        self._ctx = _LIBRHASH.rhash_init(RHash._get_hash_mask(hash_ids))
+        if len(hash_ids) == 2 and hash_ids[0] == RHash.__context_key:
+            self._ctx = hash_ids[1]
+        elif _HAS_INIT_MULTI and RHash._are_good_ids(hash_ids):
+            uint_ids = (c_uint * len(hash_ids))(*hash_ids)
+            self._ctx = _LIBRHASH.rhash_init_multi(len(hash_ids), uint_ids)
+        else:
+            self._ctx = _LIBRHASH.rhash_init(RHash._get_hash_mask(hash_ids))
         if not self._ctx:
             raise RuntimeError("No RHash context")
         # switching off the auto-final feature
@@ -220,6 +238,15 @@ class RHash(object):
         """Cleanup allocated resources."""
         if self._ctx is not None:
             _LIBRHASH.rhash_free(self._ctx)
+
+    @staticmethod
+    def _are_good_ids(hash_ids):
+        for alg_id in hash_ids:
+            if not isinstance(alg_id, int) or alg_id <= 0:
+                raise ValueError("Invalid argument")
+            if (alg_id & ALL) != alg_id or ((alg_id - 1) & alg_id) != 0:
+                return False
+        return True
 
     @staticmethod
     def _get_hash_mask(hash_ids):
@@ -306,6 +333,30 @@ class RHash(object):
     def hash(self, hash_id=0):
         """Return the message digest for the given hash function in its default format."""
         return self._print(hash_id, 0)
+
+    def store(self):
+        """Store RHash context into a block of bytes."""
+        if not hasattr(_LIBRHASH, "rhash_export"):
+            raise NotImplementedError("Unsupported method")
+        size = _LIBRHASH.rhash_export(self._ctx, None, 0)
+        if size > 0:
+            buf = create_string_buffer(size)
+            exported_size = _LIBRHASH.rhash_export(self._ctx, buf, size)
+            if size == exported_size:
+                return buf.raw
+        raise RuntimeError("Store failed")
+
+    @staticmethod
+    def load(data):
+        """Load a previously stored RHash context from a block of bytes."""
+        if not hasattr(_LIBRHASH, "rhash_import"):
+            raise NotImplementedError("Unsupported method")
+        if not isinstance(data, bytes):
+            raise ValueError("Invalid argument")
+        ctx = _LIBRHASH.rhash_import(data, len(data))
+        if ctx:
+            return RHash(RHash.__context_key, ctx)
+        raise RuntimeError("Load failed")
 
 
 # simplified interface functions
