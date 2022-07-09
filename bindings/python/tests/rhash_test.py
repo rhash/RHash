@@ -199,6 +199,15 @@ class TestRHash(unittest.TestCase):
         )
         os.remove(path)
 
+    def test_the_with_operator(self):
+        """Test the with operator."""
+        with rhash.RHash(rhash.CRC32, rhash.MD5) as ctx:
+            ctx.update("a").finish()
+            self.assertEqual("e8b7be43", ctx.hash(rhash.CRC32))
+        with self.assertRaises(RuntimeError):
+            with rhash.RHash(rhash.CRC32) as ctx:
+                raise RuntimeError("TestEx")
+
     def test_librhash_version(self):
         """Test get_librhash_version() function."""
         version = rhash.get_librhash_version()

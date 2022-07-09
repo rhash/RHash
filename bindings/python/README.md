@@ -3,7 +3,7 @@
 RHash is a Python library for computing various message digests, including
 CRC32, CRC32C, MD4, MD5, SHA1, SHA2, SHA3, AICH, ED2K, DC++ TTH, Tiger,
 BitTorrent BTIH, GOST R 34.11-94, GOST R 34.11-2012, RIPEMD-160, HAS-160,
-EDON-R, and Whirlpool.
+BLAKE2s, BLAKE2b, EDON-R, and Whirlpool.
 
 ## Installation
 
@@ -62,6 +62,13 @@ and output them in different formats
     'vgmt4nsha2awvor6evyxqugcnsonbwe5'
     >>> h.base64(rhash.BLAKE2S)
     'UIxejDJ8FOLhpyujTutFLzdFiyCe1jopTZmbTIZnWYI='
+
+The RHash object can be use within the `with` operator
+
+    import rhash
+    with rhash.RHash(rhash.MD5) as ctx:
+        ctx.update("a").finish()
+        print(ctx.hash(rhash.MD5))
 
 ## Contribution
 

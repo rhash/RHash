@@ -199,14 +199,27 @@ class RHash(object):
         # switching off the auto-final feature
         _LIBRHASH.rhash_transmit(_RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
 
+    def __enter__(self):
+        """Enter the runtime context related to the RHash object."""
+        return self
+
+    def __exit__(self, _type, _value, _traceback):
+        """Exit the runtime context related to the RHash object."""
+        self._cleanup()
+        self._ctx = None
+
     def __del__(self):
-        """Cleanup allocated resources."""
-        if self._ctx is not None:
-            _LIBRHASH.rhash_free(self._ctx)
+        """Destroy RHash object."""
+        self._cleanup()
 
     def __str__(self):
         """Return the message digest."""
         return self._print(0, 0)
+
+    def _cleanup(self):
+        """Cleanup allocated resources."""
+        if self._ctx is not None:
+            _LIBRHASH.rhash_free(self._ctx)
 
     @staticmethod
     def _get_hash_mask(hash_ids):
