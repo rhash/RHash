@@ -38,6 +38,14 @@ void set_benchmark_cpu_affinity(void)
 #include <errno.h>
 #include <locale.h>
 
+/* QuickFix for broken output, caused by libintl fwprintf and vfwprintf */
+#ifdef fwprintf
+# undef fwprintf
+#endif
+#ifdef vfwprintf
+# undef vfwprintf
+#endif
+
 struct console_data_t
 {
 	unsigned console_flags;
