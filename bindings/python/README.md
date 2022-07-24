@@ -29,7 +29,7 @@ To install the RHash Python module use the package manager [pip]
 
 You can also build the module from source
 
-    $ python setup.py build
+    $ python3 -m build
 
 ## Usage
 
@@ -63,7 +63,7 @@ and output them in different formats
     >>> h.base64(rhash.BLAKE2S)
     'UIxejDJ8FOLhpyujTutFLzdFiyCe1jopTZmbTIZnWYI='
 
-The RHash object can be use within the `with` operator
+The RHash object can be used within the `with` operator
 
     import rhash
     with rhash.RHash(rhash.MD5) as ctx:
