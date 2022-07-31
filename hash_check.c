@@ -1484,6 +1484,14 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 					else
 						result |= HashFileHasWrongHashes;
 				}
+			} else if (IS_MODE(MODE_MISSING)) {
+				if (FILE_ISBAD(&parser->parsed_path)) {
+					log_msg_file_t("%s\n", &parser->parsed_path);
+					result |= HashFileHasMissedFiles;
+					rhash_data.miss++;
+				}
+				else
+					rhash_data.ok++;
 			}
 		}
 		rhash_data.processed++;
@@ -1493,11 +1501,12 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 
 	time = rsh_timer_stop(&timer);
 
-	if (IS_MODE(MODE_CHECK)) {
+	if (IS_MODE(MODE_CHECK | MODE_MISSING)) {
 		/* check for a hash file errors */
 		if (result >= 0 && (result & (HashFileHasWrongHashes | HashFileHasMissedFiles | HashFileHasUnparsedLines)) != 0)
 			rhash_data.non_fatal_error = 1;
-
+	}
+	if (IS_MODE(MODE_CHECK)) {
 		if (result >= -1 && (print_verifying_footer() < 0 || print_check_stats() < 0)) {
 			log_error_file_t(&rhash_data.out_file);
 			result = -2;

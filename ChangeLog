@@ -1,3 +1,6 @@
+Mon 01 Aug 2022 Aleksey Kravchenko
+	* New option --missing, to print missing files
+
 Tue 14 Jun 2022 Aleksey Kravchenko
 	* === Version 1.4.3 ===
 

@@ -78,7 +78,7 @@ static int scan_files_callback(file_t* file, int preprocess)
 
 		if (!FILE_ISSPECIAL(file)) {
 			if (not_root) {
-				if (opt.mode == MODE_CHECK) {
+				if (opt.mode == MODE_CHECK || IS_MODE(MODE_MISSING)) {
 					/* use crc_accept list in the plain recursive check mode, but not in -uc mode */
 					if (!file_mask_match(opt.crc_accept, file)) {
 						return 0;
@@ -92,14 +92,15 @@ static int scan_files_callback(file_t* file, int preprocess)
 			}
 			if (must_skip_file(file))
 				return 0;
-		} else if (FILE_ISDATA(file) && IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED | MODE_UPDATE | MODE_TORRENT)) {
+		} else if (FILE_ISDATA(file) && IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED |
+				MODE_MISSING | MODE_UPDATE | MODE_TORRENT)) {
 			log_warning(_("skipping: %s\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull));
 			return 0;
 		}
 
 		if (IS_MODE(MODE_UPDATE)) {
 			res = update_ctx_update(rhash_data.update_context, file);
-		} else if (IS_MODE(MODE_CHECK)) {
+		} else if (IS_MODE(MODE_CHECK | MODE_MISSING)) {
 			res = check_hash_file(file, not_root);
 		} else if (IS_MODE(MODE_CHECK_EMBEDDED)) {
 			res = check_embedded_crc32(file);
@@ -283,7 +284,7 @@ int main(int argc, char* argv[])
 	/* print SFV header if CRC32 or no hash function has been selected */
 	rhash_data.is_sfv = (opt.fmt == FMT_SFV ||
 		(!opt.fmt && (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags)));
-	if (!opt.sum_flags && opt.mode != MODE_CHECK)
+	if (!opt.sum_flags && opt.mode != MODE_CHECK && opt.mode != MODE_MISSING)
 		opt.sum_flags = RHASH_CRC32;
 
 	if (opt.template_file) {

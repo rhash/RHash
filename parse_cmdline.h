@@ -27,9 +27,10 @@ enum {
 	MODE_DEFAULT   = 0x1,
 	MODE_CHECK     = 0x2,
 	MODE_CHECK_EMBEDDED = 0x4,
-	MODE_UPDATE    = 0x8,
-	MODE_BENCHMARK = 0x10,
-	MODE_TORRENT   = 0x20,
+	MODE_MISSING   = 0x8,
+	MODE_UPDATE    = 0x10,
+	MODE_BENCHMARK = 0x20,
+	MODE_TORRENT   = 0x40,
 
 	/* misc options */
 	OPT_VERBOSE    = 0x01,

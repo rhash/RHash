@@ -94,6 +94,7 @@ static void print_help(void)
 	print_help_line("  -a, --all        ", _("Calculate all supported hash functions.\n"));
 	print_help_line("  -c, --check      ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
+	print_help_line("      --missing    ", _("Read hash files and print missing and inaccessible files.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
 	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hash functions, one per line.\n"));
@@ -363,6 +364,7 @@ cmdline_opt_t cmdline_opt[] =
 	/* program modes */
 	{ F_UFLG, 'c',   0, "check",     0, &opt.mode, MODE_CHECK },
 	{ F_UFLG, 'k',   0, "check-embedded", 0, &opt.mode, MODE_CHECK_EMBEDDED },
+	{ F_UFLG,   0,   0, "missing",   0, &opt.mode, MODE_MISSING },
 	{ F_TSTR, 'u',   0, "update",    0, &opt.update_file, 0 },
 	{ F_UFLG, 'B',   0, "benchmark", 0, &opt.mode, MODE_BENCHMARK },
 	{ F_UFLG,   0,   0, "torrent",   0, &opt.mode, MODE_TORRENT },

@@ -328,6 +328,12 @@ TEST_RESULT=$( $rhash -vc t.sum 2>&1 | grep 'OK' )
 check "$TEST_RESULT" ""
 rm t.sum
 
+new_test "test missig files:          "
+rm -f a.txt b.txt
+printf "00000000 a.txt\\n00000000 test-empty.file\\n00000000 b.txt" > c.sfv
+TEST_RESULT=$( $rhash --missing c.sfv 2>&1 | tr -d '\r' | tr '\n' '|' )
+check "$TEST_RESULT" "a.txt|b.txt|"
+
 new_test "test *accept options:       "
 mkdir -p test_dir/a && touch test_dir/a/file.txt test_dir/a/file.bin
 # correctly handle MIGW posix path conversion
