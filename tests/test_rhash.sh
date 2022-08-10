@@ -331,8 +331,19 @@ rm t.sum
 new_test "test missig files:          "
 rm -f a.txt b.txt
 printf "00000000 a.txt\\n00000000 test-empty.file\\n00000000 b.txt" > c.sfv
-TEST_RESULT=$( $rhash --missing c.sfv 2>&1 | tr -d '\r' | tr '\n' '|' )
-check "$TEST_RESULT" "a.txt|b.txt|"
+TEST_RESULT=$( $rhash --missing c.sfv 2>&1 | tr -d '\r' | tr '\n' '@' )
+check "$TEST_RESULT" "a.txt@b.txt@"
+
+new_test "test unverified files:      "
+rm -rf d/ && mkdir d
+touch d.txt d/a.txt
+printf "00000000 d.txt\\n00000000 d/b.txt" > d.sfv
+TEST_RESULT=$( $rhash -r --unverified d.sfv d.txt test-empty.file d/ 2>&1 | tr -d '\r' | tr '\n' '@' )
+match "$TEST_RESULT" "^test-empty.file@d.a.txt@\$"
+
+new_test "test update:                "
+TEST_RESULT=$( $rhash -r --simple --update d.sfv d.txt test-empty.file d/ 2>&1 | tr -d '\r' | tr '\n' '@' )
+check "$TEST_RESULT" "Updated: d.sfv@"
 
 new_test "test *accept options:       "
 mkdir -p test_dir/a && touch test_dir/a/file.txt test_dir/a/file.bin

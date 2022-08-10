@@ -122,9 +122,12 @@ int file_stat(file_t* file, int fstat_flags);
 enum FileFOpenModes {
 	FOpenRead  = 1,
 	FOpenWrite = 2,
-	FOpenRW    = 3,
 	FOpenBin   = 4,
-	FOpenMask  = 7
+	FOpenMask  = 7,
+	FOpenRW       = FOpenRead | FOpenWrite,
+	FOpenReadBin  = FOpenRead | FOpenBin,
+	FOpenWriteBin = FOpenWrite | FOpenBin,
+	FOpenRWBin    = FOpenRW | FOpenBin,
 };
 FILE* file_fopen(file_t* file, int fopen_flags);
 

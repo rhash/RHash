@@ -46,13 +46,14 @@ static int open_and_prepare_hash_file(struct update_ctx* ctx);
 struct update_ctx* update_ctx_new(file_t* update_file)
 {
 	struct update_ctx* ctx;
-	file_set* crc_entries = file_set_new();
+	file_set* crc_entries = (IS_MODE(MODE_MISSING) ? NULL : file_set_new());
 	int update_flags = load_updated_hash_file(update_file, crc_entries);
 	if (update_flags < 0) {
 		file_set_free(crc_entries);
 		return NULL;
 	}
-	file_set_sort(crc_entries);
+	if (crc_entries)
+		file_set_sort(crc_entries);
 	opt.mode &= ~MODE_CHECK;
 
 	ctx = (update_ctx*)rsh_malloc(sizeof(update_ctx));
@@ -72,14 +73,17 @@ struct update_ctx* update_ctx_new(file_t* update_file)
  * @param file the file to add
  * @return 0 on success, -1 on fail, -2 on fatal error
  */
-int update_ctx_update(struct update_ctx* ctx, file_t* hash_file)
+int update_ctx_update(struct update_ctx* ctx, file_t* file)
 {
-	int res;
+	int res = 0;
 	if ((ctx->bit_flags & HashFileErrorOcurred) != 0)
 		return -1;
 
+	if (!IS_MODE(MODE_UPDATE | MODE_UNVERIFIED))
+		return 0;
+
 	/* skip files already present in the hash file */
-	if (file_set_exist(ctx->crc_entries, file_get_print_path(hash_file, FPathUtf8)))
+	if (file_set_exist(ctx->crc_entries, file_get_print_path(file, FPathUtf8)))
 		return 0;
 
 	if (!ctx->fd && open_and_prepare_hash_file(ctx) < 0) {
@@ -87,11 +91,19 @@ int update_ctx_update(struct update_ctx* ctx, file_t* hash_file)
 		ctx->bit_flags |= HashFileErrorOcurred;
 		return -2;
 	}
-
-	/* print message digests to the hash file */
-	res = calculate_and_print_sums(ctx->fd, &ctx->file, hash_file);
-	if (res < 0)
-		ctx->bit_flags |= HashFileErrorOcurred;
+	if (IS_MODE(MODE_UNVERIFIED)) {
+		/* print the unverified file to the program output */
+		if (fprintf_file_t(rhash_data.out, "%s\n", file, OutDefaultFlags) < 0) {
+			log_error_file_t(&rhash_data.out_file);
+			ctx->bit_flags |= HashFileErrorOcurred;
+			return -2;
+		}
+	} else {
+		/* calculate and add the message digests to the hash file */
+		res = calculate_and_print_sums(ctx->fd, &ctx->file, file);
+		if (res < 0)
+			ctx->bit_flags |= HashFileErrorOcurred;
+	}
 	return res;
 }
 
@@ -114,7 +126,7 @@ int update_ctx_free(struct update_ctx* ctx)
 			res = -1;
 		} else if (!!(ctx->bit_flags & HashFileErrorOcurred)) {
 			res = -1;
-		} else if (!rhash_data.stop_flags) {
+		} else if (IS_MODE(MODE_UPDATE) && !rhash_data.stop_flags) {
 			if (rhash_data.is_sfv)
 				res = fix_sfv_header(&ctx->file); /* finalize the hash file */
 			if (res == 0)
@@ -134,12 +146,15 @@ int update_ctx_free(struct update_ctx* ctx)
  */
 static int open_and_prepare_hash_file(struct update_ctx* ctx)
 {
-	int open_mode = (ctx->bit_flags & HashFileExist ? FOpenRW : FOpenWrite) | FOpenBin;
+	int open_mode = (!IS_MODE(MODE_UPDATE) ? FOpenReadBin :
+		ctx->bit_flags & HashFileExist ? FOpenRWBin : FOpenWriteBin);
 	assert(!ctx->fd);
 	/* open the hash file for reading/writing or create it */
 	ctx->fd = file_fopen(&ctx->file, open_mode);
 	if (!ctx->fd)
 		return -1;
+	if (!IS_MODE(MODE_UPDATE))
+		return 0;
 	if (!(ctx->bit_flags & HashFileIsEmpty)) {
 		int ch;
 		/* read the last character of the file to check if it is EOL */
@@ -185,14 +200,14 @@ static int fix_sfv_header(file_t* file)
 	int is_comment;
 	int print_comments;
 	/* open the hash file for reading */
-	in = file_fopen(file, FOpenRead);
+	in = file_fopen(file, FOpenReadBin);
 	if (!in) {
 		log_error_file_t(file);
 		return -1;
 	}
 	/* open a temporary file for writing */
 	file_modify_path(&new_file, file, ".new", FModifyAppendSuffix);
-	out = file_fopen(&new_file, FOpenWrite);
+	out = file_fopen(&new_file, FOpenWriteBin);
 	if (!out) {
 		log_error_file_t(&new_file);
 		file_cleanup(&new_file);

@@ -93,12 +93,12 @@ static int scan_files_callback(file_t* file, int preprocess)
 			if (must_skip_file(file))
 				return 0;
 		} else if (FILE_ISDATA(file) && IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED |
-				MODE_MISSING | MODE_UPDATE | MODE_TORRENT)) {
+				MODE_UPDATE | MODE_MISSING | MODE_UNVERIFIED | MODE_TORRENT)) {
 			log_warning(_("skipping: %s\n"), file_get_print_path(file, FPathUtf8 | FPathNotNull));
 			return 0;
 		}
 
-		if (IS_MODE(MODE_UPDATE)) {
+		if (IS_MODE(MODE_UPDATE | MODE_UNVERIFIED)) {
 			res = update_ctx_update(rhash_data.update_context, file);
 		} else if (IS_MODE(MODE_CHECK | MODE_MISSING)) {
 			res = check_hash_file(file, not_root);
@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
 		rsh_exit(exit_code);
 	}
 
-	if (!opt.has_files) {
+	if (!IS_MODE(MODE_MISSING) && !opt.has_files) {
 		if (argc > 1) {
 			log_warning(_("no files/directories were specified at command line\n"));
 		}
@@ -351,8 +351,9 @@ int main(int argc, char* argv[])
 			log_error_file_t(&rhash_data.out_file);
 			rhash_data.stop_flags |= FatalErrorFlag;
 		}
-	} else if (IS_MODE(MODE_UPDATE) && rhash_data.update_context) {
-		/* finalize hash file and check for errors */
+	}
+	if (rhash_data.update_context) {
+		/* finalize the updated hash file and check for errors */
 		if (update_ctx_free(rhash_data.update_context) < 0)
 				rhash_data.stop_flags |= FatalErrorFlag;
 		rhash_data.update_context = 0;

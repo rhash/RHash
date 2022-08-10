@@ -94,7 +94,8 @@ static void print_help(void)
 	print_help_line("  -a, --all        ", _("Calculate all supported hash functions.\n"));
 	print_help_line("  -c, --check      ", _("Check hash files specified by command line.\n"));
 	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
-	print_help_line("      --missing    ", _("Read hash files and print missing and inaccessible files.\n"));
+	print_help_line("      --missing=<file> ", _("Read the hash file and print missing and inaccessible files.\n"));
+	print_help_line("      --unverified=<file> ", _("Print files that can't be verified by the hash file.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
 	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hash functions, one per line.\n"));
@@ -147,11 +148,20 @@ static void list_hashes(void)
 	rsh_exit(0);
 }
 
-enum file_suffix_type {
-	MASK_ACCEPT,
-	MASK_EXCLUDE,
-	MASK_CRC_ACCEPT
-};
+/**
+ * Process a mode option, requiring a hash file.
+ *
+ * @param o pointer to the options structure to update
+ * @param path the path of the hash file
+ * @param mode the mode bit-flag
+ */
+static void hash_file_mode(options_t* o, tstr_t path, unsigned mode)
+{
+	if (o->search_data) {
+		o->update_file = path;
+		o->mode |= mode;
+	}
+}
 
 /**
  * Add a special file.
@@ -167,6 +177,12 @@ static void add_special_file(options_t* o, tstr_t path, unsigned file_mode)
 		opt.has_files = 1;
 	}
 }
+
+enum file_suffix_type {
+	MASK_ACCEPT,
+	MASK_EXCLUDE,
+	MASK_CRC_ACCEPT
+};
 
 /**
  * Process --accept, --exclude and --crc-accept options.
@@ -364,8 +380,9 @@ cmdline_opt_t cmdline_opt[] =
 	/* program modes */
 	{ F_UFLG, 'c',   0, "check",     0, &opt.mode, MODE_CHECK },
 	{ F_UFLG, 'k',   0, "check-embedded", 0, &opt.mode, MODE_CHECK_EMBEDDED },
-	{ F_UFLG,   0,   0, "missing",   0, &opt.mode, MODE_MISSING },
-	{ F_TSTR, 'u',   0, "update",    0, &opt.update_file, 0 },
+	{ F_TFNC, 'u',   0, "update",      (opt_handler_t)hash_file_mode, 0, MODE_UPDATE },
+	{ F_TFNC,   0,   0, "missing",     (opt_handler_t)hash_file_mode, 0, MODE_MISSING },
+	{ F_TFNC,   0,   0, "unverified",  (opt_handler_t)hash_file_mode, 0, MODE_UNVERIFIED },
 	{ F_UFLG, 'B',   0, "benchmark", 0, &opt.mode, MODE_BENCHMARK },
 	{ F_UFLG,   0,   0, "torrent",   0, &opt.mode, MODE_TORRENT },
 	{ F_VFNC,   0,   0, "list-hashes", (opt_handler_t)list_hashes, 0, 0 },
@@ -990,8 +1007,6 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		opt.mode = conf_opt.mode;
 		opt.update_file = conf_opt.update_file;
 	}
-	if (opt.update_file)
-		opt.mode |= MODE_UPDATE;
 
 	if (!(opt.flags & OPT_FMT_MODIFIERS))
 		opt.flags |= conf_opt.flags & OPT_FMT_MODIFIERS;

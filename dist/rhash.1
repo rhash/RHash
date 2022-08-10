@@ -50,14 +50,18 @@ Update the hash file specified by the option.
 Message digests will be calculated for all files specified by the command line and
 not present in this hash file. The calculated Message digests will be appended to
 the updated hash file in the format specified by formatting options.
-The \-\-update option can be combined with \-\-recursive to update a hash file for
-whole directory trees. Also \-\-update option can be used with \-\-check
+The \-\-update option can be combined with \-\-recursive to update the hash file
+for whole directory trees. Also \-\-update option can be used with \-\-check
 to verify the hash file before updating it.
+.IP "\-\-missing=<hash-file>"
+Read the hash file and print missing and inaccessible files, it contains.
+.IP "\-\-unverified=<hash-file>"
+Print files that can't be verified by the hash file.
+That means the files specified by the command line and not present in the hash file.
+The \-\-unverified option can be used with \-\-recursive to look for unverified
+files in whole directory trees.
 .IP "\-k, \-\-check\-embedded"
 Verify files by crc32 sum embedded in their names.
-.IP "\-\-missing"
-Read hash files specified by command line. Instead of verification, just print
-missing and inaccessible files.
 .IP "\-\-torrent"
 Create a torrent file for each processed file.
 .IP "\-h, \-\-help"

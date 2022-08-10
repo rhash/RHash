@@ -1291,7 +1291,7 @@ static void set_flags_by_hash_file_extension(file_t* hash_file, struct hash_pars
 		parser->expected_hash_mask = hash_mask;
 		parser->is_sfv = is_sfv;
 	}
-	if (IS_MODE(MODE_UPDATE)) {
+	if (IS_MODE(MODE_UPDATE | MODE_MISSING | MODE_UNVERIFIED)) {
 		opt.sum_flags = hash_mask;
 		if (!opt.fmt)
 			rhash_data.is_sfv = is_sfv;
@@ -1486,7 +1486,11 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 				}
 			} else if (IS_MODE(MODE_MISSING)) {
 				if (FILE_ISBAD(&parser->parsed_path)) {
-					log_msg_file_t("%s\n", &parser->parsed_path);
+					/* print the missing file */
+					if (fprintf_file_t(rhash_data.out, "%s\n", &parser->parsed_path, OutDefaultFlags) < 0) {
+						log_error_file_t(&rhash_data.out_file);
+						return -2;
+					}
 					result |= HashFileHasMissedFiles;
 					rhash_data.miss++;
 				}
