@@ -30,6 +30,8 @@ print_hash_info hash_info_table[32];
  * Possible types of a print_item.
  */
 enum {
+	PRINT_FLAG_BASENAME = 0x40000,
+	PRINT_FLAG_DIRNAME = 0x80000,
 	PRINT_ED2K_LINK = 0x100000,
 	PRINT_FLAG_UPPERCASE = 0x200000,
 	PRINT_FLAG_RAW    = 0x0400000,
@@ -38,15 +40,18 @@ enum {
 	PRINT_FLAG_BASE64 = 0x2000000,
 	PRINT_FLAG_URLENCODE = 0x4000000,
 	PRINT_FLAG_PAD_WITH_ZERO = 0x8000000,
-	PRINT_FLAGS_ALL = PRINT_FLAG_UPPERCASE | PRINT_FLAG_PAD_WITH_ZERO | PRINT_FLAG_RAW
-		| PRINT_FLAG_HEX | PRINT_FLAG_BASE32 | PRINT_FLAG_BASE64 | PRINT_FLAG_URLENCODE,
+	PRINT_FLAGS_PATH_PARTS = PRINT_FLAG_BASENAME | PRINT_FLAG_DIRNAME,
+	PRINT_FLAGS_ALL = PRINT_FLAG_BASENAME | PRINT_FLAG_DIRNAME | PRINT_FLAG_UPPERCASE
+		| PRINT_FLAG_PAD_WITH_ZERO | PRINT_FLAG_RAW | PRINT_FLAG_HEX
+		| PRINT_FLAG_BASE32 | PRINT_FLAG_BASE64 | PRINT_FLAG_URLENCODE,
 	PRINT_STR = 0x10000000,
 	PRINT_ZERO,
 	PRINT_NEWLINE,
 	PRINT_FILEPATH,
-	PRINT_BASENAME,
 	PRINT_SIZE,
-	PRINT_MTIME /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_MTIME, /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_BASENAME = PRINT_FILEPATH | PRINT_FLAG_BASENAME,
+	PRINT_DIRNAME = PRINT_FILEPATH | PRINT_FLAG_DIRNAME,
 };
 
 /**
@@ -152,18 +157,18 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 			*(p++) = *(format++);
 
 		if (*format == '\\') {
+			unsigned cmd;
 			format++;
 			*p = parse_escaped_char(&format);
 			if (*p == '\0') {
-				item = new_print_item(PRINT_ZERO, 0, NULL);
-#ifdef _WIN32
+				cmd = PRINT_ZERO;
 			} else if (*p == '\n') {
-				item = new_print_item(PRINT_NEWLINE, 0, NULL);
-#endif
+				cmd = PRINT_NEWLINE;
 			} else {
 				p++;
 				continue;
 			}
+			item = new_print_item(cmd, 0, NULL);
 		} else if (*format == '%') {
 			if ( *(++format) == '%' ) {
 				*(p++) = *format++;
@@ -247,14 +252,14 @@ print_item* parse_percent_item(const char** str)
 	print_item* item = NULL;
 
 	static const char* short_hash = "CMHTGWRAE";
-	static const char* short_other = "Llpfs";
+	static const char* short_other = "Llpfds";
 	static const unsigned hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
 	static const unsigned other_flags[] = {
 		(PRINT_ED2K_LINK | PRINT_FLAG_UPPERCASE), PRINT_ED2K_LINK,
-		PRINT_FILEPATH, PRINT_BASENAME, PRINT_SIZE
+		PRINT_FILEPATH, PRINT_BASENAME, PRINT_DIRNAME, PRINT_SIZE
 	};
 	/* detect the padding by zeros */
 	if (*format == '0') {
@@ -418,6 +423,12 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 	return PRINTF_RES(rsh_fprintf(out, format, d[0], d[1], d[2], d[3], d[4], d[5]));
 }
 
+#ifdef _WIN32
+# define NEWLINE_STR "\r\n"
+#else
+# define NEWLINE_STR "\n"
+#endif
+
 /**
  * Print formatted file information to the given output stream.
  *
@@ -471,20 +482,20 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 			case PRINT_ZERO: /* the '\0' character */
 				res = PRINTF_RES(rsh_fprintf(out, "%c", 0));
 				break;
-#ifdef _WIN32
 			case PRINT_NEWLINE:
-				res = PRINTF_RES(rsh_fprintf(out, "%s", "\r\n"));
+				res = PRINTF_RES(rsh_fprintf(out, NEWLINE_STR));
 				break;
-#endif
 			case PRINT_FILEPATH:
-			case PRINT_BASENAME: /* the filename without directory */
-				if ((list->flags & PRINT_FLAG_URLENCODE) != 0) {
-					unsigned fflags = FPathUtf8 | FPathNotNull | (print_type == PRINT_BASENAME ? FPathBaseName : 0);
-					fprint_urlencoded(out, file_get_print_path(info->file, fflags),
-						(list->flags & PRINT_FLAG_UPPERCASE));
-				} else {
-					unsigned pflags = (print_type == PRINT_BASENAME ? OutBaseName : 0);
-					res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags | out_flags));
+				{
+					const unsigned pflags = (list->flags & PRINT_FLAGS_PATH_PARTS) >> 16;
+					assert((PRINT_FLAG_BASENAME >> 16) == FPathBaseName);
+					assert((PRINT_FLAG_DIRNAME >> 16) == FPathDirName);
+					if ((list->flags & PRINT_FLAG_URLENCODE) != 0) {
+						fprint_urlencoded(out, file_get_print_path(info->file, pflags | FPathNotNull | FPathUtf8),
+							(list->flags & PRINT_FLAG_UPPERCASE));
+					} else {
+						res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags | out_flags));
+					}
 				}
 				break;
 			case PRINT_MTIME: /* the last-modified tine of the filename */

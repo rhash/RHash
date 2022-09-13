@@ -57,25 +57,26 @@ static int count_printed_size(const char* format, const char* path, unsigned out
  */
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags)
 {
-	unsigned basename_bit = output_flags & FPathBaseName;
+	unsigned name_bits = output_flags & (FPathBaseName | FPathDirName);
 #ifdef _WIN32
 	const char* print_path;
 	if (!file->real_path) {
-		print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | basename_bit);
+		print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | name_bits);
 	} else {
 		unsigned ppf = ((output_flags & OutForceUtf8) || (opt.flags & OPT_UTF8) ? FPathUtf8 | FPathNotNull : FPathPrimaryEncoding);
 		assert(file->real_path != NULL);
 		assert((int)OutBaseName == (int)FPathBaseName);
-		print_path = file_get_print_path(file, ppf | basename_bit);
+		print_path = file_get_print_path(file, ppf | name_bits);
 		if (!print_path) {
-			print_path = file_get_print_path(file, FPathUtf8 | FPathNotNull | basename_bit);
+			print_path = file_get_print_path(file, FPathUtf8 | FPathNotNull | name_bits);
 			assert(print_path);
 			assert(!(opt.flags & OPT_UTF8));
 		}
 	}
 #else
-	const char* print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | basename_bit);
+	const char* print_path = file_get_print_path(file, FPathPrimaryEncoding | FPathNotNull | name_bits);
 	assert((int)OutBaseName == (int)FPathBaseName);
+	assert((int)OutDirName == (int)FPathDirName);
 	assert(print_path);
 #endif
 	if (rsh_fprintf(out, (format ? format : "%s"), print_path) < 0)

@@ -74,7 +74,8 @@ enum FileModeBits {
 	FileMaskUpdatePrintPath = (FileInitUpdatePrintPathLastSlash | FileInitUpdatePrintPathSlashes),
 	FileMaskStatBits = (FileIsDir | FileIsLnk | FileIsReg | FileIsInaccessible),
 	FileMaskIsSpecial = (FileIsData | FileIsList | FileIsStdStream),
-	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial | FileContentIsUtf8)
+	FileMaskModeBits = (FileMaskStatBits | FileIsRoot | FileMaskIsSpecial | FileContentIsUtf8),
+	FileMaskSavedChar = 0xff000000,
 };
 
 #define FILE_ISDIR(file)   ((file)->mode & FileIsDir)
@@ -101,7 +102,8 @@ enum FileGetPrintPathFlags {
 	FPathUtf8 = 1,
 	FPathNative = 2,
 	FPathBaseName = 4,
-	FPathNotNull = 8
+	FPathDirName = 8,
+	FPathNotNull = 16,
 };
 const char* file_get_print_path(file_t* file, unsigned flags);
 
@@ -109,13 +111,13 @@ enum FileModifyOperations {
 	FModifyAppendSuffix,
 	FModifyInsertBeforeExtension,
 	FModifyRemoveExtension,
-	FModifyGetParentDir
+	FModifyGetParentDir,
 };
 int file_modify_path(file_t* dst, file_t* src, const char* str, int operation);
 
 enum FileStatModes {
 	FNoMode    = 0,
-	FUseLstat  = FileInitRunLstat
+	FUseLstat  = FileInitRunLstat,
 };
 int file_stat(file_t* file, int fstat_flags);
 

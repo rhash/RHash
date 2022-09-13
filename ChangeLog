@@ -1,3 +1,6 @@
+Wed 14 Sep 2022 Aleksey Kravchenko
+	* New printf-format directive '%d' to print file directory
+
 Wed 10 Aug 2022 Aleksey Kravchenko
 	* New option --unverified to print unverified files
 

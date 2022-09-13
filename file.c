@@ -413,13 +413,32 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 }
 
 /**
+ * Restore a character of the file path, if it was saved earler.
+ *
+ * @param file the file
+ */
+static void restore_saved_char(file_t* file)
+{
+	unsigned saved = file->mode & FileMaskSavedChar;
+	assert(((unsigned)(FileMaskSavedChar) >> 24) == 0xff);
+	if (saved) {
+		file->mode &= ~FileMaskSavedChar;
+		if (file->data) {
+			*(file->data) = (char)(unsigned char)(saved >> 24);
+			file->data = 0;
+		}
+	}
+}
+
+/**
  * Transform the given file path, according to passed flags.
  *
+ * @param file the file
  * @param path the file path to transform
  * @param flags bitmask containing FPathBaseName, FPathNotNull and FileMaskUpdatePrintPath bit flags
  * @return transformed path
  */
-static const char* handle_rest_of_path_flags(const char* path, unsigned flags)
+static const char* handle_rest_of_path_flags(file_t* file, const char* path, unsigned flags)
 {
 	if (path == NULL)
 		return ((flags & FPathNotNull) ? (errno == EINVAL ? "(null)" : "(encoding error)") : NULL);
@@ -433,7 +452,24 @@ static const char* handle_rest_of_path_flags(const char* path, unsigned flags)
 			}
 		}
 	}
-	return (flags & FPathBaseName ? get_basename(path) : path);
+	if ((flags & (FPathBaseName | FPathDirName)) != 0)
+	{
+		const char* name = get_basename(path);
+		if ((flags & FPathBaseName) != 0)
+			return name;
+		if (name <= path)
+			return ".";
+		name--; /* point to the end of the file dirname */
+		if (*name && file)
+		{
+			/* store the character that terminates dirname */
+			assert((unsigned)FileMaskSavedChar == (unsigned)(0xff << 24));
+			file->mode |= ((unsigned)*name) << 24;
+			file->data = (char*)name;
+			*(char*)name = 0;
+		}
+	}
+	return path;
 }
 
 /**
@@ -456,8 +492,9 @@ const char* file_get_print_path(file_t* file, unsigned flags)
 	int is_utf8 = (opt.flags & OPT_UTF8 ? !(flags & FPathNative) : flags & FPathUtf8);
 	const char* secondary_path;
 	const char** primary_path = (is_utf8 || (file->mode & FileIsAsciiPrintPath) ? &file->print_path : &file->native_path);
+	restore_saved_char(file);
 	if (*primary_path)
-		return handle_rest_of_path_flags(*primary_path, flags);
+		return handle_rest_of_path_flags(file, *primary_path, flags);
 	if (is_utf8) {
 		convert_to = ConvertToUtf8;
 		dont_use_bit = FileDontUsePrintPath;
@@ -474,15 +511,15 @@ const char* file_get_print_path(file_t* file, unsigned flags)
 				file->mode |= dont_use_bit;
 		} else
 			errno = EILSEQ;
-		return handle_rest_of_path_flags(*primary_path, flags);
+		return handle_rest_of_path_flags(file, *primary_path, flags);
 	}
 	if (!file->real_path) {
 		errno = EINVAL;
-		return handle_rest_of_path_flags(NULL, flags);
+		return handle_rest_of_path_flags(NULL, NULL, flags);
 	}
 	*primary_path = convert_wcs_to_str(file->real_path, convert_to | ConvertPath);
 	if (!*primary_path)
-		return handle_rest_of_path_flags(NULL, flags);
+		return handle_rest_of_path_flags(NULL, NULL, flags);
 	if (str_is_ascii(*primary_path)) {
 		file->mode |= FileIsAsciiPrintPath;
 		if (primary_path != &file->print_path) {
@@ -491,13 +528,14 @@ const char* file_get_print_path(file_t* file, unsigned flags)
 			primary_path = &file->print_path;
 		}
 	}
-	return handle_rest_of_path_flags(*primary_path, flags);
+	return handle_rest_of_path_flags(file, *primary_path, flags);
 #else
+	restore_saved_char(file);
 	if (!file->print_path && !file->real_path)
 		errno = EINVAL;
-	if (!file->print_path && (flags & FileMaskUpdatePrintPath))
+	else if (!file->print_path && (flags & FileMaskUpdatePrintPath))
 		file->print_path = rsh_strdup(file->real_path);
-	return handle_rest_of_path_flags((file->print_path ? file->print_path : file->real_path), flags);
+	return handle_rest_of_path_flags(file, (file->print_path ? file->print_path : file->real_path), flags);
 #endif
 }
 
@@ -521,7 +559,8 @@ void file_cleanup(file_t* file)
 	file->native_path = NULL;
 #endif /* _WIN32 */
 
-	free(file->data);
+	if (file->mode & FileIsData)
+		free(file->data);
 	file->data = NULL;
 	file->mtime = 0;
 	file->size = 0;

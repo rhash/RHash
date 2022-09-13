@@ -37,7 +37,8 @@ enum FileOutputFlags {
 	OutDefaultFlags = 0x0,
 	OutForceUtf8 = 0x1,
 	OutBaseName = 0x4,
-	OutCountSymbols = 0x8
+	OutDirName = 0x8,
+	OutCountSymbols = 0x10,
 };
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags);
 int fprint_urlencoded(FILE* out, const char* str, int upper_case);
