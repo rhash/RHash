@@ -1,3 +1,6 @@
+Thu 22 Sep 2022 Aleksey Kravchenko
+	* Support escaping of special characters in file paths
+
 Wed 14 Sep 2022 Aleksey Kravchenko
 	* New printf-format directive '%d' to print file directory
 

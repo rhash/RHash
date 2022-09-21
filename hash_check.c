@@ -107,12 +107,13 @@ static size_t unescape_characters(char* buffer, size_t buffer_size, const char* 
 	for (; src < src_end && dst < dst_back; dst++) {
 		*dst = *(src++); /* copy non-escaped characters */
 		if (*dst == '\\') {
-			if (*src == '\\') {
-				src++; /* interpret '\\' as a single '\' */
-			} else if (*src == 'n') {
+			if (*src == 'r')
+				*dst = '\r';
+			else if (*src == 'n')
 				*dst = '\n';
-				src++;
-			}
+			else if (*src != '\\')
+				continue;
+			src++;
 		}
 	}
 	assert(dst <= dst_back);
@@ -1487,7 +1488,7 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 			} else if (IS_MODE(MODE_MISSING)) {
 				if (FILE_ISBAD(&parser->parsed_path)) {
 					/* print the missing file */
-					if (fprintf_file_t(rhash_data.out, "%s\n", &parser->parsed_path, OutDefaultFlags) < 0) {
+					if (fprintf_file_t(rhash_data.out, "%s\n", &parser->parsed_path, OutEscapePrefixed) < 0) {
 						log_error_file_t(&rhash_data.out_file);
 						return -2;
 					}

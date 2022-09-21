@@ -26,15 +26,16 @@ typedef file_tchar* tpath_t;
 typedef const file_tchar* ctpath_t;
 
 /* Generic path functions */
-char* make_path(const char* dir, const char* filename, int user_path_separator);
+char* make_path(const char* dir, const char* filename, unsigned flags);
 #ifdef _WIN32
 tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, ctpath_t sub_path);
 # define make_tpath(dir_path, sub_path) make_wpath(dir_path, (size_t)-1, sub_path)
 #else
-# define make_tpath(dir_path, sub_path) make_path(dir_path, sub_path, 0)
+# define make_tpath(dir_path, sub_path) make_path(dir_path, sub_path, FileInitUseRealPathAsIs)
 #endif /* _WIN32 */
 
 int is_regular_file(const char* path); /* shall be deprecated */
+const char* get_basename(const char* path);
 
 /**
  * Portable file information.

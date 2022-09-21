@@ -233,6 +233,24 @@ TEST_EXPECTED="6Le%2bQw%3d%3d 6Le%2BQw%3D%3D 6Le+Qw== %e8%b7%beC %E8%B7%BEC"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test special characters:    "
+if ! win32; then
+  NAME_R="$(printf 'a/\r1')"
+  NAME_N="$(printf 'a/\n2')"
+  if mkdir a && touch "$NAME_R" "$NAME_N" 2>/dev/null && test -r "$NAME_R" && test -r "$NAME_N"; then
+    TEST_RESULT=$( $rhash -p '\^%f ' "$NAME_R" "$NAME_N" )
+    TEST_EXPECTED='\\r1 \\n2 '
+    check "$TEST_RESULT" "$TEST_EXPECTED" .
+    TEST_RESULT=$( $rhash -p '\^%p ' "$NAME_R" "$NAME_N" )
+    TEST_EXPECTED='\a/\r1 \a/\n2 '
+    check "$TEST_RESULT" "$TEST_EXPECTED" .
+    TEST_RESULT=$( echo '\\00000000 a/\\r1' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
+    TEST_EXPECTED='\a/\r1OK'
+    check "$TEST_RESULT" "$TEST_EXPECTED" .
+    TEST_RESULT=$( echo '\\00000000 a/\\n2' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
+    TEST_EXPECTED='\a/\n2OK'
+    check "$TEST_RESULT" "$TEST_EXPECTED" .
+  fi
+fi
 TEST_RESULT=$( $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' -m "" )
 TEST_EXPECTED=$( printf '\63\1\277\17\1\t\\ 4\r' )
 check "$TEST_RESULT" "$TEST_EXPECTED"

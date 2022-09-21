@@ -93,7 +93,7 @@ int update_ctx_update(struct update_ctx* ctx, file_t* file)
 	}
 	if (IS_MODE(MODE_UNVERIFIED)) {
 		/* print the unverified file to the program output */
-		if (fprintf_file_t(rhash_data.out, "%s\n", file, OutDefaultFlags) < 0) {
+		if (fprintf_file_t(rhash_data.out, "%s\n", file, OutEscapePrefixed) < 0) {
 			log_error_file_t(&rhash_data.out_file);
 			ctx->bit_flags |= HashFileErrorOcurred;
 			return -2;

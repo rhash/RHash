@@ -17,6 +17,14 @@
 # include <io.h>
 #endif /* _WIN32 */
 
+#ifdef _WIN32
+# define NEWLINE_STR "\r\n"
+# define CHARS_TO_ESCAPE "\r\n"
+#else
+# define NEWLINE_STR "\n"
+# define CHARS_TO_ESCAPE "\r\n\\"
+#endif
+
 /*=========================================================================
  * Formatted output functions and structures
  *=========================================================================*/
@@ -50,8 +58,11 @@ enum {
 	PRINT_FILEPATH,
 	PRINT_SIZE,
 	PRINT_MTIME, /*PRINT_ATIME, PRINT_CTIME*/
+	PRINT_ESCAPE_LINE,
 	PRINT_BASENAME = PRINT_FILEPATH | PRINT_FLAG_BASENAME,
 	PRINT_DIRNAME = PRINT_FILEPATH | PRINT_FLAG_DIRNAME,
+	FLAG_HAS_MISC_PARTS = PRINT_FLAG_RAW,
+	FLAG_IS_COMPUTED = PRINT_FLAG_PAD_WITH_ZERO,
 };
 
 /**
@@ -147,6 +158,8 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 	print_item* list = NULL;
 	print_item* item = NULL;
 	print_item** tail;
+	print_item* esc_head = NULL;
+	print_item* esc_tail = NULL;
 
 	buf = p = (char*)rsh_malloc( strlen(format) + 1 );
 	tail = &list;
@@ -157,18 +170,27 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 			*(p++) = *(format++);
 
 		if (*format == '\\') {
-			unsigned cmd;
 			format++;
-			*p = parse_escaped_char(&format);
-			if (*p == '\0') {
-				cmd = PRINT_ZERO;
-			} else if (*p == '\n') {
-				cmd = PRINT_NEWLINE;
+			if (*format == '^') {
+				format++;
+				item = new_print_item(PRINT_ESCAPE_LINE, 0, NULL);
+				esc_tail = item;
+				if (!esc_head)
+					esc_head = item;
 			} else {
-				p++;
-				continue;
+				unsigned cmd;
+				*p = parse_escaped_char(&format);
+				if (*p == '\0') {
+					cmd = PRINT_ZERO;
+				} else if (*p == '\n') {
+					cmd = PRINT_NEWLINE;
+					esc_tail = NULL;
+				} else {
+					p++;
+					continue;
+				}
+				item = new_print_item(cmd, 0, NULL);
 			}
-			item = new_print_item(cmd, 0, NULL);
 		} else if (*format == '%') {
 			if ( *(++format) == '%' ) {
 				*(p++) = *format++;
@@ -178,6 +200,15 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 				if (!item) {
 					*(p++) = '%';
 					continue;
+				}
+				if ((item->flags & ~(PRINT_FLAGS_ALL & ~PRINT_FLAG_URLENCODE)) == PRINT_FILEPATH && esc_tail) {
+					unsigned parts = (item->flags & PRINT_FLAGS_PATH_PARTS);
+					if (!parts)
+						parts = PRINT_FLAGS_PATH_PARTS;
+					esc_tail->flags |= parts;
+					assert(esc_head != NULL);
+					if (esc_head->flags != esc_tail->flags)
+						esc_head->flags |= FLAG_HAS_MISC_PARTS;
 				}
 				if (item->hash_id)
 					*sum_mask |= item->hash_id;
@@ -199,6 +230,39 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 	};
 	free(buf);
 	return list;
+}
+
+/**
+ * Test file path for characters requiring escaping.
+ *
+ * @param file the filepath to test
+ * @param esc_flags flags of the PRINT_ESCAPE_LINE print_item
+ * @param path_flags bit mask, which can contain OutForceUtf8
+ * @return the result of the test for special characters in the file
+ *     dirname and basename, represented as bit mask containing flags
+ *     PRINT_FLAG_BASENAME, PRINT_FLAG_DIRNAME, FLAG_IS_COMPUTED
+ */
+static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsigned path_flags)
+{
+	const unsigned parts_flags = esc_flags & (FLAG_HAS_MISC_PARTS | PRINT_FLAGS_PATH_PARTS);
+	if (parts_flags && !FILE_ISSPECIAL(file)) {
+		const char* path = file_get_print_path(file, path_flags);
+		if (path && path[0]) {
+			const char* basename = get_basename(path);
+			const char* start = (parts_flags == PRINT_FLAG_BASENAME ? basename : path);
+			size_t pos = strcspn(start, CHARS_TO_ESCAPE);
+			if (start[pos]) {
+				if ((start + pos) >= basename)
+					return PRINT_FLAG_BASENAME | FLAG_IS_COMPUTED;
+				if (parts_flags == PRINT_FLAG_DIRNAME)
+					return PRINT_FLAG_DIRNAME | FLAG_IS_COMPUTED;
+				pos = strcspn(basename, CHARS_TO_ESCAPE);
+				return (!basename[pos] ? PRINT_FLAG_DIRNAME | FLAG_IS_COMPUTED :
+					PRINT_FLAG_BASENAME | PRINT_FLAG_DIRNAME | FLAG_IS_COMPUTED);
+			}
+		}
+	}
+	return FLAG_IS_COMPUTED;
 }
 
 /**
@@ -423,12 +487,6 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 	return PRINTF_RES(rsh_fprintf(out, format, d[0], d[1], d[2], d[3], d[4], d[5]));
 }
 
-#ifdef _WIN32
-# define NEWLINE_STR "\r\n"
-#else
-# define NEWLINE_STR "\n"
-#endif
-
 /**
  * Print formatted file information to the given output stream.
  *
@@ -443,6 +501,8 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 	char buffer[130];
 	int res = 0;
 	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
+	unsigned line_escaping = 0;
+	unsigned file_escaping = 0;
 #ifdef _WIN32
 	/* switch to binary mode to correctly output binary message digests */
 	int out_fd = _fileno(out);
@@ -482,8 +542,17 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 			case PRINT_ZERO: /* the '\0' character */
 				res = PRINTF_RES(rsh_fprintf(out, "%c", 0));
 				break;
+			case PRINT_ESCAPE_LINE:
+				if (!file_escaping)
+					file_escaping = get_file_escaping_flags(info->file, list->flags, out_flags);
+				if ((file_escaping & list->flags) != 0) {
+					res = PRINTF_RES(rsh_fprintf(out, "\\"));
+					line_escaping = OutEscape; /* start escaping */
+				}
+				break;
 			case PRINT_NEWLINE:
 				res = PRINTF_RES(rsh_fprintf(out, NEWLINE_STR));
+				line_escaping = 0; /* end escaping */
 				break;
 			case PRINT_FILEPATH:
 				{
@@ -494,7 +563,7 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 						fprint_urlencoded(out, file_get_print_path(info->file, pflags | FPathNotNull | FPathUtf8),
 							(list->flags & PRINT_FLAG_UPPERCASE));
 					} else {
-						res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags | out_flags));
+						res = PRINTF_RES(fprintf_file_t(out, NULL, info->file, pflags | line_escaping | out_flags));
 					}
 				}
 				break;
@@ -776,8 +845,8 @@ strbuf_t* init_printf_format(void)
 int print_sfv_header_line(FILE* out, unsigned out_mode, file_t* file)
 {
 	char buf[24];
-	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
-
+	unsigned out_flags = (out_mode & FileContentIsUtf8 ?
+		OutForceUtf8 | OutEscapePrefixed : OutEscapePrefixed);
 	/* skip stdin stream and message-texts passed by command-line */
 	if (FILE_ISSPECIAL(file))
 		return 0;

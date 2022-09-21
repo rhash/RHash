@@ -53,7 +53,7 @@ static int str_is_ascii(const char* str)
  * @param path file path
  * @return file name
  */
-static const char* get_basename(const char* path)
+const char* get_basename(const char* path)
 {
 	const char* p;
 	if (!path)
@@ -62,37 +62,48 @@ static const char* get_basename(const char* path)
 	return p;
 }
 
+#ifdef _WIN32
+# define CHECK_SLASH(ch, alt_sep) IS_ANY_SLASH(ch)
+#else
+# define CHECK_SLASH(ch, alt_sep) ((ch) == SYS_PATH_SEPARATOR || (ch) == (alt_sep))
+#endif
+
 /**
  * Return filepath, obtained by concatinating a directory path and a sub-path.
  *
  * @param dir_path (nullable) directory path
  * @param sub_path the filepath to append to the directory
- * @param user_path_separator flag, 1 to use user-defined path separator,
+ * @param flags bitmask consisting of the following bits:
+ *        FileInitUpdatePrintPathSlashes - contacenate using user-defined slash
+ *        FileInitUseRealPathAsIs - do not replace alternative path separators
  *        0 to use system path separator
  * @return concatinated file path
  */
-char* make_path(const char* dir_path, const char* sub_path, int user_path_separator)
+char* make_path(const char* dir_path, const char* sub_path, unsigned flags)
 {
 	char* buf;
 	size_t dir_len;
+#ifndef _WIN32
+	char alt_sep = (flags & FileInitUseRealPathAsIs ? SYS_PATH_SEPARATOR : ALIEN_PATH_SEPARATOR);
+#endif
 	assert(sub_path);
-	if (sub_path[0] == '.' && IS_ANY_SLASH(sub_path[1]))
+	if (sub_path[0] == '.' && CHECK_SLASH(sub_path[1], alt_sep))
 		sub_path += 2;
 	if (!dir_path)
 		return rsh_strdup(sub_path);
 	/* remove leading path delimiters from sub_path */
-	for (; IS_ANY_SLASH(*sub_path); sub_path++);
+	for (; CHECK_SLASH(*sub_path, alt_sep); sub_path++);
 	if (dir_path[0] == 0 || IS_DOT_STR(dir_path)) {
 		/* do not extend sub_path for dir_path="." */
 		return rsh_strdup(sub_path);
 	}
 	/* remove trailing path delimiters from the directory path */
-	for (dir_len = strlen(dir_path); dir_len > 0 && IS_ANY_SLASH(dir_path[dir_len - 1]); dir_len--);
+	for (dir_len = strlen(dir_path); dir_len > 0 && CHECK_SLASH(dir_path[dir_len - 1], alt_sep); dir_len--);
 	/* copy directory path */
 	buf = (char*)rsh_malloc(dir_len + strlen(sub_path) + 2);
 	memcpy(buf, dir_path, dir_len);
 	/* insert path separator */
-	buf[dir_len++] = (user_path_separator && opt.path_separator ? opt.path_separator : SYS_PATH_SEPARATOR);
+	buf[dir_len++] = ((flags & FileMaskUpdatePrintPath) && opt.path_separator ? opt.path_separator : SYS_PATH_SEPARATOR);
 	strcpy(buf + dir_len, sub_path); /* append sub_path */
 	return buf;
 }
@@ -359,6 +370,9 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
  */
 int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print_path, unsigned init_flags)
 {
+#ifndef _WIN32
+	char alt_sep = (init_flags & FileInitUseRealPathAsIs ? SYS_PATH_SEPARATOR : ALIEN_PATH_SEPARATOR);
+#endif
 	assert(print_path);
 	assert(!prepend_dir || prepend_dir->real_path);
 	memset(file, 0, sizeof(file_t));
@@ -368,7 +382,7 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 		file->mode |= FileDontFreePrintPath | FileIsAsciiPrintPath;
 		return 0;
 	}
-	if (print_path[0] == '.' && IS_PATH_SEPARATOR(print_path[1]))
+	if (print_path[0] == '.' && CHECK_SLASH(print_path[1], alt_sep))
 		print_path += 2;
 #ifdef _WIN32
 	{
@@ -391,9 +405,9 @@ int file_init_by_print_path(file_t* file, file_t* prepend_dir, const char* print
 	}
 #else
 	if (!prepend_dir || IS_DOT_STR(prepend_dir->real_path)) {
-		file_init(file, print_path, init_flags & (FileInitReusePath | FileMaskModeBits));
+		file_init(file, print_path, init_flags & (FileInitReusePath | FileInitUseRealPathAsIs | FileMaskModeBits));
 	} else {
-		file->real_path = make_path(prepend_dir->real_path, print_path, 0);
+		file->real_path = make_path(prepend_dir->real_path, print_path, init_flags & FileInitUseRealPathAsIs);
 		file->mode = init_flags & FileMaskModeBits;
 	}
 	assert(file->print_path == NULL);

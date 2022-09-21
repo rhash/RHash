@@ -966,7 +966,6 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 				if (next_opt->parameter) break;  /* a parameter ends the short options string */
 			}
 		}
-
 	} /* for */
 }
 

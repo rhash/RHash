@@ -47,6 +47,86 @@ static int count_printed_size(const char* format, const char* path, unsigned out
 }
 
 /**
+ * Test if string has CR ('\n') or LF ('\r') character.
+ *
+ * @param str the string to test
+ * @return non-zero if str has CR or LF
+ */
+static int has_cr_or_lf(const char* str)
+{
+	size_t i;
+	for (i = 0; (((int)str[i]) * ((int)str[i] - '\r') * ((int)str[i] - '\n')) != 0; i++);
+	return (str[i] != 0);
+}
+
+/**
+ * Print string with escaped characters to the specified stream.
+ * Only characters '\r', '\n' and '\\' are escaped by prefixing
+ * the escape symbol '\\'.
+ *
+ * @param out the stream to print to
+ * @param str the string to print with escaping
+ * @param output_flags bitmask containing OutForceUtf8 and OutCountSymbols flags
+ * @return the number of characters printed, -1 on fail with error code stored in errno
+ */
+static int fprint_escaped(FILE* out, const char* str, unsigned output_flags)
+{
+	char buffer[1024];
+	const size_t write_max = sizeof(buffer) - 8;
+	const char* in = str;
+	size_t escaped = 0;
+	size_t pos = 0;
+	if ((output_flags & OutEscapePrefixed) != 0) {
+		if (has_cr_or_lf(str)) {
+			escaped++;
+			buffer[pos++] = '\\';
+		} else if (rsh_fprintf(out, "%s", str) < 0)
+			return -1;
+		else
+			in = "";
+	}
+	while (*in)
+	{
+		int special_char = 0;
+		switch (*in)
+		{
+			case '\\':
+				special_char = '\\';
+				break;
+			case '\n':
+				special_char = 'n';
+				break;
+			case '\r':
+				special_char = 'r';
+				break;
+		}
+		if (special_char) {
+			escaped++;
+			buffer[pos++] = '\\';
+			buffer[pos++] = (char)special_char;
+		} else
+			buffer[pos++] = *in;
+		in++;
+		if (*in)
+		{
+			if (pos < write_max)
+				continue;
+			/* copy a possible uft8 symbol till its end */
+			if (((*in & 0xc0) == 0x80) && pos < (write_max + 4))
+				continue;
+		}
+		assert(pos < sizeof(buffer));
+		buffer[pos] = '\0';
+		if (rsh_fprintf(out, "%s", buffer) < 0)
+			return -1;
+		pos = 0;
+	}
+	if ((output_flags & OutCountSymbols) != 0)
+		return escaped + count_printed_size(NULL, str, output_flags);
+	return 0;
+}
+
+/**
  * Print formatted file path to the specified stream.
  *
  * @param out the stream to write to
@@ -79,6 +159,8 @@ int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned 
 	assert((int)OutDirName == (int)FPathDirName);
 	assert(print_path);
 #endif
+	if (!format && (output_flags & (OutEscape | OutEscapePrefixed)) != 0)
+		return fprint_escaped(out, print_path, output_flags);
 	if (rsh_fprintf(out, (format ? format : "%s"), print_path) < 0)
 		return -1;
 	if ((output_flags & OutCountSymbols) != 0)
@@ -172,7 +254,7 @@ void log_msg(const char* format, ...)
  */
 void log_msg_file_t(const char* format, struct file_t* file)
 {
-	fprintf_file_t(rhash_data.log, format, file, OutDefaultFlags);
+	fprintf_file_t(rhash_data.log, format, file, OutEscapePrefixed);
 	fflush(rhash_data.log);
 }
 
@@ -199,7 +281,7 @@ void log_error_file_t(struct file_t* file)
 {
 	int file_errno = errno;
 	print_log_prefix();
-	fprintf_file_t(rhash_data.log, "%s", file, OutDefaultFlags);
+	fprintf_file_t(rhash_data.log, "%s", file, OutEscapePrefixed);
 	rsh_fprintf(rhash_data.log, ": %s\n", strerror(file_errno));
 	fflush(rhash_data.log);
 }
@@ -212,7 +294,7 @@ void log_error_file_t(struct file_t* file)
 void log_error_msg_file_t(const char* format, struct file_t* file)
 {
 	print_log_prefix();
-	fprintf_file_t(rhash_data.log, format, file, OutDefaultFlags);
+	fprintf_file_t(rhash_data.log, format, file, OutEscapePrefixed);
 	fflush(rhash_data.log);
 }
 
@@ -318,7 +400,7 @@ static int print_verbose_hash_check_error(struct file_info* info)
  */
 static int print_aligned_filepath(FILE* out, struct file_info* info)
 {
-	int symbols_count = fprintf_file_t(out, NULL, info->file, OutCountSymbols);
+	int symbols_count = fprintf_file_t(out, NULL, info->file, OutCountSymbols | OutEscapePrefixed);
 	if (symbols_count >= 0) {
 		char buf[56];
 		int spaces_count = (symbols_count <= 51 ? 52 - symbols_count : 1);
@@ -639,7 +721,7 @@ int print_verifying_header(file_t* file)
 	{
 		char dash_line[84];
 		/* TRANSLATORS: the line printed before a hash file is verified */
-		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols);
+		int count = fprintf_file_t(rhash_data.out, _("\n--( Verifying %s )"), file, OutCountSymbols | OutEscapePrefixed);
 		int tail_dash_len = (0 < count && count < 81 ? 81 - count : 2);
 		int res = rsh_fprintf(rhash_data.out, "%s\n", str_set(dash_line, '-', tail_dash_len));
 		if (res >= 0)

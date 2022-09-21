@@ -36,9 +36,11 @@ void setup_percents(void);
 enum FileOutputFlags {
 	OutDefaultFlags = 0x0,
 	OutForceUtf8 = 0x1,
+	OutCountSymbols = 0x2,
 	OutBaseName = 0x4,
 	OutDirName = 0x8,
-	OutCountSymbols = 0x10,
+	OutEscape = 0x10,
+	OutEscapePrefixed = 0x20,
 };
 int fprintf_file_t(FILE* out, const char* format, struct file_t* file, unsigned output_flags);
 int fprint_urlencoded(FILE* out, const char* str, int upper_case);

@@ -27,7 +27,12 @@
 
 static int dir_scan(file_t* start_dir, file_search_data* data);
 
-/* allocate and fill the file_search_data */
+/**
+ * Allocate and initialize file search context.
+ * The allocated context must be freed by file_search_data_free.
+ *
+ * @return pointer to the allocated file search context
+ */
 file_search_data* file_search_data_new(void)
 {
 	file_search_data* data = (file_search_data*)rsh_malloc(sizeof(file_search_data));
@@ -37,7 +42,14 @@ file_search_data* file_search_data_new(void)
 	return data;
 }
 
-static void file_search_add_special_file(file_search_data* search_data, unsigned file_mode, tstr_t str)
+/**
+ * Add a special file, like stdin or data message, to file search context.
+ *
+ * @param context file search context
+ * @param path file path
+ * @param file_mode bitmask consisting of FileIsStdin and FileIsData bits
+ */
+static void file_search_add_special_file(file_search_data* context, unsigned file_mode, tstr_t str)
 {
 	file_t file;
 	char* filename = (file_mode & FileIsStdin ? "(stdin)" : "(message)");
@@ -59,9 +71,16 @@ static void file_search_add_special_file(file_search_data* search_data, unsigned
 		file.data = ext_data;
 		file.size = strlen(ext_data);
 	}
-	add_root_file(search_data, &file);
+	add_root_file(context, &file);
 }
 
+/**
+ * Add a file to the file search context for later processing.
+ *
+ * @param data file search context
+ * @param path file path
+ * @param file_mode bitmask consisting of FileIsList and FileIsData bits
+ */
 void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mode)
 {
 #ifdef _WIN32
@@ -173,7 +192,7 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 	}
 #else
 	/* init the file and test for its existence */
-	if (file_init(&file, path, file_mode | FileInitRunLstat) < 0)
+	if (file_init(&file, path, file_mode | FileInitUseRealPathAsIs | FileInitRunLstat) < 0)
 	{
 		log_error_file_t(&file);
 		file_cleanup(&file);
@@ -185,7 +204,9 @@ void file_search_add_file(file_search_data* data, tstr_t path, unsigned file_mod
 }
 
 /**
- * Free memory allocated by the file_search_data structure
+ * Free memory allocated by file search context.
+ *
+ * @param data pointer to the file search context
  */
 void file_search_data_free(file_search_data* data)
 {
@@ -203,6 +224,11 @@ void file_search_data_free(file_search_data* data)
 	}
 }
 
+/**
+ * Search and process files, using file search context.
+ *
+ * @param data file search context
+ */
 void scan_files(file_search_data* data)
 {
 	size_t i;
@@ -264,11 +290,11 @@ typedef struct dir_entry
 } dir_entry;
 
 /**
- * Allocate and initialize a dir_entry.
+ * Allocate and initialize a dir_entry. These entries form a linked list.
  *
- * @param next next dir_entry in list
+ * @param next pointer to the list entry, before which the allocated one is inserted
  * @param filename a filename to store in the dir_entry
- * @param type type of dir_entry
+ * @param type type of the dir_entry
  * @return allocated dir_entry
  */
 static dir_entry* dir_entry_new(dir_entry* next, tstr_t filename, unsigned type)
@@ -295,9 +321,9 @@ static dir_entry* dir_entry_new(dir_entry* next, tstr_t filename, unsigned type)
 }
 
 /**
- * Insert a dir_entry with given filename and type in list.
+ * Allocate and insert a dir_entry with given filename and type in the list.
  *
- * @param at the position before which the entry will be inserted
+ * @param at the position, before which the allocated entry will be inserted
  * @param filename file name
  * @param type file type
  * @return pointer to the inserted dir_entry
@@ -459,7 +485,12 @@ static int dir_scan(file_t* start_dir, file_search_data* data)
 			filepath = make_tpath(dir_path, dirent_get_tname(de));
 			if (!filepath)
 				continue;
-			res  = file_init(&file, filepath, fstat_bit | FileInitUpdatePrintPathSlashes);
+#ifdef _WIN32
+# define slashes_bits (FileInitUpdatePrintPathSlashes)
+#else
+# define slashes_bits (FileInitUpdatePrintPathSlashes | FileInitUseRealPathAsIs)
+#endif
+			res  = file_init(&file, filepath, fstat_bit | slashes_bits);
 			free(filepath);
 			if (res >= 0)
 			{
