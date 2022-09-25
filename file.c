@@ -544,12 +544,19 @@ const char* file_get_print_path(file_t* file, unsigned flags)
 	}
 	return handle_rest_of_path_flags(file, *primary_path, flags);
 #else
+	const char* path = NULL;
 	restore_saved_char(file);
 	if (!file->print_path && !file->real_path)
 		errno = EINVAL;
-	else if (!file->print_path && (flags & FileMaskUpdatePrintPath))
-		file->print_path = rsh_strdup(file->real_path);
-	return handle_rest_of_path_flags(file, (file->print_path ? file->print_path : file->real_path), flags);
+	else if ((flags & FPathReal) != 0) {
+		path = (file->real_path ? file->real_path : file->print_path);
+		flags &= ~FileMaskUpdatePrintPath;
+	} else {
+		if (!file->print_path && (flags & FileMaskUpdatePrintPath))
+			file->print_path = rsh_strdup(file->real_path);
+		path = (file->print_path ? file->print_path : file->real_path);
+	}
+	return handle_rest_of_path_flags(file, path, flags);
 #endif
 }
 

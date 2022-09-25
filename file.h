@@ -100,11 +100,12 @@ int are_paths_equal(ctpath_t path, struct file_t* file);
 
 enum FileGetPrintPathFlags {
 	FPathPrimaryEncoding = 0,
-	FPathUtf8 = 1,
-	FPathNative = 2,
-	FPathBaseName = 4,
-	FPathDirName = 8,
-	FPathNotNull = 16,
+	FPathUtf8     = 0x1,
+	FPathNative   = 0x2,
+	FPathBaseName = 0x4,
+	FPathDirName  = 0x8,
+	FPathNotNull  = 0x10,
+	FPathReal     = 0x20,
 };
 const char* file_get_print_path(file_t* file, unsigned flags);
 

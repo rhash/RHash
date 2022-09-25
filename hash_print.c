@@ -246,7 +246,7 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
 {
 	const unsigned parts_flags = esc_flags & (FLAG_HAS_MISC_PARTS | PRINT_FLAGS_PATH_PARTS);
 	if (parts_flags && !FILE_ISSPECIAL(file)) {
-		const char* path = file_get_print_path(file, path_flags);
+		const char* path = file_get_print_path(file, path_flags | FPathReal);
 		if (path && path[0]) {
 			const char* basename = get_basename(path);
 			const char* start = (parts_flags == PRINT_FLAG_BASENAME ? basename : path);
@@ -756,7 +756,7 @@ strbuf_t* init_printf_format(void)
 		return out;
 
 	if (opt.fmt == FMT_BSD) {
-		fmt = "\003(%p) = \001\\n";
+		fmt = "\\^\003(%p) = \001\\n";
 	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=");
 		rsh_str_append(out, (uppercase ? "%Uf" : "%uf"));
@@ -764,9 +764,9 @@ strbuf_t* init_printf_format(void)
 		need_modifier = RHASH_SHA1;
 		tail = "\\n";
 	} else if (!rhash_data.is_sfv && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
-		fmt = "\001  %p\\n";
+		fmt = "\\^\001  %p\\n";
 	} else {
-		rsh_str_append_n(out, "%p", 2);
+		rsh_str_append_n(out, "\\^%p", 4);
 		fmt = (rhash_data.is_sfv ? " \001" : "  \001");
 		tail = "\\n";
 	}
