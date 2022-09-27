@@ -110,7 +110,7 @@ static void print_help(void)
 	print_help_line("  -i, --ignore-case  ", _("Ignore case of filenames when updating hash files.\n"));
 	print_help_line("  -P, --percents   ", _("Show percents, while calculating or verifying message digests.\n"));
 	print_help_line("      --speed      ", _("Output per-file and total processing speed.\n"));
-	print_help_line("      --maxdepth=<n> ", _("Descend at most <n> levels of directories.\n"));
+	print_help_line("      --max-depth=<n> ", _("Descend at most <n> levels of directories.\n"));
 	if (rhash_is_openssl_supported())
 		print_help_line("      --openssl=<list> ", _("Specify hash functions to be calculated using OpenSSL.\n"));
 	print_help_line("  -o, --output=<file> ", _("File to output calculation or checking results.\n"));
@@ -280,7 +280,7 @@ static void nya(void)
 }
 
 /**
- * Process on --maxdepth option.
+ * Process on --max-depth option.
  *
  * @param o pointer to the processed option
  * @param number the string containing the max-depth number
@@ -290,7 +290,7 @@ static void set_max_depth(options_t* o, char* number, unsigned param)
 {
 	(void)param;
 	if (strspn(number, "0123456789") < strlen(number)) {
-		log_error(_("maxdepth parameter is not a number: %s\n"), number);
+		log_error(_("max-depth parameter is not a number: %s\n"), number);
 		rsh_exit(2);
 	}
 	o->find_max_depth = atoi(number);
@@ -460,7 +460,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_PFNC,   0,   0, "exclude",       (opt_handler_t)add_file_suffix, 0, MASK_EXCLUDE },
 	{ F_VFNC,   0,   0, "video",         (opt_handler_t)accept_video, 0, 0 },
 	{ F_VFNC,   0,   0, "nya",           (opt_handler_t)nya, 0, 0 },
-	{ F_PFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
+	{ F_PFNC,   0,   0, "max-depth",      (opt_handler_t)set_max_depth, 0, 0 },
 	{ F_UFLG,   0,   0, "bt-private",    0, &opt.flags, OPT_BT_PRIVATE },
 	{ F_UFLG,   0,   0, "bt-transmission", 0, &opt.flags, OPT_BT_TRANSMISSION },
 	{ F_PFNC,   0,   0, "bt-piece-length", (opt_handler_t)set_bt_piece_length, 0, 0 },
@@ -473,6 +473,9 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "base32",        0, &opt.flags, OPT_BASE32 },
 	{ F_UFLG, 'b',   0, "base64",        0, &opt.flags, OPT_BASE64 },
 	{ F_PFNC,   0,   0, "openssl",       (opt_handler_t)openssl_flags, 0, 0 },
+
+	/* for compatibility */
+	{ F_PFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
 
 #ifdef _WIN32 /* code pages (windows only) */
 	{ F_UENC,   0,   0, "utf8", 0, &opt.flags, OPT_UTF8 },
