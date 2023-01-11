@@ -123,24 +123,27 @@ static size_t unescape_characters(char* buffer, size_t buffer_size, const char* 
 
 /* convert a hash function bit-flag to the index of the bit */
 #if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
-# define get_ctz(x) __builtin_ctz(x)
+# define get_ctz(x) __builtin_ctzll(x)
 #else
 
 /**
- * Returns index of the trailing bit of a 32-bit number.
- * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
+ * Returns index of the trailing bit of a 64-bit number.
+ * This is a plain C equivalent for GCC __builtin_ctzll() bit scan.
  *
  * @param x the number to process
  * @return zero-based index of the trailing bit
  */
-static unsigned get_ctz(unsigned x)
+static unsigned get_ctz(unsigned long long x)
 {
-	/* see http://graphics.stanford.edu/~seander/bithacks.html */
-	static unsigned char bit_pos[32] =  {
-		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-	};
-	return bit_pos[((uint32_t)((x & -(int)x) * 0x077CB531U)) >> 27];
+	x &= -x; /* keep rightmost 1-bit */
+	
+	return ( (x & 0x00000000FFFFFFFFULL) ? 0 : 32 ) +
+	       ( (x & 0x0000FFFF0000FFFFULL) ? 0 : 16 ) +
+	       ( (x & 0x00FF00FF00FF00FFULL) ? 0 :  8 ) +
+	       ( (x & 0x0F0F0F0F0F0F0F0FULL) ? 0 :  4 ) +
+	       ( (x & 0x3333333333333333ULL) ? 0 :  2 ) +
+	       ( (x & 0x5555555555555555ULL) ? 0 :  1 ) +
+	       (  x                          ? 0 :  1 ) ; // zero should return 64
 }
 #endif /* (GCC >= 4.3) */
 
@@ -166,12 +169,12 @@ static int code_digest_size(int digest_size)
  * @param digest_size length of a binary message digest in bytes
  * @return mask of hash-ids with given hash length, 0 on fail
  */
-static unsigned hash_bitmask_by_digest_size(int digest_size)
+static unsigned long long hash_bitmask_by_digest_size(int digest_size)
 {
-	static unsigned mask[10] = { 0,0,0,0,0,0,0,0,0,0 };
+	static unsigned long long mask[10] = { 0,0,0,0,0,0,0,0,0,0 };
 	int code;
 	if (mask[9] == 0) {
-		unsigned hash_id;
+		unsigned long long hash_id;
 		for (hash_id = 1; hash_id <= RHASH_ALL_HASHES; hash_id <<= 1) {
 			code = code_digest_size(rhash_get_digest_size(hash_id));
 			assert(0 <= code && code <= 7);
@@ -317,7 +320,7 @@ enum HashNameMatchModes {
  *                   allowed.
  * @return id of hash function if found, zero otherwise
  */
-static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum HashNameMatchModes match_mode)
+static unsigned long long bsd_hash_name_to_id(const char* name, unsigned length, enum HashNameMatchModes match_mode)
 {
 #define code2mask_size (19 * 2)
 	static unsigned code2mask[code2mask_size] = {
@@ -343,7 +346,7 @@ static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum Hash
 		FOURC2U('T', 'T', 'H', 0),   RHASH_TTH,
 		FOURC2U('W', 'H', 'I', 'R'), RHASH_WHIRLPOOL
 	};
-	unsigned code, i, hash_mask, hash_id;
+	unsigned long long code, i, hash_mask, hash_id;
 	char fourth_char;
 	if (length < 3) return 0;
 	fourth_char = (name[3] != '-' ? name[3] : name[4]);
@@ -425,7 +428,7 @@ struct hash_token
 	file_t* p_parsed_path;
 	struct hash_parser_ext* parser;
 	struct hash_value* p_hashes;
-	unsigned expected_hash_id;
+	unsigned long long expected_hash_id;
 	int hash_type;
 };
 
@@ -717,7 +720,7 @@ static int finalize_parsed_data(struct hash_token* token)
 
 		if (hv->hash_id == 0) {
 			/* calculate bit-mask of hash function ids */
-			unsigned mask = 0;
+			unsigned long long mask = 0;
 			if (hv->format & FmtHex) {
 				mask |= hash_bitmask_by_digest_size(hv->length >> 1);
 			}
@@ -1039,8 +1042,8 @@ unsigned get_crc32(struct rhash_context* ctx)
  */
 static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* ctx)
 {
-	unsigned unverified_mask;
-	unsigned hash_id;
+	unsigned long long unverified_mask;
+	unsigned long long hash_id;
 	unsigned printed;
 	char hex[132], base32[104], base64[88];
 	int j;
@@ -1057,7 +1060,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 	if (parser->hashes_num == 0)
 		return !HP_FAILED(parser->bit_flags);
 
-	unverified_mask = (1 << parser->hashes_num) - 1;
+	unverified_mask = (1ULL << parser->hashes_num) - 1;
 
 	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES && unverified_mask; hash_id <<= 1) {
 		if ((parser->hash_mask & hash_id) == 0)

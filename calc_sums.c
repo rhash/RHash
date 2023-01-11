@@ -402,7 +402,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
  * @param out computed hash
  * @return 1 on success, 0 on error
  */
-static int benchmark_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
+static int benchmark_loop(unsigned long long hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
 {
 	int i;
 	struct rhash_context* context = rhash_init(hash_id);
@@ -445,7 +445,7 @@ static uint64_t read_tsc(void) {
 #endif /* _MSC_VER, __GNUC__ */
 #endif /* x86/amd64 arch */
 
-void run_benchmark(unsigned hash_id, unsigned flags)
+void run_benchmark(unsigned long long hash_id, unsigned flags)
 {
 	unsigned char ALIGN_DATA(64) message[8192]; /* 8 KiB */
 	timedelta_t timer;

@@ -355,12 +355,12 @@ static int print_verbose_hash_check_error(struct file_info* info)
 	}
 
 	if (HpWrongHashes & info->hp->bit_flags) {
-		unsigned reported = 0;
+		unsigned long long reported = 0;
 		int i;
 		for (i = 0; i < info->hp->hashes_num; i++) {
 			struct hash_value* hv = &info->hp->hashes[i];
 			char* expected_hash = info->hp->line_begin + hv->offset;
-			unsigned hid = hv->hash_id;
+			unsigned long long hid = hv->hash_id;
 			int pflags;
 			if ((info->hp->wrong_hashes & (1 << i)) == 0)
 				continue;
@@ -374,7 +374,7 @@ static int print_verbose_hash_check_error(struct file_info* info)
 				if (hid & ~info->hp->found_hash_ids) hid &= ~info->hp->found_hash_ids;
 				if (hid & ~reported) hid &= ~reported; /* avoid repeating */
 				if (hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
-				hid &= -(int)hid; /* take the lowest bit */
+				hid &= -(long long)hid; /* take the lowest bit */
 			}
 			assert(hid != 0 && (hid & (hid - 1)) == 0); /* single bit only */
 			reported |= hid;

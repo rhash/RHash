@@ -299,7 +299,7 @@ RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
 	size_t i;
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	export_header* header = (export_header*)out;
-	unsigned* hash_ids = NULL;
+	unsigned long long * hash_ids = NULL;
 	if (!ctx || (out && size < sizeof(export_header)) || IS_BAD_STATE(ectx->state))
 		return export_error_einval();
 	export_size = sizeof(export_header) + sizeof(unsigned) * ectx->hash_vector_size;
@@ -309,7 +309,7 @@ RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
 		header->hash_vector_size = (uint16_t)(ectx->hash_vector_size);
 		header->flags = (uint16_t)(ectx->flags);
 		header->msg_size = ctx->msg_size;
-		hash_ids = (unsigned*)(void*)(header + 1);
+		hash_ids = (unsigned long long *)(void*)(header + 1);
 	}
 	for (i = 0; i < ectx->hash_vector_size; i++) {
 		void* src_context = ectx->vector[i].context;
@@ -361,7 +361,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 	const export_header* header = (const export_header*)in;
 	size_t i;
 	size_t imported_size;
-	const unsigned* hash_ids;
+	const unsigned long long * hash_ids;
 	const char* src_item;
 	rhash_context_ext* ectx;
 	if (!header || IS_BAD_STATE(header->state) || size < sizeof(export_header))
@@ -369,7 +369,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 	imported_size = sizeof(export_header) + sizeof(unsigned) * header->hash_vector_size;
 	if (!header->hash_vector_size || size < imported_size)
 		return import_error_einval();
-	hash_ids = (const unsigned*)(const void*)(header + 1);
+	hash_ids = (const unsigned long long *)(const void*)(header + 1);
 	ectx = (rhash_context_ext*)rhash_alloc_multi(header->hash_vector_size, hash_ids, 0);
 	if (!ectx)
 		return NULL; /* errno must be set by the previous function */
@@ -423,7 +423,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
  * @param hash_id id of hash to retrieve or zero for hash with the lowest available id
  * @param result buffer to put the hash into
  */
-static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
+static void rhash_put_digest(rhash ctx, unsigned long long hash_id, unsigned char* result)
 {
 	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
 	unsigned i;
@@ -472,7 +472,7 @@ RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* ca
 
 /* HIGH-LEVEL LIBRHASH INTERFACE */
 
-RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result)
+RHASH_API int rhash_msg(unsigned long long hash_id, const void* message, size_t length, unsigned char* result)
 {
 	rhash ctx;
 	hash_id &= RHASH_ALL_HASHES;
@@ -527,7 +527,7 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 # define FOPEN_MODE "rb"
 #endif
 
-RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result)
+RHASH_API int rhash_file(unsigned long long hash_id, const char* filepath, unsigned char* result)
 {
 	FILE* fd;
 	rhash ctx;
@@ -559,7 +559,7 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
 #ifdef _WIN32 /* windows only function */
 #include <share.h>
 
-RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result)
+RHASH_API int rhash_wfile(unsigned long long hash_id, const wchar_t* filepath, unsigned char* result)
 {
 	FILE* fd;
 	rhash ctx;
@@ -591,43 +591,43 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 
 /* RHash information functions */
 
-RHASH_API int rhash_is_base32(unsigned hash_id)
+RHASH_API int rhash_is_base32(unsigned long long hash_id)
 {
 	/* fast method is just to test a bit-mask */
 	return ((hash_id & (RHASH_TTH | RHASH_AICH)) != 0);
 }
 
-RHASH_API int rhash_get_digest_size(unsigned hash_id)
+RHASH_API int rhash_get_digest_size(unsigned long long hash_id)
 {
 	hash_id &= RHASH_ALL_HASHES;
 	if (hash_id == 0 || (hash_id & (hash_id - 1)) != 0) return -1;
 	return (int)rhash_info_table[rhash_ctz(hash_id)].info->digest_size;
 }
 
-RHASH_API int rhash_get_hash_length(unsigned hash_id)
+RHASH_API int rhash_get_hash_length(unsigned long long hash_id)
 {
 	const rhash_info* info = rhash_info_by_id(hash_id);
 	return (int)(info ? (info->flags & F_BS32 ?
 		BASE32_LENGTH(info->digest_size) : info->digest_size * 2) : 0);
 }
 
-RHASH_API const char* rhash_get_name(unsigned hash_id)
+RHASH_API const char* rhash_get_name(unsigned long long hash_id)
 {
 	const rhash_info* info = rhash_info_by_id(hash_id);
 	return (info ? info->name : 0);
 }
 
-RHASH_API const char* rhash_get_magnet_name(unsigned hash_id)
+RHASH_API const char* rhash_get_magnet_name(unsigned long long hash_id)
 {
 	const rhash_info* info = rhash_info_by_id(hash_id);
 	return (info ? info->magnet_name : 0);
 }
 
 static size_t rhash_get_magnet_url_size(const char* filepath,
-	rhash context, unsigned hash_mask, int flags)
+	rhash context, unsigned long long hash_mask, int flags)
 {
 	size_t size = 0; /* count terminating '\0' */
-	unsigned bit, hash = context->hash_id & hash_mask;
+	unsigned long long bit, hash = context->hash_id & hash_mask;
 
 	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
 	if ((flags & RHPR_NO_MAGNET) == 0) {
@@ -663,7 +663,7 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 }
 
 RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
-	rhash context, unsigned hash_mask, int flags)
+	rhash context, unsigned long long hash_mask, int flags)
 {
 	int i;
 	const char* begin = output;
@@ -693,8 +693,8 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	}
 
 	for (i = 0; i < 2; i++) {
-		unsigned bit;
-		unsigned hash = context->hash_id & hash_mask;
+		unsigned long long bit;
+		unsigned long long hash = context->hash_id & hash_mask;
 		hash = (i == 0 ? hash & (RHASH_ED2K | RHASH_AICH)
 			: hash & ~(RHASH_ED2K | RHASH_AICH));
 		if (!hash) continue;
@@ -753,7 +753,7 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes, size_t size, 
 	return result_length;
 }
 
-RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id, int flags)
+RHASH_API size_t rhash_print(char* output, rhash context, unsigned long long hash_id, int flags)
 {
 	const rhash_info* info;
 	unsigned char digest[80];

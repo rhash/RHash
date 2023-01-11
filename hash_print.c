@@ -72,7 +72,7 @@ typedef struct print_item
 {
 	struct print_item* next;
 	unsigned flags;
-	unsigned hash_id;
+	unsigned long long hash_id;
 	unsigned width;
 	const char* data;
 } print_item;
@@ -88,7 +88,7 @@ static print_item* parse_percent_item(const char** str);
  * @param data optional string to store
  * @return allocated print_item
  */
-static print_item* new_print_item(unsigned flags, unsigned hash_id, const char* data)
+static print_item* new_print_item(unsigned flags, unsigned long long hash_id, const char* data)
 {
 	print_item* item = (print_item*)rsh_malloc(sizeof(print_item));
 	item->flags = flags;
@@ -151,7 +151,7 @@ static char parse_escaped_char(const char** pformat)
  *
  * @return a print_item list with parsed information
  */
-print_item* parse_print_string(const char* format, unsigned* sum_mask)
+print_item* parse_print_string(const char* format, unsigned long long * sum_mask)
 {
 	char* buf;
 	char* p;
@@ -273,12 +273,12 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
  * @param flags pointer to unsigned variable to receive print flags
  * @return directive id on success, 0 on fail
  */
-static unsigned printf_name_to_id(const char* name, size_t length, unsigned* flags)
+static unsigned long long printf_name_to_id(const char* name, size_t length, unsigned* flags)
 {
 	char buf[20];
 	size_t i;
 	print_hash_info* info = hash_info_table;
-	unsigned bit;
+	unsigned long long bit;
 
 	if (length > (sizeof(buf) - 1)) return 0;
 	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
@@ -309,7 +309,7 @@ print_item* parse_percent_item(const char** str)
 {
 	const char* format = *str;
 	const char* p = NULL;
-	unsigned hash_id = 0;
+	unsigned long long hash_id = 0;
 	unsigned modifier_flags = 0;
 	int id_found = 0;
 	int width = 0;
@@ -317,7 +317,7 @@ print_item* parse_percent_item(const char** str)
 
 	static const char* short_hash = "CMHTGWRAE";
 	static const char* short_other = "Llpfds";
-	static const unsigned hash_ids[] = {
+	static const unsigned long long hash_ids[] = {
 		RHASH_CRC32, RHASH_MD5, RHASH_SHA1, RHASH_TTH, RHASH_GOST12_256,
 		RHASH_WHIRLPOOL, RHASH_RIPEMD160, RHASH_AICH, RHASH_ED2K
 	};
@@ -375,7 +375,7 @@ print_item* parse_percent_item(const char** str)
 			return NULL;
 		/* look for a known token */
 		if (upper && (p = strchr(short_hash, upper))) {
-			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
+			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned long long)) );
 			hash_id = hash_ids[p - short_hash];
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 		}
@@ -397,7 +397,6 @@ print_item* parse_percent_item(const char** str)
 	*str = ++format;
 	return item;
 }
-
 /**
  * Print EDonkey 2000 url for given file to a stream.
  *
@@ -515,7 +514,7 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 
 		/* output a hash function digest */
 		if (!print_type) {
-			unsigned hash_id = list->hash_id;
+			unsigned long long hash_id = list->hash_id;
 			int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0)
 				| (list->flags & PRINT_FLAG_RAW ? RHPR_RAW : 0)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
@@ -643,11 +642,11 @@ static const char* get_librhash_version(void)
  */
 void init_hash_info_table(void)
 {
-	unsigned bit;
-	const unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
-	const unsigned custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
+	unsigned long long bit;
+	const unsigned long long fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
+	const unsigned long long custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512;
-	const unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
+	const unsigned long long short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
 	const char* short_opt = "cmhteawrgl";
 	print_hash_info* info = hash_info_table;
@@ -734,7 +733,7 @@ strbuf_t* init_printf_format(void)
 	strbuf_t* out;
 	const char* fmt;
 	const char* tail = 0;
-	unsigned bit, index = 0;
+	unsigned long long bit, index = 0;
 	int uppercase;
 	unsigned need_modifier = 0;
 	char up_flag;

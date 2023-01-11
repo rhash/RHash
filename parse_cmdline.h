@@ -73,7 +73,7 @@ enum {
 	FMT_PRINTF_MASK = FMT_PRINTF | FMT_FILE_TEMPLATE,
 };
 
-#define OPT_ED2K_LINK 0x80000000
+#define OPT_ED2K_LINK 0x8000000000000000LL
 
 struct vector_t;
 
@@ -83,7 +83,7 @@ struct vector_t;
 struct options_t
 {
 	unsigned flags;      /* program options */
-	unsigned sum_flags;  /* flags to specify what sums will be calculated */
+	unsigned long long sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
 	unsigned openssl_mask;    /* bit-mask for enabled OpenSSL hash functions */

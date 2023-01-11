@@ -352,7 +352,7 @@ typedef struct cmdline_opt_t
 	char* long_name;      /* long option name */
 	opt_handler_t handler; /* option handler */
 	void* ptr;            /* auxiliary pointer, e.g. to an opt field */
-	unsigned param;       /* optional integer parameter */
+	unsigned long long param;       /* optional integer parameter */
 } cmdline_opt_t;
 
 enum option_type_t
