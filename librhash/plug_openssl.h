@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 int rhash_plug_openssl(void); /* load openssl algorithms */
-unsigned rhash_get_openssl_supported_hash_mask(void);
-unsigned rhash_get_openssl_available_hash_mask(void);
+unsigned long long rhash_get_openssl_supported_hash_mask(void);
+unsigned long long rhash_get_openssl_available_hash_mask(void);
 
-extern unsigned rhash_openssl_hash_mask; /* mask of hash sums to use */
+extern unsigned long long rhash_openssl_hash_mask; /* mask of hash sums to use */
 extern rhash_hash_info rhash_openssl_hash_info[9];
 #define rhash_ossl_sha1_init() (rhash_openssl_hash_info[2].init)
 #define rhash_ossl_sha1_update() (rhash_openssl_hash_info[2].update)

@@ -19,7 +19,7 @@
 
 #  if _MSC_VER >= 1300 && (_M_IX86 || _M_AMD64 || _M_IA64) /* if MSVC++ >= 2002 on x86/x64 */
 #  include <intrin.h>
-#  pragma intrinsic(_BitScanForward)
+#  pragma intrinsic(_BitScanForward64)
 
 /**
  * Returns index of the trailing bit of x.
@@ -27,10 +27,10 @@
  * @param x the number to process
  * @return zero-based index of the trailing bit
  */
-unsigned rhash_ctz(unsigned x)
+unsigned rhash_ctz(unsigned long long x)
 {
 	unsigned long index;
-	unsigned char isNonzero = _BitScanForward(&index, x); /* MSVC intrinsic */
+	unsigned char isNonzero = _BitScanForward64(&index, x); /* MSVC intrinsic */
 	return (isNonzero ? (unsigned)index : 0);
 }
 #  else /* _MSC_VER >= 1300... */
@@ -42,21 +42,20 @@ unsigned rhash_ctz(unsigned x)
  * @param x the number to process
  * @return zero-based index of the trailing bit
  */
-unsigned rhash_ctz(unsigned x)
+unsigned rhash_ctz(unsigned long long x)
 {
-	/* array for conversion to bit position */
-	static unsigned char bit_pos[32] =  {
-		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-	};
+	/* this function is not used in an innerloop of any algo so its implementation speed
+	   does not influence anything */
 
-	/* The De Bruijn bit-scan was devised in 1997, according to Donald Knuth
-	 * by Martin Lauter. The constant 0x077CB531UL is a De Bruijn sequence,
-	 * which produces a unique pattern of bits into the high 5 bits for each
-	 * possible bit position that it is multiplied against.
-	 * See http://graphics.stanford.edu/~seander/bithacks.html
-	 * and http://chessprogramming.wikispaces.com/BitScan */
-	return (unsigned)bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
+	x &= -x; /* keep rightmost 1-bit */
+	
+	return ( (x & 0x00000000FFFFFFFFULL) ? 0 : 32 ) +
+	       ( (x & 0x0000FFFF0000FFFFULL) ? 0 : 16 ) +
+	       ( (x & 0x00FF00FF00FF00FFULL) ? 0 :  8 ) +
+	       ( (x & 0x0F0F0F0F0F0F0F0FULL) ? 0 :  4 ) +
+	       ( (x & 0x3333333333333333ULL) ? 0 :  2 ) +
+	       ( (x & 0x5555555555555555ULL) ? 0 :  1 ) +
+	       (  x                          ? 0 :  1 ) ; // zero should return 64
 }
 #  endif /* _MSC_VER >= 1300... */
 #endif /* rhash_ctz */

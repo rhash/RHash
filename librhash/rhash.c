@@ -79,7 +79,7 @@ RHASH_API int rhash_count(void)
  * @param need_init initialize context for each hash function
  * @return initialized rhash context, NULL on fail with error code stored in errno
  */
-static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_ids[], int need_init)
+static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned long long hash_ids[], int need_init)
 {
 	struct rhash_hash_info* info;   /* hash algorithm information */
 	rhash_context_ext* rctx = NULL; /* allocated rhash context */
@@ -87,7 +87,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 	size_t ctx_size_sum = 0;   /* size of hash contexts to store in rctx */
 	size_t i;
 	char* phash_ctx;
-	unsigned hash_bitmask = 0;
+	unsigned long long hash_bitmask = 0;
 
 	if (count < 1) {
 		errno = EINVAL;
@@ -147,13 +147,13 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 	return rctx;
 }
 
-RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
+RHASH_API rhash rhash_init_multi(size_t count, const unsigned long long hash_ids[])
 {
 	rhash_context_ext* ectx = rhash_alloc_multi(count, hash_ids, 1);
 	return &ectx->rc; /* return initialized rhash context */
 }
 
-RHASH_API rhash rhash_init(unsigned hash_id)
+RHASH_API rhash rhash_init(unsigned long long hash_id)
 {
 	if (!IS_VALID_HASH_MASK(hash_id)) {
 		errno = EINVAL;
@@ -164,8 +164,8 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	} else {
 		/* handle the depricated case, when hash_id is a bitwise union of several hash function identifiers */
 		size_t count;
-		unsigned hash_ids[32];
-		unsigned id = hash_id & -hash_id; /* get the trailing bit */
+		unsigned long long hash_ids[64];
+		unsigned long long id = hash_id & -hash_id; /* get the trailing bit */
 		for (count = 0; id <= hash_id; id = id << 1) {
 			assert(id != 0);
 			if (hash_id & id)

@@ -111,11 +111,11 @@ extern "C" {
 
 /* define rhash_ctz - count traling zero bits */
 #if (defined(__GNUC__) && __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)) || \
-    (defined(__clang__) && __has_builtin(__builtin_ctz))
+    (defined(__clang__) && __has_builtin(__builtin_ctzll))
 /* GCC >= 3.4 or clang */
-# define rhash_ctz(x) __builtin_ctz(x)
+# define rhash_ctz(x) __builtin_ctzll(x)
 #else
-unsigned rhash_ctz(unsigned); /* define as function */
+unsigned rhash_ctz(unsigned long long); /* define as function */
 #endif
 
 void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t length);
