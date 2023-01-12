@@ -302,7 +302,7 @@ RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
 	unsigned long long * hash_ids = NULL;
 	if (!ctx || (out && size < sizeof(export_header)) || IS_BAD_STATE(ectx->state))
 		return export_error_einval();
-	export_size = sizeof(export_header) + sizeof(unsigned) * ectx->hash_vector_size;
+	export_size = sizeof(export_header) + sizeof(unsigned long long) * ectx->hash_vector_size;
 	if (out != NULL) {
 		memset(out, 0, size);
 		header->state = ectx->state;
@@ -366,7 +366,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 	rhash_context_ext* ectx;
 	if (!header || IS_BAD_STATE(header->state) || size < sizeof(export_header))
 		return import_error_einval();
-	imported_size = sizeof(export_header) + sizeof(unsigned) * header->hash_vector_size;
+	imported_size = sizeof(export_header) + sizeof(unsigned long long) * header->hash_vector_size;
 	if (!header->hash_vector_size || size < imported_size)
 		return import_error_einval();
 	hash_ids = (const unsigned long long *)(const void*)(header + 1);
