@@ -418,6 +418,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 /**
  * The type of an unsigned integer large enough to hold a pointer.
  */
+/*
 #if defined(UINTPTR_MAX)
 typedef uintptr_t rhash_uptr_t;
 #elif defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
@@ -426,6 +427,9 @@ typedef unsigned long long rhash_uptr_t;
 #else
 typedef unsigned long rhash_uptr_t;
 #endif
+*/
+
+typedef unsigned long long rhash_uptr_t; /* quick hack to allow 64bit hash masks pass rhash_transmit() */
 
 /**
  * The value returned by rhash_transmit on error.
