@@ -657,6 +657,11 @@ LIBDL_LDFLAGS=
 if win32; then
   ALLOW_RUNTIME_LINKING=yes
 elif test "$BUILD_STATIC" = "yes"; then
+  if test "$STATIC_LIBRHASH" = "yes"; then
+    if ! cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);'; then
+      LIBDL_LDFLAGS="-ldl"
+    fi
+  fi
   ALLOW_RUNTIME_LINKING=no
 elif test "$OPT_OPENSSL" = "auto" || test "$OPT_OPENSSL" = "runtime"; then
   start_check "linker support for dlopen"
