@@ -113,16 +113,15 @@ new_test() {
 }
 
 print_failed() {
-    st=$( test "$1" = "." -o "$sub_test" -gt 1 && echo " Subtest #$sub_test" )
-    echo "Failed$st"
+    st=$( test "$1" = "." -o "$sub_test" -gt 1 && printf " Subtest #$sub_test" )
+    printf "Failed$st\n"
 }
 
 # verify obtained value $1 against the expected value $2
 check() {
-#printf "test '%s' = '%s'", "$1" "$2"
   sub_test=$((sub_test+1))
   if [ "$1" = "$2" ]; then
-    test "$3" = "." || echo "Ok"
+    test "$3" = "." || printf "Ok\n"
   else
     print_failed "$3"
     printf "obtained: \"%s\"\n" "$1"
@@ -135,7 +134,7 @@ check() {
 
 # match obtained value $1 against given grep-regexp $2
 match_line() {
-  if echo "$1" | grep -vq "$2"; then
+  if printf "$1" | grep -vq "$2"; then
     printf "obtained: \"%s\"\n" "$1"
     printf "regexp:  /%s/\n" "$2"
     fail_cnt=$((fail_cnt+1))
@@ -154,19 +153,19 @@ match() {
     fail_cnt=$((fail_cnt+1))
     return 1;
   else
-    test "$3" = "." || echo "Ok"
+    test "$3" = "." || printf "Ok\n"
   fi
   return 0
 }
 
 new_test "test with a text string:    "
-TEST_RESULT=$( $rhash --message "abc" | tail -1 )
+TEST_RESULT=$( $rhash --message "abc" | tail -n1 )
 TEST_EXPECTED="(message) 352441C2"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
 new_test "test stdin processing:      "
 TEST_STR="test_string1"
-TEST_RESULT=$( printf "abc" | $rhash -CHMETAGW --sfv - | tail -1 )
+TEST_RESULT=$( printf "abc" | $rhash -CHMETAGW --sfv - | tail -n1 )
 TEST_EXPECTED="(stdin) 352441C2 900150983CD24FB0D6963F7D28E17F72 A9993E364706816ABA3E25717850C26C9CD0D89D ASD4UJSEH5M47PDYB46KBTSQTSGDKLBHYXOMUIA A448017AAF21D8525FC10AE87AA6729D VGMT4NSHA2AWVOR6EVYXQUGCNSONBWE5 4E2448A4C6F486BB16B6562C73B4020BF3043E3A731BCE721AE1B303D97E6D4C7181EEBDB6C57E277D0E34957114CBD6C797FC9D95D8B582D225292076D4EEF5 4E2919CF137ED41EC4FB6270C61826CC4FFFB660341E0AF3688CD0626D23B481"
 check "$TEST_RESULT" "$TEST_EXPECTED"
 
@@ -207,9 +206,9 @@ $rhash test1K.data | tr -d '\r' | (
   read l; match_line "$l" "^test1K.data B70B4C26\$"
 ) > "$MATCH_LOG"
 if [ ! -s "$MATCH_LOG" ]; then
-  echo "Ok"
+  printf "Ok\n"
 else
-  echo "Failed"
+  printf "Failed\n"
   fail_cnt=$((fail_cnt+1))
   cat "$MATCH_LOG"
 fi
@@ -243,10 +242,10 @@ if ! win32; then
     TEST_RESULT=$( $rhash -p '\^%p ' "$NAME_R" "$NAME_N" )
     TEST_EXPECTED='\a/\r1 \a/\n2 '
     check "$TEST_RESULT" "$TEST_EXPECTED" .
-    TEST_RESULT=$( echo '\\00000000 a/\\r1' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
+    TEST_RESULT=$( printf '\\00000000 a/\\r1\n' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
     TEST_EXPECTED='\a/\r1OK'
     check "$TEST_RESULT" "$TEST_EXPECTED" .
-    TEST_RESULT=$( echo '\\00000000 a/\\n2' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
+    TEST_RESULT=$( printf '\\00000000 a/\\n2\n' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
     TEST_EXPECTED='\a/\n2OK'
     check "$TEST_RESULT" "$TEST_EXPECTED" .
   fi
@@ -258,7 +257,7 @@ check "$TEST_RESULT" "$TEST_EXPECTED"
 new_test "test file lists:            "
 F="$RHASH_TMP/t"
 touch ${F}1 ${F}2 ${F}3 ${F}4
-( echo ${F}2; echo ${F}3 ) > ${F}l
+printf "${F}2\n${F}3\n" > ${F}l
 TEST_RESULT=$($rhash -p '%f ' ${F}1 --file-list ${F}l ${F}4)
 check "$TEST_RESULT" "t1 t2 t3 t4 "
 rm -f ${F}1 ${F}2 ${F}3 ${F}4 ${F}l
@@ -369,7 +368,7 @@ check "$TEST_RESULT" "Updated: d.sfv@"
 new_test "test *accept options:       "
 mkdir -p test_dir/a && touch test_dir/a/file.txt test_dir/a/file.bin
 # correctly handle MIGW posix path conversion
-echo "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
+printf "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
 # test also --path-separator option
 TEST_RESULT=$( $rhash -rC --simple --accept=.bin --path-separator=$SLASH test_dir )
 check "$TEST_RESULT" "00000000  test_dir/a/file.bin" .
@@ -417,7 +416,7 @@ rm -f "$UNWRITABLE_FILE"
 
 # check if any test failed
 if [ $fail_cnt -gt 0 ]; then
-  echo "Failed $fail_cnt checks"
+  printf "Failed $fail_cnt checks\n"
   exit 1 # some tests failed
 fi
 
