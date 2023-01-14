@@ -89,7 +89,9 @@ Features options:
                          If runtime specified, then load OpenSSL at runtime if
                          the library is found [autodetect]
   --enable-debug         enable debug information
-  --enable-static        statically link libraries into RHash binary
+  --enable-static        statically link all libraries into RHash binary
+  --enable-static=librhash only librhash will be statically linked into binary,
+                         otherwise it will be dynamic (i.e. require libc etc.)
   --enable-lib-static    build and install LibRHash static library [auto]
   --enable-lib-shared    build and install LibRHash shared library [auto]
   --enable-symlinks[=LIST]   install symlinks to the binary [enable]
