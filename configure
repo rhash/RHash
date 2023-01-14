@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
 # set default values
 OPT_OPENSSL=auto
@@ -14,6 +15,7 @@ CMD_AR=ar
 CMD_INSTALL=install
 BUILD_DEBUG=
 BUILD_STATIC=auto
+STATIC_LIBRHASH=no
 BUILD_EXTRA_CFLAGS=
 BUILD_EXTRA_LDFLAGS=
 CHECK_LDFLAGS=
@@ -184,6 +186,10 @@ for OPT do
     ;;
   --enable-static)
     BUILD_STATIC=yes
+    ;;
+  --enable-static=librhash)
+    BUILD_STATIC=yes
+    STATIC_LIBRHASH=yes
     ;;
   --disable-static)
     BUILD_STATIC=no
@@ -629,7 +635,12 @@ elif darwin; then
 fi
 
 # check for linker flags
-LD_STATIC=-static
+if test "$STATIC_LIBRHASH" = "yes"; then
+  LD_STATIC=
+else
+  LD_STATIC=-static
+fi
+
 test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
 test "$OPT_OPENSSL" = "runtime" && ! win32 && LD_STATIC=
 if test -n "$LD_STATIC"; then
@@ -734,7 +745,9 @@ if test "$OPT_OPENSSL" != "no"; then
   OPENSSL_FOUND=no
   if test "$ALLOW_RUNTIME_LINKING" = "no"; then
     echo "No runtime library loading, because dlopen() is not found!" >> "$TMPLOG"
-    test "$OPT_OPENSSL" = "runtime" && die "dlopen() is required for OpenSSL runtime loading"
+    test "$OPT_OPENSSL" = "runtime" && \
+    test "$STATIC_LIBRHASH" = "no" && \
+    die "dlopen() is required for OpenSSL runtime loading"
   fi
   OPENSSL_HEADERS="openssl/opensslconf.h openssl/md4.h openssl/md5.h openssl/sha.h"
   if cc_check_headers $OPENSSL_HEADERS; then
