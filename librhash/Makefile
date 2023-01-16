@@ -167,10 +167,6 @@ whirlpool.o: whirlpool.c byte_order.h ustd.h whirlpool.h
 whirlpool_sbox.o: whirlpool_sbox.c byte_order.h ustd.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-# build shared library
-$(EXPORTS_FILE): $(SO_HEADERS)
-	sed -ne '1s/.*/{ global:/p; s/^RHASH_API.* \(rhash_[a-z0-9_]*\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(SO_HEADERS) > $@
-
 $(LIBRHASH_SOLINK):
 	rm -f $(LIBRHASH_SOLINK)
 	ln -s $(LIBRHASH_SHARED) $(LIBRHASH_SOLINK)

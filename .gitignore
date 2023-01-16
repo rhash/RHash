@@ -1,7 +1,6 @@
 /dist/rhash.spec
 /dist/rhash.1.*
 /dist/librhash.pc
-/librhash/exports.sym
 po/*.gmo
 /rhash
 /rhash_shared
