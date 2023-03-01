@@ -31,6 +31,12 @@ static const char* get_full_program_version(void)
 	return version_buffer;
 }
 
+static void on_verbose(options_t* o)
+{
+	if (o->verbose < 2)
+		o->verbose++;
+}
+
 static void print_version(void)
 {
 	rsh_fprintf(rhash_data.out, "%s", get_full_program_version());
@@ -388,6 +394,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_VFNC,   0,   0, "list-hashes", (opt_handler_t)list_hashes, 0, 0 },
 	{ F_VFNC, 'h',   0, "help",        (opt_handler_t)print_help, 0, 0 },
 	{ F_VFNC, 'V',   0, "version",     (opt_handler_t)print_version, 0, 0 },
+	{ F_VFNC, 'v',   0, "verbose",     (opt_handler_t)on_verbose, 0, 0 },
 
 	/* hash functions options */
 	{ F_UFLG, 'a',   0, "all",      0, &opt.sum_flags, RHASH_ALL_HASHES },
@@ -442,7 +449,6 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_TFNC, 'm',   0, "message",       (opt_handler_t)add_special_file, 0, FileIsData },
 	{ F_TFNC,   0,   0, "file-list",     (opt_handler_t)add_special_file, 0, FileIsList },
 	{ F_UFLG,   0,   0, "follow",        0, &opt.flags, OPT_FOLLOW },
-	{ F_UFLG, 'v',   0, "verbose",       0, &opt.flags, OPT_VERBOSE },
 	{ F_UFLG,   0,   0, "brief",         0, &opt.flags, OPT_BRIEF },
 	{ F_UFLG,   0,   0, "gost-reverse",  0, &opt.flags, OPT_GOST_REVERSE },
 	{ F_UFLG,   0,   0, "skip-ok",       0, &opt.flags, OPT_SKIP_OK },
@@ -1014,6 +1020,9 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 		opt.flags |= conf_opt.flags & OPT_FMT_MODIFIERS;
 	opt.flags |= conf_opt.flags & ~OPT_FMT_MODIFIERS; /* copy the rest of options */
 
+	if (!opt.verbose)
+		opt.verbose = conf_opt.verbose;
+
 	if (opt.files_accept == 0)  {
 		opt.files_accept = conf_opt.files_accept;
 		conf_opt.files_accept = 0;
@@ -1153,7 +1162,7 @@ static void check_compatibility(int what, unsigned bit_mask)
  */
 static void make_final_options_checks(void)
 {
-	if ((opt.flags & OPT_VERBOSE) && !!rhash_data.config_file.real_path) {
+	if (opt.verbose && !!rhash_data.config_file.real_path) {
 		/* note that the first log_msg call shall be made after setup_output() */
 		log_msg_file_t(_("Config file: %s\n"), &rhash_data.config_file);
 	}

@@ -1,3 +1,6 @@
+Wed 01 Mar 2023 Aleksey Kravchenko
+	* Print the algorithms being calculated on -vv
+
 Tue 27 Sep 2022 Aleksey Kravchenko
 	* Renamed --maxdepth option to --max-depth
 

@@ -428,14 +428,14 @@ static int print_check_result(struct file_info* info, int print_name, int print_
 		if (info->processing_result < 0) {
 			/* print error to stdout */
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, "%s\n", strerror(saved_errno)));
-		} else if (!HP_FAILED(info->hp->bit_flags) || !(opt.flags & OPT_VERBOSE)) {
+		} else if (HP_FAILED(info->hp->bit_flags) && opt.verbose) {
+			res = print_verbose_hash_check_error(info);
+		} else {
 			res = PRINTF_RES(rsh_fprintf(rhash_data.out, (!HP_FAILED(info->hp->bit_flags) ?
 				/* TRANSLATORS: printed when all message digests match, use at least 3 characters to overwrite "99%" */
 				_("OK \n") :
 				/* TRANSLATORS: ERR (short for 'error') is printed on a message digest mismatch */
 				_("ERR\n"))));
-		} else {
-			res = print_verbose_hash_check_error(info);
 		}
 	}
 	if (fflush(rhash_data.out) < 0)
@@ -762,6 +762,33 @@ int print_check_stats(void)
 			rhash_data.processed - rhash_data.ok - rhash_data.miss, rhash_data.miss, rhash_data.ok, rhash_data.processed));
 	}
 	return (fflush(rhash_data.out) < 0 ? -1 : res);
+}
+
+/**
+ * Print used algorithms, but only on very verbose level
+ *
+ * @param out the stream to print the result to
+ * @param hash_mask bit mask containing hash ids to calculate
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+int print_verbose_algorithms(FILE* out, unsigned hash_mask)
+{
+	unsigned hash_id;
+	const char* prefix;
+	if (!hash_mask || opt.verbose <= 1)
+		return 0;
+	prefix = _("Calculating: ");
+	for (hash_id = 1; hash_id && hash_id <= hash_mask; hash_id <<= 1) {
+		if ((hash_id & hash_mask) != 0) {
+			const char* hash_name = rhash_get_name(hash_id);
+			if (rsh_fprintf(out, "%s%s", prefix, hash_name) < 0)
+				return -1;
+			prefix = ", ";
+		}
+	}
+	if (rsh_fprintf(out, "\n") < 0)
+		return -1;
+	return (fflush(out) < 0 ? -1 : 0);
 }
 
 /**

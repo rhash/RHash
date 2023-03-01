@@ -332,6 +332,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 	rsh_timer_start(&timer);
 
 	if (info.sums_flags) {
+		print_verbose_algorithms(rhash_data.log, info.sums_flags);
 		/* calculate sums */
 		if (calc_sums(&info) < 0) {
 			/* print i/o error */
@@ -363,7 +364,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 			log_error_file_t(out_file);
 			res = -2;
 		}
-		if (opt.flags & OPT_VERBOSE) {
+		if (opt.verbose) {
 			print_sfv_header_line(rhash_data.log, rhash_data.log_file.mode, file);
 			fflush(rhash_data.log);
 		}
@@ -376,7 +377,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 				res = -2;
 			}
 			/* print the calculated line to stderr/log-file if verbose */
-			else if (IS_MODE(MODE_UPDATE) && (opt.flags & OPT_VERBOSE)) {
+			else if (IS_MODE(MODE_UPDATE) && opt.verbose) {
 				print_line(rhash_data.log, rhash_data.log_file.mode, rhash_data.print_list, &info);
 			}
 		}
@@ -462,6 +463,8 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 #ifdef _WIN32
 	set_benchmark_cpu_affinity(); /* set CPU affinity to improve test results */
 #endif
+	if (!(flags & BENCHMARK_RAW))
+		print_verbose_algorithms(rhash_data.out, hash_id);
 
 	/* set message size for fast and slow hash functions */
 	msg_size = 1073741824 / 2;

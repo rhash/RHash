@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
 		rhash_data.template_text = init_printf_format();
 		rhash_data.printf_str = rhash_data.template_text->str;
 
-		if (HAS_OPTION(OPT_VERBOSE)) {
+		if (opt.verbose) {
 			char* str = rsh_strdup(rhash_data.printf_str);
 			log_msg(_("Format string is: %s\n"), str_trim(str));
 			free(str);

@@ -34,7 +34,6 @@ enum {
 	MODE_TORRENT   = 0x80,
 
 	/* misc options */
-	OPT_VERBOSE    = 0x01,
 	OPT_BRIEF      = 0x02,
 	OPT_EMBED_CRC  = 0x20,
 	OPT_RECURSIVE  = 0x40,
@@ -86,6 +85,7 @@ struct options_t
 	unsigned sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
+	unsigned verbose;    /* verbosity level */
 	unsigned openssl_mask;    /* bit-mask for enabled OpenSSL hash functions */
 	char* printf_str;         /* printf-like format */
 	opt_tchar* template_file; /* printf-like template file path */

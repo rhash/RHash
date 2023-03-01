@@ -787,7 +787,7 @@ static int parse_magnet_url(struct hash_token* token)
 							break;
 					}
 					if (i >= RHASH_HASH_COUNT) {
-						if (opt.flags & OPT_VERBOSE) {
+						if (opt.verbose) {
 							*hf_end = '\0';
 							log_warning(_("unknown hash in magnet link: %s\n"), token->begin);
 						}
@@ -1152,6 +1152,7 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
 	info.file = file;
 	info.sums_flags = hp->hash_mask;
 	info.hp = hp;
+	print_verbose_algorithms(rhash_data.log, info.sums_flags);
 
 	/* initialize percents output */
 	if (init_percents(&info) < 0) {
