@@ -51,6 +51,14 @@ win32()
   return 1
 }
 
+mingw_or_ucrt()
+{
+  case "$MSYSTEM" in
+    MINGW32|MINGW64|UCRT32|UCRT64) return 0 ;;
+  esac
+  return 1
+}
+
 # detect shared library
 if [ -n "$OPT_SHARED" -a -d "$UPPER_DIR/librhash" ]; then
   D="$UPPER_DIR/librhash"
@@ -367,8 +375,8 @@ check "$TEST_RESULT" "Updated: d.sfv@"
 
 new_test "test *accept options:       "
 mkdir -p test_dir/a && touch test_dir/a/file.txt test_dir/a/file.bin
-# correctly handle MIGW posix path conversion
-printf "$MSYSTEM" | grep -q '^MINGW[36][24]' && SLASH=// || SLASH="/"
+# correctly handle MINGW posix path conversion
+mingw_or_ucrt && SLASH=// || SLASH="/"
 # test also --path-separator option
 TEST_RESULT=$( $rhash -rC --simple --accept=.bin --path-separator=$SLASH test_dir )
 check "$TEST_RESULT" "00000000  test_dir/a/file.bin" .
