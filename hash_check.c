@@ -483,7 +483,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 	char* begin = token->begin;
 	char* end = token->end;
 	char* url_path = 0;
-	size_t url_length;
+	size_t url_length = 0;
 	struct hash_parser* hp = &token->parser->hp;
 	struct hash_value hv;
 	int unsaved_hashval = 0;
