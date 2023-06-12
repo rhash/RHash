@@ -1,3 +1,6 @@
+Tue 13 Jun 2023 Aleksey Kravchenko
+	* Bugfix: Fix slash usage with wilcards on Windows
+
 Wed 01 Mar 2023 Aleksey Kravchenko
 	* Print the algorithms being calculated on -vv
 

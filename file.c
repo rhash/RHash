@@ -137,7 +137,7 @@ tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, ctpath_t sub_path)
 	result = (wchar_t*)rsh_malloc((dir_len + len + 2) * sizeof(wchar_t));
 	if (dir_len > 0) {
 		memcpy(result, dir_path, dir_len * sizeof(wchar_t));
-		if (result[dir_len - 1] != L'\\' && sub_path[0]) {
+		if (!IS_PATH_SEPARATOR_W(result[dir_len - 1]) && sub_path[0]) {
 			/* append path separator to the directory */
 			result[dir_len++] = L'\\';
 		}
