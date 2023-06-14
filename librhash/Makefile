@@ -169,7 +169,8 @@ whirlpool_sbox.o: whirlpool_sbox.c byte_order.h ustd.h
 
 # build shared library
 $(EXPORTS_FILE): $(SO_HEADERS)
-	sed -ne '1s/.*/{ global:/p; s/^RHASH_API.* \(rhash_[a-z0-9_]*\)(.*/  \1;/p; $$s/.*/local: *; };/p' $(SO_HEADERS) > $@
+	sed -ne '1s/.*/{ global:/p; s/^RHASH_API.* \(rhash_[a-z0-9_]*\)(.*/  \1;/p; $$s/.*/local: *; };/p' \
+	  $(SO_HEADERS) | grep -v "$(EXPORTS_SKIP)" > $@
 
 $(LIBRHASH_SOLINK):
 	rm -f $(LIBRHASH_SOLINK)
