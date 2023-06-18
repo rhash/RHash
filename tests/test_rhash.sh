@@ -183,7 +183,7 @@ TEST_EXPECTED="test1K.data . B70B4C26 B2EA9F7FCEA831A4A63B213F41A8855B 5B00669C4
 check "$TEST_RESULT" "$TEST_EXPECTED" .
 # test calculation/verification of reversed GOST hashes with 1Kb data file
 TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data )
-TEST_EXPECTED="test1K.data  bb4c042bacee51bbabc186107e6020b20991fd4ea119672da24dbe5deeb30b89  06cc52d9a7fb5137d01667d1641683620060391722a56222bb4b14ab332ec9d9"
+TEST_EXPECTED="test1K.data bb4c042bacee51bbabc186107e6020b20991fd4ea119672da24dbe5deeb30b89 06cc52d9a7fb5137d01667d1641683620060391722a56222bb4b14ab332ec9d9"
 check "$TEST_RESULT" "$TEST_EXPECTED" .
 TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"

@@ -506,11 +506,13 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			if (len == 0)
 				fend--;
 			search_str = fend;
+//log_msg("match_hash_tokens: backward format=\"%s\", C=%02x len=%u\n", format, (unsigned)*search_str, (unsigned)len);
 		} else {
 			search_str = format;
 			for (; *format >= '-' && format < fend; format++, len++);
 			if (len == 0)
 				format++;
+//log_msg("match_hash_tokens:  forward format=\"%s\", C=%02x len=%u\n", format, (unsigned)*search_str, (unsigned)len);
 		}
 		if (len > 0) {
 			if ((end - begin) < len)
@@ -545,9 +547,17 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 		case '\2':
 		case '\3':
 			if (backward) {
+				/* trim right */
+				for (; begin < end && rhash_isspace(end[-1]); end--, len++);
+				if (begin == end)
+					return ResFailed;
 				hv.format = test_hash_string(&end, begin, &len);
 				hv.offset = (unsigned short)(end - hp->line_begin);
 			} else {
+				/* trim left */
+				for (; rhash_isspace(*begin) && begin < end; begin++, len++);
+				if (begin == end)
+					return ResFailed;
 				hv.offset = (unsigned short)(begin - hp->line_begin);
 				hv.format = test_hash_string(&begin, end, &len) & token->hash_type;
 			}
@@ -592,12 +602,15 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			break;
 		case '\6':
 		case ' ':
-			if (backward)
-				for (; begin < end && rhash_isspace(end[-1]); end--, len++);
-			else
-				for (; rhash_isspace(*begin) && begin < end; begin++, len++);
+			if (backward) {
+				char* low_limit = (begin < end && *search_str == '\6' ? end - 1 : begin);
+				for (; low_limit < end && rhash_isspace(end[-1]); end--, len++);
+			} else {
+				char* hi_limit = (begin < end && *search_str == '\6' ? begin + 1 : end);
+				for (; begin < hi_limit && rhash_isspace(*begin); begin++, len++);
+			}
 			/* check if space is mandatory */
-			if (*search_str != ' ' && len == 0) {
+			if (*search_str == '\6' && len == 0) {
 				/* for '\6' verify (len > 0 || (MhtAllowOneHash is set && begin == end)) */
 				if (!(bit_flags & MhtAllowOneHash) || begin < end)
 					return ResFailed;
@@ -615,8 +628,16 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 	if (unsaved_hashval && hp->hashes_num < HP_MAX_HASHES) {
 		token->p_hashes[hp->hashes_num++] = hv;
 	}
+	if (!backward) {
+		/* trim left */
+		if (begin < end && rhash_isspace(*begin))
+			begin++;
+	}
+
+	/* the rest is stored as a path */
 	token->begin = begin;
 	token->end = end;
+//log_msg("Filepath = \"%s\"\n", begin); // DEBUG
 	if ((bit_flags & MhtAllowOneHash) != 0 && hp->hashes_num == 1 && begin == end)
 	{
 		struct hash_parser_ext* const parser = token->parser;
@@ -673,6 +694,7 @@ static int fstat_path_token(struct hash_token* token, char* str, size_t str_leng
 	int is_absolute = IS_PATH_SEPARATOR(path[0]);
 	char saved_char = path[path_length];
 	path[path_length] = '\0';
+//log_msg("fstat_path_token: \"%s\"\n", path); // DEBUG
 
 	IF_WINDOWS(is_absolute = is_absolute || (path[0] && path[1] == ':'));
 	if (is_absolute || !parent_dir->real_path)
@@ -854,35 +876,37 @@ static int parse_ed2k_link(struct hash_token* token)
 static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 {
 	struct hash_token token;
-	char* line = parser->hp.line_begin;
-	char* line_end = strchr(line, '\0');
+	char* const line_start = parser->hp.line_begin;
+	char* token_start = line_start;
+	char* line_end = strchr(line_start, '\0');
 	int res;
 
-	assert(line[0] != '\0');
+	assert(line_start[0] != '\0');
 
 	/* return if EOL not found at the end of the line */
 	if (line_end[-1] != '\n' && check_eol)
 		return ResFailed;
-	/* trim line manually, without str_trim(), cause we'll need line_end later */
-	while (rhash_isspace(line_end[-1]) && line_end > line)
+	/* remove trailing CR and LF */
+	while ((line_end[-1] == '\n' || line_end[-1] == '\r') && line_end > line_start)
 		*(--line_end) = 0;
 	/* skip white spaces at the start of the line */
-	while (rhash_isspace(*line))
-		line++;
+	while (rhash_isspace(*token_start))
+		token_start++;
+//log_msg("Trimmed line \"%s\", size=%u\n", token_start, (unsigned)strlen(token_start)); // DEBUG
 
 	memset(&token, 0, sizeof(token));
-	token.begin = line;
+	token.begin = token_start;
 	token.end = line_end;
 	token.parser = parser;
 	token.p_parsed_path = &parser->hp.parsed_path;
 	token.p_hashes = parser->hp.hashes;
 
 	memset(&parser->hp, 0, sizeof(parser->hp));
-	parser->hp.line_begin = line;
+	parser->hp.line_begin = line_start;
 	parser->hp.file_size = (uint64_t)-1;
 
 	/* check for a minimum acceptable message digest length */
-	if ((line + 8) > line_end)
+	if ((token_start + 8) > line_end)
 		return ResFailed;
 
 	if (strncmp(token.begin, "ed2k://|file|", 13) == 0) {
@@ -898,6 +922,7 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 	if (res != ResFailed)
 		return finalize_parsed_data(&token);
 	token.hash_type = FmtAll;
+	token.begin = line_start;
 
 	{
 		const unsigned is_sfv_format = parser->is_sfv;

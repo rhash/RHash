@@ -209,14 +209,29 @@ char* convert_str_encoding(const char* str, unsigned flags)
  */
 wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 {
-	if (!IS_UNC_PREFIX(wpath) && wcslen(wpath) > 200) {
+	size_t length;
+	size_t index;
+	size_t spaces_count = 0;
+	if (IS_UNC_PREFIX(wpath))
+		return NULL;
+	length = wcslen(wpath);
+	/* Do not end a file or directory name with a space or a period on Windows.
+	   See https://learn.microsoft.com/en-gb/windows/win32/fileio/naming-a-file */
+	for (index = length; index > 0 && wpath[index - 1] == ' '; --index, ++spaces_count);
+	if (length > 200 || spaces_count > 0) {
+		/* get required buffer size, including the terminating null character */
 		DWORD size = GetFullPathNameW(wpath, 0, NULL, NULL);
 		if (size > 0) {
-			wchar_t* result = (wchar_t*)rsh_malloc((size + UNC_PREFIX_SIZE) * sizeof(wchar_t));
+			size_t buffer_size = (size + spaces_count + UNC_PREFIX_SIZE) * sizeof(wchar_t);
+			wchar_t* result = (wchar_t*)rsh_malloc(buffer_size);
 			wcscpy(result, L"\\\\?\\");
+			/* get path length without the terminating null character */
 			size = GetFullPathNameW(wpath, size, result + UNC_PREFIX_SIZE, NULL);
-			if (size > 0)
+			if (size > 0) {
+				if (spaces_count > 0)
+					wcscpy_s(result + UNC_PREFIX_SIZE + size, spaces_count + 1, wpath + index);
 				return result;
+			}
 			free(result);
 		}
 	}

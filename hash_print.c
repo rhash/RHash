@@ -767,7 +767,7 @@ strbuf_t* init_printf_format(void)
 		fmt = "\\^\001  %p\\n";
 	} else {
 		rsh_str_append_n(out, "\\^%p", 4);
-		fmt = (rhash_data.is_sfv ? " \001" : "  \001");
+		fmt = " \001";
 		tail = "\\n";
 	}
 	if ((opt.flags & OPT_FMT_MODIFIERS) != 0)
