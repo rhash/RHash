@@ -750,7 +750,6 @@ static int file_statw(file_t* file)
 	/* read file attributes */
 	if (GetFileAttributesExW(file->real_path, GetFileExInfoStandard, &data)) {
 		uint64_t u;
-//log_msg("file_statw: [%S]\n", file->real_path);
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FileIsDir : FileIsReg);
 		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
@@ -762,7 +761,6 @@ static int file_statw(file_t* file)
 		file->mtime = u / 10000000 - 11644473600LL;
 		return 0;
 	}
-//log_msg("file_statw: FileIsInaccessible [%S]\n", file->real_path);
 	file->mode |= FileIsInaccessible;
 	set_errno_from_last_file_error();
 	return -1;

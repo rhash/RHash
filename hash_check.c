@@ -506,13 +506,11 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			if (len == 0)
 				fend--;
 			search_str = fend;
-//log_msg("match_hash_tokens: backward format=\"%s\", C=%02x len=%u\n", format, (unsigned)*search_str, (unsigned)len);
 		} else {
 			search_str = format;
 			for (; *format >= '-' && format < fend; format++, len++);
 			if (len == 0)
 				format++;
-//log_msg("match_hash_tokens:  forward format=\"%s\", C=%02x len=%u\n", format, (unsigned)*search_str, (unsigned)len);
 		}
 		if (len > 0) {
 			if ((end - begin) < len)
@@ -629,24 +627,22 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 		token->p_hashes[hp->hashes_num++] = hv;
 	}
 	if (!backward) {
-		/* trim left */
+		/* eat zero or one leading space */
 		if (begin < end && rhash_isspace(*begin))
 			begin++;
 	}
 
-	/* the rest is stored as a path */
+	/* the rest is stored as a file path */
 	token->begin = begin;
 	token->end = end;
-//log_msg("Filepath = \"%s\"\n", begin); // DEBUG
 	if ((bit_flags & MhtAllowOneHash) != 0 && hp->hashes_num == 1 && begin == end)
 	{
+		/* a single hash without a file path was detected */
 		struct hash_parser_ext* const parser = token->parser;
 		file_t* parsed_path = &parser->hp.parsed_path;
 
-		if (file_modify_path(parsed_path, parser->hash_file, NULL, FModifyRemoveExtension) < 0) {
-			/* note: trailing whitespaces were removed from line by hash_parser_parse_line() */
+		if (file_modify_path(parsed_path, parser->hash_file, NULL, FModifyRemoveExtension) < 0)
 			return ResFailed;
-		}
 		if ((bit_flags & MhtFstatPath) != 0 && file_stat(parsed_path, 0) < 0)
 			hp->parsed_path_errno = errno;
 		return ResOneHashDetected;
@@ -694,7 +690,6 @@ static int fstat_path_token(struct hash_token* token, char* str, size_t str_leng
 	int is_absolute = IS_PATH_SEPARATOR(path[0]);
 	char saved_char = path[path_length];
 	path[path_length] = '\0';
-//log_msg("fstat_path_token: \"%s\"\n", path); // DEBUG
 
 	IF_WINDOWS(is_absolute = is_absolute || (path[0] && path[1] == ':'));
 	if (is_absolute || !parent_dir->real_path)
@@ -892,7 +887,6 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 	/* skip white spaces at the start of the line */
 	while (rhash_isspace(*token_start))
 		token_start++;
-//log_msg("Trimmed line \"%s\", size=%u\n", token_start, (unsigned)strlen(token_start)); // DEBUG
 
 	memset(&token, 0, sizeof(token));
 	token.begin = token_start;
@@ -918,7 +912,7 @@ static int parse_hash_file_line(struct hash_parser_ext* parser, int check_eol)
 		return parse_magnet_url(&token);
 	}
 	/* check for BSD-formatted line has been processed */
-	res = match_hash_tokens(&token, "\1 ( $ ) = \3", MhtFstatPath | MhtAllowEscapedPath);
+	res = match_hash_tokens(&token, "\1 ($) = \3", MhtFstatPath | MhtAllowEscapedPath);
 	if (res != ResFailed)
 		return finalize_parsed_data(&token);
 	token.hash_type = FmtAll;
