@@ -12,7 +12,6 @@ OTHER_FILES = configure Makefile ChangeLog INSTALL.md COPYING README.md \
 LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
   librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
-  librhash/rhash_timing.c librhash/rhash_timing.h \
   librhash/aich.c librhash/aich.h librhash/blake2b.c librhash/blake2b.h \
   librhash/blake2s.c librhash/blake2s.h librhash/crc32.c librhash/crc32.h \
   librhash/ed2k.c librhash/ed2k.h librhash/edonr.c librhash/edonr.h \
@@ -24,8 +23,8 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h librhash/tiger_sbox.c \
   librhash/torrent.h librhash/torrent.c librhash/tth.c librhash/tth.h \
   librhash/whirlpool.c librhash/whirlpool.h librhash/whirlpool_sbox.c \
-  librhash/test_lib.c librhash/test_lib.h librhash/ustd.h \
-  librhash/util.c librhash/util.h librhash/Makefile
+  librhash/test_lib.c librhash/test_lib.h librhash/test_utils.c librhash/test_utils.h \
+  librhash/ustd.h librhash/util.c librhash/util.h librhash/Makefile
 I18N_FILES  = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po po/uk.po
 ALL_FILES   = $(SOURCES) $(HEADERS) $(LIBRHASH_FILES) $(OTHER_FILES) $(WIN_DIST_FILES) $(I18N_FILES)
 SPECFILE    = dist/rhash.spec

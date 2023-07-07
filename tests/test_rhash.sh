@@ -63,11 +63,11 @@ mingw_or_ucrt()
 if [ -n "$OPT_SHARED" -a -d "$UPPER_DIR/librhash" ]; then
   D="$UPPER_DIR/librhash"
   N="$D/librhash"
-  if [ -r $N.0.dylib ] && ( uname -s | grep -qi "^darwin" || [ ! -r $N.so.0 ] ); then
+  if [ -r $N.1.dylib ] && ( uname -s | grep -qi "^darwin" || [ ! -r $N.so.1 ] ); then
     export DYLD_LIBRARY_PATH="$D:$DYLD_LIBRARY_PATH"
-  elif ls $D/*rhash.dll 2>/dev/null >/dev/null && ( win32 || [ ! -r $N.so.0 ] ); then
+  elif ls $D/*rhash.dll 2>/dev/null >/dev/null && ( win32 || [ ! -r $N.so.1 ] ); then
     export PATH="$D:$PATH"
-  elif [ -r $N.so.0 ]; then
+  elif [ -r $N.so.1 ]; then
     export LD_LIBRARY_PATH="$D:$LD_LIBRARY_PATH"
   else
     echo "shared library not found at $D"

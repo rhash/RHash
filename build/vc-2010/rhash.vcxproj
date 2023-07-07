@@ -241,7 +241,6 @@
     <ClCompile Include="..\..\librhash\md5.c" />
     <ClCompile Include="..\..\librhash\plug_openssl.c" />
     <ClCompile Include="..\..\librhash\rhash.c" />
-    <ClCompile Include="..\..\librhash\rhash_timing.c" />
     <ClCompile Include="..\..\librhash\rhash_torrent.c" />
     <ClCompile Include="..\..\librhash\ripemd-160.c" />
     <ClCompile Include="..\..\librhash\sha1.c" />
@@ -250,6 +249,12 @@
     <ClCompile Include="..\..\librhash\sha3.c" />
     <ClCompile Include="..\..\librhash\snefru.c" />
     <ClCompile Include="..\..\librhash\test_lib.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\librhash\test_utils.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -268,11 +273,11 @@
     <ClInclude Include="..\..\librhash\edonr.h" />
     <ClInclude Include="..\..\librhash\plug_openssl.h" />
     <ClInclude Include="..\..\librhash\rhash.h" />
-    <ClInclude Include="..\..\librhash\rhash_timing.h" />
     <ClInclude Include="..\..\librhash\rhash_torrent.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
     <ClInclude Include="..\..\librhash\test_lib.h" />
+    <ClInclude Include="..\..\librhash\test_utils.h" />
     <ClInclude Include="..\..\librhash\aich.h" />
     <ClInclude Include="..\..\librhash\blake2b.h" />
     <ClInclude Include="..\..\librhash\blake2s.h" />

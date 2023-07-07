@@ -245,6 +245,101 @@ test -z "$INSTALL_LIBDIR" && INSTALL_LIBDIR="$INSTALL_EXEC_PREFIX/lib"
 test -z "$INSTALL_PKGCONFIGDIR" && INSTALL_PKGCONFIGDIR="$INSTALL_LIBDIR/pkgconfig"
 test -z "$INSTALL_LOCALEDIR" && INSTALL_LOCALEDIR="$INSTALL_PREFIX/share/locale"
 
+# logging functions
+log_start()
+{
+  echo "============ Checking for $1 ============" >> "$TMPLOG"
+}
+
+log_finish()
+{
+  echo "=============================================" >> "$TMPLOG"
+  echo "" >> "$TMPLOG"
+}
+
+# echo and log a start of a check
+start_check() {
+  log_start "$1"
+  printf '%s' "Checking for $1 ... "
+  res_comment=""
+}
+
+# echo and log the results of a check
+finish_check() {
+  if test -n "$res_comment"; then
+    res_comment="($res_comment)"
+  fi
+  echo "Result is: $1 $res_comment" >> "$TMPLOG"
+  log_finish
+  echo "$1 $res_comment"
+  res_comment=""
+}
+
+# detect source directories
+start_check "sources"
+HAS_RHASH=no
+HAS_LIBRHASH=no
+HAS_BINDINGS=no
+RHASH_VERSION=
+RHASH_VERSION_MAJOR=
+RHASH_XVERSION=
+BINDINGS_VERSION=
+RHASH_SRC=
+LIBRHASH_SRC=
+LIBRHASH_PC=
+BINDINGS_SRC=
+SRC_FOUND=no
+test -f Makefile || die "Makefile not found"
+if test -f rhash_main.c; then
+  HAS_RHASH=yes
+  SRC_FOUND=RHash
+  if test -d librhash; then
+    HAS_LIBRHASH=yes
+    LIBRHASH_SRC=librhash/
+  fi
+  if test -f bindings/version.properties; then
+    HAS_BINDINGS=yes
+    BINDINGS_SRC=bindings/
+  fi
+elif test -f rhash.c; then
+  HAS_LIBRHASH=yes
+  SRC_FOUND=LibRHash
+elif test -f version.properties; then
+  HAS_BINDINGS=yes
+  SRC_FOUND="RHash bindings"
+fi
+echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_SRC" >> "$TMPLOG"
+
+# check version
+good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[0-9]' ; }
+if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
+  test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
+  RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
+  echo "RHASH_VERSION=$RHASH_VERSION" >> "$TMPLOG"
+  good_version "$RHASH_VERSION" || die "wrong version: $RHASH_VERSION"
+  _v1=$(echo $RHASH_VERSION | cut -d '.' -f 1)
+  _v2=$(echo $RHASH_VERSION | cut -d '.' -f 2)
+  _v3=$(echo $RHASH_VERSION | cut -d '.' -f 3)
+  RHASH_VERSION_MAJOR=$_v1
+  RHASH_XVERSION=$(printf "0x%02x%02x%02x%02x" "$_v1" "$_v2" "$_v3" 0)
+  test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
+fi
+if test "$HAS_BINDINGS" = "yes"; then
+  BINDINGS_VERSION=$(cut -d = -f 2 "${BINDINGS_SRC}version.properties")
+  echo "BINDINGS_VERSION=$BINDINGS_VERSION" >> "$TMPLOG"
+  good_version "$BINDINGS_VERSION" || die "wrong bindings version: $BINDINGS_VERSION"
+  test -z "$RHASH_VERSION" && RHASH_VERSION="$BINDINGS_VERSION"
+fi
+test -n "$RHASH_VERSION" && SRC_FOUND="$SRC_FOUND $RHASH_VERSION"
+finish_check "$SRC_FOUND"
+test "$SRC_FOUND" = "no" && die "sources not found"
+
+if test "$HAS_BINDINGS" = "yes" && test "$BINDINGS_VERSION" != "$RHASH_VERSION"; then
+  echo "Updating ${BINDINGS_SRC}version.properties"
+  echo "version=$RHASH_VERSION" > ${BINDINGS_SRC}version.properties
+fi
+
+# helper functions for compilation checks
 join_params()
 {
   printf '%s ' $@ | sed -e 's/ $//'
@@ -264,36 +359,7 @@ yn_nonempty()
   test -n "$1" && echo yes || echo no;
 }
 
-log_start()
-{
-  echo "============ Checking for $1 ============" >> "$TMPLOG"
-}
-
-log_finish()
-{
-  echo "=============================================" >> "$TMPLOG"
-  echo "" >> "$TMPLOG"
-}
-
-# Use this before starting a check
-start_check() {
-  log_start "$1"
-  printf '%s' "Checking for $1 ... "
-  res_comment=""
-}
-
-# Use this to echo the results of a check
-finish_check() {
-  if test -n "$res_comment"; then
-    res_comment="($res_comment)"
-  fi
-  echo "Result is: $1 $res_comment" >> "$TMPLOG"
-  log_finish
-  echo "$1 $res_comment"
-  res_comment=""
-}
-
-# check source file compilation and return exit code
+# try to run a source file compilation and return the exit code
 compile_check() {
   source="$1"
   shift
@@ -603,8 +669,8 @@ log_finish
 # detect proper shared library name
 SHARED_PREFIX="lib"
 STATIC_PREFIX="lib"
-SHARED_EXT=".so.0"
 STATIC_EXT=".a"
+SHARED_EXT=".so.${RHASH_VERSION_MAJOR}"
 SOLINK_EXT=".so"
 EXEC_EXT=
 NEED_IMPLIB=no
@@ -624,7 +690,7 @@ if win32; then
     SHARED_PREFIX="cyg"
   fi
 elif darwin; then
-  SHARED_EXT=".0.dylib"
+  SHARED_EXT=".${RHASH_VERSION_MAJOR}.dylib"
   SOLINK_EXT=".dylib"
 fi
 
@@ -690,7 +756,6 @@ LIBRHASH_EXPORTS_TARGET=
 LIBRHASH_SH_CFLAGS=""
 LIBRHASH_SH_LDFLAGS=""
 LIBRHASH_RM_FILES=
-LIBRHASH_LEGACY_HEADERS=
 if win32; then
   LIBRHASH_SH_CFLAGS="-DRHASH_EXPORTS"
   LIBRHASH_SH_LDFLAGS="-shared -Wl,--out-implib=${LIBRHASH_IMPLIB}${SHARED_VSCRIPT},--output-def,${LIBRHASH_DEF}"
@@ -701,7 +766,6 @@ elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
 else
-  LIBRHASH_LEGACY_HEADERS="rhash_timing.h"
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SHARED)"
   test -n "$SHARED_VSCRIPT" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
@@ -796,70 +860,8 @@ if test "$INSTALL_LIB_SHARED" = "yes"; then
   LIBRHASH_TEST_TARGETS=$(join_params $LIBRHASH_TEST_TARGETS test-shared)
 fi
 
-# check for old POSIX make
+# check for an old POSIX make
 posix_make && Q_ASSIGN="=" || Q_ASSIGN="?="
-
-# detect source directories
-start_check "sources"
-HAS_RHASH=no
-HAS_LIBRHASH=no
-HAS_BINDINGS=no
-RHASH_VERSION=
-RHASH_XVERSION=
-BINDINGS_VERSION=
-RHASH_SRC=
-LIBRHASH_SRC=
-LIBRHASH_PC=
-BINDINGS_SRC=
-SRC_FOUND=no
-test -f Makefile || die "Makefile not found"
-if test -f rhash_main.c; then
-  HAS_RHASH=yes
-  SRC_FOUND=RHash
-  if test -d librhash; then
-    HAS_LIBRHASH=yes
-    LIBRHASH_SRC=librhash/
-  fi
-  if test -f bindings/version.properties; then
-    HAS_BINDINGS=yes
-    BINDINGS_SRC=bindings/
-  fi
-elif test -f rhash.c; then
-  HAS_LIBRHASH=yes
-  SRC_FOUND=LibRHash
-elif test -f version.properties; then
-  HAS_BINDINGS=yes
-  SRC_FOUND="RHash bindings"
-fi
-echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_SRC" >> "$TMPLOG"
-
-# check version
-good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[0-9]' ; }
-if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
-  test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
-  RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
-  echo "RHASH_VERSION=$RHASH_VERSION" >> "$TMPLOG"
-  good_version "$RHASH_VERSION" || die "wrong version: $RHASH_VERSION"
-  _v1=$(echo $RHASH_VERSION | cut -d '.' -f 1)
-  _v2=$(echo $RHASH_VERSION | cut -d '.' -f 2)
-  _v3=$(echo $RHASH_VERSION | cut -d '.' -f 3)
-  RHASH_XVERSION=$(printf "0x%02x%02x%02x%02x" "$_v1" "$_v2" "$_v3" 0)
-  test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
-fi
-if test "$HAS_BINDINGS" = "yes"; then
-  BINDINGS_VERSION=$(cut -d = -f 2 "${BINDINGS_SRC}version.properties")
-  echo "BINDINGS_VERSION=$BINDINGS_VERSION" >> "$TMPLOG"
-  good_version "$BINDINGS_VERSION" || die "wrong bindings version: $BINDINGS_VERSION"
-  test -z "$RHASH_VERSION" && RHASH_VERSION="$BINDINGS_VERSION"
-fi
-test -n "$RHASH_VERSION" && SRC_FOUND="$SRC_FOUND $RHASH_VERSION"
-finish_check "$SRC_FOUND"
-test "$SRC_FOUND" = "no" && die "sources not found"
-
-if test "$HAS_BINDINGS" = "yes" && test "$BINDINGS_VERSION" != "$RHASH_VERSION"; then
-  echo "Updating ${BINDINGS_SRC}version.properties"
-  echo "version=$RHASH_VERSION" > ${BINDINGS_SRC}version.properties
-fi
 
 if test "$HAS_RHASH" = "yes"; then
   echo "Writing ${RHASH_SRC}config.mak"
@@ -928,7 +930,6 @@ EXPORTS_SKIP     = $LIBRHASH_EXPORTS_SKIP
 RM_FILES         = $LIBRHASH_RM_FILES
 BUILD_TYPE       = $RHASH_BUILD_TYPE
 EXEC_EXT         = $EXEC_EXT
-LEGACY_HEADERS   = $LIBRHASH_LEGACY_HEADERS
 
 EXPORTS_TARGET   = $LIBRHASH_EXPORTS_TARGET
 BUILD_TARGETS    = $LIBRHASH_BUILD_TARGETS

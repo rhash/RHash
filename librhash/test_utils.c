@@ -1,4 +1,4 @@
-/* rhash_timing.c - functions to benchmark hash algorithms,
+/* test_utils.c - functions to benchmark hash algorithms,
  *
  * Copyright (c) 2010, Aleksey Kravchenko <rhash.admin@gmail.com>
  *
@@ -14,14 +14,27 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* modifier for Windows dll */
-#if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
-# define RHASH_API __declspec(dllexport)
-#endif
+#include "test_utils.h"
 
+#ifdef USE_RHASH_DLL
+# define RHASH_API __declspec(dllimport)
+#endif
 #include "byte_order.h"
 #include "rhash.h"
-#include "rhash_timing.h"
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+/**
+ * Platform-dependent time delta.
+ */
+typedef unsigned long long timedelta_t;
+
+#else
+# include <sys/time.h> /* for timeval */
+/**
+ * Platform-dependent time delta.
+ */
+typedef struct timeval timedelta_t;
+#endif
 
 /* DEFINE read_tsc() if possible */
 
@@ -73,12 +86,12 @@ static double fsec(timedelta_t* timer)
 #endif
 }
 
-void rhash_timer_start(timedelta_t* timer)
+static void rhash_timer_start(timedelta_t* timer)
 {
 	get_timedelta(timer);
 }
 
-double rhash_timer_stop(timedelta_t* timer)
+static double rhash_timer_stop(timedelta_t* timer)
 {
 	timedelta_t end;
 	get_timedelta(&end);
@@ -140,7 +153,7 @@ static int hash_in_loop(unsigned hash_id, const unsigned char* message, size_t m
 	return 1;
 }
 
-void rhash_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
+void test_run_benchmark(unsigned hash_id, unsigned flags, FILE* output)
 {
 	unsigned char ALIGN_ATTR(64) message[8192]; /* 8 KiB */
 	timedelta_t timer;

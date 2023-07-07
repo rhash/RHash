@@ -1,4 +1,4 @@
-/* test_lib.h - detect compiler defines */
+/** @file test_lib.h - detect compiler defines */
 #ifndef TEST_LIB_H
 #define TEST_LIB_H
 

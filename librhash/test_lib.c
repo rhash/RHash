@@ -22,8 +22,8 @@
 #include <ctype.h>
 
 #include "byte_order.h"
-#include "rhash_timing.h"
 #include "rhash_torrent.h"
+#include "test_utils.h"
 
 #ifdef USE_RHASH_DLL
 # define RHASH_API __declspec(dllimport)
@@ -1289,7 +1289,7 @@ int main(int argc, char* argv[])
 		print_openssl_status();
 	} else if (test_speed) {
 		test_known_strings(hash_id);
-		rhash_run_benchmark(hash_id, 0, stdout);
+		test_run_benchmark(hash_id, 0, stdout);
 	} else {
 		test_all_known_strings();
 		test_long_strings();

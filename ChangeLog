@@ -1,3 +1,7 @@
+Sun 09 Jul 2023 Aleksey Kravchenko
+	* Remove obsolete rhash_timer functions (API breaking change)
+	* Increment LibRHash soname version on Linux and Unix
+
 Sun 18 Jun 2023 Aleksey Kravchenko
 	* Support leading and trailing spaces in a file names
 	* Changed the simple file format to fit the sfv format
