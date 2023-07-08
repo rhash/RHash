@@ -27,6 +27,9 @@ install-lib-static: $(LIBRHASH_STATIC)
 install-lib-shared: $(LIBRHASH_SHARED) $(EXTRA_INSTALL_LIBSHARED)
 	$(INSTALL) -d $(SO_DIR)
 	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(SO_DIR)/
+	test "x$(LIBRHASH_SO_MAJ)" != "x$(LIBRHASH_SHARED)" && \
+	  rm -f $(LIBDIR)/$(LIBRHASH_SO_MAJ) && \
+	  ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SO_MAJ)
 
 install-implib:
 	$(INSTALL) -d $(LIBDIR)
@@ -35,13 +38,13 @@ install-implib:
 install-so-link:
 	$(INSTALL) -d $(LIBDIR)
 	rm -f $(LIBDIR)/$(LIBRHASH_SOLINK)
-	ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SOLINK)
+	ln -s $(LIBRHASH_SO_MAJ) $(LIBDIR)/$(LIBRHASH_SOLINK)
 
 uninstall-lib-static: uninstall-lib-headers
 	rm -f $(LIBDIR)/$(LIBRHASH_STATIC)
 
 uninstall-lib-shared: $(EXTRA_UNINSTALL_LIBSHARED)
-	rm -f $(SO_DIR)/$(LIBRHASH_SHARED)
+	rm -f $(SO_DIR)/$(LIBRHASH_SHARED) $(SO_DIR)/$(LIBRHASH_SO_MAJ)
 
 uninstall-implib:
 	rm -f $(LIBDIR)/$(LIBRHASH_IMPLIB)
@@ -172,8 +175,11 @@ $(EXPORTS_FILE): $(LIB_HEADERS)
 	  $(LIB_HEADERS) | grep -v "$(EXPORTS_SKIP)" > $@
 
 $(LIBRHASH_SOLINK):
+	test "x$(LIBRHASH_SO_MAJ)" != "x$(LIBRHASH_SHARED)" && \
+	  rm -f $(LIBRHASH_SO_MAJ) && \
+	  ln -s $(LIBRHASH_SHARED) $(LIBRHASH_SO_MAJ)
 	rm -f $(LIBRHASH_SOLINK)
-	ln -s $(LIBRHASH_SHARED) $(LIBRHASH_SOLINK)
+	ln -s $(LIBRHASH_SO_MAJ) $(LIBRHASH_SOLINK)
 
 $(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
 	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SOURCES) $(SHARED_LDFLAGS) -o $@

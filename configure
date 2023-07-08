@@ -1,5 +1,6 @@
 #!/bin/sh
 
+#####################################################################
 # set default values
 OPT_OPENSSL=auto
 OPT_OPENSSL_RUNTIME=auto
@@ -24,7 +25,8 @@ INSTALL_LIB_SHARED=auto
 INSTALL_PKGCONFIGDIR="$PKG_INSTALLDIR"
 SHARED_LIB_MODE=${SHARED_LIB_MODE:-755}
 
-# detect and prepare tmp directory
+#####################################################################
+# detect and prepare temp directory
 for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
   test -d "$DETECT_TMP" && break
 done
@@ -47,6 +49,7 @@ remove_tmpdir()
 }
 trap remove_tmpdir EXIT
 
+#####################################################################
 # display error message and exit
 die() {
   echo
@@ -58,6 +61,8 @@ die() {
   exit 1
 }
 
+#####################################################################
+# helper functions for options parsing
 print_help()
 {
   cat << EOF
@@ -118,6 +123,8 @@ get_opt_value()
   echo $(echo $* | cut -d '=' -f 2-)
 }
 
+#####################################################################
+# parse the command line options passed to the configure script
 for OPT do
   case "$OPT" in
     --help|-help|-h)
@@ -235,6 +242,7 @@ for OPT do
   shift
 done
 
+#####################################################################
 # set variables which use INSTALL_PREFIX
 test -z "$INSTALL_EXEC_PREFIX_SET" && INSTALL_EXEC_PREFIX="$INSTALL_PREFIX"
 test -z "$INSTALL_BINDIR" && INSTALL_BINDIR="$INSTALL_EXEC_PREFIX/bin"
@@ -245,6 +253,7 @@ test -z "$INSTALL_LIBDIR" && INSTALL_LIBDIR="$INSTALL_EXEC_PREFIX/lib"
 test -z "$INSTALL_PKGCONFIGDIR" && INSTALL_PKGCONFIGDIR="$INSTALL_LIBDIR/pkgconfig"
 test -z "$INSTALL_LOCALEDIR" && INSTALL_LOCALEDIR="$INSTALL_PREFIX/share/locale"
 
+#####################################################################
 # logging functions
 log_start()
 {
@@ -275,6 +284,7 @@ finish_check() {
   res_comment=""
 }
 
+#####################################################################
 # detect source directories
 start_check "sources"
 HAS_RHASH=no
@@ -310,7 +320,8 @@ elif test -f version.properties; then
 fi
 echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_SRC" >> "$TMPLOG"
 
-# check version
+#####################################################################
+# check RHash version
 good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[0-9]' ; }
 if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
   test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
@@ -339,6 +350,7 @@ if test "$HAS_BINDINGS" = "yes" && test "$BINDINGS_VERSION" != "$RHASH_VERSION";
   echo "version=$RHASH_VERSION" > ${BINDINGS_SRC}version.properties
 fi
 
+#####################################################################
 # helper functions for compilation checks
 join_params()
 {
@@ -426,6 +438,7 @@ EOF
   cc_check $@
 }
 
+#####################################################################
 # detect host and target OS
 start_check "target OS"
 HOST_OS=$(uname -s 2>&1)
@@ -552,6 +565,7 @@ wine()      { test "$OS_LC" = "wine"; }
 win32()     { cygwin || mingw32 || mingw64 || msys || wine; }
 posix_make() { aix || bsdos || hpux || irix || qnx || sunos; }
 
+#####################################################################
 # Checking CC version...
 # Intel C++ Compilers (no autoselect, use CC=/some/binary ./configure)
 cc_vendor=
@@ -641,6 +655,7 @@ if test "$cc_name" = "gcc" && test "$_cc_major" -gt 3; then
   WARN_CFLAGS="$WARN_CFLAGS -Wdeclaration-after-statement"
 fi
 
+#####################################################################
 # select optimization flags
 has_optimization()
 {
@@ -666,11 +681,13 @@ if ! cc_check_cflag; then
 fi
 log_finish
 
+#####################################################################
 # detect proper shared library name
 SHARED_PREFIX="lib"
 STATIC_PREFIX="lib"
 STATIC_EXT=".a"
 SHARED_EXT=".so.${RHASH_VERSION_MAJOR}"
+SO_MAJ_EXT=".so.${RHASH_VERSION_MAJOR}"
 SOLINK_EXT=".so"
 EXEC_EXT=
 NEED_IMPLIB=no
@@ -692,8 +709,12 @@ if win32; then
 elif darwin; then
   SHARED_EXT=".${RHASH_VERSION_MAJOR}.dylib"
   SOLINK_EXT=".dylib"
+elif linux; then
+  # use the full library version for the library file extension
+  SHARED_EXT=".so.${RHASH_VERSION}"
 fi
 
+#####################################################################
 # check for linker flags
 LD_STATIC=-static
 test "$BUILD_STATIC" = "auto" && BUILD_STATIC=no
@@ -742,9 +763,11 @@ if win32; then
   finish_check $(yn_nonempty "$WIN_LDFLAGS")
 fi
 
-# detect library names and build flags
-LIBRHASH_SHARED="${SHARED_PREFIX}rhash${SHARED_EXT}"
+#####################################################################
+# detect shared and static library names and build flags
 LIBRHASH_STATIC="${STATIC_PREFIX}rhash${STATIC_EXT}"
+LIBRHASH_SHARED="${SHARED_PREFIX}rhash${SHARED_EXT}"
+LIBRHASH_SO_MAJ="${SHARED_PREFIX}rhash${SO_MAJ_EXT}"
 LIBRHASH_SOLINK="${SHARED_PREFIX}rhash${SOLINK_EXT}"
 LIBRHASH_SOLINK_TARGET=
 test "$NEED_SOLINK" = "yes" && LIBRHASH_SOLINK_TARGET=$LIBRHASH_SOLINK
@@ -767,9 +790,10 @@ elif darwin; then
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
 else
   LIBRHASH_SH_CFLAGS="-fpic"
-  LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SHARED)"
+  LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SO_MAJ)"
   test -n "$SHARED_VSCRIPT" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
 fi
+test "x$LIBRHASH_SO_MAJ" != "x$LIBRHASH_SHARED" && LIBRHASH_RM_FILES="$LIBRHASH_RM_FILES $LIBRHASH_SO_MAJ"
 LIBRHASH_RM_FILES=$(join_params $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
 
 RHASH_DEFINES=
@@ -863,6 +887,8 @@ fi
 # check for an old POSIX make
 posix_make && Q_ASSIGN="=" || Q_ASSIGN="?="
 
+#####################################################################
+# write config.mak for the RHash makefile
 if test "$HAS_RHASH" = "yes"; then
   echo "Writing ${RHASH_SRC}config.mak"
   cat > ${RHASH_SRC}config.mak << EOF
@@ -905,7 +931,8 @@ BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(join_params $LD_STATIC $OPENSSL_LDFLAGS)
 EOF
 fi
 
-
+#####################################################################
+# write config.mak for the LibRHash makefile
 if test "$HAS_LIBRHASH" = "yes"; then
   echo "Writing ${LIBRHASH_SRC}config.mak"
   cat > ${LIBRHASH_SRC}config.mak << EOF
@@ -922,6 +949,7 @@ INSTALL = $CMD_INSTALL
 
 LIBRHASH_STATIC  = $LIBRHASH_STATIC
 LIBRHASH_SHARED  = $LIBRHASH_SHARED
+LIBRHASH_SO_MAJ  = $LIBRHASH_SO_MAJ
 LIBRHASH_SOLINK  = $LIBRHASH_SOLINK
 LIBRHASH_DEF     = $LIBRHASH_DEF
 LIBRHASH_IMPLIB  = $LIBRHASH_IMPLIB
@@ -954,6 +982,8 @@ BIN_STATIC_LDFLAGS = \$(LDFLAGS) $(join_params $LD_STATIC $OPENSSL_LDFLAGS)
 EOF
 fi
 
+#####################################################################
+# write the pkg-config file for the librhash library
 if test -n "$LIBRHASH_PC"; then
   PC_EXC="$INSTALL_EXEC_PREFIX"
   PC_INC="$INSTALL_INCDIR"
