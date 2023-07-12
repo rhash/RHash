@@ -92,8 +92,9 @@ Features options:
   --enable-openssl[=runtime] enable OpenSSL (optimized hash functions) support.
                          If runtime specified, then load OpenSSL at runtime if
                          the library is found [autodetect]
-  --enable-debug         enable debug information
-  --enable-static        statically link libraries into RHash binary
+  --enable-debug         enable debug information [disable]
+  --enable-static[=librhash] statically link all libraries or (if =librhash)
+                         only the LibRHash library into RHash binary [disable]
   --enable-lib-static    build and install LibRHash static library [auto]
   --enable-lib-shared    build and install LibRHash shared library [auto]
   --enable-symlinks[=LIST]   install symlinks to the binary [enable]
@@ -191,6 +192,9 @@ for OPT do
       ;;
     --enable-static)
       OPT_STATIC=yes
+      ;;
+    --enable-static=librhash)
+      OPT_STATIC=librhash
       ;;
     --disable-static)
       OPT_STATIC=no
