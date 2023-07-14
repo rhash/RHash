@@ -34,7 +34,6 @@ tpath_t make_wpath(ctpath_t dir_path, size_t dir_len, ctpath_t sub_path);
 # define make_tpath(dir_path, sub_path) make_path(dir_path, sub_path, FileInitUseRealPathAsIs)
 #endif /* _WIN32 */
 
-int is_regular_file(const char* path); /* shall be deprecated */
 const char* get_basename(const char* path);
 
 /**

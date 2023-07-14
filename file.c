@@ -207,24 +207,6 @@ static void convert_backslashes_to_unix(char* path)
 }
 #endif /* _WIN32 */
 
-/**
- * Check if a path points to a regular file.
- *
- * @param path the path to check
- * @return 1 if file exists an is a regular file, 0 otherwise
- */
-int is_regular_file(const char* path)
-{
-	int is_regular = 0;
-	file_t file;
-	file_init_by_print_path(&file, NULL, path, FileInitReusePath);
-	if (file_stat(&file, 0) >= 0) {
-		is_regular = FILE_ISREG(&file);
-	}
-	file_cleanup(&file);
-	return is_regular;
-}
-
 /*=========================================================================
  * file_t functions
  *=========================================================================*/
