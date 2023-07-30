@@ -567,6 +567,7 @@ qnx()       { test "$OS_LC" = "qnx"; }
 sunos()     { test "$OS_LC" = "sunos"; }
 wine()      { test "$OS_LC" = "wine"; }
 win32()     { cygwin || mingw32 || mingw64 || msys || wine; }
+bsd()       { dragonfly || freebsd || netbsd || openbsd ; }
 posix_make() { aix || bsdos || hpux || irix || qnx || sunos; }
 
 #####################################################################
@@ -713,7 +714,7 @@ if win32; then
 elif darwin; then
   SHARED_EXT=".${RHASH_VERSION_MAJOR}.dylib"
   SOLINK_EXT=".dylib"
-elif linux; then
+elif linux || bsd; then
   # use the full library version for the library file extension
   SHARED_EXT=".so.${RHASH_VERSION}"
 fi
