@@ -229,7 +229,7 @@ wchar_t* get_long_path_if_needed(const wchar_t* wpath)
 			size = GetFullPathNameW(wpath, size, result + UNC_PREFIX_SIZE, NULL);
 			if (size > 0) {
 				if (spaces_count > 0)
-					wcscpy_s(result + UNC_PREFIX_SIZE + size, spaces_count + 1, wpath + index);
+					wcscpy(result + UNC_PREFIX_SIZE + size, wpath + index);
 				return result;
 			}
 			free(result);
