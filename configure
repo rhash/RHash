@@ -703,6 +703,7 @@ if win32; then
   LN_S="cp -pR"
   EXEC_EXT=".exe"
   SHARED_EXT=".dll"
+  SO_MAJ_EXT=$SHARED_EXT
   NEED_IMPLIB=yes
   NEED_SOLINK=no
   INSTALL_SO_DIR=$INSTALL_BINDIR
@@ -712,7 +713,8 @@ if win32; then
     SHARED_PREFIX="cyg"
   fi
 elif darwin; then
-  SHARED_EXT=".${RHASH_VERSION_MAJOR}.dylib"
+  SHARED_EXT=".${RHASH_VERSION}.dylib"
+  SO_MAJ_EXT=".${RHASH_VERSION_MAJOR}.dylib"
   SOLINK_EXT=".dylib"
 elif linux || bsd; then
   # use the full library version for the library file extension
@@ -782,7 +784,7 @@ LIBRHASH_SOLINK="${SHARED_PREFIX}rhash${SOLINK_EXT}"
 LIBRHASH_SOLINK_TARGET=
 test "$NEED_SOLINK" = "yes" && LIBRHASH_SOLINK_TARGET=$LIBRHASH_SOLINK
 LIBRHASH_DEF="${SHARED_PREFIX}rhash.def"
-LIBRHASH_IMPLIB="${STATIC_PREFIX}rhash${SHARED_EXT}${STATIC_EXT}"
+LIBRHASH_IMPLIB="${STATIC_PREFIX}rhash${SO_MAJ_EXT}${STATIC_EXT}"
 LIBRHASH_EXPORTS_FILE="exports.sym"
 LIBRHASH_EXPORTS_SKIP="rhash_wfile"
 LIBRHASH_EXPORTS_TARGET=

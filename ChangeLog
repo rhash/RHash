@@ -1,3 +1,12 @@
+Mon 28 Aug 2023 Aleksey Kravchenko
+	* Bugfix: Fix dynamic library symlink on macOS
+
+Mon 21 Aug 2023 Aleksey Kravchenko
+	* Bugfix: Fix support of WinXP platform
+
+Mon 31 Jul 2023 Aleksey Kravchenko
+	* Bugfix: Fix dynamic library symlink on *BSD
+
 Fri 14 Jul 2023 Aleksey Kravchenko
 	* === Version 1.4.4 ===
 
