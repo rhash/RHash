@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(rhash)
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/version.h" versionfile)
+file(READ "version.h" versionfile)
 string(REGEX MATCH "#define VERSION \"([0-9]*)\.([0-9]*)\.([0-9]*)\"" _ ${versionfile})
 set(RHASH_VERSION_MAJOR ${CMAKE_MATCH_1})
 set(RHASH_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -10,35 +10,35 @@ set(RHASH_VERSION "${RHASH_VERSION_MAJOR}.${RHASH_VERSION_MINOR}.${RHASH_VERSION
 
 option(USE_GETTEXT "Enable gettext (localization) support")
 
-set(SOURCE_FILES    "${CMAKE_CURRENT_SOURCE_DIR}/calc_sums.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_print.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/common_func.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_update.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file_mask.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file_set.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/find_file.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_check.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/output.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/parse_cmdline.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_main.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/win_utils.c")
+set(SOURCE_FILES    "calc_sums.c"
+                    "hash_print.c"
+                    "common_func.c"
+                    "hash_update.c"
+                    "file.c"
+                    "file_mask.c"
+                    "file_set.c"
+                    "find_file.c"
+                    "hash_check.c"
+                    "output.c"
+                    "parse_cmdline.c"
+                    "rhash_main.c"
+                    "win_utils.c")
 
-set(HEADER_FILES    "${CMAKE_CURRENT_SOURCE_DIR}/calc_sums.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_print.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/common_func.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_update.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file_mask.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/file_set.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/find_file.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hash_check.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/output.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/parse_cmdline.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_main.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/win_utils.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/platform.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/version.h")
+set(HEADER_FILES    "calc_sums.h"
+                    "hash_print.h"
+                    "common_func.h"
+                    "hash_update.h"
+                    "file.h"
+                    "file_mask.h"
+                    "file_set.h"
+                    "find_file.h"
+                    "hash_check.h"
+                    "output.h"
+                    "parse_cmdline.h"
+                    "rhash_main.h"
+                    "win_utils.h"
+                    "platform.h"
+                    "version.h")
 
 add_subdirectory("librhash")
 

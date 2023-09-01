@@ -3,73 +3,68 @@ project(librhash LANGUAGES C)
 
 include(GNUInstallDirs)
 
-if(MSVC OR MSVC90 OR MSVC10)
-    set(MSVC ON)
-    if(BUILD_SHARED_LIBS)
-        set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-    endif()
-endif()
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON CACHE BOOL "Export all symbols when building shared library on Windows")
 
 option(USE_OPENSSL "Enable OpenSSL (optimized hash functions) support")
 option(OPENSSL_RUNTIME "Load OpenSSL at runtime if present")
 
-set(SOURCE_FILES    "${CMAKE_CURRENT_SOURCE_DIR}/algorithms.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/byte_order.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/plug_openssl.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_timing.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_torrent.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/aich.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/crc32.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/ed2k.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/edonr.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hex.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/md4.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/md5.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha1.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha256.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha512.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha3.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/ripemd-160.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/gost12.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/gost94.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/has160.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/snefru.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/tiger.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/tiger_sbox.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/tth.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/torrent.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/whirlpool.c"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/whirlpool_sbox.c")
+set(SOURCE_FILES    "algorithms.c"
+                    "byte_order.c"
+                    "plug_openssl.c"
+                    "rhash.c"
+                    "rhash_timing.c"
+                    "rhash_torrent.c"
+                    "aich.c"
+                    "crc32.c"
+                    "ed2k.c"
+                    "edonr.c"
+                    "hex.c"
+                    "md4.c"
+                    "md5.c"
+                    "sha1.c"
+                    "sha256.c"
+                    "sha512.c"
+                    "sha3.c"
+                    "ripemd-160.c"
+                    "gost12.c"
+                    "gost94.c"
+                    "has160.c"
+                    "snefru.c"
+                    "tiger.c"
+                    "tiger_sbox.c"
+                    "tth.c"
+                    "torrent.c"
+                    "whirlpool.c"
+                    "whirlpool_sbox.c")
 
-set(HEADER_FILES    "${CMAKE_CURRENT_SOURCE_DIR}/algorithms.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/byte_order.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/plug_openssl.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_timing.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/rhash_torrent.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/aich.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/crc32.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/ed2k.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/edonr.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/hex.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/md4.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/md5.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha1.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha256.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha512.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/sha3.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/ripemd-160.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/gost12.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/gost94.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/has160.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/snefru.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/tiger.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/tth.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/torrent.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/ustd.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/util.h"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/whirlpool.h")
+set(HEADER_FILES    "algorithms.h"
+                    "byte_order.h"
+                    "plug_openssl.h"
+                    "rhash.h"
+                    "rhash_timing.h"
+                    "rhash_torrent.h"
+                    "aich.h"
+                    "crc32.h"
+                    "ed2k.h"
+                    "edonr.h"
+                    "hex.h"
+                    "md4.h"
+                    "md5.h"
+                    "sha1.h"
+                    "sha256.h"
+                    "sha512.h"
+                    "sha3.h"
+                    "ripemd-160.h"
+                    "gost12.h"
+                    "gost94.h"
+                    "has160.h"
+                    "snefru.h"
+                    "tiger.h"
+                    "tth.h"
+                    "torrent.h"
+                    "ustd.h"
+                    "util.h"
+                    "whirlpool.h")
 
 add_library(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${CMAKE_PROJECT_NAME}")
@@ -103,11 +98,11 @@ export(TARGETS ${PROJECT_NAME}
 
 install(TARGETS ${PROJECT_NAME}
        EXPORT ${CMAKE_PROJECT_NAME}Config
-       RUNTIME DESTINATION bin
-       LIBRARY DESTINATION lib
-       ARCHIVE DESTINATION lib)
+       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/rhash.h" "${CMAKE_CURRENT_SOURCE_DIR}/rhash_torrent.h"
+install(FILES "rhash.h" "rhash_torrent.h"
         DESTINATION include)
 
 install(EXPORT ${CMAKE_PROJECT_NAME}Config
