@@ -27,7 +27,7 @@ install-lib-static: $(LIBRHASH_STATIC)
 install-lib-shared: $(LIBRHASH_SHARED) $(EXTRA_INSTALL_LIBSHARED)
 	$(INSTALL) -d $(SO_DIR)
 	$(INSTALL_SHARED) $(LIBRHASH_SHARED) $(SO_DIR)/
-	test "x$(LIBRHASH_SO_MAJ)" != "x$(LIBRHASH_SHARED)" || ( \
+	test "x$(LIBRHASH_SO_MAJ)" = "x$(LIBRHASH_SHARED)" || ( \
 	  rm -f $(LIBDIR)/$(LIBRHASH_SO_MAJ) && \
 	  ln -s $(LIBRHASH_SHARED) $(LIBDIR)/$(LIBRHASH_SO_MAJ) )
 
