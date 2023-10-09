@@ -513,7 +513,7 @@ const char* btih_without_a_filename_tests[] = {
 /** Set of test vectors for one hash function */
 struct test_vectors_t {
 	/** Hash function id */
-	unsigned hash_id;
+	unsigned long long hash_id;
 	/** Array of pairs (message, message_digest) */
 	const char** tests;
 };
@@ -632,7 +632,7 @@ enum ChunkedDataBitFlags {
  * @param total_size the total size of the data to be hashed
  * @param flags bit flags to control the hashing process
  */
-static char* hash_data_by_chunks(unsigned hash_id, const char* data, size_t chunk_size, size_t total_size, unsigned flags)
+static char* hash_data_by_chunks(unsigned long long hash_id, const char* data, size_t chunk_size, size_t total_size, unsigned flags)
 {
 	struct rhash_context* ctx;
 	size_t left, size;
@@ -676,7 +676,7 @@ static char* hash_data_by_chunks(unsigned hash_id, const char* data, size_t chun
  * @param hash the expected hash value
  * @param flags bit flags to control the hashing process
  */
-static void assert_hash_long_msg(unsigned hash_id, const char* data, size_t chunk_size, size_t total_size, const char* hash, const char* msg_name, unsigned flags)
+static void assert_hash_long_msg(unsigned long long hash_id, const char* data, size_t chunk_size, size_t total_size, const char* hash, const char* msg_name, unsigned flags)
 {
 	char* result;
 	result = hash_data_by_chunks(hash_id, data, chunk_size, total_size, flags);
@@ -698,7 +698,7 @@ static void assert_hash_long_msg(unsigned hash_id, const char* data, size_t chun
  * @param data_size the size of the data
  * @param flags bit flags to control the hashing process
  */
-static char* hash_data(unsigned hash_id, const char* data, size_t data_size, unsigned flags)
+static char* hash_data(unsigned long long hash_id, const char* data, size_t data_size, unsigned flags)
 {
 	return hash_data_by_chunks(hash_id, data, data_size, data_size, flags);
 }
@@ -710,7 +710,7 @@ static char* hash_data(unsigned hash_id, const char* data, size_t data_size, uns
  * @param str the message to hash
  * @param flags bit flags to control the hashing process
  */
-static char* hash_message(unsigned hash_id, const char* str, unsigned flags)
+static char* hash_message(unsigned long long hash_id, const char* str, unsigned flags)
 {
 	return hash_data(hash_id, str, strlen(str), flags);
 }
@@ -724,7 +724,7 @@ static char* hash_message(unsigned hash_id, const char* str, unsigned flags)
  * @param expected_hash the expected hash value
  * @param flags bit flags to control the hashing process
  */
-static void assert_hash(unsigned hash_id, const char* str, const char* expected_hash, unsigned flags)
+static void assert_hash(unsigned long long hash_id, const char* str, const char* expected_hash, unsigned flags)
 {
 	size_t length = strlen(str);
 	assert_hash_long_msg(hash_id, str, length, length, expected_hash, NULL, flags);
@@ -740,7 +740,7 @@ static void assert_hash(unsigned hash_id, const char* str, const char* expected_
  * @param expected_hash the expected hash value
  * @param flags bit flags to control the hashing process
  */
-static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const char* hash, unsigned flags)
+static void assert_rep_hash(unsigned long long hash_id, char ch, size_t msg_size, const char* hash, unsigned flags)
 {
 	char ALIGN_ATTR(64) msg_chunk[8192]; /* 8 KiB */
 	char msg_name[20];
@@ -763,7 +763,7 @@ static void assert_rep_hash(unsigned hash_id, char ch, size_t msg_size, const ch
  * @param ptr pointer to array of pairs <message,expected-hash>
  * @param flags bit flags to control the hashing process
  */
-static void test_known_strings_pairs(unsigned hash_id, const char** ptr, unsigned flags)
+static void test_known_strings_pairs(unsigned long long hash_id, const char** ptr, unsigned flags)
 {
 	for (; ptr[0] && ptr[1]; ptr += 2) {
 		assert_hash(hash_id, ptr[0], ptr[1], flags);
@@ -775,7 +775,7 @@ static void test_known_strings_pairs(unsigned hash_id, const char** ptr, unsigne
  *
  * @param hash_id id of the algorithm to test
  */
-static void test_known_strings(unsigned hash_id)
+static void test_known_strings(unsigned long long hash_id)
 {
 	int i;
 	dbg("test known strings\n");
@@ -805,7 +805,7 @@ static void test_all_known_strings(void)
  * A pair <algorithm-id, expected-hash-value>.
  */
 typedef struct id_to_hash_t {
-	int hash_id;
+	unsigned long long hash_id;
 	const char* expected_hash;
 } id_to_hash_t;
 
@@ -897,7 +897,7 @@ static void test_results_consistency(void)
 	struct rhash_context* ctx;
 	unsigned char res1[70];
 	char res2[70];
-	unsigned i, hash_id;
+	unsigned long long i, hash_id;
 	dbg("test results consistency\n");
 
 	for (i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
@@ -930,7 +930,7 @@ static void test_results_consistency(void)
 static void test_unaligned_messages_consistency(void)
 {
 	int start, alignment_size;
-	unsigned hash_id;
+	unsigned long long hash_id;
 	dbg("test unaligned messages consistency\n");
 
 	/* loop by hash algorithms */
@@ -965,7 +965,7 @@ static void test_unaligned_messages_consistency(void)
 static void test_chunk_size_consistency(void)
 {
 	char buffer[8192];
-	unsigned hash_id;
+	unsigned long long hash_id;
 	size_t i;
 	dbg("test chunk size consistency\n");
 
@@ -992,7 +992,7 @@ static void test_context_alignment(void)
 {
 	const size_t aligner = 63;
 	int i;
-	unsigned hash_ids[32];
+	unsigned long long hash_ids[32];
 	dbg("test context alignment\n");
 
 	for (i = 0; i < 32; i++)
@@ -1055,7 +1055,7 @@ static void test_generic_assumptions(void)
 static void test_import_export(void)
 {
 #if !defined(NO_IMPORT_EXPORT)
-	unsigned hash_mask = RHASH_ALL_HASHES;
+	unsigned long long hash_mask = RHASH_ALL_HASHES;
 	uint8_t data[241];
 	size_t i;
 	size_t min_sizes[3] = { 0, 1024, 8192 };
@@ -1070,7 +1070,7 @@ static void test_import_export(void)
 		void* exported_data;
 		rhash ctx = rhash_init(hash_mask);
 		rhash imported_ctx;
-		unsigned hash_id;
+		unsigned long long hash_id;
 		for (; size < min_size; size += sizeof(data))
 			rhash_update(ctx, data, sizeof(data));
 		if ((hash_mask & RHASH_BTIH) != 0) {
@@ -1195,7 +1195,7 @@ static void test_magnet(void)
 static unsigned find_hash(const char* name)
 {
 	char buf[30];
-	unsigned hash_id;
+	unsigned long long hash_id;
 	int i;
 
 	if (strlen(name) > (sizeof(buf) - 1)) return 0;
@@ -1213,8 +1213,8 @@ static unsigned find_hash(const char* name)
  */
 static void print_openssl_status(void)
 {
-	rhash_uptr_t available = rhash_get_openssl_available_mask();
-	rhash_uptr_t supported = rhash_get_openssl_supported_mask();
+	unsigned long long available = rhash_get_openssl_available_mask();
+	unsigned long long supported = rhash_get_openssl_supported_mask();
 	int has_openssl = rhash_is_openssl_supported();
 
 	printf("OpenSSL %s", (has_openssl ? "supported" : "not supported"));
@@ -1223,7 +1223,7 @@ static void print_openssl_status(void)
 		printf(", %s", (available ? "loaded" : "not loaded"));
 		if (available)
 		{
-			unsigned hash_id;
+			unsigned long long hash_id;
 			printf(":");
 			available &= RHASH_ALL_HASHES;
 			for (hash_id = 1; hash_id <= available; hash_id <<= 1) {
@@ -1250,7 +1250,7 @@ static void print_openssl_status(void)
 int main(int argc, char* argv[])
 {
 	int test_speed = 0, print_info = 0;
-	unsigned hash_id = RHASH_SHA1;
+	unsigned long long hash_id = RHASH_SHA1;
 	int i;
 
 	for (i = 1; i < argc; i++) {

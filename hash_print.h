@@ -31,7 +31,7 @@ void init_hash_info_table(void);
 struct strbuf_t* init_printf_format(void);
 
 /* formatted output of message digests and file information */
-struct print_item* parse_print_string(const char* format, unsigned* sum_mask);
+struct print_item* parse_print_string(const char* format, unsigned long long * sum_mask);
 int print_line(FILE* out, unsigned out_mode, struct print_item* list, struct file_info* info);
 void free_print_list(struct print_item* list);
 

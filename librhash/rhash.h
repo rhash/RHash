@@ -22,37 +22,37 @@ extern "C" {
  */
 enum rhash_ids
 {
-	RHASH_CRC32 = 0x01,
-	RHASH_MD4   = 0x02,
-	RHASH_MD5   = 0x04,
-	RHASH_SHA1  = 0x08,
-	RHASH_TIGER = 0x10,
-	RHASH_TTH   = 0x20,
-	RHASH_BTIH  = 0x40,
-	RHASH_ED2K  = 0x80,
-	RHASH_AICH  = 0x100,
-	RHASH_WHIRLPOOL = 0x200,
-	RHASH_RIPEMD160 = 0x400,
-	RHASH_GOST94    = 0x800,
-	RHASH_GOST94_CRYPTOPRO = 0x1000,
-	RHASH_HAS160     = 0x2000,
-	RHASH_GOST12_256 = 0x4000,
-	RHASH_GOST12_512 = 0x8000,
-	RHASH_SHA224    = 0x10000,
-	RHASH_SHA256    = 0x20000,
-	RHASH_SHA384    = 0x40000,
-	RHASH_SHA512    = 0x80000,
-	RHASH_EDONR256  = 0x0100000,
-	RHASH_EDONR512  = 0x0200000,
-	RHASH_SHA3_224  = 0x0400000,
-	RHASH_SHA3_256  = 0x0800000,
-	RHASH_SHA3_384  = 0x1000000,
-	RHASH_SHA3_512  = 0x2000000,
-	RHASH_CRC32C    = 0x4000000,
-	RHASH_SNEFRU128 = 0x8000000,
-	RHASH_SNEFRU256 = 0x10000000,
-	RHASH_BLAKE2S   = 0x20000000,
-	RHASH_BLAKE2B   = 0x40000000,
+	RHASH_CRC32 = 0x01ULL,
+	RHASH_MD4   = 0x02ULL,
+	RHASH_MD5   = 0x04ULL,
+	RHASH_SHA1  = 0x08ULL,
+	RHASH_TIGER = 0x10ULL,
+	RHASH_TTH   = 0x20ULL,
+	RHASH_BTIH  = 0x40ULL,
+	RHASH_ED2K  = 0x80ULL,
+	RHASH_AICH  = 0x100ULL,
+	RHASH_WHIRLPOOL = 0x200ULL,
+	RHASH_RIPEMD160 = 0x400ULL,
+	RHASH_GOST94    = 0x800ULL,
+	RHASH_GOST94_CRYPTOPRO = 0x1000ULL,
+	RHASH_HAS160     = 0x2000ULL,
+	RHASH_GOST12_256 = 0x4000ULL,
+	RHASH_GOST12_512 = 0x8000ULL,
+	RHASH_SHA224    = 0x10000ULL,
+	RHASH_SHA256    = 0x20000ULL,
+	RHASH_SHA384    = 0x40000ULL,
+	RHASH_SHA512    = 0x80000ULL,
+	RHASH_EDONR256  = 0x0100000ULL,
+	RHASH_EDONR512  = 0x0200000ULL,
+	RHASH_SHA3_224  = 0x0400000ULL,
+	RHASH_SHA3_256  = 0x0800000ULL,
+	RHASH_SHA3_384  = 0x1000000ULL,
+	RHASH_SHA3_512  = 0x2000000ULL,
+	RHASH_CRC32C    = 0x4000000ULL,
+	RHASH_SNEFRU128 = 0x8000000ULL,
+	RHASH_SNEFRU256 = 0x10000000ULL,
+	RHASH_BLAKE2S   = 0x20000000ULL,
+	RHASH_BLAKE2B   = 0x40000000ULL,
 
 	/**
 	 * The bit-mask containing all supported hash functions.
@@ -70,7 +70,7 @@ enum rhash_ids
 	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO, /* deprecated constant name */
 
 	/* bit-flag for extra hash identifiers */
-	RHASH_EXTENDED_BIT = (int)0x80000000,
+	RHASH_EXTENDED_BIT = 0x8000000000000000LL,
 
 	/**
 	 * The number of supported hash functions.
@@ -91,7 +91,7 @@ struct rhash_context
 	/**
 	 * The bit-mask containing identifiers of the hash functions being calculated.
 	 */
-	unsigned hash_id;
+	unsigned long long hash_id;
 };
 
 #ifndef LIBRHASH_RHASH_CTX_DEFINED
@@ -124,7 +124,7 @@ RHASH_API void rhash_library_init(void);
  * @param result buffer to receive the binary message digest value
  * @return 0 on success, -1 on error
  */
-RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result);
+RHASH_API int rhash_msg(unsigned long long hash_id, const void* message, size_t length, unsigned char* result);
 
 /**
  * Compute a single message digest for the given file.
@@ -134,7 +134,7 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
  * @param result buffer to receive message digest
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* result);
+RHASH_API int rhash_file(unsigned long long hash_id, const char* filepath, unsigned char* result);
 
 #ifdef _WIN32
 /**
@@ -145,7 +145,7 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
  * @param result buffer to receive the binary message digest value
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned char* result);
+RHASH_API int rhash_wfile(unsigned long long hash_id, const wchar_t* filepath, unsigned char* result);
 #endif
 
 
@@ -160,7 +160,7 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
  *        be an identifier of one hash function
  * @return initialized rhash context, NULL on fail with error code stored in errno
  */
-RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[]);
+RHASH_API rhash rhash_init_multi(size_t count, const unsigned long long hash_ids[]);
 
 /**
  * Allocate and initialize RHash context for calculating a single hash function.
@@ -173,7 +173,7 @@ RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[]);
  * @param hash_id identifier of a hash function
  * @return initialized rhash context, NULL on fail with error code stored in errno
  */
-RHASH_API rhash rhash_init(unsigned hash_id);
+RHASH_API rhash rhash_init(unsigned long long hash_id);
 
 /**
  * Calculate message digests of message.
@@ -276,7 +276,7 @@ RHASH_API int rhash_count(void);
  * @param hash_id the id of the hash function
  * @return the size of the message digest in bytes
  */
-RHASH_API int rhash_get_digest_size(unsigned hash_id);
+RHASH_API int rhash_get_digest_size(unsigned long long hash_id);
 
 /**
  * Returns the length of message digest string in its default output format.
@@ -284,7 +284,7 @@ RHASH_API int rhash_get_digest_size(unsigned hash_id);
  * @param hash_id the id of the hash function
  * @return the length of the message digest
  */
-RHASH_API int rhash_get_hash_length(unsigned hash_id);
+RHASH_API int rhash_get_hash_length(unsigned long long hash_id);
 
 /**
  * Detect default message digest output format for the given hash algorithm.
@@ -292,7 +292,7 @@ RHASH_API int rhash_get_hash_length(unsigned hash_id);
  * @param hash_id the id of hash algorithm
  * @return 1 for base32 format, 0 for hexadecimal
  */
-RHASH_API int rhash_is_base32(unsigned hash_id);
+RHASH_API int rhash_is_base32(unsigned long long hash_id);
 
 /**
  * Returns the name of the given hash function.
@@ -300,7 +300,7 @@ RHASH_API int rhash_is_base32(unsigned hash_id);
  * @param hash_id id of the hash function
  * @return hash function name
  */
-RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function name */
+RHASH_API const char* rhash_get_name(unsigned long long hash_id); /* get hash function name */
 
 /**
  * Returns a name part of magnet urn of the given hash algorithm.
@@ -310,7 +310,7 @@ RHASH_API const char* rhash_get_name(unsigned hash_id); /* get hash function nam
  * @param hash_id id of the hash algorithm
  * @return name
  */
-RHASH_API const char* rhash_get_magnet_name(unsigned hash_id); /* get name part of magnet urn */
+RHASH_API const char* rhash_get_magnet_name(unsigned long long hash_id); /* get name part of magnet urn */
 
 /* HASH SUM OUTPUT INTERFACE */
 
@@ -392,7 +392,7 @@ RHASH_API size_t rhash_print_bytes(char* output,
  *               flags RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
  * @return the number of written characters on success or 0 on fail
  */
-RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
+RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned long long hash_id,
 	int flags);
 
 /**
@@ -410,7 +410,7 @@ RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
  * @return number of written characters, including terminating '\0' on success, 0 on fail
  */
 RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
-	rhash context, unsigned hash_mask, int flags);
+	rhash context, unsigned long long hash_mask, int flags);
 
 
 /* MESSAGE API */
@@ -418,6 +418,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 /**
  * The type of an unsigned integer large enough to hold a pointer.
  */
+/*
 #if defined(UINTPTR_MAX)
 typedef uintptr_t rhash_uptr_t;
 #elif defined(_LP64) || defined(__LP64__) || defined(__x86_64) || \
@@ -426,11 +427,14 @@ typedef unsigned long long rhash_uptr_t;
 #else
 typedef unsigned long rhash_uptr_t;
 #endif
+*/
+
+typedef unsigned long long rhash_uptr_t; /* quick hack to allow 64bit hash masks pass rhash_transmit() */
 
 /**
  * The value returned by rhash_transmit on error.
  */
-#define RHASH_ERROR ((rhash_uptr_t)-1)
+#define RHASH_ERROR ((unsigned long long)-1LL)
 /**
  * Convert a pointer to rhash_uptr_t.
  */

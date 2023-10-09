@@ -156,7 +156,7 @@ rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
  *
  * @param mask ids of hash sums to initialize
  */
-void rhash_init_algorithms(unsigned mask)
+void rhash_init_algorithms(unsigned long long mask)
 {
 	(void)mask; /* unused now */
 
@@ -175,7 +175,7 @@ void rhash_init_algorithms(unsigned mask)
  * @param hash_id the id of hash algorithm
  * @return pointer to the rhash_info structure containing the information
  */
-const rhash_info* rhash_info_by_id(unsigned hash_id)
+const rhash_info* rhash_info_by_id(unsigned long long hash_id)
 {
 	hash_id &= RHASH_ALL_HASHES;
 	/* check that one and only one bit is set */
@@ -278,7 +278,7 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
  * @param size size of memory region
  * @return the size of the exported data on success, 0 on fail.
  */
-size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size)
+size_t rhash_export_alg(unsigned long long hash_id, const void* ctx, void* out, size_t size)
 {
 	switch (hash_id)
 	{
@@ -301,7 +301,7 @@ size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t siz
  * @param size size of data to import
  * @return the size of the imported data on success, 0 on fail.
  */
-size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size)
+size_t rhash_import_alg(unsigned long long hash_id, void* ctx, const void* in, size_t size)
 {
 	switch (hash_id)
 	{

@@ -69,8 +69,8 @@
 	(PLUGIN_MD4 | PLUGIN_MD5 | PLUGIN_SHA1_SHA2 | PLUGIN_RIPEMD160 | PLUGIN_WHIRLPOOL)
 
 /* the mask of ids of hashing algorithms to use from the OpenSSL library */
-unsigned rhash_openssl_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
-unsigned openssl_available_algorithms_hash_mask = 0;
+unsigned long long rhash_openssl_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
+unsigned long long openssl_available_algorithms_hash_mask = 0;
 
 #ifdef OPENSSL_RUNTIME
 typedef void (*os_fin_t)(void*, void*);
@@ -309,7 +309,7 @@ int rhash_plug_openssl(void)
  *
  * @return the bit-mask of available OpenSSL algorithms
  */
-unsigned rhash_get_openssl_supported_hash_mask(void)
+unsigned long long rhash_get_openssl_supported_hash_mask(void)
 {
 	return PLUGIN_SUPPORTED_HASH_MASK;
 }
@@ -321,7 +321,7 @@ unsigned rhash_get_openssl_supported_hash_mask(void)
  *
  * @return the bit-mask of available OpenSSL algorithms
  */
-unsigned rhash_get_openssl_available_hash_mask(void)
+unsigned long long rhash_get_openssl_available_hash_mask(void)
 {
 	return openssl_available_algorithms_hash_mask;
 }

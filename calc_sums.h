@@ -43,7 +43,7 @@ int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
  * @param hash_id hash algorithm identifier
  * @param flags benchmark flags, can contain BENCHMARK_CPB, BENCHMARK_RAW
  */
-void run_benchmark(unsigned hash_id, unsigned flags);
+void run_benchmark(unsigned long long hash_id, unsigned flags);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -28,7 +28,7 @@ typedef struct rhash_info
 	/**
 	 * Hash function indentifier.
 	 */
-	unsigned hash_id;
+	unsigned long long hash_id;
 	/**
 	 * Flags bit-mask, including RHASH_INFO_BASE32 bit.
 	 */
@@ -142,12 +142,12 @@ extern rhash_info info_edr512;
 #define F_BE64 0
 #endif
 
-void rhash_init_algorithms(unsigned mask);
-const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
+void rhash_init_algorithms(unsigned long long mask);
+const rhash_info* rhash_info_by_id(unsigned long long hash_id); /* get hash sum info by hash id */
 
 #if !defined(NO_IMPORT_EXPORT)
-size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size);
-size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size);
+size_t rhash_export_alg(unsigned long long hash_id, const void* ctx, void* out, size_t size);
+size_t rhash_import_alg(unsigned long long hash_id, void* ctx, const void* in, size_t size);
 #endif /* !defined(NO_IMPORT_EXPORT) */
 
 #if defined(OPENSSL_RUNTIME) && !defined(USE_OPENSSL)
