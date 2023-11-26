@@ -188,6 +188,16 @@ check "$TEST_RESULT" "$TEST_EXPECTED" .
 TEST_RESULT=$( $rhash --simple --gost --gost-cryptopro --gost-reverse test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
+new_test "test symlinked file size:   "
+MSYS=winsymlinks:nativestrict CYGWIN=winsymlinks:nativestrict ln -s test1K.data test1K-symlink.data >/dev/null 2>&1
+if [ -L "test1K-symlink.data" ]; then
+  TEST_RESULT=$( $rhash --printf "%f %d %s\n" test1K-symlink.data 2>/dev/null )
+  TEST_EXPECTED="test1K-symlink.data . 1024"
+  check "$TEST_RESULT" "$TEST_EXPECTED"
+else
+  printf "Skipped - unable to create the symlink\n"
+fi
+
 new_test "test handling empty files:  "
 EMPTY_FILE="$RHASH_TMP/test-empty.file"
 printf "" > "$EMPTY_FILE"

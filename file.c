@@ -728,14 +728,23 @@ int file_modify_path(file_t* dst, file_t* src, const char* str, int operation)
 static int file_statw(file_t* file)
 {
 	WIN32_FILE_ATTRIBUTE_DATA data;
+	FILE* fd;
+	LARGE_INTEGER link_target_size;
 
 	/* read file attributes */
 	if (GetFileAttributesExW(file->real_path, GetFileExInfoStandard, &data)) {
 		uint64_t u;
 		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FileIsDir : FileIsReg);
-		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
+		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
 			file->mode |= FileIsLnk;
+			fd = file_fopen(file, FOpenReadBin);
+			if (fd) {
+				if (GetFileSizeEx((HANDLE)(INT_PTR)_get_osfhandle(_fileno(fd)), &link_target_size))
+					file->size = link_target_size.QuadPart;
+				fclose(fd);
+			}
+		}
 
 		/* the number of 100-nanosecond intervals since January 1, 1601 */
 		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
