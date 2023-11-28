@@ -392,7 +392,7 @@ RHASH_API size_t rhash_print_bytes(char* output,
  *               flags RHPR_UPPERCASE, RHPR_HEX, RHPR_BASE32, RHPR_BASE64, etc.
  * @return the number of written characters on success or 0 on fail
  */
-RHASH_API size_t rhash_print(char* output, rhash ctx, unsigned hash_id,
+RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id,
 	int flags);
 
 /**
