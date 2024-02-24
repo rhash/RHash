@@ -95,14 +95,23 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef _M_ALPHA
 	" _M_ALPHA"
 #endif
-#ifdef vax
-	" vax"
+#ifdef _ARM_
+	" _ARM_"
+#endif
+#ifdef __arm__
+	" __arm__"
+#endif
+#ifdef _M_ARM64
+	" _M_ARM64"
+#endif
+#ifdef _M_ARM64EC
+	" _M_ARM64EC"
+#endif
+#ifdef __loongarch64
+	" __loongarch64"
 #endif
 #ifdef MIPSEL
 	" MIPSEL"
-#endif
-#ifdef _ARM_
-	" _ARM_"
 #endif
 #ifdef __sparc
 	" __sparc"
@@ -140,6 +149,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __ppc__
 	" __ppc__"
 #endif
+#ifdef __hppa__
+	" __hppa__"
+#endif
 #ifdef __hpux
 	" __hpux"
 #endif
@@ -157,6 +169,9 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 #ifdef sel
 	" sel"
+#endif
+#ifdef vax
+	" vax"
 #endif
 
 /* detect compiler and OS */
@@ -181,6 +196,9 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 #ifdef __TINYC__ /* tcc */
 	" __TINYC__"
+#endif
+#ifdef __cplusplus /* С++ */
+	" __cplusplus"
 #endif
 #ifdef _ISOC11_SOURCE
 	" _ISOC11_SOURCE"
@@ -227,6 +245,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef __sun /* Solaris */
 	" __sun"
 #endif
+#ifdef __DragonFly__
+	" __DragonFly__"
+#endif
 #ifdef __FreeBSD__
 	" __FreeBSD__"
 #endif
@@ -235,6 +256,9 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 #ifdef __NetBSD__
 	" __NetBSD__"
+#endif
+#ifdef __HAIKU__
+	" __HAIKU__"
 #endif
 #ifdef __APPLE__
 	" __APPLE__"
@@ -246,6 +270,7 @@ char* compiler_flags = "Compile-time flags:"
 #include <limits.h>
 #ifdef __GLIBC__ /* GLIBC >= 6 */
 	" __GLIBC__"
+	" (__GLIBC__=" EXPAND_TO_STRING(__GLIBC__) ",__GLIBC_MINOR__=" EXPAND_TO_STRING(__GLIBC_MINOR__) ")"
 #endif
 #ifdef __UCLIBC__
 	" __UCLIBC__"
@@ -260,6 +285,9 @@ char* compiler_flags = "Compile-time flags:"
 /* rhash-related macro */
 #ifdef USE_RHASH_DLL
 	" USE_RHASH_DLL"
+#endif
+#ifdef USE_KECCAK
+	" USE_KECCAK"
 #endif
 #ifdef USE_OPENSSL
 	" USE_OPENSSL"
