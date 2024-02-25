@@ -731,17 +731,34 @@ static int file_statw(file_t* file)
 
 	/* read file attributes */
 	if (GetFileAttributesExW(file->real_path, GetFileExInfoStandard, &data)) {
-		uint64_t u;
-		file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
 		file->mode |= (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FileIsDir : FileIsReg);
-		if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0)
-			file->mode |= FileIsLnk;
+		do {
+			uint64_t u;
+			if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) == 0) {
+				/* Process a regular file or directory */
+				file->size  = (((uint64_t)data.nFileSizeHigh) << 32) + data.nFileSizeLow;
+			} else {
+				/* Process a symlink (aka Reparse point) */
+				LARGE_INTEGER link_size;
+				HANDLE handle = CreateFileW(file->real_path,
+					GENERIC_READ, FILE_SHARE_READ, NULL,
+					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+				if (handle == INVALID_HANDLE_VALUE)
+					break;
+				if (!GetFileSizeEx(handle, &link_size))
+					break;
+				if (!GetFileTime(handle, NULL, NULL, &data.ftLastWriteTime))
+					break;
+				file->size  = (((uint64_t)link_size.HighPart) << 32) + link_size.LowPart;
+				file->mode |= FileIsLnk;
+			}
 
-		/* the number of 100-nanosecond intervals since January 1, 1601 */
-		u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
-		/* convert to seconds and subtract the epoch difference */
-		file->mtime = u / 10000000 - 11644473600LL;
-		return 0;
+			/* the number of 100-nanosecond intervals since January 1, 1601 */
+			u = (((uint64_t)data.ftLastWriteTime.dwHighDateTime) << 32) + data.ftLastWriteTime.dwLowDateTime;
+			/* convert to seconds and subtract the epoch difference */
+			file->mtime = u / 10000000 - 11644473600LL;
+			return 0;
+		} while(0);
 	}
 	file->mode |= FileIsInaccessible;
 	set_errno_from_last_file_error();
