@@ -1,8 +1,26 @@
+Sun 17 Mar 2024 Aleksey Kravchenko
+	* Bugfix: Updating must continue after a file access error
+
+Sun 25 Feb 2024 Aleksey Kravchenko
+	* Bugfix: Show correct size and time for Windows symlinks
+
+Wed 14 Feb 2024 Brad King
+	* Bugfix: Fix building with glibc < 2.15
+
+Sun 24 Dec 2023 Brad King
+	* Bugfix: Fix building on Solaris
+
+Wed 29 Nov 2023 Brad King
+	* Bugfix: Enable large file support on 32-bit targets
+
+Mon 11 Sep 2023 Aleksey Kravchenko
+	* Bugfix: Fix building on Unix
+
 Mon 28 Aug 2023 Aleksey Kravchenko
 	* Bugfix: Fix dynamic library symlink on macOS
 
 Mon 21 Aug 2023 Aleksey Kravchenko
-	* Bugfix: Fix support of WinXP platform
+	* Bugfix: Fix runtime error on WinXP
 
 Mon 31 Jul 2023 Aleksey Kravchenko
 	* Bugfix: Fix dynamic library symlink on *BSD

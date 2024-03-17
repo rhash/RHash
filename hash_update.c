@@ -101,7 +101,7 @@ int update_ctx_update(struct update_ctx* ctx, file_t* file)
 	} else {
 		/* calculate and add the message digests to the hash file */
 		res = calculate_and_print_sums(ctx->fd, &ctx->file, file);
-		if (res < 0)
+		if (res <= -2)
 			ctx->bit_flags |= HashFileErrorOcurred;
 	}
 	return res;
