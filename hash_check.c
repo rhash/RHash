@@ -1048,38 +1048,32 @@ unsigned get_crc32(struct rhash_context* ctx)
 }
 
 /**
- * Verify calculated message digests against original values.
- * Also verify the file size and embedded CRC32 if present.
- * The HP_WRONG_* bits are set in the parser->flags field on fail.
+ * Verify calculated message digests against original values using
+ * only a specific set of hash algorithms.  Improves modularity
+ * of logic to provide callers a more finely grained ordering
+ * of message-digest checks if they desire it.
+ *
+ * This is essentially a helper function just to refactor the code to
+ * be flexible with respect to the ordering of hashes we try, for
+ * performance reasons. It modifies the structures to which its parameters
+ * point in just the way that its parent function did in the version of the
+ * code it replaces.
  *
  * @param parser 'original' parsed message digests, to verify against
  * @param ctx the rhash context containing calculated message digests
- * @return 1 on successfull verification, 0 on message digests mismatch
+ * @param hash_mask the mask identifying the limited set of hash IDs to try
+ * @param unverified_mask the mask identifying the as-yet unverified hashes
+ * @return a mask identifying the still-unverified hashes
  */
-static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* ctx)
+static int do_hash_sums_match_mask(struct hash_parser* parser, struct rhash_context* ctx, uint64_t hash_mask, unsigned unverified_mask)
 {
-	unsigned unverified_mask;
 	unsigned hash_id;
 	unsigned printed;
 	char hex[132], base32[104], base64[88];
 	int j;
 
-	/* verify file size, if present */
-	if ((parser->bit_flags & HpHasFileSize) != 0 && parser->file_size != ctx->msg_size)
-		parser->bit_flags |= HpWrongFileSize;
-
-	/* verify embedded CRC32 checksum, if present */
-	if ((parser->bit_flags & HpHasEmbeddedCrc32) != 0 && get_crc32(ctx) != parser->embedded_crc32)
-		parser->bit_flags |= HpWrongEmbeddedCrc32;
-
-	/* return if nothing else to verify */
-	if (parser->hashes_num == 0)
-		return !HP_FAILED(parser->bit_flags);
-
-	unverified_mask = (1 << parser->hashes_num) - 1;
-
 	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES && unverified_mask; hash_id <<= 1) {
-		if ((parser->hash_mask & hash_id) == 0)
+		if ((hash_mask & hash_id) == 0)
 			continue;
 		printed = 0;
 
@@ -1142,10 +1136,45 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 				break;
 		}
 	}
+	return unverified_mask;
+}
 
+/**
+ * Verify calculated message digests against original values.
+ * Also verify the file size and embedded CRC32 if present.
+ * The HP_WRONG_* bits are set in the parser->flags field on fail.
+ *
+ * @param parser 'original' parsed message digests, to verify against
+ * @param ctx the rhash context containing calculated message digests
+ * @return 1 on successful verification, 0 on message digests mismatch
+ */
+static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* ctx)
+{
+        static uint64_t cached_mask = 0;	/* records previously successful hashes */
+        unsigned unverified_mask = (1 << parser->hashes_num) - 1;
+
+	/* verify file size, if present */
+	if ((parser->bit_flags & HpHasFileSize) != 0 && parser->file_size != ctx->msg_size)
+		parser->bit_flags |= HpWrongFileSize;
+
+	/* verify embedded CRC32 checksum, if present */
+	if ((parser->bit_flags & HpHasEmbeddedCrc32) != 0 && get_crc32(ctx) != parser->embedded_crc32)
+		parser->bit_flags |= HpWrongEmbeddedCrc32;
+
+	/* return if nothing else to verify */
+	if (parser->hashes_num == 0)
+		return !HP_FAILED(parser->bit_flags);
+
+        /* try to verify hashes - first those we've found before, then the rest */
+	unverified_mask = do_hash_sums_match_mask(parser, ctx, parser->hash_mask & cached_mask, unverified_mask);
+	unverified_mask = do_hash_sums_match_mask(parser, ctx, parser->hash_mask & ~cached_mask, unverified_mask);
 	parser->wrong_hashes = unverified_mask;
 	if (unverified_mask != 0)
 		parser->bit_flags |= HpWrongHashes;
+
+	/* cache success to affect the order of subsequent runs */
+	cached_mask |= parser->found_hash_ids;
+
 	return !HP_FAILED(parser->bit_flags);
 }
 
