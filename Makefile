@@ -25,7 +25,7 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/whirlpool.c librhash/whirlpool.h librhash/whirlpool_sbox.c \
   librhash/test_lib.c librhash/test_lib.h librhash/test_utils.c librhash/test_utils.h \
   librhash/ustd.h librhash/util.c librhash/util.h librhash/Makefile
-I18N_FILES  = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/ro.po po/ru.po po/uk.po
+I18N_FILES  = po/ca.po po/de.po po/en_AU.po po/es.po po/fr.po po/gl.po po/it.po po/pt_BR.po po/ro.po po/ru.po po/uk.po
 ALL_FILES   = $(SOURCES) $(HEADERS) $(LIBRHASH_FILES) $(OTHER_FILES) $(WIN_DIST_FILES) $(I18N_FILES)
 SPECFILE    = dist/rhash.spec
 LIBRHASH_PC = dist/librhash.pc
