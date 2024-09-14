@@ -202,9 +202,11 @@ class RHash(object):
     """Class to compute message digests and magnet links."""
 
     __context_key = object()
+    _hash_ids = []
 
     def __init__(self, *hash_ids):
         """Construct RHash object."""
+        self._hash_ids = hash_ids
         if len(hash_ids) == 2 and hash_ids[0] == RHash.__context_key:
             self._ctx = hash_ids[1]
         elif _HAS_INIT_MULTI and RHash._are_good_ids(hash_ids):
@@ -288,6 +290,8 @@ class RHash(object):
 
     def _print(self, hash_id, flags):
         """Retrieve the message digest in the specified format."""
+        if hash_id not in self._hash_ids:
+            raise Exception(f"you are trying to _print a message digest, which was not given at class initialization: {hash_id}")
         buf = create_string_buffer(130)
         size = _LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
         if (flags & 3) == _RHPR_RAW:
