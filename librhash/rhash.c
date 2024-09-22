@@ -416,44 +416,45 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 }
 
 /**
- * Store digest for given hash_id.
- * If hash_id is zero, function stores digest for a hash with the lowest id found in the context.
- * For nonzero hash_id the context must contain it, otherwise function silently does nothing.
+ * Find rhash_vector_item by the given hash_id in rhash context.
+ * The context must include the hash algorithm corresponding to the hash_id.
  *
- * @param ctx rhash context
- * @param hash_id id of hash to retrieve or zero for hash with the lowest available id
- * @param result buffer to put the hash into
+ * @param ectx rhash context
+ * @param hash_id id of hash algorithm, or zero for the first hash algorithm in the rhash context
+ * @return item of the rhash context if the hash algorithm has been found, NULL otherwise
  */
-static void rhash_put_digest(rhash ctx, unsigned hash_id, unsigned char* result)
+static rhash_vector_item* rhash_get_info(rhash_context_ext* ectx, unsigned hash_id)
 {
-	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
-	unsigned i;
-	rhash_vector_item* item;
-	struct rhash_hash_info* info;
-	unsigned char* digest;
-
 	assert(ectx);
 	assert(ectx->hash_vector_size > 0 && ectx->hash_vector_size <= RHASH_HASH_COUNT);
 
-	/* finalize context if not yet finalized and auto-final is on */
-	if ((ectx->flags & RCTX_FINALIZED_MASK) == RCTX_AUTO_FINAL) {
-		rhash_final(ctx, NULL);
-	}
-
 	if (hash_id == 0) {
-		item = &ectx->vector[0]; /* get the first hash */
-		info = item->hash_info;
+		return &ectx->vector[0]; /* get the first hash */
 	} else {
-		for (i = 0;; i++) {
-			if (i >= ectx->hash_vector_size) {
-				return; /* hash_id not found, do nothing */
-			}
+		unsigned i;
+		rhash_vector_item* item;
+		for (i = 0; i < ectx->hash_vector_size; i++) {
 			item = &ectx->vector[i];
-			info = item->hash_info;
-			if (info->info->hash_id == hash_id) break;
+			assert(item->hash_info != NULL);
+			assert(item->hash_info->info != NULL);
+			if (item->hash_info->info->hash_id == hash_id)
+				return item;
 		}
 	}
-	digest = ((unsigned char*)item->context + info->digest_diff);
+	return NULL; /* hash_id not found */
+}
+
+/**
+ * Store message digest from the given rhash context item.
+ *
+ * @param item rhash context item, containing a message digest
+ * @param result buffer to put the message digest into
+ */
+static void rhash_put_digest(rhash_vector_item* item, unsigned char* result)
+{
+	struct rhash_hash_info* info = item->hash_info;
+	unsigned char* digest = ((unsigned char*)item->context + info->digest_diff);
+
 	if (info->info->flags & F_SWAP32) {
 		assert((info->info->digest_size & 3) == 0);
 		/* NB: the next call is correct only for multiple of 4 byte size */
@@ -756,14 +757,15 @@ size_t rhash_print_bytes(char* output, const unsigned char* bytes, size_t size, 
 
 RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id, int flags)
 {
+	rhash_context_ext* ectx = (rhash_context_ext*)context;
+	rhash_vector_item* item = rhash_get_info(ectx, hash_id);
 	const rhash_info* info;
 	unsigned char digest[80];
 	size_t digest_size;
 
-	info = (hash_id != 0 ? rhash_info_by_id(hash_id) :
-		((rhash_context_ext*)context)->vector[0].hash_info->info);
+	if (!item || !item->hash_info || !item->hash_info->info) return 0;
 
-	if (info == NULL) return 0;
+	info = item->hash_info->info;
 	digest_size = info->digest_size;
 	assert(digest_size <= 64);
 
@@ -787,8 +789,12 @@ RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id, int 
 		}
 	}
 
-	/* note: use info->hash_id, cause hash_id can be 0 */
-	rhash_put_digest(context, info->hash_id, digest);
+	/* finalize context if not yet finalized and auto-final is on */
+	if ((ectx->flags & RCTX_FINALIZED_MASK) == RCTX_AUTO_FINAL) {
+		rhash_final(context, NULL);
+	}
+
+	rhash_put_digest(item, digest);
 
 	if ((flags & ~RHPR_UPPERCASE) == (RHPR_REVERSE | RHPR_HEX)) {
 		/* reverse the digest */
