@@ -139,7 +139,7 @@ class TestRHash(unittest.TestCase):
         """Test sequential updates."""
         ctx = rhash.RHash(rhash.CRC32, rhash.MD5)
         ctx.update("Hello, ").update("world!").finish()
-        self.assertEqual("EBE6C6E6", ctx.HEX(rhash.CRC32))
+        self.assertEqual("EBE6C6E6", ctx.hex_upper(rhash.CRC32))
         self.assertEqual("6cd3556deb0da54bca060b4c39479839", ctx.hex(rhash.MD5))
 
     def test_shift_operator(self):

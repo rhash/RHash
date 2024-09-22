@@ -55,11 +55,11 @@ with   methods   update(message)  and  update_file(filepath).
 Finally, call finish() to end up all remaining calculations.
 
 To  receive  text represenation of the message digest use one
-of the methods hex(), HEX(), base32(), BASE32(), base64() and
-BASE64().  The hash() method  outputs  message digest  in its
-default format.  Binary  message digest may be obtained  with
-raw().  All of these  methods  accept  hash_id  as  argument,
-hash_id can be omitted  if the instance of RHash  was created
+of the methods hex(), HEX(), base32(), BASE32() and base64().
+The  hash()  method  outputs  message digest  in  its default
+format.  Binary  message digest  may be obtained  with raw().
+All  of  these  methods  accept  hash_id  as  argument,   but
+hash_id can be omitted if the instance of  RHash  was created
 to compute message digest of a single hash function.
 
 Method  magnet(filepath) will generate magnet link containing
@@ -310,16 +310,17 @@ class RHash(object):
         """Return the message digest as a Base64 string."""
         return self._print(hash_id, _RHPR_BASE64)
 
-    # pylint: disable=invalid-name
-    def HEX(self, hash_id=0):
+    def hex_upper(self, hash_id=0):
         """Return the message digest as a hexadecimal upper-case string."""
         return self._print(hash_id, _RHPR_HEX | _RHPR_UPPERCASE)
 
-    def BASE32(self, hash_id=0):
+    def base32_upper(self, hash_id=0):
         """Return the message digest as a Base32 upper-case string."""
         return self._print(hash_id, _RHPR_BASE32 | _RHPR_UPPERCASE)
 
-    # pylint: enable=invalid-name
+    # deprecated aliases
+    HEX = hex_upper
+    BASE32 = base32_upper
 
     def magnet(self, filepath):
         """Return magnet link with all message digests computed by this object."""
