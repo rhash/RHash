@@ -128,7 +128,6 @@ if sys.version < "3":
             return msg
         return str(msg)
 
-
 else:
     import codecs
 
@@ -196,6 +195,10 @@ _RHPR_FILESIZE = 0x40
 
 _RMSG_SET_AUTOFINAL = 5
 _RMSG_GET_LIBRHASH_VERSION = 20
+
+
+class InvalidArgumentError(ValueError):
+    """Raised on an invalid argument value."""
 
 
 class RHash(object):
@@ -290,6 +293,10 @@ class RHash(object):
         """Retrieve the message digest in the specified format."""
         buf = create_string_buffer(130)
         size = _LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
+        if not size:
+            raise InvalidArgumentError(
+                "Requested message digest for an invalid hash_id = {}".format(hash_id)
+            )
         if (flags & 3) == _RHPR_RAW:
             return buf[0:size]
         return buf[0:size].decode()

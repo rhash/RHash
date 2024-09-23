@@ -204,9 +204,18 @@ class TestRHash(unittest.TestCase):
         with rhash.RHash(rhash.CRC32, rhash.MD5) as ctx:
             ctx.update("a").finish()
             self.assertEqual("e8b7be43", ctx.hash(rhash.CRC32))
-        with self.assertRaises(RuntimeError):
-            with rhash.RHash(rhash.CRC32) as ctx:
-                raise RuntimeError("TestEx")
+            self.assertEqual("btaxlooa6g3kqmodthrgs5zgme", ctx.base32(rhash.MD5))
+            with self.assertRaises(rhash.InvalidArgumentError):
+                ctx.base32(rhash.SHA1)
+            with self.assertRaises(rhash.InvalidArgumentError):
+                ctx.base64(rhash.SHA1)
+            with self.assertRaises(rhash.InvalidArgumentError):
+                ctx.hex(rhash.SHA1)
+            with self.assertRaises(rhash.InvalidArgumentError):
+                ctx.raw(rhash.SHA1)
+        with self.assertRaises(rhash.InvalidArgumentError):
+            with rhash.RHash(rhash.CRC32, rhash.MD5) as ctx:
+                ctx.hash(rhash.SHA1)
 
     def test_librhash_version(self):
         """Test get_librhash_version() function."""
