@@ -1023,3 +1023,12 @@ Libs.private: ${OPENSSL_LDFLAGS}
 
 EOF
 fi
+
+#####################################################################
+# write man page
+MAN_PATH=${RHASH_SRC}dist/rhash.1
+if test -f "${MAN_PATH}.in"; then
+  SED_SYSCONFDIR=$(echo $INSTALL_SYSCONFDIR | sed -e 's/\([|\\&]\)/\\\1/g')
+  echo "Writing ${MAN_PATH}"
+  sed -e "s|@SYSCONFDIR@|$SED_SYSCONFDIR|" ${MAN_PATH}.in > ${MAN_PATH}
+fi

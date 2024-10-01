@@ -6,7 +6,7 @@ SOURCES = calc_sums.c hash_print.c common_func.c hash_update.c file.c file_mask.
 OBJECTS = $(SOURCES:.c=.o)
 WIN_DIST_FILES = dist/MD5.bat dist/magnet.bat dist/rhashrc.sample
 OTHER_FILES = configure Makefile ChangeLog INSTALL.md COPYING README.md \
-  build/vc-2010/rhash.vcxproj dist/rhash.spec.in dist/rhash.1 dist/rhash.1.win.sed \
+  build/vc-2010/rhash.vcxproj dist/rhash.spec.in dist/rhash.1.in dist/rhash.1.win.sed \
   docs/CONTRIBUTING.md docs/LIBRHASH.md librhash/Doxyfile po/rhash.pot \
   tests/test_rhash.sh tests/test1K.data
 LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
@@ -287,7 +287,7 @@ clean-local:
 	rm -f po/*.gmo po/*.po~ po/compile-gmo.tag
 
 distclean: clean-local
-	rm -f config.log config.mak $(SPECFILE) $(LIBRHASH_PC)
+	rm -f config.log config.mak dist/rhash.1 $(SPECFILE) $(LIBRHASH_PC)
 	+cd librhash && $(MAKE) distclean
 
 clean: clean-local

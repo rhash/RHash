@@ -326,7 +326,7 @@ placing a hardlink/symlink to it with a filename containing strings `crc32',
 .SH CONFIG FILE
 RHash looks for a config file
 at $XDG_CONFIG_HOME/rhash/rhashrc, $HOME/.config/rhash/rhashrc,
-$XDG_CONFIG_DIRS/rhash/rhashrc, $HOME/.rhashrc and /etc/rhashrc.
+$XDG_CONFIG_DIRS/rhash/rhashrc, $HOME/.rhashrc and @SYSCONFDIR@.
 
 The config file consists of lines formatted as
 .RS
