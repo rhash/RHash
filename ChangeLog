@@ -1,3 +1,9 @@
+Thu 03 Oct 2024 Aleksey Kravchenko
+	* Support --one-hash formatting option
+
+Wed 02 Oct 2024 Aleksey Kravchenko
+	* Bugfix: Show correct config directory in the manpage
+
 Sun 17 Mar 2024 Aleksey Kravchenko
 	* Bugfix: Updating must continue after a file access error
 

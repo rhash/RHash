@@ -757,6 +757,8 @@ strbuf_t* init_printf_format(void)
 
 	if (opt.fmt == FMT_BSD) {
 		fmt = "\\^\003(%p) = \001\\n";
+	} else if (opt.fmt == FMT_ONE_HASH) {
+		fmt = "\001\\n";
 	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=");
 		rsh_str_append(out, (uppercase ? "%Uf" : "%uf"));

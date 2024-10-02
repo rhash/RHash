@@ -222,6 +222,10 @@ else
 fi
 rm -f "$MATCH_LOG"
 
+new_test "test one-hash format:       "
+TEST_RESULT=$( $rhash --one-hash --md5 -m "abc" )
+check "$TEST_RESULT" "900150983cd24fb0d6963f7d28e17f72"
+
 new_test "test %x, %b, %B modifiers:  "
 TEST_RESULT=$( $rhash -p '%f %s %xC %bc %bM %Bh %bE %bg %xT %xa %bW\n' -m "a" )
 TEST_EXPECTED="(message) 1 E8B7BE43 5c334qy BTAXLOOA6G3KQMODTHRGS5ZGME hvfkN/qlp/zhXR3cuerq6jd2Z7g= XXSSZMY54M7EMJC6AX55XVX3EQ xiyqtg44zbhmfjtr5eytk4rxreqkobntmoyddiolj7ad4aoorxzq 16614B1F68C5C25EAF6136286C9C12932F4F73E87E90A273 86f7e437faa5a7fce15d1ddcb9eaeaea377667b8 RLFCMATZFLWG6ENGOIDFGH5X27YN75MUCMKF42LTYRIADUAIPNBNCG6GIVATV37WHJBDSGRZCRNFSGUSEAGVMAMV4U5UPBME7WXCGGQ"

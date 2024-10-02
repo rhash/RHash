@@ -438,6 +438,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "sfv",       0, &opt.fmt, FMT_SFV },
 	{ F_UFLG,   0,   0, "bsd",       0, &opt.fmt, FMT_BSD },
 	{ F_UFLG,   0,   0, "simple",    0, &opt.fmt, FMT_SIMPLE },
+	{ F_UFLG,   0,   0, "one-hash",  0, &opt.fmt, FMT_ONE_HASH },
 	{ F_UFLG, 'g',   0, "magnet",    0, &opt.fmt, FMT_MAGNET },
 	{ F_UFLG,   0,   0, "uppercase", 0, &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", 0, &opt.flags, OPT_LOWERCASE },
@@ -1079,6 +1080,7 @@ static void set_default_sums_flags(const char* progName)
 
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
 	if (strstr(buf, "bsd") && opt.fmt == 0) opt.fmt = FMT_BSD;
+	if (strstr(buf, "one") && opt.fmt == 0) opt.fmt = FMT_ONE_HASH;
 	if (strstr(buf, "magnet") && opt.fmt == 0) opt.fmt = FMT_MAGNET;
 
 	if (strstr(buf, "crc32c")) opt.sum_flags |= RHASH_CRC32C;
