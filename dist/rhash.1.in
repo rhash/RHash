@@ -228,6 +228,8 @@ after hash function name and file's path, enclosed in parentheses.
 .IP "\-\-simple"
 Use simple output format. Each line will consist of
 filename and message digests specified by options.
+.IP "\-\-one\-hash"
+Print one message digest per line without additional file information.
 .IP "\-\-hex"
 Print message digests in hexadecimal format.
 .IP "\-\-base32"
