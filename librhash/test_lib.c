@@ -571,18 +571,6 @@ static void log_va(int level, const char* format, va_list args)
 }
 
 /**
- * Print a formatted message.
- * @param format the format of the message
- */
-static void log_message(char* format, ...)
-{
-	va_list vl;
-	va_start(vl, format);
-	log_va(0, format, vl);
-	va_end(vl);
-}
-
-/**
  * Print a formatted debug message.
  * The message is shown only in verbose mode (-v).
  * @param format the format of the message
@@ -608,14 +596,48 @@ static void dbg2(const char* format, ...)
 	va_end(vl);
 }
 
-/*=========================================================================*
- *               Functions for calculating a message digest                *
- *=========================================================================*/
-
 /**
  * The total number of errors
  */
-static int g_errors = 0;
+static int g_errors_count = 0;
+
+/**
+ * Print a formatted error message.
+ * @param line the line number of the reported error
+ * @param format the format of the message
+ */
+static void log_error_impl(int line, const char* format, ...)
+{
+	va_list vl;
+	va_start(vl, format);
+	printf("%s:%d: error: ", __FILE__, line);
+	log_va(0, format, vl);
+	va_end(vl);
+	g_errors_count++;
+}
+
+#define log_error(msg) \
+	(log_error_impl(__LINE__, (msg)))
+#define log_error1(msg, a) \
+	(log_error_impl(__LINE__, (msg), (a)))
+#define log_error2(msg, a, b) \
+	(log_error_impl(__LINE__, (msg), (a), (b)))
+#define log_error3(msg, a, b, c) \
+	(log_error_impl(__LINE__, (msg), (a), (b), (c)))
+#define log_error4(msg, a, b, c, d) \
+	(log_error_impl(__LINE__, (msg), (a), (b), (c), (d)))
+
+#define CHECK_NOOP {}
+#define CHECK_IMPL(failed, cmd, msg) \
+	if (failed) { \
+		log_error(msg); \
+		cmd; \
+	}
+#define CHECK_EQ(a, b, msg) CHECK_IMPL((a) != (b), CHECK_NOOP, msg)
+
+/*=========================================================================*
+ *               Functions for calculating a message digest                *
+ *=========================================================================*/
 
 enum ChunkedDataBitFlags {
 	CHDT_NO_FLAGS = 0,
@@ -683,10 +705,9 @@ static void assert_hash_long_msg(unsigned hash_id, const char* data, size_t chun
 	if (strcmp(result, hash) != 0) {
 		const char* hash_name = rhash_get_name(hash_id); /* the hash function name */
 		if (msg_name)
-			log_message("failed: %s(%s) = %s, expected %s\n", hash_name, msg_name, result, hash);
+			log_error4("%s(%s) = %s, expected %s\n", hash_name, msg_name, result, hash);
 		else
-			log_message("failed: %s(\"%s\") = %s, expected %s\n", hash_name, data, result, hash);
-		g_errors++;
+			log_error4("%s(\"%s\") = %s, expected %s\n", hash_name, data, result, hash);
 	}
 }
 
@@ -918,8 +939,7 @@ static void test_results_consistency(void)
 		rhash_free(ctx);
 
 		if (memcmp(res1, res2, digest_size) != 0) {
-			log_message("failed: inconsistent %s(\"%s\") hash results\n", rhash_get_name(hash_id), msg);
-			g_errors++;
+			log_error2("inconsistent %s(\"%s\") hash results\n", rhash_get_name(hash_id), msg);
 		}
 	}
 }
@@ -1005,9 +1025,8 @@ static void test_context_alignment(void)
 		assert(!!ctx);
 		context_ptr = (char*)rhash_get_context_ptr(ctx, RHASH_MD5);
 		if (((context_ptr - (char*)0) & aligner) != 0) {
-			log_message("error: wrong aligment %d of pointer %p for the %2d-th context (rhash = %p)\n",
+			log_error4("wrong aligment %d of pointer %p for the %2d-th context (rhash = %p)\n",
 				(int)((context_ptr - (char*)0) & aligner), context_ptr, i, ctx);
-			g_errors++;
 		}
 		rhash_free(ctx);
 		hash_ids[i] = RHASH_CRC32;
@@ -1015,25 +1034,20 @@ static void test_context_alignment(void)
 }
 
 /**
- * Verify processor endianness detected at compile-time against
- * with the actual CPU endianness in runtime.
+ * Verify processor endianness detected at compile time
+ * against the actual CPU endianness.
  */
 static void test_endianness(void)
 {
 	unsigned tmp = 1;
-	if (*(char*)&tmp == IS_BIG_ENDIAN) {
-		log_message("error: wrong endianness detected at compile time\n");
-		g_errors++;
-	}
+	CHECK_EQ(*(char*)&tmp, IS_LITTLE_ENDIAN, "wrong endianness detected at compile time\n");
 }
 
 static void test_version_sanity(void)
 {
 	unsigned version = rhash_get_version();
-	if (!(version & 0xff000000) || (version & 0xf0e0e0e0)) {
-		log_message("error: wrong librhash version: %x\n", version);
-		g_errors++;
-	}
+	if (!(version & 0xff000000) || (version & 0xf0e0e0e0))
+		log_error1("wrong librhash version: %x\n", version);
 }
 
 /**
@@ -1044,10 +1058,8 @@ static void test_generic_assumptions(void)
 	unsigned mask = (1u << RHASH_HASH_COUNT) - 1u;
 	dbg("test generic assumptions\n");
 	if (mask != RHASH_ALL_HASHES) {
-		log_message("error: wrong algorithms count %d for the mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
-		g_errors++;
+		log_error2("wrong algorithms count %d for the mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
 	}
-
 	test_endianness();
 	test_version_sanity();
 }
@@ -1086,23 +1098,20 @@ static void test_import_export(void)
 		dbg2("- call rhash_export NULL\n");
 		required_size = rhash_export(ctx, NULL, 0);
 		if (!required_size) {
-			log_message("error: rhash_export failed for block size=%u\n", (unsigned)size);
-			g_errors++;
+			log_error1("rhash_export failed for block size=%u\n", (unsigned)size);
 			return;
 		}
 		dbg2("- call rhash_export ctx\n");
 		exported_data = malloc(required_size);
 		exported_size = rhash_export(ctx, exported_data, required_size);
 		if (exported_size != required_size) {
-			log_message("error: rhash_export failed: %u != %u\n", (unsigned)exported_size, (unsigned)required_size);
-			g_errors++;
+			log_error2("rhash_export failed: %u != %u\n", (unsigned)exported_size, (unsigned)required_size);
 			return;
 		}
 		dbg2("- call rhash_import\n");
 		imported_ctx = rhash_import(exported_data, required_size);
 		if (!imported_ctx) {
-			log_message("error: rhash_import failed for block size=%u\n", (unsigned)size);
-			g_errors++;
+			log_error1("rhash_import failed for block size=%u\n", (unsigned)size);
 			return;
 		}
 		free(exported_data);
@@ -1119,9 +1128,8 @@ static void test_import_export(void)
 				rhash_print(out2, imported_ctx, hash_id, RHPR_UPPERCASE);
 				if (strcmp(out1, out2) != 0) {
 					const char* hash_name = rhash_get_name(hash_id);
-					log_message("error: import failed, wrong hash %s != %s for %s,  block size=%u\n",
+					log_error4("import failed, wrong hash %s != %s for %s,  block size=%u\n",
 						out1, out2, hash_name, (unsigned)size);
-					g_errors++;
 					return;
 				}
 			}
@@ -1147,16 +1155,13 @@ static void assert_magnet(const char* expected,
 	size = rhash_print_magnet(out, path, ctx, mask, flags);
 
 	if (expected && strcmp(expected, out) != 0) {
-		log_message("error: \"%s\" != \"%s\"\n", expected, out);
-		g_errors++;
+		log_error2("\"%s\" != \"%s\"\n", expected, out);
 	} else {
 		size_t size2 = strlen(out) + 1;
 		if (size != size2) {
-			log_message("error: rhash_print_magnet returns wrong length %d != %d for \"%s\"\n", (int)size, (int)size2, out);
-			g_errors++;
+			log_error3("rhash_print_magnet returns wrong length %d != %d for \"%s\"\n", (int)size, (int)size2, out);
 		} else if (size != (size2 = rhash_print_magnet(NULL, path, ctx, mask, flags))) {
-			log_message("error: rhash_print_magnet(NULL, ...) returns wrong length %d != %d for \"%s\"\n", (int)size2, (int)size, out);
-			g_errors++;
+			log_error3("rhash_print_magnet(NULL, ...) returns wrong length %d != %d for \"%s\"\n", (int)size2, (int)size, out);
 		}
 	}
 }
@@ -1273,9 +1278,9 @@ int main(int argc, char* argv[])
 		}
 		else {
 			printf("Options:\n"
-				"--verbose Be verbose.\n"
-				"--info Print library info\n"
-				"--speed [HASH_NAME] Benchmark given hash algorithm\n");
+				"-v, --verbose Be verbose.\n"
+				"    --info Print library info\n"
+				"    --speed [HASH_NAME] Benchmark given hash algorithm\n");
 			return 1;
 		}
 	}
@@ -1299,11 +1304,11 @@ int main(int argc, char* argv[])
 		test_context_alignment();
 		test_import_export();
 		test_magnet();
-		if (g_errors == 0)
+		if (g_errors_count == 0)
 			printf("All sums are working properly!\n");
 		fflush(stdout);
 	}
-	if (g_errors > 0)
+	if (g_errors_count > 0)
 		printf("%s", compiler_flags);
-	return (g_errors == 0 ? 0 : 1);
+	return (g_errors_count == 0 ? 0 : 1);
 }
