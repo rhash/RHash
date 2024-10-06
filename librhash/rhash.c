@@ -163,7 +163,7 @@ RHASH_API rhash rhash_init(unsigned hash_id)
 	if (HAS_ZERO_OR_ONE_BIT(hash_id)) {
 		return rhash_init_multi(1, &hash_id);
 	} else {
-		/* handle the depricated case, when hash_id is a bitwise union of several hash function identifiers */
+		/* handle the deprecated case, when hash_id is a bitwise union of several hash function identifiers */
 		size_t count;
 		unsigned hash_ids[32];
 		unsigned id = hash_id & -hash_id; /* get the trailing bit */
@@ -855,25 +855,24 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 	case RMSG_CANCEL:
 		/* mark rhash context as canceled, in a multithreaded program */
 		atomic_compare_and_swap(&ctx->state, STATE_ACTIVE, STATE_STOPPED);
-		return 0;
-
+		break;
 	case RMSG_IS_CANCELED:
 		return (ctx->state == STATE_STOPPED);
-
 	case RMSG_GET_FINALIZED:
 		return ((ctx->flags & RCTX_FINALIZED) != 0);
 	case RMSG_SET_AUTOFINAL:
 		ctx->flags &= ~RCTX_AUTO_FINAL;
-		if (ldata) ctx->flags |= RCTX_AUTO_FINAL;
+		if (ldata)
+			ctx->flags |= RCTX_AUTO_FINAL;
 		break;
 
 	/* OpenSSL related messages */
 #ifdef USE_OPENSSL
 	case RMSG_SET_OPENSSL_MASK:
-		rhash_openssl_hash_mask = (unsigned)ldata;
+		rhash_set_openssl_enabled_hash_mask((unsigned)ldata);
 		break;
 	case RMSG_GET_OPENSSL_MASK:
-		return rhash_openssl_hash_mask;
+		return rhash_get_openssl_enabled_hash_mask();
 #endif
 	case RMSG_GET_OPENSSL_SUPPORTED_MASK:
 		return rhash_get_openssl_supported_hash_mask();

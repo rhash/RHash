@@ -18,7 +18,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <assert.h>
 #include <ctype.h>
 
 #include "byte_order.h"
@@ -634,6 +633,11 @@ static void log_error_impl(int line, const char* format, ...)
 		cmd; \
 	}
 #define CHECK_EQ(a, b, msg) CHECK_IMPL((a) != (b), CHECK_NOOP, msg)
+#define CHECK_NE(a, b, msg) CHECK_IMPL((a) == (b), CHECK_NOOP, msg)
+#define CHECK_TRUE(condition, msg) CHECK_IMPL(!(condition), CHECK_NOOP, msg)
+#define REQUIRE_EQ(a, b, msg) CHECK_IMPL((a) != (b), return, msg)
+#define REQUIRE_NE(a, b, msg) CHECK_IMPL((a) == (b), return, msg)
+#define REQUIRE_TRUE(condition, msg) CHECK_IMPL(!(condition), return, msg)
 
 /*=========================================================================*
  *               Functions for calculating a message digest                *
@@ -659,7 +663,11 @@ static char* hash_data_by_chunks(unsigned hash_id, const char* data, size_t chun
 	struct rhash_context* ctx;
 	size_t left, size;
 	static char out[130];
-	assert(rhash_get_hash_length(hash_id) < 130);
+
+	if (rhash_get_hash_length(hash_id) >= (int)sizeof(out)) {
+		log_error("too big hash length\n");
+		return "";
+	}
 
 	ctx = rhash_init(hash_id);
 
@@ -923,7 +931,7 @@ static void test_results_consistency(void)
 
 	for (i = 0, hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1, i++) {
 		digest_size = rhash_get_digest_size(hash_id);
-		assert(digest_size < 70);
+		REQUIRE_TRUE(digest_size < 70, "too big digest size\n");
 
 		ctx = rhash_init(hash_id);
 
@@ -956,7 +964,7 @@ static void test_unaligned_messages_consistency(void)
 	/* loop by hash algorithms */
 	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
 		char expected_hash[130];
-		assert(rhash_get_digest_size(hash_id) < (int)sizeof(expected_hash));
+		REQUIRE_TRUE(rhash_get_digest_size(hash_id) < (int)sizeof(expected_hash), "too big digest size\n");
 
 		alignment_size = (hash_id & (RHASH_TTH | RHASH_TIGER | RHASH_WHIRLPOOL | RHASH_SHA512) ? 8 : 4);
 
@@ -1022,7 +1030,7 @@ static void test_context_alignment(void)
 		char* context_ptr;
 		hash_ids[i] = RHASH_MD5;
 		ctx = rhash_init_multi(count, hash_ids);
-		assert(!!ctx);
+		REQUIRE_TRUE(ctx, "NULL rhash context\n");
 		context_ptr = (char*)rhash_get_context_ptr(ctx, RHASH_MD5);
 		if (((context_ptr - (char*)0) & aligner) != 0) {
 			log_error4("wrong aligment %d of pointer %p for the %2d-th context (rhash = %p)\n",
@@ -1220,29 +1228,31 @@ static void print_openssl_status(void)
 {
 	rhash_uptr_t available = rhash_get_openssl_available_mask();
 	rhash_uptr_t supported = rhash_get_openssl_supported_mask();
-	int has_openssl = rhash_is_openssl_supported();
 
-	printf("OpenSSL %s", (has_openssl ? "supported" : "not supported"));
-	if (has_openssl && available != RHASH_ERROR)
-	{
-		printf(", %s", (available ? "loaded" : "not loaded"));
-		if (available)
-		{
-			unsigned hash_id;
-			printf(":");
-			available &= RHASH_ALL_HASHES;
-			for (hash_id = 1; hash_id <= available; hash_id <<= 1) {
-				if (!!(hash_id & available))
-					printf(" %s", rhash_get_name(hash_id));
-			}
-			supported &= (~available & RHASH_ALL_HASHES);
-			for (hash_id = 1; hash_id <= supported; hash_id <<= 1) {
-				if (!!(hash_id & supported))
-					printf(" -%s", rhash_get_name(hash_id));
-			}
-		}
+	if (!rhash_is_openssl_supported()) {
+		printf("OpenSSL is not supported\n");
+		return;
 	}
-	printf("\n");
+	if (available == RHASH_ERROR)
+		available = 0;
+
+	printf("OpenSSL is supported, %s",
+		(available ? "loaded:" : "not loaded\n"));
+	if (available)
+	{
+		unsigned hash_id;
+		available &= RHASH_ALL_HASHES;
+		for (hash_id = 1; hash_id <= available; hash_id <<= 1) {
+			if (!!(hash_id & available))
+				printf(" %s", rhash_get_name(hash_id));
+		}
+		supported &= (~available & RHASH_ALL_HASHES);
+		for (hash_id = 1; hash_id <= supported; hash_id <<= 1) {
+			if (!!(hash_id & supported))
+				printf(" -%s", rhash_get_name(hash_id));
+		}
+		printf("\n");
+	}
 }
 
 /**
@@ -1259,13 +1269,13 @@ int main(int argc, char* argv[])
 	int i;
 
 	for (i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "--info") == 0) {
+		if (!strcmp(argv[i], "--info") || !strcmp(argv[i], "-i")) {
 			print_info = 1;
 		}
-		else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+		else if (!strcmp(argv[i], "--verbose") || !strcmp(argv[i], "-v")) {
 			g_verbose++;
 		}
-		else if (strcmp(argv[i], "--speed") == 0) {
+		else if (!strcmp(argv[i], "--speed") || !strcmp(argv[i], "-s")) {
 			test_speed = 1;
 			if ((i + 1) < argc && argv[i + 1][0] != '-') {
 				hash_id = find_hash(argv[i + 1]);
@@ -1278,9 +1288,10 @@ int main(int argc, char* argv[])
 		}
 		else {
 			printf("Options:\n"
+				"-h, --help Print help.\n"
 				"-v, --verbose Be verbose.\n"
-				"    --info Print library info\n"
-				"    --speed [HASH_NAME] Benchmark given hash algorithm\n");
+				"-i, --info Print library info\n"
+				"-s, --speed [HASH_NAME] Benchmark given hash algorithm\n");
 			return 1;
 		}
 	}

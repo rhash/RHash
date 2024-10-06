@@ -165,7 +165,7 @@ RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[]);
 /**
  * Allocate and initialize RHash context for calculating a single hash function.
  *
- * This function also supports a depricated way to initialize rhash context
+ * This function also supports a deprecated way to initialize rhash context
  * for multiple hash functions, by passing a bitwise union of several hash
  * identifiers. Only single-bit identifiers (not greater than RHASH_SNEFRU256)
  * can be used in such bitwise union.
@@ -529,11 +529,6 @@ RHASH_API rhash_uptr_t rhash_transmit(
  * and zero otherwise.
  */
 #define rhash_is_openssl_supported() (rhash_get_openssl_mask() != RHASH_ERROR)
-
-/**
- * Legacy macro. The bit mask of hash algorithms implemented by OpenSSL.
- */
-# define RHASH_OPENSSL_SUPPORTED_HASHES (rhash_get_openssl_supported_mask())
 
 #ifdef __cplusplus
 } /* extern "C" */

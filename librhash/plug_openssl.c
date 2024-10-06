@@ -69,7 +69,7 @@
 	(PLUGIN_MD4 | PLUGIN_MD5 | PLUGIN_SHA1_SHA2 | PLUGIN_RIPEMD160 | PLUGIN_WHIRLPOOL)
 
 /* the mask of ids of hashing algorithms to use from the OpenSSL library */
-unsigned rhash_openssl_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
+unsigned openssl_enabled_hash_mask = OPENSSL_DEFAULT_HASH_MASK;
 unsigned openssl_available_algorithms_hash_mask = 0;
 
 #ifdef OPENSSL_RUNTIME
@@ -276,12 +276,12 @@ int rhash_plug_openssl(void)
 
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
 
-	if ( (rhash_openssl_hash_mask & RHASH_OPENSSL_SUPPORTED_HASHES) == 0) {
+	if ((openssl_enabled_hash_mask & PLUGIN_SUPPORTED_HASH_MASK) == 0)
 		return 1; /* do not load OpenSSL */
-	}
 
 #ifdef OPENSSL_RUNTIME
-	if (!load_openssl_runtime()) return 0;
+	if (!load_openssl_runtime())
+		return 0;
 #endif
 
 	memcpy(rhash_updated_hash_info, rhash_info_table, sizeof(rhash_updated_hash_info));
@@ -293,7 +293,7 @@ int rhash_plug_openssl(void)
 		if (!method->init)
 			continue;
 		openssl_available_algorithms_hash_mask |= method->info->hash_id;
-		if ((rhash_openssl_hash_mask & method->info->hash_id) == 0)
+		if ((openssl_enabled_hash_mask & method->info->hash_id) == 0)
 			continue;
 		bit_index = rhash_ctz(method->info->hash_id);
 		assert(method->info->hash_id == rhash_updated_hash_info[bit_index].info->hash_id);
@@ -324,6 +324,31 @@ unsigned rhash_get_openssl_supported_hash_mask(void)
 unsigned rhash_get_openssl_available_hash_mask(void)
 {
 	return openssl_available_algorithms_hash_mask;
+}
+
+/**
+ * Returns bit-mask of enabled OpenSSL algorithms, if the OpenSSL has
+ * been successfully loaded, zero otherwise.
+ * Only available algorithms are listed.
+ *
+ * @return the bit-mask of enabled OpenSSL algorithms
+ */
+unsigned rhash_get_openssl_enabled_hash_mask(void)
+{
+	return openssl_enabled_hash_mask & openssl_available_algorithms_hash_mask;
+}
+
+/**
+ * Set bit-mask of enabled OpenSSL algorithms.
+ *
+ * @return the bit-mask of enabled OpenSSL algorithms
+ */
+void rhash_set_openssl_enabled_hash_mask(unsigned mask)
+{
+	mask &= (openssl_available_algorithms_hash_mask ?
+		openssl_available_algorithms_hash_mask :
+		PLUGIN_SUPPORTED_HASH_MASK);
+	openssl_enabled_hash_mask = mask;
 }
 #else
 typedef int dummy_declaration_required_by_strict_iso_c;
