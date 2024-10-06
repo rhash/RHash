@@ -448,13 +448,13 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "edonr512",  0, &opt.sum_flags, RHASH_EDONR512 },
 	{ F_UFLG,   0,   0, "blake2s",   0, &opt.sum_flags, RHASH_BLAKE2S },
 	{ F_UFLG,   0,   0, "blake2b",   0, &opt.sum_flags, RHASH_BLAKE2B },
-	{ F_UFLG, 'L',   0, "ed2k-link", 0, &opt.sum_flags, OPT_ED2K_LINK },
 
 	/* output formats */
 	{ F_UFLG,   0,   0, "sfv",       0, &opt.fmt, FMT_SFV },
 	{ F_UFLG,   0,   0, "bsd",       0, &opt.fmt, FMT_BSD },
 	{ F_UFLG,   0,   0, "simple",    0, &opt.fmt, FMT_SIMPLE },
 	{ F_UFLG,   0,   0, "one-hash",  0, &opt.fmt, FMT_ONE_HASH },
+	{ F_UFLG, 'L',   0, "ed2k-link", 0, &opt.fmt, FMT_ED2K_LINK },
 	{ F_UFLG, 'g',   0, "magnet",    0, &opt.fmt, FMT_MAGNET },
 	{ F_UFLG,   0,   0, "uppercase", 0, &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", 0, &opt.flags, OPT_LOWERCASE },
@@ -1100,8 +1100,9 @@ static void set_default_sums_flags(const char* progName)
 
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
 	if (strstr(buf, "bsd") && opt.fmt == 0) opt.fmt = FMT_BSD;
-	if (strstr(buf, "one") && opt.fmt == 0) opt.fmt = FMT_ONE_HASH;
 	if (strstr(buf, "magnet") && opt.fmt == 0) opt.fmt = FMT_MAGNET;
+	if (strstr(buf, "ed2k-link") && opt.fmt == 0) opt.fmt |= FMT_ED2K_LINK;
+	if (strstr(buf, "one") && opt.fmt == 0) opt.fmt = FMT_ONE_HASH;
 
 	if (strstr(buf, "crc32c")) opt.sum_flags |= RHASH_CRC32C;
 	else if (strstr(buf, "crc32")) opt.sum_flags |= RHASH_CRC32;
@@ -1133,7 +1134,6 @@ static void set_default_sums_flags(const char* progName)
 	if (strstr(buf, "blake2b"))   opt.sum_flags |= RHASH_BLAKE2B;
 	if (strstr(buf, "snefru256")) opt.sum_flags |= RHASH_SNEFRU128;
 	if (strstr(buf, "snefru128")) opt.sum_flags |= RHASH_SNEFRU256;
-	if (strstr(buf, "ed2k-link")) opt.sum_flags |= OPT_ED2K_LINK;
 	else if (strstr(buf, "ed2k")) opt.sum_flags |= RHASH_ED2K;
 
 	if (!opt.sum_flags && opt.fmt == FMT_MAGNET)

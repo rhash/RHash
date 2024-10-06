@@ -32,7 +32,7 @@
 /**
  * The table with information about hash functions.
  */
-print_hash_info hash_info_table[RHASH_HASH_COUNT + 2];
+print_hash_info hash_info_table[RHASH_HASH_COUNT + 1];
 
 /**
  * Possible types of a print_item.
@@ -644,12 +644,11 @@ static const char* get_librhash_version(void)
 void init_hash_info_table(void)
 {
 	unsigned bit;
-	const unsigned fullmask = RHASH_ALL_HASHES | OPT_ED2K_LINK;
 	const unsigned custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512;
 	const unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
-		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256 | OPT_ED2K_LINK;
-	const char* short_opt = "cmhteawrgl";
+		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256;
+	const char* short_opt = "cmhteawrg";
 	print_hash_info* info = hash_info_table;
 
 	/* prevent crash on incompatible librhash */
@@ -660,14 +659,14 @@ void init_hash_info_table(void)
 		log_warning("inconsistent librhash version is loaded: %s\n", get_librhash_version());
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
-	for (bit = 1; bit && bit <= fullmask; bit = bit << 1) {
+	for (bit = 1; bit && bit <= RHASH_ALL_HASHES; bit = bit << 1) {
 		const char* p;
 		char* e;
 		char* d;
 
-		if (!(bit & fullmask))
+		if (!(bit & RHASH_ALL_HASHES))
 			continue;
-		if ((info - hash_info_table) > RHASH_HASH_COUNT) {
+		if ((info - hash_info_table) >= RHASH_HASH_COUNT) {
 			log_warning("too many hash ids\n"); /* this shall never happen */
 			break;
 		}
@@ -676,7 +675,7 @@ void init_hash_info_table(void)
 		info->short_char = ((bit & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
 
-		info->name = (bit & RHASH_ALL_HASHES ? rhash_get_name(bit) : "ED2K-LINK");
+		info->name = rhash_get_name(bit);
 		assert(strlen(info->name) < 19);
 		p = info->name;
 		d = info->short_name;
@@ -725,7 +724,7 @@ void init_hash_info_table(void)
 			info->bsd_name = info->name;
 		++info;
 	}
-	assert((info - hash_info_table) == (RHASH_HASH_COUNT + 1));
+	assert((info - hash_info_table) == RHASH_HASH_COUNT);
 	assert(info->hash_id == 0);
 	assert(info->name == NULL);
 }
@@ -755,18 +754,17 @@ strbuf_t* init_printf_format(void)
 	out = rsh_str_new();
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
-	if ((opt.sum_flags & OPT_ED2K_LINK) != 0) {
-		rsh_str_append_n(out, "%l\\n", 4);
-		out->str[1] &= up_flag;
-		return out;
-	}
-	if (opt.sum_flags == 0)
+	if (opt.sum_flags == 0 && opt.fmt != FMT_ED2K_LINK)
 		return out;
 
 	if (opt.fmt == FMT_BSD) {
 		fmt = "\\^\003(%p) = \001\\n";
 	} else if (opt.fmt == FMT_ONE_HASH) {
 		fmt = "\001\\n";
+	} else if (opt.fmt == FMT_ED2K_LINK) {
+		rsh_str_append_n(out, "%l\\n", 4);
+		out->str[1] &= up_flag;
+		return out;
 	} else if (opt.fmt == FMT_MAGNET) {
 		rsh_str_append(out, "magnet:?xl=%s&dn=");
 		rsh_str_append(out, (uppercase ? "%Uf" : "%uf"));

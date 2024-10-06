@@ -274,14 +274,6 @@ TEST_RESULT=$($rhash -p '%f ' ${F}1 --file-list ${F}l ${F}4)
 check "$TEST_RESULT" "t1 t2 t3 t4 "
 rm -f ${F}1 ${F}2 ${F}3 ${F}4 ${F}l
 
-new_test "test eDonkey link:          "
-TEST_RESULT=$( $rhash -p '%L %l\n' -m "a" )
-TEST_EXPECTED="ed2k://|file|%28message%29|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|%28message%29|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
-check "$TEST_RESULT" "$TEST_EXPECTED" .
-# test verification of ed2k links
-TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
-match "$TEST_RESULT" "^test1K.data *OK"
-
 if [ -n "$OPT_FULL" ]; then
   new_test "test all hash options:      "
   errors=0
@@ -297,6 +289,14 @@ TEST_RESULT=$( $rhash --simple -a test1K.data | $rhash -vc - 2>/dev/null | grep 
 match "$TEST_RESULT" "^test1K.data *OK" .
 # verify a filepath started by star ('*') character
 TEST_RESULT=$( echo "b70b4c26 *test1K.data" | $rhash -Cc - 2>/dev/null | grep test1K.data )
+match "$TEST_RESULT" "^test1K.data *OK"
+
+new_test "test eDonkey links:         "
+TEST_RESULT=$( $rhash -p '%L %l\n' -m "a" )
+TEST_EXPECTED="ed2k://|file|%28message%29|1|BDE52CB31DE33E46245E05FBDBD6FB24|h=Q336IN72UWT7ZYK5DXOLT2XK5I3XMZ5Y|/ ed2k://|file|%28message%29|1|bde52cb31de33e46245e05fbdbd6fb24|h=q336in72uwt7zyk5dxolt2xk5i3xmz5y|/"
+check "$TEST_RESULT" "$TEST_EXPECTED" .
+# test verification of ed2k links
+TEST_RESULT=$( $rhash -L test1K.data | $rhash -vc - 2>/dev/null | grep test1K.data )
 match "$TEST_RESULT" "^test1K.data *OK"
 
 new_test "test magnet links:          "

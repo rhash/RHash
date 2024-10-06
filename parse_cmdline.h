@@ -19,11 +19,8 @@ typedef wchar_t opt_tchar;
 typedef char opt_tchar;
 #endif
 
-/**
- * Options bit flags and constants.
- */
-enum {
-	/* program modes */
+/** Bit flags for program modes. */
+enum ProgramModes {
 	MODE_DEFAULT   = 0x1,
 	MODE_CHECK     = 0x2,
 	MODE_CHECK_EMBEDDED = 0x4,
@@ -32,8 +29,10 @@ enum {
 	MODE_UNVERIFIED = 0x20,
 	MODE_BENCHMARK = 0x40,
 	MODE_TORRENT   = 0x80,
+};
 
-	/* misc options */
+/** Bit flags for program misc options. */
+enum ProgramOptions {
 	OPT_BRIEF      = 0x02,
 	OPT_EMBED_CRC  = 0x20,
 	OPT_RECURSIVE  = 0x40,
@@ -62,18 +61,20 @@ enum {
 	OPT_ENC_DOS = 0x40000000,
 	OPT_ENCODING = OPT_UTF8 | OPT_ENC_WIN | OPT_ENC_DOS,
 #endif
+};
 
+/** Bit flags for formatting options. */
+enum FormattingOptions {
 	FMT_BSD    = 0x01,
 	FMT_SFV    = 0x02,
 	FMT_SIMPLE = 0x04,
-	FMT_ONE_HASH = 0x08,
-	FMT_MAGNET = 0x10,
-	FMT_PRINTF = 0x20,
-	FMT_FILE_TEMPLATE = 0x40,
+	FMT_ONE_HASH  = 0x08,
+	FMT_ED2K_LINK = 0x10,
+	FMT_MAGNET = 0x20,
+	FMT_PRINTF = 0x40,
+	FMT_FILE_TEMPLATE = 0x80,
 	FMT_PRINTF_MASK = FMT_PRINTF | FMT_FILE_TEMPLATE,
 };
-
-#define OPT_ED2K_LINK 0x80000000
 
 struct vector_t;
 

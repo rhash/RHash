@@ -96,8 +96,6 @@ BTIH: Select BitTorrent Info Hash.
 AICH: Select AICH hash function.
 .IP "\-E, \-\-ed2k"
 ED2K: Select eDonkey 2000 hash function.
-.IP "\-L, \-\-ed2k\-link"
-eDonkey link: calculate and print eDonkey link.
 .IP "\-W, \-\-whirlpool"
 Whirlpool: Select Whirlpool hash function.
 .IP "\-G, \-\-gost12-256"
@@ -230,6 +228,9 @@ Use simple output format. Each line will consist of
 filename and message digests specified by options.
 .IP "\-\-one\-hash"
 Print one message digest per line without additional file information.
+.IP "\-L, \-\-ed2k\-link"
+Print eDonkey link containing file name, file size, ED2K and AICH
+message digests.
 .IP "\-\-hex"
 Print message digests in hexadecimal format.
 .IP "\-\-base32"
