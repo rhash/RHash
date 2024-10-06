@@ -121,29 +121,6 @@ static size_t unescape_characters(char* buffer, size_t buffer_size, const char* 
 	return (dst - buffer);
 }
 
-/* convert a hash function bit-flag to the index of the bit */
-#if __GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) /* GCC >= 3.4 */
-# define get_ctz(x) __builtin_ctz(x)
-#else
-
-/**
- * Returns index of the trailing bit of a 32-bit number.
- * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
- *
- * @param x the number to process
- * @return zero-based index of the trailing bit
- */
-static unsigned get_ctz(unsigned x)
-{
-	/* see http://graphics.stanford.edu/~seander/bithacks.html */
-	static unsigned char bit_pos[32] =  {
-		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
-	};
-	return bit_pos[((uint32_t)((x & -(int)x) * 0x077CB531U)) >> 27];
-}
-#endif /* (GCC >= 4.3) */
-
 /**
  * Encode a hash function digest size into a small number in [0,...,7].
  * The digest size must be in the set { 4, 16, 20, 24, 28, 32, 48, 64 }.

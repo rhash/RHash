@@ -469,6 +469,28 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 }
 
 /*=========================================================================
+ * Bit functions
+ *=========================================================================*/
+ #ifndef get_ctz
+/**
+ * Returns index of the trailing bit of a 32-bit number.
+ * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
+ *
+ * @param x the number to process
+ * @return zero-based index of the trailing bit
+ */
+unsigned get_ctz(unsigned x)
+{
+	/* array for conversion to bit position */
+	static unsigned char bit_pos[32] =  {
+		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
+		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
+	};
+	return bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
+}
+#endif
+
+/*=========================================================================
  * Containers
  *=========================================================================*/
 
