@@ -832,26 +832,74 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
 }
 #endif
 
-#define PVOID2UPTR(p) ((rhash_uptr_t)(((char*)(p)) + 0))
+/* Helper macro */
+#define ENSURE_THAT(condition) while(!(condition)) { return RHASH_ERROR; }
 
-RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata)
+static rhash_uptr_t rhash_get_algorithms_impl(const rhash_context_ext* ctx, size_t count, void* ptr)
 {
-	/* for messages working with rhash context */
-	rhash_context_ext* const ctx = (rhash_context_ext*)dst;
-	(void)rdata;
+	unsigned* buffer = (unsigned*)(ptr);
+	size_t i;
+	if (ctx != 0) {
+		if (count != 0 && buffer != 0) {
+			ENSURE_THAT(ctx->hash_vector_size <= count);
+			for (i = 0; i < ctx->hash_vector_size; i++)
+				buffer[i] = ctx->vector[i].hash_info->info->hash_id;
+		}
+		return ctx->hash_vector_size;
+	} else {
+		if (count != 0 && buffer != 0) {
+			ENSURE_THAT((size_t)RHASH_HASH_COUNT <= count);
+			for (i = 0; i < (size_t)RHASH_HASH_COUNT; i++)
+				buffer[i] = 1 << i;
+		}
+		return (rhash_uptr_t)RHASH_HASH_COUNT;
+	}
+}
 
-	switch (msg_id) {
+static size_t hash_bitmask_to_array(unsigned bitmask, size_t count, unsigned* data)
+{
+	unsigned bits_count;
+	bitmask &= ((unsigned)RHASH_EXTENDED_BIT - 1);
+	bits_count = rhash_popcount(bitmask);
+	if (count > 0 && data != 0) {
+		size_t index = 0;
+		ENSURE_THAT(bits_count <= count);
+		for (unsigned bit = 1; bit <= bitmask; bit = bit << 1) {
+			if ((bitmask & bit) != 0)
+				data[index++] = bit;
+		}
+		ENSURE_THAT(bits_count == index);
+	}
+	return bits_count;
+}
+
+static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
+{
+	unsigned bitmask = 0;
+	size_t i;
+	for (i = 0; i < count; i++)
+		bitmask |= data[i];
+	return bitmask;
+}
+
+RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data)
+{
+	/* cast to extented rhash context */
+	rhash_context_ext* const ctx = (rhash_context_ext*)context;
+	switch (cmd) {
 	case RMSG_GET_CONTEXT:
 		{
 			unsigned i;
+			ENSURE_THAT(data);
 			for (i = 0; i < ctx->hash_vector_size; i++) {
 				struct rhash_hash_info* info = ctx->vector[i].hash_info;
-				if (info->info->hash_id == (unsigned)ldata)
-					return PVOID2UPTR(ctx->vector[i].context);
+				if (info->info->hash_id == (unsigned)size) {
+					*(void**)data = ctx->vector[i].context;
+					return 0;
+				}
 			}
-			return (rhash_uptr_t)0;
+			return RHASH_ERROR;
 		}
-
 	case RMSG_CANCEL:
 		/* mark rhash context as canceled, in a multithreaded program */
 		atomic_compare_and_swap(&ctx->state, STATE_ACTIVE, STATE_STOPPED);
@@ -862,11 +910,56 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 		return ((ctx->flags & RCTX_FINALIZED) != 0);
 	case RMSG_SET_AUTOFINAL:
 		ctx->flags &= ~RCTX_AUTO_FINAL;
-		if (ldata)
+		if (size)
 			ctx->flags |= RCTX_AUTO_FINAL;
 		break;
 
-	/* OpenSSL related messages */
+	case RMSG_GET_ALL_ALGORITHMS:
+		return rhash_get_algorithms_impl(NULL, size, (unsigned*)data);
+	case RMSG_GET_CTX_ALGORITHMS:
+		ENSURE_THAT(ctx);
+		return rhash_get_algorithms_impl(ctx, size, (unsigned*)data);
+
+	case RMSG_GET_OPENSSL_SUPPORTED:
+		return hash_bitmask_to_array(
+			rhash_get_openssl_supported_hash_mask(), size, (unsigned*)data);
+	case RMSG_GET_OPENSSL_AVAILABLE:
+		return hash_bitmask_to_array(
+			rhash_get_openssl_available_hash_mask(), size, (unsigned*)data);
+	case RMSG_GET_OPENSSL_ENABLED:
+		return hash_bitmask_to_array(
+			rhash_get_openssl_enabled_hash_mask(), size, (unsigned*)data);
+	case RMSG_SET_OPENSSL_ENABLED:
+		ENSURE_THAT(data || !size);
+		rhash_set_openssl_enabled_hash_mask(ids_array_to_hash_bitmask(size, (unsigned*)data));
+		break;
+
+	case RMSG_GET_LIBRHASH_VERSION:
+		return RHASH_XVERSION;
+	default:
+		return RHASH_ERROR; /* unknown message */
+	}
+	return 0;
+}
+
+/* Convert a rhash_uptr_t to a void* pointer. */
+#define UPTR2PVOID(u) ((void*)((u) + 0))
+
+/* Deprecated function to control rhash, use rhash_ctrl() instead */
+RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata)
+{
+	rhash ctx = (rhash)dst;
+	(void)rdata;
+
+	switch (msg_id) {
+	case RMSG_CANCEL:
+	case RMSG_IS_CANCELED:
+	case RMSG_GET_FINALIZED:
+	case RMSG_SET_AUTOFINAL:
+	case RMSG_GET_LIBRHASH_VERSION:
+		return rhash_ctrl(ctx, msg_id, (unsigned)ldata, UPTR2PVOID(rdata));
+
+	/* Legacy messages, which operate openssl hash masks directly */
 #ifdef USE_OPENSSL
 	case RMSG_SET_OPENSSL_MASK:
 		rhash_set_openssl_enabled_hash_mask((unsigned)ldata);
@@ -878,9 +971,6 @@ RHASH_API rhash_uptr_t rhash_transmit(unsigned msg_id, void* dst, rhash_uptr_t l
 		return rhash_get_openssl_supported_hash_mask();
 	case RMSG_GET_OPENSSL_AVAILABLE_MASK:
 		return rhash_get_openssl_available_hash_mask();
-
-	case RMSG_GET_LIBRHASH_VERSION:
-		return RHASH_XVERSION;
 
 	default:
 		return RHASH_ERROR; /* unknown message */

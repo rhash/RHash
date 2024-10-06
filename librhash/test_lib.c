@@ -639,6 +639,7 @@ static void log_error_impl(int line, const char* format, ...)
 #define REQUIRE_NE(a, b, msg) CHECK_IMPL((a) == (b), return, msg)
 #define REQUIRE_TRUE(condition, msg) CHECK_IMPL(!(condition), return, msg)
 
+
 /*=========================================================================*
  *               Functions for calculating a message digest                *
  *=========================================================================*/
@@ -1031,7 +1032,7 @@ static void test_context_alignment(void)
 		hash_ids[i] = RHASH_MD5;
 		ctx = rhash_init_multi(count, hash_ids);
 		REQUIRE_TRUE(ctx, "NULL rhash context\n");
-		context_ptr = (char*)rhash_get_context_ptr(ctx, RHASH_MD5);
+		rhash_get_context(ctx, RHASH_MD5, &context_ptr);
 		if (((context_ptr - (char*)0) & aligner) != 0) {
 			log_error4("wrong aligment %d of pointer %p for the %2d-th context (rhash = %p)\n",
 				(int)((context_ptr - (char*)0) & aligner), context_ptr, i, ctx);
@@ -1070,6 +1071,114 @@ static void test_generic_assumptions(void)
 	}
 	test_endianness();
 	test_version_sanity();
+}
+
+static void check_openssl_ids(size_t count, unsigned* hash_ids)
+{
+	size_t i;
+	for (i = 0; i < count; i++) {
+		unsigned id = hash_ids[i];
+		if ((id & (id - 1)) != 0 || (id & 0x000f060e) == 0)
+			log_error2("got bad openssl algorithm id = %08x (%s)\n", id, rhash_get_name(id));
+	}
+}
+
+/**
+ * Test getting of ids.
+ */
+static void test_openssl_getters(void)
+{
+	const size_t total = (size_t)RHASH_HASH_COUNT;
+	unsigned hash_ids[RHASH_HASH_COUNT];
+	size_t scount, acount, ecount;
+
+	dbg2("- test openssl calls\n");
+	scount = rhash_get_openssl_supported(0, NULL);
+	REQUIRE_TRUE(scount <= total, "openssl: supported count is greater than the total slgorithm count\n");
+	CHECK_EQ(scount, rhash_get_openssl_supported(0, hash_ids), "wrong openssl algorithms count\n");
+	CHECK_EQ(scount, rhash_get_openssl_supported(total, NULL), "wrong openssl algorithms count\n");
+	if (scount > 1)
+		CHECK_EQ(RHASH_ERROR, rhash_get_openssl_supported(1, hash_ids), "RHASH_ERROR expected\n");
+	CHECK_EQ(scount, rhash_get_openssl_supported(scount, hash_ids), "wrong openssl algorithms count\n");
+	check_openssl_ids(scount, hash_ids);
+	acount = rhash_get_openssl_available(0, NULL);
+	CHECK_TRUE(acount <= scount, "openssl: available count is greater than supported count\n");
+	CHECK_EQ(acount, rhash_get_openssl_available(0, hash_ids), "wrong openssl algorithms count\n");
+	CHECK_EQ(acount, rhash_get_openssl_available(total, NULL), "wrong openssl algorithms count\n");
+	CHECK_EQ(acount, rhash_get_openssl_available(acount, hash_ids), "wrong openssl algorithms count\n");
+	check_openssl_ids(acount, hash_ids);
+	ecount = rhash_get_openssl_enabled(0, NULL);
+	CHECK_TRUE(ecount <= acount, "openssl: enabled count is greater than available count\n");
+	CHECK_EQ(ecount, rhash_get_openssl_enabled(0, hash_ids), "wrong openssl algorithms count\n");
+	CHECK_EQ(ecount, rhash_get_openssl_enabled(total, NULL), "wrong openssl algorithms count\n");
+	CHECK_EQ(ecount, rhash_get_openssl_enabled(ecount, hash_ids), "wrong openssl algorithms count\n");
+	check_openssl_ids(ecount, hash_ids);
+	/* test changing the list of enabled openssl algorithms */
+	CHECK_EQ(RHASH_ERROR, rhash_set_openssl_enabled(total, NULL), "RHASH_ERROR expected\n");
+	CHECK_EQ(ecount, rhash_get_openssl_enabled(0, NULL), "enabled algorithms changed\n");
+	REQUIRE_EQ(total, rhash_get_all_algorithms(total, hash_ids), "failed to get all algorithms\n");
+	CHECK_EQ(0, rhash_set_openssl_enabled(total, hash_ids), "failed to enable all openssl algorithms\n");
+	CHECK_EQ(acount, rhash_get_openssl_enabled(0, NULL), "all available algorithms must be enabled\n");
+	CHECK_EQ(0, rhash_set_openssl_enabled(0, NULL), "disabling algorithms must work without ids array\n");
+	CHECK_EQ(0, rhash_get_openssl_enabled(0, NULL), "openssl algorithms were not disabled\n");
+	REQUIRE_EQ(acount, rhash_get_openssl_available(acount, hash_ids), "failed to get available algorithms\n");
+	CHECK_EQ(0, rhash_set_openssl_enabled(acount, hash_ids), "failed to enable all openssl algorithms\n");
+	CHECK_EQ(acount, rhash_get_openssl_enabled(0, NULL), "not all available algorithms were anbled\n");
+	CHECK_EQ(0, rhash_set_openssl_enabled(0, hash_ids), "failed to disable openssl algorithms\n");
+	CHECK_EQ(0, rhash_get_openssl_enabled(0, NULL), "openssl algorithms were not disabled\n");
+}
+
+/**
+ * Test getting of ids.
+ */
+static void test_id_getters(void)
+{
+	const size_t count = (size_t)RHASH_HASH_COUNT;
+	unsigned hash_ids[RHASH_HASH_COUNT];
+	unsigned hash_ids2[RHASH_HASH_COUNT];
+	rhash ctx;
+	dbg("test algorithms getters\n");
+	CHECK_EQ(count, rhash_get_all_algorithms(0, hash_ids), "incorrect number of supported algorithms\n");
+	CHECK_EQ(count, rhash_get_all_algorithms(1, 0), "incorrect number of supported algorithms\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_all_algorithms(1, hash_ids), "RHASH_ERROR expected for small buffer\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_all_algorithms(count - 1, hash_ids), "RHASH_ERROR expected for small buffer\n");
+	REQUIRE_EQ(count, rhash_get_all_algorithms(count, hash_ids), "failed to get ids of supported algorithms\n");
+	ctx = rhash_init_multi(count, hash_ids);
+	REQUIRE_NE(0, ctx, "got invalid context\n");
+	CHECK_EQ(count, rhash_get_ctx_algorithms(ctx, 0, hash_ids2), "incorrect number of context algorithms\n");
+	CHECK_EQ(count, rhash_get_ctx_algorithms(ctx, 1, 0), "incorrect number of context algorithms\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_ctx_algorithms(ctx, 1, hash_ids2), "RHASH_ERROR expected for small buffer\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_ctx_algorithms(ctx, count - 1, hash_ids2), "RHASH_ERROR expected for small buffer\n");
+	REQUIRE_EQ(count, rhash_get_ctx_algorithms(ctx, count, hash_ids2), "failed to get ids of context algorithms\n");
+	CHECK_EQ(0, memcmp(hash_ids, hash_ids2, sizeof(hash_ids)), "unexpected algorithms ids\n");
+	rhash_free(ctx);
+
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
+	REQUIRE_NE(0, rhash_is_openssl_supported(), "openssl must be on\n");
+	test_openssl_getters();
+#else
+	REQUIRE_EQ(0, rhash_is_openssl_supported(), "openssl must be off\n");
+	dbg2("- openssl tests are disabled\n");
+#endif
+}
+
+static void test_get_context(void)
+{
+	unsigned hash_ids[2] = { RHASH_CRC32, RHASH_HAS160 };
+	void* context_ptr = NULL;
+	rhash ctx = rhash_init_multi(2, hash_ids);
+	REQUIRE_TRUE(ctx, "NULL rhash context\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_context(ctx, RHASH_MD5, &context_ptr), "RHASH_ERROR expected\n");
+	CHECK_EQ(RHASH_ERROR, rhash_get_context(ctx, RHASH_SHA1, &context_ptr), "RHASH_ERROR expected\n");
+	CHECK_EQ(0, rhash_get_context(ctx, RHASH_CRC32, &context_ptr), "failed to get context pointer\n");
+	REQUIRE_NE(NULL, context_ptr, "NULL context pointer\n");
+	CHECK_EQ(0, *(uint32_t*)context_ptr, "wrong crc32 value\n");
+	rhash_update(ctx, "abcd", 4);
+	CHECK_EQ(0, rhash_get_context(ctx, RHASH_HAS160, &context_ptr), "failed to get context pointer\n");
+	REQUIRE_NE(NULL, context_ptr, "NULL context pointer\n");
+	CHECK_EQ(0, memcmp("abcd", context_ptr, 4), "wrong message buffer content in hash context\n");
+	CHECK_EQ(4, *((uint64_t*)context_ptr + 8), "wrong message length in hash context\n");
+	rhash_free(ctx);
 }
 
 static void test_import_export(void)
@@ -1226,30 +1335,30 @@ static unsigned find_hash(const char* name)
  */
 static void print_openssl_status(void)
 {
-	rhash_uptr_t available = rhash_get_openssl_available_mask();
-	rhash_uptr_t supported = rhash_get_openssl_supported_mask();
+	unsigned available[RHASH_HASH_COUNT];
+	unsigned supported[RHASH_HASH_COUNT];
+	size_t available_count, supported_count;
 
 	if (!rhash_is_openssl_supported()) {
 		printf("OpenSSL is not supported\n");
 		return;
 	}
-	if (available == RHASH_ERROR)
-		available = 0;
+	supported_count = rhash_get_openssl_supported(RHASH_HASH_COUNT, supported);
+	available_count = rhash_get_openssl_available(RHASH_HASH_COUNT, available);
+	REQUIRE_NE(RHASH_ERROR, supported_count, "failed to load supported openssl algorithms\n");
+	REQUIRE_NE(RHASH_ERROR, available_count, "failed to load available openssl algorithms\n");
 
 	printf("OpenSSL is supported, %s",
-		(available ? "loaded:" : "not loaded\n"));
-	if (available)
-	{
-		unsigned hash_id;
-		available &= RHASH_ALL_HASHES;
-		for (hash_id = 1; hash_id <= available; hash_id <<= 1) {
-			if (!!(hash_id & available))
-				printf(" %s", rhash_get_name(hash_id));
-		}
-		supported &= (~available & RHASH_ALL_HASHES);
-		for (hash_id = 1; hash_id <= supported; hash_id <<= 1) {
-			if (!!(hash_id & supported))
-				printf(" -%s", rhash_get_name(hash_id));
+		(available_count ? "loaded:" : "not loaded\n"));
+	if (available_count > 0) {
+		size_t i, j;
+		for (i = 0; i < available_count; i++)
+			printf(" %s", rhash_get_name(available[i]));
+		for (i = 0; i < supported_count; i++) {
+			unsigned id = supported[i];
+			for (j = 0; j < available_count && available[j] != id; j++);
+			if (j == available_count)
+				printf(" -%s", rhash_get_name(id));
 		}
 		printf("\n");
 	}
@@ -1313,6 +1422,8 @@ int main(int argc, char* argv[])
 		test_unaligned_messages_consistency();
 		test_chunk_size_consistency();
 		test_context_alignment();
+		test_id_getters();
+		test_get_context();
 		test_import_export();
 		test_magnet();
 		if (g_errors_count == 0)

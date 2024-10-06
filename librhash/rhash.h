@@ -428,19 +428,12 @@ typedef unsigned long rhash_uptr_t;
 #endif
 
 /**
- * The value returned by rhash_transmit on error.
+ * The value returned by rhash_ctrl on error.
  */
-#define RHASH_ERROR ((rhash_uptr_t)-1)
-/**
- * Convert a pointer to rhash_uptr_t.
- */
-#define RHASH_STR2UPTR(str) ((rhash_uptr_t)(char*)(str))
-/**
- * Convert a rhash_uptr_t to a void* pointer.
- */
-#define RHASH_UPTR2PVOID(u) ((void*)((u) + 0))
+#define RHASH_ERROR ((size_t)-1)
 
 /**
+ * Deprecated function.
  * Process a rhash message.
  *
  * @param msg_id message identifier
@@ -452,60 +445,159 @@ typedef unsigned long rhash_uptr_t;
 RHASH_API rhash_uptr_t rhash_transmit(
 	unsigned msg_id, void* dst, rhash_uptr_t ldata, rhash_uptr_t rdata);
 
-/* rhash message constants */
+/**
+ * Perform a generic or rhash context specific control command.
+ *
+ * @param context rhash context
+ * @param cmd control command id
+ * @param size the size of the data or command specific argument
+ * @param data command specific data
+ * @return command specific return value
+ */
+RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
 
+/* Commands for rhash_ctrl() */
 #define RMSG_GET_CONTEXT 1
 #define RMSG_CANCEL      2
 #define RMSG_IS_CANCELED 3
 #define RMSG_GET_FINALIZED 4
 #define RMSG_SET_AUTOFINAL 5
+#define RMSG_GET_ALL_ALGORITHMS 14
+#define RMSG_GET_CTX_ALGORITHMS 15
+#define RMSG_GET_OPENSSL_SUPPORTED 16
+#define RMSG_GET_OPENSSL_AVAILABLE 17
+#define RMSG_GET_OPENSSL_ENABLED 18
+#define RMSG_SET_OPENSSL_ENABLED 19
+#define RMSG_GET_LIBRHASH_VERSION 20
+
+/* Deprecated message ids for rhash_transmit() */
 #define RMSG_SET_OPENSSL_MASK 10
 #define RMSG_GET_OPENSSL_MASK 11
 #define RMSG_GET_OPENSSL_SUPPORTED_MASK 12
 #define RMSG_GET_OPENSSL_AVAILABLE_MASK 13
-#define RMSG_GET_LIBRHASH_VERSION 20
 
 /* HELPER MACROS */
 
 /**
  * Get a pointer to the context of the specified hash function.
  */
-#define rhash_get_context_ptr(ctx, hash_id) RHASH_UPTR2PVOID(rhash_transmit(RMSG_GET_CONTEXT, ctx, hash_id, 0))
+#define rhash_get_context(ctx, hash_id, ptr) \
+	rhash_ctrl(ctx, RMSG_GET_CONTEXT, hash_id, ptr)
 /**
  * Cancel file processing.
  */
-#define rhash_cancel(ctx) rhash_transmit(RMSG_CANCEL, ctx, 0, 0)
+#define rhash_cancel(ctx) \
+	rhash_ctrl(ctx, RMSG_CANCEL, 0, NULL)
 /**
  * Return non-zero if a message digest calculation was canceled, zero otherwise.
  */
-#define rhash_is_canceled(ctx) rhash_transmit(RMSG_IS_CANCELED, ctx, 0, 0)
+#define rhash_is_canceled(ctx) \
+	rhash_ctrl(ctx, RMSG_IS_CANCELED, 0, NULL)
 /**
  * Return non-zero if rhash_final was called for rhash_context.
  */
-#define rhash_get_finalized(ctx) rhash_transmit(RMSG_GET_FINALIZED, ctx, 0, 0)
+#define rhash_get_finalized(ctx) \
+	rhash_ctrl(ctx, RMSG_GET_FINALIZED, 0, NULL)
 
 /**
  * Turn on/off the auto-final flag for the given rhash_context. By default
  * auto-final is on, which means rhash_final is called automatically, if
  * needed when a message digest is retrieved by rhash_print call.
  */
-#define rhash_set_autofinal(ctx, on) rhash_transmit(RMSG_SET_AUTOFINAL, ctx, on, 0)
+#define rhash_set_autofinal(ctx, on) \
+	rhash_ctrl(ctx, RMSG_SET_AUTOFINAL, on, NULL)
 
 /**
+ * Fill the hash_ids array by identifiers of all algorithms supported
+ * by the library. The hash_ids array must have space to store
+ * at least count of unsigned elements.
+ * Returns RHASH_ERROR if the count and the hash_ids pointer are non-zero
+ * and the count is smaller then the number of supported algorithms,
+ * otherwise returns the number of algorithms.
+ */
+#define rhash_get_all_algorithms(count, hash_ids) \
+	rhash_ctrl(NULL, RMSG_GET_ALL_ALGORITHMS, count, hash_ids)
+
+/**
+ * Fill the hash_ids array by identifiers of algorithms associated with the given
+ * rhash context. The hash_ids array must have space to store
+ * at least count of unsigned elements.
+ * Returns RHASH_ERROR if hash_ids is not NULL and count is non-zero,
+ * and the count is smaller then the number of algorithms in context,
+ * otherwise returns the number of algorithms.
+ */
+#define rhash_get_ctx_algorithms(ctx, count, hash_ids) \
+	rhash_ctrl(ctx, RMSG_GET_CTX_ALGORITHMS, count, hash_ids)
+
+/**
+ * Get array of ids of algorithms supported by the OpenSSL plugin.
+ * Do not use this macro, unless reading detailed plugin info.
+ * Returns RHASH_ERROR if hash_ids is not NULL and count is non-zero,
+ * and count is lesser than the number of enabled algorithms,
+ * returns the number of supported algorithms otherwize.
+ */
+#define rhash_get_openssl_supported(count, hash_ids) \
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_SUPPORTED, count, hash_ids)
+
+/**
+ * Get array of ids of algorithms available from OpenSSL library.
+ * Returns RHASH_ERROR if hash_ids is not NULL and count is non-zero,
+ * and count is lesser than the number of enabled algorithms,
+ * returns 0 if dynamic OpenSSL library is not found or not loaded,
+ * returns the number of enabled algorithms otherwize.
+ */
+#define rhash_get_openssl_available(count, hash_ids) \
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_AVAILABLE, count, hash_ids)
+
+/**
+ * Get array of ids of "enabled" OpenSSL algorithms, which means
+ * the algorithms selected to be calculated by OpenSSL library.
+ * Returns RHASH_ERROR if hash_ids is not NULL and count is non-zero,
+ * and count is lesser than the number of enabled algorithms,
+ * returns the number of enabled algorithms otherwize.
+ */
+#define rhash_get_openssl_enabled(count, hash_ids) \
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_ENABLED, count, hash_ids)
+
+/**
+ * Set array of algorithms to be calculated by OpenSSL library.
+ * The call rhash_set_openssl_enabled(0, NULL) made before rhash_library_init(),
+ * disables loading of the OpenSSL dynamic library.
+ * Returns RHASH_ERROR if hash_ids is NULL and count is non-zero, 0 otherwise.
+ */
+#define rhash_set_openssl_enabled(count, hash_ids) \
+	rhash_ctrl(NULL, RMSG_SET_OPENSSL_ENABLED, count, hash_ids)
+
+/**
+ * Return non-zero if LibRHash has been compiled with OpenSSL support,
+ * and zero otherwise.
+ */
+#define rhash_is_openssl_supported() (rhash_get_openssl_supported(0, NULL))
+
+/**
+ * Return librhash version.
+ */
+#define rhash_get_version() \
+	rhash_ctrl(NULL, RMSG_GET_LIBRHASH_VERSION, 0, NULL)
+
+/* Deprecated macros to work with hash masks */
+
+/**
+ * Deprecated macro.
  * Set the bit-mask of hash algorithms to be calculated by OpenSSL library.
- * The call rhash_set_openssl_mask(0) made before rhash_library_init(),
- * turns off loading of the OpenSSL dynamic library.
- * This call works if the LibRHash was compiled with OpenSSL support.
+ * Return RHASH_ERROR if LibRHash is compiled without OpenSSL support.
  */
 #define rhash_set_openssl_mask(mask) rhash_transmit(RMSG_SET_OPENSSL_MASK, NULL, mask, 0)
 
 /**
+ * Deprecated macro.
  * Return current bit-mask of hash algorithms selected to be calculated by OpenSSL
  * library. Return RHASH_ERROR if LibRHash is compiled without OpenSSL support.
  */
 #define rhash_get_openssl_mask() rhash_transmit(RMSG_GET_OPENSSL_MASK, NULL, 0, 0)
 
 /**
+ * Deprecated macro.
  * Return the bit-mask of algorithms that can be provided by the OpenSSL plugin,
  * if the library is compiled with OpenSSL support, 0 otherwise. This bit-mask is
  * a constant value computed at compile-time.
@@ -513,22 +605,12 @@ RHASH_API rhash_uptr_t rhash_transmit(
 #define rhash_get_openssl_supported_mask() rhash_transmit(RMSG_GET_OPENSSL_SUPPORTED_MASK, NULL, 0, 0)
 
 /**
+ * Deprecated macro.
  * Return the bit-mask of algorithms that are successfully loaded from
  * OpenSSL library. If the library is not loaded or not supported by LibRHash,
  * then return 0.
  */
 #define rhash_get_openssl_available_mask() rhash_transmit(RMSG_GET_OPENSSL_AVAILABLE_MASK, NULL, 0, 0)
-
-/**
- * Return librhash version.
- */
-#define rhash_get_version() rhash_transmit(RMSG_GET_LIBRHASH_VERSION, NULL, 0, 0)
-
-/**
- * Return non-zero if LibRHash has been compiled with OpenSSL support,
- * and zero otherwise.
- */
-#define rhash_is_openssl_supported() (rhash_get_openssl_mask() != RHASH_ERROR)
 
 #ifdef __cplusplus
 } /* extern "C" */
