@@ -87,7 +87,8 @@ struct options_t
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
 	unsigned verbose;    /* verbosity level */
-	unsigned openssl_mask;    /* bit-mask for enabled OpenSSL hash functions */
+	uint32_t openssl_ids[32]; /* hash ids of enabled OpenSSL hash functions */
+	unsigned openssl_ids_count;
 	char* printf_str;         /* printf-like format */
 	opt_tchar* template_file; /* printf-like template file path */
 	opt_tchar* output;        /* file to output calculation or checking results to */

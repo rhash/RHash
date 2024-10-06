@@ -15,6 +15,7 @@ typedef struct print_hash_info
 {
 	const char* name;
 	const char* bsd_name;
+	unsigned hash_id;
 	char short_name[20];
 	char short_char;
 } print_hash_info;

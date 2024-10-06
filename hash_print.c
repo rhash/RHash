@@ -32,7 +32,7 @@
 /**
  * The table with information about hash functions.
  */
-print_hash_info hash_info_table[32];
+print_hash_info hash_info_table[RHASH_HASH_COUNT + 2];
 
 /**
  * Possible types of a print_item.
@@ -626,7 +626,7 @@ static const char* get_librhash_version(void)
 			v = 0x01030800;
 		else if (algorithm_count == 27)
 			v = 0x01030700;
-		else if (rhash_get_openssl_supported_mask() != RHASH_ERROR)
+		else if (rhash_transmit(12, NULL, 0, 0) != RHASH_ERROR)
 			v = 0x01030600;
 		else if (algorithm_count == 26)
 			return "1.3.[0-5]";
@@ -667,7 +667,12 @@ void init_hash_info_table(void)
 
 		if (!(bit & fullmask))
 			continue;
+		if ((info - hash_info_table) > RHASH_HASH_COUNT) {
+			log_warning("too many hash ids\n"); /* this shall never happen */
+			break;
+		}
 
+		info->hash_id = bit;
 		info->short_char = ((bit & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
 
@@ -720,6 +725,9 @@ void init_hash_info_table(void)
 			info->bsd_name = info->name;
 		++info;
 	}
+	assert((info - hash_info_table) == (RHASH_HASH_COUNT + 1));
+	assert(info->hash_id == 0);
+	assert(info->name == NULL);
 }
 
 /**
@@ -734,7 +742,7 @@ strbuf_t* init_printf_format(void)
 	strbuf_t* out;
 	const char* fmt;
 	const char* tail = 0;
-	unsigned bit, index = 0;
+	print_hash_info* info;
 	int uppercase;
 	unsigned need_modifier = 0;
 	char up_flag;
@@ -779,14 +787,13 @@ strbuf_t* init_printf_format(void)
 	}
 
 	/* loop by message digests */
-	for (bit = 1 << index; bit && bit <= opt.sum_flags; bit = bit << 1, index++) {
+	for (info = hash_info_table; info->hash_id; info++) {
 		const char* p;
-		print_hash_info* info;
+		unsigned hash_id = info->hash_id;
 
-		if ((bit & opt.sum_flags) == 0)
+		if ((hash_id & opt.sum_flags) == 0)
 			continue;
 		p = fmt;
-		info = &hash_info_table[index];
 
 		/* ensure the output buffer have enough space */
 		rsh_str_ensure_size(out, out->len + 256);
@@ -800,7 +807,7 @@ strbuf_t* init_printf_format(void)
 			switch ((int)*(p++)) {
 				case 1:
 					out->str[out->len++] = '%';
-					if ( (bit & need_modifier) != 0 )
+					if ( (hash_id & need_modifier) != 0 )
 						out->str[out->len++] = fmt_modifier;
 					if (info->short_char)
 						out->str[out->len++] = info->short_char & up_flag;
@@ -814,7 +821,7 @@ strbuf_t* init_printf_format(void)
 					}
 					break;
 				case 2:
-					rsh_str_append(out, rhash_get_magnet_name(bit));
+					rsh_str_append(out, rhash_get_magnet_name(hash_id));
 					break;
 				case 3:
 					rsh_str_append(out, info->bsd_name);

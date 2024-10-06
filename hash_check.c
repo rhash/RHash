@@ -1304,7 +1304,7 @@ static void set_flags_by_hash_file_extension(file_t* hash_file, struct hash_pars
 	struct file_ext ext;
 	unsigned hash_mask;
 	int is_sfv;
-	if(HAS_OPTION(OPT_NO_DETECT_BY_EXT) || !extract_uppercase_file_ext(&ext, hash_file))
+	if (HAS_OPTION(OPT_NO_DETECT_BY_EXT) || !extract_uppercase_file_ext(&ext, hash_file))
 		return;
 	hash_mask = (opt.sum_flags ? opt.sum_flags : bsd_hash_name_to_id(ext.buffer, ext.length, PrefixMatch));
 	is_sfv = (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0);
@@ -1368,7 +1368,7 @@ static struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
 	/* extract the parent directory of the hash file, if required */
 	if (chdir)
 		file_modify_path(&parser->parent_dir, hash_file, NULL, FModifyGetParentDir);
-	if((opt.flags & OPT_NO_DETECT_BY_EXT) == 0)
+	if ((opt.flags & OPT_NO_DETECT_BY_EXT) == 0)
 		set_flags_by_hash_file_extension(hash_file, parser);
 	return &parser->hp;
 }
@@ -1463,7 +1463,7 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 	rhash_data.processed = rhash_data.ok = rhash_data.miss = 0;
 	rhash_data.total_size = 0;
 
-	while((parsing_res = hash_parser_process_line(parser)) > ResStopParsing) {
+	while ((parsing_res = hash_parser_process_line(parser)) > ResStopParsing) {
 		result &= ~HashFileIsEmpty;
 		/* skip comments and empty lines */
 		if (parsing_res == ResSkipLine)

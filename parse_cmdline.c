@@ -230,38 +230,54 @@ static void bt_announce(options_t* o, char* announce_url, unsigned unused)
  */
 static void openssl_flags(options_t* o, char* openssl_hashes, unsigned type)
 {
+	unsigned supported_ids[RHASH_HASH_COUNT];
+	const size_t supported_count =
+		rhash_get_openssl_supported(RHASH_HASH_COUNT, supported_ids);
+	const size_t max_parsed_ids_count = sizeof(o->openssl_ids) / sizeof(*o->openssl_ids);
+	char* cur;
+	char* next;
+
 	(void)type;
-	if (rhash_is_openssl_supported())
+	if (!rhash_is_openssl_supported())
 	{
-		rhash_uptr_t openssl_supported_hashes = rhash_get_openssl_supported_mask();
-		char* cur;
-		char* next;
-		o->openssl_mask = 0x80000000; /* turn off using default mask */
+		log_warning(_("compiled without openssl support\n"));
+		return;
+	}
 
-		/* set the openssl_mask */
-		for (cur = openssl_hashes; cur && *cur; cur = next) {
-			print_hash_info* info = hash_info_table;
-			unsigned bit;
-			size_t length;
-			next = strchr(cur, ',');
-			length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
-
-			for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
-				if ( (bit & openssl_supported_hashes) &&
-					memcmp(cur, info->short_name, length) == 0 &&
-					info->short_name[length] == 0) {
-						o->openssl_mask |= bit;
-						break;
+	/* set the openssl_mask */
+	for (cur = openssl_hashes; cur && *cur; cur = next) {
+		print_hash_info* info;
+		size_t length;
+		next = strchr(cur, ',');
+		length = (next != NULL ? (size_t)(next++ - cur) : strlen(cur));
+		if (length == 0)
+			continue;
+		for (info = hash_info_table; info->hash_id; info++) {
+			unsigned hash_id = info->hash_id;
+			if (memcmp(cur, info->short_name, length) == 0 &&
+				info->short_name[length] == '\0')
+			{
+				size_t i;
+				for (i = 0; i < supported_count && hash_id != supported_ids[i]; i++);
+				if (i == supported_count) {
+					cur[length] = '\0'; /* terminate wrong hash function name */
+					log_warning(_("openssl option doesn't support '%s' hash function\n"), cur);
+				} else {
+					if (o->openssl_ids_count == max_parsed_ids_count) {
+						log_warning("too many hash functions\n"); /* very rare message */
+						return;
+					}
+					assert(hash_id != 0);
+					o->openssl_ids[o->openssl_ids_count] = hash_id;
+					o->openssl_ids_count++;
 				}
-			}
-			if (bit > RHASH_ALL_HASHES) {
-				cur[length] = '\0'; /* terminate wrong hash function name */
-				log_warning(_("openssl option doesn't support '%s' hash function\n"), cur);
+				break;
 			}
 		}
 	}
-	else
-		log_warning(_("compiled without openssl support\n"));
+	/* handle the special case of disabling openssl: --openssl="" */
+	if (o->openssl_ids_count == 0)
+		o->openssl_ids[o->openssl_ids_count++] = 0;
 }
 
 /**
@@ -647,7 +663,7 @@ static int try_config(ctpath_t path_parts[], unsigned flags)
 						}
 					}
 					sub_path = next;
-				} while(sub_path);
+				} while (sub_path);
 				free(allocated);
 				return 0;
 			}
@@ -1044,7 +1060,11 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = conf_opt.embed_crc_delimiter;
 	if (!opt.path_separator) opt.path_separator = conf_opt.path_separator;
 	if (opt.flags & OPT_EMBED_CRC) opt.sum_flags |= RHASH_CRC32;
-	if (opt.openssl_mask == 0) opt.openssl_mask = conf_opt.openssl_mask;
+	if (opt.openssl_ids_count == 0 && conf_opt.openssl_ids_count > 0) {
+		opt.openssl_ids_count = conf_opt.openssl_ids_count;
+		memcpy(opt.openssl_ids, conf_opt.openssl_ids,
+			conf_opt.openssl_ids_count * sizeof(*conf_opt.openssl_ids));
+	}
 	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
 	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
 	opt.search_data->max_depth = opt.find_max_depth;
@@ -1184,8 +1204,11 @@ static void make_final_options_checks(void)
 
 	if (!opt.crc_accept)
 		opt.crc_accept = file_mask_new_from_list(".sfv");
-	if (opt.openssl_mask)
-		rhash_set_openssl_mask(opt.openssl_mask);
+	if (opt.openssl_ids_count > 0) {
+		size_t ids_count = (opt.openssl_ids[0] || opt.openssl_ids_count > 1 ?
+			opt.openssl_ids_count : 0);
+		rhash_set_openssl_enabled(ids_count, opt.openssl_ids);
+	}
 }
 
 static struct parsed_cmd_line_t cmd_line;

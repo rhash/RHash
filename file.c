@@ -329,7 +329,7 @@ static int detect_path_encoding(file_t* file, wchar_t* dir_path, const char* pri
 			}
 			free(file->real_path);
 			file->real_path = last_path;
-			if(file->real_path)
+			if (file->real_path)
 				return primary_path_index;
 		} else if (file->real_path) {
 			return (path_index & 1);
@@ -758,7 +758,7 @@ static int file_statw(file_t* file)
 			/* convert to seconds and subtract the epoch difference */
 			file->mtime = u / 10000000 - 11644473600LL;
 			return 0;
-		} while(0);
+		} while (0);
 	}
 	file->mode |= FileIsInaccessible;
 	set_errno_from_last_file_error();
@@ -850,7 +850,7 @@ FILE* file_fopen(file_t* file, int fopen_flags)
 #else
 	fd = fopen(file->real_path, mode);
 # if _POSIX_C_SOURCE >= 200112L && !defined(__STRICT_ANSI__)
-	if(fd)
+	if (fd)
 		posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL);
 # endif /* _POSIX_C_SOURCE >= 200112L && !defined(__STRICT_ANSI__) */
 	return fd;
@@ -996,7 +996,7 @@ int file_list_read(file_list_t* list)
 {
 	char buf[2048];
 	file_cleanup(&list->current_file);
-	while(fgets(buf, 2048, list->fd)) {
+	while (fgets(buf, 2048, list->fd)) {
 		char* p;
 		char* line = buf;
 		char* buf_back = buf + sizeof(buf) - 1;
