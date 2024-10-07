@@ -18,6 +18,88 @@
 # include <io.h>
 #endif
 
+
+/*=========================================================================
+ * Hash identifiers functions
+ *=========================================================================*/
+
+/**
+ * Convert 64-bit hash_mask to a sequence of hash function identifiers.
+ *
+ * @param hash_mask bit mask
+ * @param max_count maximum space in the hash_ids array
+ * @param hash_ids array to store sequence of hash function identifiers
+ * @param out_count count of stored hash function identifiers
+ * @return -1 on error, 0 otherwise
+ */
+int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
+	unsigned* hash_ids, unsigned* out_count)
+{
+	unsigned count;
+	if (!hash_ids || !out_count)
+		return -1;
+	for (count = 0; hash_mask; count++) {
+		uint64_t bit64 = hash_mask ^ (hash_mask - 1);
+		if (count == max_count)
+			return -1;
+		hash_ids[count] = bit64_to_hash_id(bit64);
+		hash_mask ^= bit64;
+	}
+	*out_count = count;
+	return 0;
+}
+
+static uint64_t hash_ids_to_hash_mask(size_t count, unsigned* hash_ids)
+{
+	uint64_t hash_mask = 0;
+	size_t i;
+	for (i = 0; i < count; i++)
+		hash_mask |= hash_id_to_bit64(hash_ids[i]);
+	return hash_mask;
+}
+
+/**
+ * Enable openssl implementation for algorithms selected by the hash_mask.
+ *
+ * @param hash_mask bit mask for enabled hash functions
+ * @return -1 on error, 0 otherwise
+ */
+int set_openssl_enabled_hash_mask(uint64_t hash_mask)
+{
+	unsigned hash_ids[64];
+	unsigned count;
+	size_t res;
+	hash_mask &= ~OPENSSL_MASK_VALID_BIT; /* remove validity bit */
+	if (hash_mask_to_hash_ids(hash_mask, 64, hash_ids, &count) < 0)
+		return -1;
+	rhash_set_openssl_enabled(count, hash_ids);
+	res = rhash_get_openssl_enabled(0, NULL);
+	return (res != RHASH_ERROR ? (int)res : -1);
+}
+
+/**
+ * Return hash_mask for algorithms supported by openssl.
+ ^
+ * @return bit mask for supported hash functions
+ */
+uint64_t get_openssl_supported_hash_mask(void)
+{
+	const uint64_t unknown_bit = 0x8000000000000000;
+	static uint64_t supported = unknown_bit;
+	if (supported == unknown_bit) {
+		unsigned hash_ids[64];
+		size_t count = rhash_get_openssl_supported(64, hash_ids);
+		if (count != RHASH_ERROR)
+			supported = hash_ids_to_hash_mask(count, hash_ids);
+		supported &= ~unknown_bit;
+	}
+	return supported;
+}
+
+/*=========================================================================
+ * Hash calculation functions
+ *=========================================================================*/
+
 /**
  * Initialize BTIH hash function. Unlike other algorithms BTIH
  * requires more data for correct computation.

@@ -10,6 +10,17 @@
 extern "C" {
 #endif
 
+/* Hash function identifiers and bit masks */
+#define bit64_to_hash_id(hash_id) ((uint64_t)(hash_id))
+#define hash_id_to_bit64(hash_id) ((unsigned)(hash_id))
+
+int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
+	unsigned* hash_ids, unsigned* out_count);
+uint64_t get_openssl_supported_hash_mask(void);
+int set_openssl_enabled_hash_mask(uint64_t hash_mask);
+
+/* Hash function calculation */
+
 /**
  * Information about a file to calculate/verify message digests for.
  */

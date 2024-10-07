@@ -253,6 +253,8 @@ int main(int argc, char* argv[])
 
 	read_options(argc, argv); /* load config and parse command line options */
 	prev_sigint_handler = signal(SIGINT, ctrl_c_handler); /* install SIGINT handler */
+	if (opt.openssl_mask)
+		set_openssl_enabled_hash_mask(opt.openssl_mask);
 	rhash_library_init();
 	setup_percents();
 
