@@ -873,6 +873,7 @@ static size_t hash_bitmask_to_array(unsigned bitmask, size_t count, unsigned* da
 	return bits_count;
 }
 
+#if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 {
 	unsigned bitmask = 0;
@@ -881,6 +882,7 @@ static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 		bitmask |= data[i];
 	return bitmask;
 }
+#endif
 
 RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data)
 {

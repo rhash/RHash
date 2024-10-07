@@ -1155,11 +1155,10 @@ static void test_id_getters(void)
 
 #if defined(USE_OPENSSL) || defined(OPENSSL_RUNTIME)
 	REQUIRE_NE(0, rhash_is_openssl_supported(), "openssl must be on\n");
-	test_openssl_getters();
 #else
 	REQUIRE_EQ(0, rhash_is_openssl_supported(), "openssl must be off\n");
-	dbg2("- openssl tests are disabled\n");
 #endif
+	test_openssl_getters();
 }
 
 static void test_get_context(void)
