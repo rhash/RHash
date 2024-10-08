@@ -202,7 +202,6 @@ RHASH_API void rhash_reset(rhash ctx)
 
 	assert(ectx->hash_vector_size > 0);
 	assert(ectx->hash_vector_size <= RHASH_HASH_COUNT);
-	ectx->state = STATE_ACTIVE; /* re-activate the structure */
 
 	/* re-initialize every hash in a loop */
 	for (i = 0; i < ectx->hash_vector_size; i++) {
@@ -215,6 +214,8 @@ RHASH_API void rhash_reset(rhash ctx)
 		info->init(ectx->vector[i].context);
 	}
 	ectx->flags &= ~RCTX_FINALIZED; /* clear finalized state */
+	ectx->state = STATE_ACTIVE; /* re-activate the structure */
+	ctx->msg_size = 0;
 }
 
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)

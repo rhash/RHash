@@ -39,7 +39,7 @@ int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
 	if (!hash_ids || !out_count)
 		return -1;
 	for (count = 0; hash_mask; count++) {
-		uint64_t bit64 = hash_mask ^ (hash_mask - 1);
+		uint64_t bit64 = hash_mask & -hash_mask;
 		if (count == max_count)
 			return -1;
 		hash_ids[count] = bit64_to_hash_id(bit64);
@@ -142,8 +142,8 @@ static void init_btih_data(struct file_info* info)
 static void re_init_rhash_context(struct file_info* info)
 {
 	if (rhash_data.rctx != 0) {
-		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED)) {
-			/* a set of hash algorithms can change from file to file */
+		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED) && rhash_data.last_hash_mask != (uint64_t)info->sums_flags) {
+			/* a set of hash algorithms has changed from the previous run */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
 		} else {
@@ -160,8 +160,22 @@ static void re_init_rhash_context(struct file_info* info)
 	}
 
 	if (rhash_data.rctx == 0) {
-		rhash_data.rctx = rhash_init(info->sums_flags);
+		uint64_t hash_mask = (uint64_t)info->sums_flags;
+		if (rhash_data.last_hash_mask != hash_mask) {
+			unsigned count = 0;
+			if (hash_mask_to_hash_ids(hash_mask, 64, rhash_data.hash_ids, &count) < 0) {
+				log_error("failed to convert hash ids\n"); /* almost impossible case */
+				rsh_exit(2);
+			}
+			rhash_data.hash_ids_count = count;
+			rhash_data.last_hash_mask = hash_mask;
+		}
+		rhash_data.rctx = rhash_init_multi(rhash_data.hash_ids_count, rhash_data.hash_ids);
 		info->rctx = rhash_data.rctx;
+		if (!rhash_data.rctx) {
+			log_error("failed to initialize hash context\n"); /* almost impossible case */
+			rsh_exit(2);
+		}
 	}
 
 	if (info->sums_flags & RHASH_BTIH) {

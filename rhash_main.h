@@ -30,6 +30,9 @@ struct rhash_t
 	struct strbuf_t* template_text;
 	struct update_ctx* update_context;
 	struct rhash_context* rctx;
+	uint64_t last_hash_mask;
+	unsigned hash_ids[64];
+	size_t   hash_ids_count;
 	int is_sfv;
 	int non_fatal_error;
 	unsigned stop_flags;
