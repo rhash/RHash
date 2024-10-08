@@ -47,6 +47,7 @@ int fprint_urlencoded(FILE* out, const char* str, int upper_case);
 
 void log_msg(const char* format, ...);
 void log_msg_file_t(const char* format, struct file_t* file);
+void die(const char* format, ...);
 #define log_warning log_error
 #define log_warning_msg_file_t log_error_msg_file_t
 void log_error(const char* format, ...);

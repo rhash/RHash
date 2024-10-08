@@ -502,25 +502,13 @@ cmdline_opt_t cmdline_opt[] =
 cmdline_opt_t cmdline_file = { F_TFNC, 0, 0, "FILE", (opt_handler_t)add_special_file, 0, 0 };
 
 /**
- * Log a message and exit the program.
- *
- * @param msg the message to log
- */
-static void die(const char* msg)
-{
-	log_error(msg);
-	rsh_exit(2);
-}
-
-/**
  * Log an error about unknown option and exit the program.
  *
  * @param option_name the name of the unknown option encountered
  */
 static void fail_on_unknow_option(const char* option_name)
 {
-	log_error(_("unknown option: %s\n"), (option_name ? option_name : "?"));
-	rsh_exit(2);
+	die(_("unknown option: %s\n"), (option_name ? option_name : "?"));
 }
 
 /* structure to store command line option information */

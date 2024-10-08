@@ -259,6 +259,21 @@ void log_msg_file_t(const char* format, struct file_t* file)
 }
 
 /**
+ * Print a formatted error message and exit.
+ *
+ * @param format the format string
+ */
+void die(const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	print_log_prefix();
+	log_va_msg(format, ap);
+	va_end(ap);
+	rsh_exit(2);
+}
+
+/**
  * Print a formatted error message to the program log.
  *
  * @param format the format string
