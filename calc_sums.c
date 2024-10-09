@@ -164,14 +164,14 @@ static void re_init_rhash_context(struct file_info* info)
 		if (rhash_data.last_hash_mask != hash_mask) {
 			unsigned count = 0;
 			if (hash_mask_to_hash_ids(hash_mask, 64, rhash_data.hash_ids, &count) < 0)
-				die("failed to convert hash ids\n"); /* almost impossible case */
+				fatal_error("failed to convert hash ids\n");
 			rhash_data.hash_ids_count = count;
 			rhash_data.last_hash_mask = hash_mask;
 		}
 		rhash_data.rctx = rhash_init_multi(rhash_data.hash_ids_count, rhash_data.hash_ids);
 		info->rctx = rhash_data.rctx;
 		if (!rhash_data.rctx)
-			die("failed to initialize hash context\n"); /* almost impossible case */
+			fatal_error("failed to initialize hash context\n");
 	}
 
 	if (info->hash_mask & hash_id_to_bit64(RHASH_BTIH)) {
@@ -576,7 +576,7 @@ void run_benchmark(uint64_t hash_mask, unsigned flags)
 		if (!hash_name) hash_name = ""; /* unsupported hash function */
 	}
 	if (hash_mask_to_hash_ids(hash_mask, 64, hash_ids, &hash_ids_count) < 0)
-		die("failed to convert hash ids\n"); /* almost impossible case */
+		fatal_error("failed to convert hash ids\n");
 
 	for (i = 0; i < (int)sizeof(message); i++)
 		message[i] = i & 0xff;

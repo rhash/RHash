@@ -1,6 +1,7 @@
 /* common_func.c - functions used almost everywhere */
 
 #include "common_func.h"
+#include "output.h"
 #include "parse_cmdline.h"
 #include "version.h"
 #include "win_utils.h"
@@ -332,32 +333,6 @@ void rsh_exit(int code)
 }
 
 /*=========================================================================
- * Error reporting functions
- *=========================================================================*/
-
-static void report_error_default(const char* srcfile, int srcline,
-	const char* format, ...);
-
-void (*rsh_report_error)(const char* srcfile, int srcline,
-	const char* format, ...) = report_error_default;
-
-/**
- * Print given library failure to stderr.
- *
- * @param srcfile source file to report error on fail
- * @param srcline source code line to be reported on fail
- * @param format printf-formatted error message
- */
-static void report_error_default(const char* srcfile, int srcline, const char* format, ...)
-{
-	va_list ap;
-	rsh_fprintf(stderr, "RHash: error at %s:%u: ", srcfile, srcline);
-	va_start(ap, format);
-	rsh_vfprintf(stderr, format, ap); /* report the error to stderr */
-	va_end(ap);
-}
-
-/*=========================================================================
  * Memory functions
  *=========================================================================*/
 
@@ -372,10 +347,8 @@ static void report_error_default(const char* srcfile, int srcline, const char* f
 void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 {
 	void* res = malloc(size);
-	if (!res) {
-		rsh_report_error(srcfile, srcline, "%s(%u) failed\n", "malloc", (unsigned)size);
-		rsh_exit(2);
-	}
+	if (!res)
+		fatal_error_impl(srcfile, srcline, "%malloc(%u) failed\n", (unsigned)size);
 	return res;
 }
 
@@ -391,10 +364,8 @@ void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline)
 {
 	void* res = calloc(num, size);
-	if (!res) {
-		rsh_report_error(srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
-		rsh_exit(2);
-	}
+	if (!res)
+		fatal_error_impl(srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
 	return res;
 }
 
@@ -416,10 +387,8 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 	if (res) strcpy(res, str);
 #endif
 
-	if (!res) {
-		rsh_report_error(srcfile, srcline, "strdup(\"%s\") failed\n", str);
-		rsh_exit(2);
-	}
+	if (!res)
+		fatal_error_impl(srcfile, srcline, "strdup(\"%s\") failed\n", str);
 	return res;
 }
 
@@ -441,10 +410,8 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 	if (res) wcscpy(res, str);
 #endif
 
-	if (!res) {
-		rsh_report_error(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
-		rsh_exit(2);
-	}
+	if (!res)
+		fatal_error_impl(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
 	return res;
 }
 #endif
@@ -461,10 +428,8 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 {
 	void* res = realloc(mem, size);
-	if (!res) {
-		rsh_report_error(srcfile, srcline, "realloc(%p, %u) failed\n", mem, (unsigned)size);
-		rsh_exit(2);
-	}
+	if (!res)
+		fatal_error_impl(srcfile, srcline, "realloc(%p, %u) failed\n", mem, (unsigned)size);
 	return res;
 }
 

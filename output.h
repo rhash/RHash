@@ -50,6 +50,8 @@ void log_msg_file_t(const char* format, struct file_t* file);
 void die(const char* format, ...);
 #define log_warning log_error
 #define log_warning_msg_file_t log_error_msg_file_t
+#define fatal_error(...) fatal_error_impl(__FILE__, __LINE__, __VA_ARGS__);
+void fatal_error_impl(const char* file, int line, const char* format, ...);
 void log_error(const char* format, ...);
 void log_error_file_t(struct file_t* file);
 void log_error_msg_file_t(const char* format, struct file_t* file);

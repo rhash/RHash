@@ -142,8 +142,6 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 #define rsh_tstrdup(str) rsh_strdup(str)
 #endif
 
-extern void (*rsh_report_error)(const char* srcfile, int srcline, const char* format, ...);
-
 /* get_ctz - count traling zero bits */
 #if (defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))) || \
     (defined(__clang__) && __has_builtin(__builtin_ctz))

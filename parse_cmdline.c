@@ -314,8 +314,7 @@ static void set_max_depth(options_t* o, char* number, unsigned param)
 {
 	(void)param;
 	if (strspn(number, "0123456789") < strlen(number)) {
-		log_error(_("max-depth parameter is not a number: %s\n"), number);
-		rsh_exit(2);
+		die(_("max-depth parameter is not a number: %s\n"), number);
 	}
 	o->find_max_depth = atoi(number);
 }
@@ -331,8 +330,7 @@ static void set_bt_piece_length(options_t* o, char* number, unsigned param)
 {
 	(void)param;
 	if (strspn(number, "0123456789") < strlen(number)) {
-		log_error(_("bt-piece-length parameter is not a number: %s\n"), number);
-		rsh_exit(2);
+		die(_("bt-piece-length parameter is not a number: %s\n"), number);
 	}
 	o->bt_piece_length = (size_t)atoi(number);
 }
@@ -356,8 +354,7 @@ static void set_path_separator(options_t* o, char* sep, unsigned param)
 		o->path_separator = '/';
 #endif
 	} else {
-		log_error(_("path-separator is neither '/' nor '\\': %s\n"), sep);
-		rsh_exit(2);
+		die(_("path-separator is neither '/' nor '\\': %s\n"), sep);
 	}
 }
 
@@ -548,8 +545,7 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 	/* check if option requires a parameter */
 	if (is_param_required(option_type)) {
 		if (!option->parameter) {
-			log_error(_("argument is required for option %s\n"), option->name);
-			rsh_exit(2);
+			die(_("argument is required for option %s\n"), option->name);
 		}
 
 #ifdef _WIN32
@@ -911,7 +907,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	parg = cmd_line->warg = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if ( NULL == parg || argc < 1) {
 		/* this very rare system message should not be translated */
-		die("CommandLineToArgvW failed\n");
+		fatal_error("CommandLineToArgvW failed\n");
 	}
 #else
 	argc = cmd_line->argc;
@@ -970,8 +966,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 					next_opt->parameter = (ptr[1] ? ptr + 1 : *(++parg));
 					if (!next_opt->parameter) {
 						/* note: need to check for parameter here, for early -o/-l options processing */
-						log_error(_("argument is required for option %s\n"), next_opt->name);
-						rsh_exit(2);
+						die(_("argument is required for option %s\n"), next_opt->name);
 					}
 				}
 

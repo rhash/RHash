@@ -657,8 +657,7 @@ void init_hash_info_table(void)
 
 	/* prevent crash on incompatible librhash */
 	if (rhash_count() < RHASH_HASH_COUNT) {
-		rsh_fprintf(stderr, "fatal error: incompatible librhash version is loaded: %s\n", get_librhash_version());
-		rsh_exit(2);
+		fatal_error("incompatible librhash version is loaded: %s\n", get_librhash_version());
 	} else if (RHASH_HASH_COUNT != rhash_count())
 		log_warning("inconsistent librhash version is loaded: %s\n", get_librhash_version());
 

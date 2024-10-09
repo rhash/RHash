@@ -274,6 +274,24 @@ void die(const char* format, ...)
 }
 
 /**
+ * Print fatal error message with source_file:line: prefix
+ * and exit.
+ *
+ * @param file source file name
+ * @param line source code line
+ * @param format the format string
+ */
+void fatal_error_impl(const char* file, int line, const char* format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+	rsh_fprintf(rhash_data.log, "%s: %s:%d: ", PROGRAM_NAME, file, line);
+	log_va_msg(format, ap);
+	va_end(ap);
+	rsh_exit(2);
+}
+
+/**
  * Print a formatted error message to the program log.
  *
  * @param format the format string
