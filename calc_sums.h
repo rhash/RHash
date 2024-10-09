@@ -11,8 +11,8 @@ extern "C" {
 #endif
 
 /* Hash function identifiers and bit masks */
-#define bit64_to_hash_id(bit64) ((uint64_t)(bit64))
-#define hash_id_to_bit64(hash_id) ((unsigned)(hash_id))
+#define bit64_to_hash_id(bit64) ((unsigned)(bit64))
+#define hash_id_to_bit64(hash_id) ((uint64_t)(hash_id))
 
 int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
 	unsigned* hash_ids, unsigned* out_count);

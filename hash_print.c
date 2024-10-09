@@ -280,10 +280,11 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 	char buf[20];
 	size_t i;
 	print_hash_info* info = hash_info_table;
-	unsigned bit;
 
-	if (length > (sizeof(buf) - 1)) return 0;
-	for (i = 0; i < length; i++) buf[i] = tolower(name[i]);
+	if (length > (sizeof(buf) - 1))
+		return 0;
+	for (i = 0; i < length; i++)
+		buf[i] = tolower(name[i]);
 
 	/* check for legacy '%{urlname}' directive for compatibility */
 	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
@@ -294,9 +295,11 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 		return 0;
 	}
 
-	for (bit = 1; bit <= RHASH_ALL_HASHES; bit = bit << 1, info++) {
+	/* loop by hash functions */
+	for (info = hash_info_table; info->hash_id; info++) {
 		if (memcmp(buf, info->short_name, length) == 0 &&
-			info->short_name[length] == 0) return bit;
+				info->short_name[length] == 0)
+			return info->hash_id;
 	}
 	return 0;
 }
@@ -647,13 +650,13 @@ static const char* get_librhash_version(void)
  */
 void init_hash_info_table(void)
 {
-	unsigned bit;
-	const unsigned custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
+	const uint64_t custom_bsd_name = RHASH_RIPEMD160 | RHASH_BLAKE2S | RHASH_BLAKE2B |
 		RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512;
-	const unsigned short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
+	const uint64_t short_opt_mask = RHASH_CRC32 | RHASH_MD5 | RHASH_SHA1 | RHASH_TTH | RHASH_ED2K |
 		RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 | RHASH_GOST12_256;
 	const char* short_opt = "cmhteawrg";
 	print_hash_info* info = hash_info_table;
+	uint64_t hash_mask;
 
 	/* prevent crash on incompatible librhash */
 	RSH_REQUIRE(rhash_count() >= RHASH_HASH_COUNT,
@@ -662,23 +665,21 @@ void init_hash_info_table(void)
 		log_warning("inconsistent librhash version is loaded: %s\n", get_librhash_version());
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));
-	for (bit = 1; bit && bit <= RHASH_ALL_HASHES; bit = bit << 1) {
+
+	for (hash_mask = get_all_supported_hash_mask(); hash_mask; hash_mask &= hash_mask - 1) {
+		uint64_t bit64 = hash_mask & -hash_mask;
+		unsigned hash_id = bit64_to_hash_id(bit64);
 		const char* p;
 		char* e;
 		char* d;
 
-		if (!(bit & RHASH_ALL_HASHES))
-			continue;
-		if ((info - hash_info_table) >= RHASH_HASH_COUNT) {
-			log_warning("too many hash ids\n"); /* this shall never happen */
-			break;
-		}
+		RSH_REQUIRE((info - hash_info_table) < RHASH_HASH_COUNT, "too many hash ids\n");
 
-		info->hash_id = bit;
-		info->short_char = ((bit & short_opt_mask) != 0 && *short_opt ?
+		info->hash_id = hash_id;
+		info->short_char = ((bit64 & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
 
-		info->name = rhash_get_name(bit);
+		info->name = rhash_get_name(hash_id);
 		assert(strlen(info->name) < 19);
 		p = info->name;
 		d = info->short_name;
@@ -699,8 +700,8 @@ void init_hash_info_table(void)
 			}
 		}
 		*d = 0;
-		if ((bit & custom_bsd_name) != 0) {
-			switch (bit) {
+		if ((bit64 & custom_bsd_name) != 0) {
+			switch (hash_id) {
 				case RHASH_RIPEMD160:
 					info->bsd_name = "RMD160";
 					break;

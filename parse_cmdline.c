@@ -147,10 +147,13 @@ static void print_help(void)
  */
 static void list_hashes(void)
 {
-	unsigned id;
-	for (id = 1; id < RHASH_ALL_HASHES; id <<= 1) {
-		const char* hash_name = rhash_get_name(id);
-		if (hash_name) rsh_fprintf(rhash_data.out, "%s\n", hash_name);
+	uint64_t hash_mask = get_all_supported_hash_mask();
+	while (hash_mask) {
+		uint64_t bit64 = hash_mask & -hash_mask;
+		const char* hash_name = rhash_get_name(bit64_to_hash_id(bit64));
+		if (hash_name)
+			rsh_fprintf(rhash_data.out, "%s\n", hash_name);
+		hash_mask ^= bit64;
 	}
 	rsh_exit(0);
 }

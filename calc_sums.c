@@ -96,6 +96,25 @@ uint64_t get_openssl_supported_hash_mask(void)
 	return supported;
 }
 
+/**
+ * Return hash_mask for algorithms supported by openssl.
+ ^
+ * @return bit mask for supported hash functions
+ */
+uint64_t get_all_supported_hash_mask(void)
+{
+	const uint64_t unknown_bit = 0x8000000000000000;
+	static uint64_t hash_mask = unknown_bit;
+	if (hash_mask == unknown_bit) {
+		unsigned hash_ids[64];
+		size_t count = rhash_get_all_algorithms(64, hash_ids);
+		RSH_REQUIRE(count != RHASH_ERROR, "failed to get all supported algorithms\n");
+		hash_mask = hash_ids_to_hash_mask(count, hash_ids);
+		hash_mask &= ~unknown_bit;
+	}
+	return hash_mask;
+}
+
 /*=========================================================================
  * Hash calculation functions
  *=========================================================================*/

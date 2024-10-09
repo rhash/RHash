@@ -146,7 +146,7 @@ static int code_digest_size(int digest_size)
  */
 static uint64_t hash_bitmask_by_digest_size(int digest_size)
 {
-	static unsigned hash_masks[10] = { 0,0,0,0,0,0,0,0,0,0 };
+	static uint64_t hash_masks[10] = { 0,0,0,0,0,0,0,0,0,0 };
 	int code;
 	if (hash_masks[9] == 0) {
 		unsigned hash_ids[64];
