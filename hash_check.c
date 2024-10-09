@@ -138,27 +138,34 @@ static int code_digest_size(int digest_size)
 }
 
 /**
- * Calculate a bit-mask of hash-ids by a length of message digest in bytes.
+ * Compute a bit mask for hash functions that have a specified length
+ * (in bytes) of their message digest.
  *
- * @param digest_size length of a binary message digest in bytes
- * @return mask of hash-ids with given hash length, 0 on fail
+ * @param digest_size length (in bytes) of a binary message digest
+ * @return bit mask for found hash functions, 0 on fail
  */
-static unsigned hash_bitmask_by_digest_size(int digest_size)
+static uint64_t hash_bitmask_by_digest_size(int digest_size)
 {
-	static unsigned mask[10] = { 0,0,0,0,0,0,0,0,0,0 };
+	static unsigned hash_masks[10] = { 0,0,0,0,0,0,0,0,0,0 };
 	int code;
-	if (mask[9] == 0) {
-		unsigned hash_id;
-		for (hash_id = 1; hash_id <= RHASH_ALL_HASHES; hash_id <<= 1) {
-			code = code_digest_size(rhash_get_digest_size(hash_id));
+	if (hash_masks[9] == 0) {
+		unsigned hash_ids[64];
+		size_t count = rhash_get_all_algorithms(64, hash_ids);
+		size_t i;
+		if (count == RHASH_ERROR) {
+			log_error("failed to get all hash ids\n"); /* almost impossible case */
+			rsh_exit(2);
+		}
+		for (i = 0; i < count; i++) {
+			code = code_digest_size(rhash_get_digest_size(hash_ids[i]));
 			assert(0 <= code && code <= 7);
 			if (code >= 0)
-				mask[code] |= hash_id;
+				hash_masks[code] |= hash_id_to_bit64(hash_ids[i]);
 		}
-		mask[9] = 1;
+		hash_masks[9] = 1;
 	}
 	code = code_digest_size(digest_size);
-	return (code >= 0 ? mask[code] : 0);
+	return (code >= 0 ? hash_masks[code] : 0);
 }
 
 /**
@@ -550,8 +557,8 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 					hv.format &= ~FmtBase64;
 				if (!hv.format)
 					return ResFailed;
-				hv.hash_id = token->expected_hash_id;
-			} else hv.hash_id = 0;
+				hv.hash_mask = hash_id_to_bit64(token->expected_hash_id);
+			} else hv.hash_mask = 0;
 			hv.length = (unsigned char)len;
 			unsaved_hashval = 1;
 			break;
@@ -709,25 +716,25 @@ static int finalize_parsed_data(struct hash_token* token)
 		char* hash_str = parser->line_begin + hv->offset;
 		hash_str[hv->length] = '\0'; /* terminate the message digest */
 
-		if (hv->hash_id == 0) {
-			/* calculate bit-mask of hash function ids */
-			unsigned mask = 0;
+		if (hv->hash_mask == 0) {
+			/* calculate bit-mask of hash function */
+			uint64_t hash_mask = 0;
 			if (hv->format & FmtHex) {
-				mask |= hash_bitmask_by_digest_size(hv->length >> 1);
+				hash_mask |= hash_bitmask_by_digest_size(hv->length >> 1);
 			}
 			if (hv->format & FmtBase32) {
 				assert(((hv->length * 5 / 8) & 3) == 0);
-				mask |= hash_bitmask_by_digest_size(BASE32_BIT_SIZE(hv->length) / 8);
+				hash_mask |= hash_bitmask_by_digest_size(BASE32_BIT_SIZE(hv->length) / 8);
 			}
 			if (hv->format & FmtBase64) {
-				mask |= hash_bitmask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
+				hash_mask |= hash_bitmask_by_digest_size(BASE64_BIT_SIZE(hv->length) / 8);
 			}
-			assert(mask != 0);
-			if ((mask & token->parser->expected_hash_mask) != 0)
-				mask &= token->parser->expected_hash_mask;
-			hv->hash_id = mask;
+			assert(hash_mask != 0);
+			if ((hash_mask & token->parser->expected_hash_mask) != 0)
+				hash_mask &= token->parser->expected_hash_mask;
+			hv->hash_mask = hash_mask;
 		}
-		parser->hash_mask |= hv->hash_id;
+		parser->hash_mask |= hv->hash_mask;
 	}
 	return ResAllMatched;
 }
@@ -1035,11 +1042,13 @@ unsigned get_crc32(struct rhash_context* ctx)
  */
 static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* ctx)
 {
+	uint64_t hash_mask = parser->hash_mask;
 	unsigned unverified_mask;
-	unsigned hash_id;
 	unsigned printed;
 	char hex[132], base32[104], base64[88];
 	int j;
+	static const uint64_t gost94_hash_mask =
+		hash_id_to_bit64(RHASH_GOST94) | hash_id_to_bit64(RHASH_GOST94_CRYPTOPRO);
 
 	/* verify file size, if present */
 	if ((parser->bit_flags & HpHasFileSize) != 0 && parser->file_size != ctx->msg_size)
@@ -1055,8 +1064,10 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 
 	unverified_mask = (1 << parser->hashes_num) - 1;
 
-	for (hash_id = 1; hash_id <= RHASH_ALL_HASHES && unverified_mask; hash_id <<= 1) {
-		if ((parser->hash_mask & hash_id) == 0)
+	while(hash_mask && unverified_mask) {
+		uint64_t bit64 = hash_mask & -hash_mask;
+		unsigned hash_id = bit64_to_hash_id(bit64);
+		if ((parser->hash_mask & bit64) == 0)
 			continue;
 		printed = 0;
 
@@ -1068,7 +1079,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 			int comparision_mode;
 
 			/* skip already verified message digests and message digests of different size */
-			if (!(unverified_mask & (1 << j)) || !(hv->hash_id & hash_id))
+			if (!(unverified_mask & (1 << j)) || !(hv->hash_mask & bit64))
 				continue;
 			comparision_mode = 0;
 			bit_length = rhash_get_digest_size(hash_id) * 8;
@@ -1082,7 +1093,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 					printed |= FmtHex;
 				}
 				calculated_hash = hex;
-				if ((hash_id & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)) != 0)
+				if ((bit64 & gost94_hash_mask) != 0)
 					comparision_mode = CompareHashReversed;
 			} else if (hv->length == BASE32_LENGTH(bit_length)) {
 				assert(hv->format & FmtBase32);
@@ -1112,12 +1123,13 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 				continue;
 
 			unverified_mask &= ~(1 << j); /* mark the j-th message digest as verified */
-			parser->found_hash_ids |= hash_id;
+			parser->found_hash_ids |= bit64;
 
 			/* end the loop if all message digests were successfully verified */
 			if (unverified_mask == 0)
 				break;
 		}
+		hash_mask ^= bit64;
 	}
 
 	parser->wrong_hashes = unverified_mask;
@@ -1146,9 +1158,9 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
 
 	memset(&info, 0, sizeof(info));
 	info.file = file;
-	info.sums_flags = hp->hash_mask;
+	info.hash_mask = hp->hash_mask;
 	info.hp = hp;
-	print_verbose_algorithms(rhash_data.log, info.sums_flags);
+	print_verbose_algorithms(rhash_data.log, info.hash_mask);
 
 	/* initialize percents output */
 	if (init_percents(&info) < 0) {
@@ -1184,7 +1196,7 @@ static int verify_hashes(file_t* file, struct hash_parser* hp)
 		res = 1;
 	if (finish_percents(&info, res) < 0)
 		res = -2;
-	if ((opt.flags & OPT_SPEED) && info.sums_flags != 0)
+	if ((opt.flags & OPT_SPEED) && info.hash_mask != 0)
 		print_file_time_stats(&info);
 	return res;
 }
@@ -1279,18 +1291,19 @@ static int extract_uppercase_file_ext(struct file_ext* fe, file_t* file)
 static void set_flags_by_hash_file_extension(file_t* hash_file, struct hash_parser_ext* parser)
 {
 	struct file_ext ext;
-	unsigned hash_mask;
+	uint64_t hash_mask;
 	int is_sfv;
 	if (HAS_OPTION(OPT_NO_DETECT_BY_EXT) || !extract_uppercase_file_ext(&ext, hash_file))
 		return;
-	hash_mask = (opt.sum_flags ? opt.sum_flags : bsd_hash_name_to_id(ext.buffer, ext.length, PrefixMatch));
+	hash_mask = (opt.hash_mask ? opt.hash_mask :
+		hash_id_to_bit64(bsd_hash_name_to_id(ext.buffer, ext.length, PrefixMatch)));
 	is_sfv = (ext.length == 3 && memcmp(ext.buffer, "SFV", 3) == 0);
 	if (parser != NULL) {
 		parser->expected_hash_mask = hash_mask;
 		parser->is_sfv = is_sfv;
 	}
 	if (IS_MODE(MODE_UPDATE | MODE_MISSING | MODE_UNVERIFIED)) {
-		opt.sum_flags = hash_mask;
+		opt.hash_mask = hash_mask;
 		if (!opt.fmt)
 			rhash_data.is_sfv = is_sfv;
 	}
@@ -1339,7 +1352,7 @@ static struct hash_parser* hash_parser_open(file_t* hash_file, int chdir)
 	memset(parser, 0, sizeof(struct hash_parser_ext));
 	parser->hash_file = hash_file;
 	parser->fd = fd;
-	parser->expected_hash_mask = opt.sum_flags;
+	parser->expected_hash_mask = opt.hash_mask;
 	parser->is_sfv = rhash_data.is_sfv;
 
 	/* extract the parent directory of the hash file, if required */

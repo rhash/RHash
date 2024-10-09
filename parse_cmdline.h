@@ -86,10 +86,10 @@ struct vector_t;
 struct options_t
 {
 	unsigned flags;      /* program options */
-	unsigned sum_flags;  /* flags to specify what sums will be calculated */
 	unsigned fmt;        /* flags to specify output format to use */
 	unsigned mode;       /* flags to specify program mode */
 	unsigned verbose;    /* verbosity level */
+	uint64_t hash_mask;  /* bit mask to specify what hashes to calculate */
 	uint64_t openssl_mask;    /* bit mask for enabled OpenSSL hash functions */
 	char* printf_str;         /* printf-like format */
 	opt_tchar* template_file; /* printf-like template file path */

@@ -72,7 +72,7 @@ typedef struct print_item
 {
 	struct print_item* next;
 	unsigned flags;
-	unsigned hash_id;
+	unsigned hash_mask;
 	unsigned width;
 	const char* data;
 } print_item;
@@ -84,15 +84,15 @@ static print_item* parse_percent_item(const char** str);
  * Allocate new print_item.
  *
  * @param flags the print_item flags
- * @param hash_id optional hash_id
+ * @param hash_mask optional hash_mask
  * @param data optional string to store
  * @return allocated print_item
  */
-static print_item* new_print_item(unsigned flags, unsigned hash_id, const char* data)
+static print_item* new_print_item(unsigned flags, uint64_t hash_mask, const char* data)
 {
 	print_item* item = (print_item*)rsh_malloc(sizeof(print_item));
 	item->flags = flags;
-	item->hash_id = hash_id;
+	item->hash_mask = hash_mask;
 	item->width = 0;
 	item->data = (data ? rsh_strdup(data) : NULL);
 	item->next = NULL;
@@ -149,9 +149,11 @@ static char parse_escaped_char(const char** pformat)
 /**
  * Parse format string.
  *
+ * @param format the format string to parse
+ * @param hash_mask bit mask for found hash functions
  * @return a print_item list with parsed information
  */
-print_item* parse_print_string(const char* format, unsigned* sum_mask)
+print_item* parse_print_string(const char* format, uint64_t* hash_mask)
 {
 	char* buf;
 	char* p;
@@ -163,7 +165,7 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 
 	buf = p = (char*)rsh_malloc( strlen(format) + 1 );
 	tail = &list;
-	*sum_mask = 0;
+	*hash_mask = 0;
 
 	for (;;) {
 		while (*format && *format != '%' && *format != '\\')
@@ -210,8 +212,8 @@ print_item* parse_print_string(const char* format, unsigned* sum_mask)
 					if (esc_head->flags != esc_tail->flags)
 						esc_head->flags |= FLAG_HAS_MISC_PARTS;
 				}
-				if (item->hash_id)
-					*sum_mask |= item->hash_id;
+				if (item->hash_mask)
+					*hash_mask |= item->hash_mask;
 			}
 		}
 		if (p > buf || (!*format && list == NULL && item == NULL)) {
@@ -309,7 +311,7 @@ print_item* parse_percent_item(const char** str)
 {
 	const char* format = *str;
 	const char* p = NULL;
-	unsigned hash_id = 0;
+	uint64_t hash_mask = 0;
 	unsigned modifier_flags = 0;
 	int id_found = 0;
 	int width = 0;
@@ -357,8 +359,8 @@ print_item* parse_percent_item(const char** str)
 		for (; isalnum((unsigned char)*p) || (*p == '-'); p++);
 		if (*p == '}') {
 			unsigned flags = 0;
-			hash_id = printf_name_to_id(format + 1, p - (format + 1), &flags);
-			if (hash_id || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
+			hash_mask = printf_name_to_id(format + 1, p - (format + 1), &flags);
+			if (hash_mask || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= flags | (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -376,14 +378,16 @@ print_item* parse_percent_item(const char** str)
 		/* look for a known token */
 		if (upper && (p = strchr(short_hash, upper))) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
-			hash_id = hash_ids[p - short_hash];
+			hash_mask = hash_id_to_bit64(hash_ids[p - short_hash]);
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 		}
 		else if ((p = strchr(short_other, *format))) {
+			static const uint64_t ed2k_aich_hash_mask =
+				hash_id_to_bit64(RHASH_ED2K) | hash_id_to_bit64(RHASH_AICH);
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
 			modifier_flags |= other_flags[p - short_other];
 			if ((modifier_flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_LINK)
-				hash_id = RHASH_ED2K | RHASH_AICH;
+				hash_mask = ed2k_aich_hash_mask;
 		} else if ((modifier_flags & PRINT_FLAG_URLENCODE) != 0) {
 			/* handle legacy token: '%u' -> '%uf' */
 			modifier_flags |= PRINT_BASENAME;
@@ -392,7 +396,7 @@ print_item* parse_percent_item(const char** str)
 			return 0; /* no valid token found */
 		}
 	}
-	item = new_print_item(modifier_flags, hash_id, NULL);
+	item = new_print_item(modifier_flags, hash_mask, NULL);
 	item->width = width;
 	*str = ++format;
 	return item;
@@ -413,7 +417,7 @@ static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 	int upper_case = (print_type & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
 	char buf[104];
 	char* dst = buf;
-	assert(info->sums_flags & RHASH_ED2K);
+	assert(info->hash_mask & hash_id_to_bit64(RHASH_ED2K));
 	assert(info->rctx);
 	if (rsh_fprintf(out, "ed2k://|file|") < 0 || fprint_urlencoded(out, filename, upper_case) < 0)
 		return -1;
@@ -423,7 +427,7 @@ static int fprint_ed2k_url(FILE* out, struct file_info* info, int print_type)
 	*dst++ = '|';
 	rhash_print(dst, info->rctx, RHASH_ED2K, upper_case);
 	dst += 32;
-	if ((info->sums_flags & RHASH_AICH) != 0) {
+	if ((info->hash_mask & hash_id_to_bit64(RHASH_AICH)) != 0) {
 		strcpy(dst, "|h=");
 		rhash_print(dst += 3, info->rctx, RHASH_AICH, RHPR_BASE32 | upper_case);
 		dst += 32;
@@ -515,7 +519,7 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 
 		/* output a hash function digest */
 		if (!print_type) {
-			unsigned hash_id = list->hash_id;
+			unsigned hash_id = bit64_to_hash_id(list->hash_mask);
 			int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0)
 				| (list->flags & PRINT_FLAG_RAW ? RHPR_RAW : 0)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
@@ -743,7 +747,7 @@ strbuf_t* init_printf_format(void)
 	const char* tail = 0;
 	print_hash_info* info;
 	int uppercase;
-	unsigned need_modifier = 0;
+	uint64_t need_modifier = 0;
 	char up_flag;
 	char fmt_modifier = 'b';
 
@@ -754,7 +758,7 @@ strbuf_t* init_printf_format(void)
 	out = rsh_str_new();
 	rsh_str_ensure_size(out, 1024); /* allocate big enough buffer */
 
-	if (opt.sum_flags == 0 && opt.fmt != FMT_ED2K_LINK)
+	if (opt.hash_mask == 0 && opt.fmt != FMT_ED2K_LINK)
 		return out;
 
 	if (opt.fmt == FMT_BSD) {
@@ -769,9 +773,9 @@ strbuf_t* init_printf_format(void)
 		rsh_str_append(out, "magnet:?xl=%s&dn=");
 		rsh_str_append(out, (uppercase ? "%Uf" : "%uf"));
 		fmt = "&xt=urn:\002:\001";
-		need_modifier = RHASH_SHA1;
+		need_modifier = hash_id_to_bit64(RHASH_SHA1);
 		tail = "\\n";
-	} else if (!rhash_data.is_sfv && 0 == (opt.sum_flags & (opt.sum_flags - 1))) {
+	} else if (!rhash_data.is_sfv && 0 == (opt.hash_mask & (opt.hash_mask - 1))) {
 		fmt = "\\^\001  %p\\n";
 	} else {
 		rsh_str_append_n(out, "\\^%p", 4);
@@ -780,16 +784,16 @@ strbuf_t* init_printf_format(void)
 	}
 	if ((opt.flags & OPT_FMT_MODIFIERS) != 0)
 	{
-		need_modifier = 0xffffffff;
+		need_modifier = (uint64_t)-1;
 		fmt_modifier = (opt.flags & OPT_HEX ? 'x' : opt.flags & OPT_BASE32 ? 'b' : 'B');
 	}
 
 	/* loop by message digests */
 	for (info = hash_info_table; info->hash_id; info++) {
 		const char* p;
-		unsigned hash_id = info->hash_id;
+		uint64_t bit64 = hash_id_to_bit64(info->hash_id);
 
-		if ((hash_id & opt.sum_flags) == 0)
+		if ((bit64 & opt.hash_mask) == 0)
 			continue;
 		p = fmt;
 
@@ -805,7 +809,7 @@ strbuf_t* init_printf_format(void)
 			switch ((int)*(p++)) {
 				case 1:
 					out->str[out->len++] = '%';
-					if ( (hash_id & need_modifier) != 0 )
+					if ( (bit64 & need_modifier) != 0 )
 						out->str[out->len++] = fmt_modifier;
 					if (info->short_char)
 						out->str[out->len++] = info->short_char & up_flag;
@@ -819,7 +823,7 @@ strbuf_t* init_printf_format(void)
 					}
 					break;
 				case 2:
-					rsh_str_append(out, rhash_get_magnet_name(hash_id));
+					rsh_str_append(out, rhash_get_magnet_name(info->hash_id));
 					break;
 				case 3:
 					rsh_str_append(out, info->bsd_name);

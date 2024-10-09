@@ -338,9 +338,6 @@ struct percents_t
 };
 static struct percents_t percents;
 
-/* the hash functions, which needs to be reported first on mismatch */
-#define REPORT_FIRST_MASK (RHASH_MD5 | RHASH_SHA256 | RHASH_SHA512)
-
 /**
  * Print verbose error on a message digest mismatch.
  *
@@ -370,12 +367,17 @@ static int print_verbose_hash_check_error(struct file_info* info)
 	}
 
 	if (HpWrongHashes & info->hp->bit_flags) {
-		unsigned reported = 0;
+		/* bits-mask for hash functions to be reported first on mismatch */
+		static const uint64_t report_first_mask =
+			hash_id_to_bit64(RHASH_MD5) |
+			hash_id_to_bit64(RHASH_SHA256) |
+			hash_id_to_bit64(RHASH_SHA512);
+		uint64_t reported = 0;
 		int i;
 		for (i = 0; i < info->hp->hashes_num; i++) {
 			struct hash_value* hv = &info->hp->hashes[i];
 			char* expected_hash = info->hp->line_begin + hv->offset;
-			unsigned hid = hv->hash_id;
+			uint64_t hid = hv->hash_mask;
 			int pflags;
 			if ((info->hp->wrong_hashes & (1 << i)) == 0)
 				continue;
@@ -385,10 +387,10 @@ static int print_verbose_hash_check_error(struct file_info* info)
 			/* if can't detect precise hash */
 			if ((hid & (hid - 1)) != 0) {
 				/* guess the hash id */
-				if (hid & opt.sum_flags) hid &= opt.sum_flags;
+				if (hid & opt.hash_mask) hid &= opt.hash_mask;
 				if (hid & ~info->hp->found_hash_ids) hid &= ~info->hp->found_hash_ids;
 				if (hid & ~reported) hid &= ~reported; /* avoid repeating */
-				if (hid & REPORT_FIRST_MASK) hid &= REPORT_FIRST_MASK;
+				if (hid & report_first_mask) hid &= report_first_mask;
 				hid &= -(int)hid; /* take the lowest bit */
 			}
 			assert(hid != 0 && (hid & (hid - 1)) == 0); /* single bit only */
@@ -783,23 +785,22 @@ int print_check_stats(void)
  * Print used algorithms, but only on very verbose level
  *
  * @param out the stream to print the result to
- * @param hash_mask bit mask containing hash ids to calculate
+ * @param hash_mask bit mask for calculated message digests to print
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-int print_verbose_algorithms(FILE* out, unsigned hash_mask)
+int print_verbose_algorithms(FILE* out, uint64_t hash_mask)
 {
-	unsigned hash_id;
 	const char* prefix;
 	if (!hash_mask || opt.verbose <= 1)
 		return 0;
 	prefix = _("Calculating: ");
-	for (hash_id = 1; hash_id && hash_id <= hash_mask; hash_id <<= 1) {
-		if ((hash_id & hash_mask) != 0) {
-			const char* hash_name = rhash_get_name(hash_id);
-			if (rsh_fprintf(out, "%s%s", prefix, hash_name) < 0)
-				return -1;
-			prefix = ", ";
-		}
+	while (hash_mask) {
+		uint64_t bit64 = hash_mask & -hash_mask;
+		const char* hash_name = rhash_get_name(bit64_to_hash_id(bit64));
+		if (rsh_fprintf(out, "%s%s", prefix, hash_name) < 0)
+			return -1;
+		prefix = ", ";
+		hash_mask ^= bit64;
 	}
 	if (rsh_fprintf(out, "\n") < 0)
 		return -1;

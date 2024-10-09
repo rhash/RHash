@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 		if (!HAS_OPTION(OPT_BENCH_RAW)) {
 			rsh_fprintf(rhash_data.out, _("%s v%s benchmarking...\n"), PROGRAM_NAME, get_version_string());
 		}
-		run_benchmark(opt.sum_flags, flags);
+		run_benchmark(opt.hash_mask, flags);
 		exit_code = (rhash_data.stop_flags ? 3 : 0);
 		rsh_exit(exit_code);
 	}
@@ -284,10 +284,10 @@ int main(int argc, char* argv[])
 	/* setup printf formatting string */
 	rhash_data.printf_str = opt.printf_str;
 	/* print SFV header if CRC32 or no hash function has been selected */
-	rhash_data.is_sfv = (opt.fmt == FMT_SFV ||
-		(!opt.fmt && (opt.sum_flags == RHASH_CRC32 || !opt.sum_flags)));
-	if (!opt.sum_flags && opt.mode != MODE_CHECK && opt.mode != MODE_MISSING)
-		opt.sum_flags = RHASH_CRC32;
+	rhash_data.is_sfv = (opt.fmt == FMT_SFV || (!opt.fmt &&
+		(!opt.hash_mask || opt.hash_mask == hash_id_to_bit64(RHASH_CRC32))));
+	if (!opt.hash_mask && opt.mode != MODE_CHECK && opt.mode != MODE_MISSING)
+		opt.hash_mask = hash_id_to_bit64(RHASH_CRC32);
 
 	if (opt.template_file) {
 		if (!load_printf_template()) rsh_exit(2);
@@ -304,7 +304,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (rhash_data.printf_str) {
-		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.sum_flags);
+		rhash_data.print_list = parse_print_string(rhash_data.printf_str, &opt.hash_mask);
 	}
 
 	opt.search_data->options = FIND_SKIP_DIRS;

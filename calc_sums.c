@@ -142,7 +142,7 @@ static void init_btih_data(struct file_info* info)
 static void re_init_rhash_context(struct file_info* info)
 {
 	if (rhash_data.rctx != 0) {
-		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED) && rhash_data.last_hash_mask != (uint64_t)info->sums_flags) {
+		if (IS_MODE(MODE_CHECK | MODE_CHECK_EMBEDDED) && rhash_data.last_hash_mask != info->hash_mask) {
 			/* a set of hash algorithms has changed from the previous run */
 			rhash_free(rhash_data.rctx);
 			rhash_data.rctx = 0;
@@ -160,7 +160,7 @@ static void re_init_rhash_context(struct file_info* info)
 	}
 
 	if (rhash_data.rctx == 0) {
-		uint64_t hash_mask = (uint64_t)info->sums_flags;
+		uint64_t hash_mask = info->hash_mask;
 		if (rhash_data.last_hash_mask != hash_mask) {
 			unsigned count = 0;
 			if (hash_mask_to_hash_ids(hash_mask, 64, rhash_data.hash_ids, &count) < 0)
@@ -174,14 +174,14 @@ static void re_init_rhash_context(struct file_info* info)
 			die("failed to initialize hash context\n"); /* almost impossible case */
 	}
 
-	if (info->sums_flags & RHASH_BTIH) {
+	if (info->hash_mask & hash_id_to_bit64(RHASH_BTIH)) {
 		/* re-initialize BitTorrent data */
 		init_btih_data(info);
 	}
 }
 
 /**
- * Calculate message digests simultaneously, according to the info->sums_flags.
+ * Calculate message digests simultaneously, according to the info->hash_mask.
  * Calculated message digests are stored in info->rctx.
  *
  * @param info file data
@@ -208,7 +208,7 @@ int calc_sums(struct file_info* info)
 
 		info->size = info->file->size; /* total size, in bytes */
 
-		if (!info->sums_flags)
+		if (!info->hash_mask)
 			return 0;
 
 		if (!FILE_ISDATA(info->file)) {
@@ -414,7 +414,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 	memset(&info, 0, sizeof(info));
 	info.file = file;
 	info.size = file->size; /* total size, in bytes */
-	info.sums_flags = opt.sum_flags;
+	info.hash_mask = opt.hash_mask;
 
 	/* initialize percents output */
 	if (init_percents(&info) < 0) {
@@ -423,8 +423,8 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 	}
 	rsh_timer_start(&timer);
 
-	if (info.sums_flags) {
-		print_verbose_algorithms(rhash_data.log, info.sums_flags);
+	if (info.hash_mask) {
+		print_verbose_algorithms(rhash_data.log, info.hash_mask);
 		/* calculate sums */
 		if (calc_sums(&info) < 0) {
 			/* print i/o error */
@@ -474,7 +474,7 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
 			}
 		}
 
-		if ((opt.flags & OPT_SPEED) && info.sums_flags) {
+		if ((opt.flags & OPT_SPEED) && info.hash_mask) {
 			print_file_time_stats(&info);
 		}
 	}

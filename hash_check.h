@@ -27,7 +27,7 @@ enum HpBitFlags {
  */
 struct hash_value
 {
-	uint32_t hash_id; /* the id of hash, if it was detected */
+	uint64_t hash_mask; /* bit mask of possible hash identifiers */
 	uint16_t offset;
 	unsigned char length;
 	unsigned char format;
@@ -45,7 +45,7 @@ struct hash_parser {
 	uint64_t wrong_hashes;   /* bit mask for mismatched message digests */
 	char* line_begin;
 	unsigned embedded_crc32;  /* CRC32 embedded into filename */
-	unsigned hash_mask; /* the mask of hash ids to verify against */
+	uint64_t hash_mask; /* the mask of hash ids to verify against */
 	int hashes_num; /* number of parsed message digests */
 	struct hash_value hashes[HP_MAX_HASHES];
 };

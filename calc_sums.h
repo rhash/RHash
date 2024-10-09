@@ -30,8 +30,8 @@ struct file_info {
 	uint64_t time;          /* file processing time in milliseconds */
 	file_t* file;           /* the file being processed */
 	struct rhash_context* rctx; /* state of hash algorithms */
-	struct hash_parser* hp;  /* parsed line of a hash file */
-	unsigned sums_flags;    /* mask of ids of calculated hash functions */
+	struct hash_parser* hp; /* parsed line of a hash file */
+	uint64_t hash_mask;     /* mask of ids of calculated hash functions */
 	int processing_result;  /* -1/-2 for i/o error, 0 on success, 1 on a hash mismatch */
 };
 

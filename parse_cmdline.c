@@ -156,6 +156,19 @@ static void list_hashes(void)
 }
 
 /**
+ * Add a hash function to the list of calulated ones.
+ * If RHASH_ALL_HASHES is passed as hash_id, then all
+ * hash functions will be calculated.
+ *
+ * @param o pointer to the options structure to update
+ * @param hash_id hash function identifier
+ */
+static void add_hash_id(options_t* o, unsigned hash_id)
+{
+	o->hash_mask |= hash_id_to_bit64(hash_id);
+}
+
+/**
  * Process a mode option, requiring a hash file.
  *
  * @param o pointer to the options structure to update
@@ -402,41 +415,41 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_VFNC, 'v',   0, "verbose",     (opt_handler_t)on_verbose, 0, 0 },
 
 	/* hash functions options */
-	{ F_UFLG, 'a',   0, "all",      0, &opt.sum_flags, RHASH_ALL_HASHES },
-	{ F_UFLG, 'C',   0, "crc32",    0, &opt.sum_flags, RHASH_CRC32 },
-	{ F_UFLG,   0,   0, "crc32c",   0, &opt.sum_flags, RHASH_CRC32C },
-	{ F_UFLG,   0,   0, "md4",      0, &opt.sum_flags, RHASH_MD4 },
-	{ F_UFLG, 'M',   0, "md5",      0, &opt.sum_flags, RHASH_MD5 },
-	{ F_UFLG, 'H',   0, "sha1",     0, &opt.sum_flags, RHASH_SHA1 },
-	{ F_UFLG,   0,   0, "sha224",   0, &opt.sum_flags, RHASH_SHA224 },
-	{ F_UFLG,   0,   0, "sha256",   0, &opt.sum_flags, RHASH_SHA256 },
-	{ F_UFLG,   0,   0, "sha384",   0, &opt.sum_flags, RHASH_SHA384 },
-	{ F_UFLG,   0,   0, "sha512",   0, &opt.sum_flags, RHASH_SHA512 },
-	{ F_UFLG,   0,   0, "sha3-224", 0, &opt.sum_flags, RHASH_SHA3_224 },
-	{ F_UFLG,   0,   0, "sha3-256", 0, &opt.sum_flags, RHASH_SHA3_256 },
-	{ F_UFLG,   0,   0, "sha3-384", 0, &opt.sum_flags, RHASH_SHA3_384 },
-	{ F_UFLG,   0,   0, "sha3-512", 0, &opt.sum_flags, RHASH_SHA3_512 },
-	{ F_UFLG,   0,   0, "tiger",    0, &opt.sum_flags, RHASH_TIGER },
-	{ F_UFLG, 'T',   0, "tth",      0, &opt.sum_flags, RHASH_TTH },
-	{ F_UFLG,   0,   0, "btih",     0, &opt.sum_flags, RHASH_BTIH },
-	{ F_UFLG, 'E',   0, "ed2k",     0, &opt.sum_flags, RHASH_ED2K },
-	{ F_UFLG, 'A',   0, "aich",     0, &opt.sum_flags, RHASH_AICH },
-	{ F_UFLG, 'G',   0, "gost12-256", 0, &opt.sum_flags, RHASH_GOST12_256 },
-	{ F_UFLG,   0,   0, "gost12-512", 0, &opt.sum_flags, RHASH_GOST12_512 },
-	{ F_UFLG,   0,   0, "gost94",   0, &opt.sum_flags, RHASH_GOST94 },
-	{ F_UFLG,   0,   0, "gost94-cryptopro", 0, &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
+	{ F_VFNC, 'a',   0, "all",      (opt_handler_t)add_hash_id, 0, RHASH_ALL_HASHES },
+	{ F_VFNC, 'C',   0, "crc32",    (opt_handler_t)add_hash_id, 0, RHASH_CRC32 },
+	{ F_VFNC,   0,   0, "crc32c",   (opt_handler_t)add_hash_id, 0, RHASH_CRC32C },
+	{ F_VFNC,   0,   0, "md4",      (opt_handler_t)add_hash_id, 0, RHASH_MD4 },
+	{ F_VFNC, 'M',   0, "md5",      (opt_handler_t)add_hash_id, 0, RHASH_MD5 },
+	{ F_VFNC, 'H',   0, "sha1",     (opt_handler_t)add_hash_id, 0, RHASH_SHA1 },
+	{ F_VFNC,   0,   0, "sha224",   (opt_handler_t)add_hash_id, 0, RHASH_SHA224 },
+	{ F_VFNC,   0,   0, "sha256",   (opt_handler_t)add_hash_id, 0, RHASH_SHA256 },
+	{ F_VFNC,   0,   0, "sha384",   (opt_handler_t)add_hash_id, 0, RHASH_SHA384 },
+	{ F_VFNC,   0,   0, "sha512",   (opt_handler_t)add_hash_id, 0, RHASH_SHA512 },
+	{ F_VFNC,   0,   0, "sha3-224", (opt_handler_t)add_hash_id, 0, RHASH_SHA3_224 },
+	{ F_VFNC,   0,   0, "sha3-256", (opt_handler_t)add_hash_id, 0, RHASH_SHA3_256 },
+	{ F_VFNC,   0,   0, "sha3-384", (opt_handler_t)add_hash_id, 0, RHASH_SHA3_384 },
+	{ F_VFNC,   0,   0, "sha3-512", (opt_handler_t)add_hash_id, 0, RHASH_SHA3_512 },
+	{ F_VFNC,   0,   0, "tiger",    (opt_handler_t)add_hash_id, 0, RHASH_TIGER },
+	{ F_VFNC, 'T',   0, "tth",      (opt_handler_t)add_hash_id, 0, RHASH_TTH },
+	{ F_VFNC,   0,   0, "btih",     (opt_handler_t)add_hash_id, 0, RHASH_BTIH },
+	{ F_VFNC, 'E',   0, "ed2k",     (opt_handler_t)add_hash_id, 0, RHASH_ED2K },
+	{ F_VFNC, 'A',   0, "aich",     (opt_handler_t)add_hash_id, 0, RHASH_AICH },
+	{ F_VFNC, 'G',   0, "gost12-256", (opt_handler_t)add_hash_id, 0, RHASH_GOST12_256 },
+	{ F_VFNC,   0,   0, "gost12-512", (opt_handler_t)add_hash_id, 0, RHASH_GOST12_512 },
+	{ F_VFNC,   0,   0, "gost94",   (opt_handler_t)add_hash_id, 0, RHASH_GOST94 },
+	{ F_VFNC,   0,   0, "gost94-cryptopro", (opt_handler_t)add_hash_id, 0, RHASH_GOST94_CRYPTOPRO },
 	/* legacy: the following two gost options are left for compatibility */
-	{ F_UFLG,   0,   0, "gost",   0, &opt.sum_flags, RHASH_GOST94 },
-	{ F_UFLG,   0,   0, "gost-cryptopro", 0, &opt.sum_flags, RHASH_GOST94_CRYPTOPRO },
-	{ F_UFLG, 'W',   0, "whirlpool", 0, &opt.sum_flags, RHASH_WHIRLPOOL },
-	{ F_UFLG,   0,   0, "ripemd160", 0, &opt.sum_flags, RHASH_RIPEMD160 },
-	{ F_UFLG,   0,   0, "has160",    0, &opt.sum_flags, RHASH_HAS160 },
-	{ F_UFLG,   0,   0, "snefru128", 0, &opt.sum_flags, RHASH_SNEFRU128 },
-	{ F_UFLG,   0,   0, "snefru256", 0, &opt.sum_flags, RHASH_SNEFRU256 },
-	{ F_UFLG,   0,   0, "edonr256",  0, &opt.sum_flags, RHASH_EDONR256 },
-	{ F_UFLG,   0,   0, "edonr512",  0, &opt.sum_flags, RHASH_EDONR512 },
-	{ F_UFLG,   0,   0, "blake2s",   0, &opt.sum_flags, RHASH_BLAKE2S },
-	{ F_UFLG,   0,   0, "blake2b",   0, &opt.sum_flags, RHASH_BLAKE2B },
+	{ F_VFNC,   0,   0, "gost",   (opt_handler_t)add_hash_id, 0, RHASH_GOST94 },
+	{ F_VFNC,   0,   0, "gost-cryptopro", (opt_handler_t)add_hash_id, 0, RHASH_GOST94_CRYPTOPRO },
+	{ F_VFNC, 'W',   0, "whirlpool", (opt_handler_t)add_hash_id, 0, RHASH_WHIRLPOOL },
+	{ F_VFNC,   0,   0, "ripemd160", (opt_handler_t)add_hash_id, 0, RHASH_RIPEMD160 },
+	{ F_VFNC,   0,   0, "has160",    (opt_handler_t)add_hash_id, 0, RHASH_HAS160 },
+	{ F_VFNC,   0,   0, "snefru128", (opt_handler_t)add_hash_id, 0, RHASH_SNEFRU128 },
+	{ F_VFNC,   0,   0, "snefru256", (opt_handler_t)add_hash_id, 0, RHASH_SNEFRU256 },
+	{ F_VFNC,   0,   0, "edonr256",  (opt_handler_t)add_hash_id, 0, RHASH_EDONR256 },
+	{ F_VFNC,   0,   0, "edonr512",  (opt_handler_t)add_hash_id, 0, RHASH_EDONR512 },
+	{ F_VFNC,   0,   0, "blake2s",   (opt_handler_t)add_hash_id, 0, RHASH_BLAKE2S },
+	{ F_VFNC,   0,   0, "blake2b",   (opt_handler_t)add_hash_id, 0, RHASH_BLAKE2B },
 
 	/* output formats */
 	{ F_UFLG,   0,   0, "sfv",       0, &opt.fmt, FMT_SFV },
@@ -576,7 +589,7 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 		( (void(*)(options_t*, char*, unsigned))o->handler )(opts, value, o->param);
 		break;
 	case F_VFNC:
-		( (void(*)(options_t*))o->handler )(opts); /* call option handler */
+		( (void(*)(options_t*, unsigned))o->handler )(opts, o->param); /* call option handler */
 		break;
 	case F_PRNT:
 		log_msg("%s", (char*)o->ptr);
@@ -993,7 +1006,7 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	}
 
 	/* if no formatting options were specified at the command line */
-	if (!opt.printf_str && !opt.template_file && !opt.sum_flags && !opt.fmt) {
+	if (!opt.printf_str && !opt.template_file && !opt.hash_mask && !opt.fmt) {
 		/* copy the format from config */
 		opt.printf_str = conf_opt.printf_str;
 		opt.template_file = conf_opt.template_file;
@@ -1002,7 +1015,7 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 
 	if (!(opt.fmt & FMT_PRINTF_MASK)) {
 		if (!opt.fmt) opt.fmt = conf_opt.fmt;
-		if (!opt.sum_flags) opt.sum_flags = conf_opt.sum_flags;
+		if (!opt.hash_mask) opt.hash_mask = conf_opt.hash_mask;
 	}
 
 	if (!opt.mode && !opt.update_file) {
@@ -1036,7 +1049,7 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = conf_opt.embed_crc_delimiter;
 	if (!opt.path_separator) opt.path_separator = conf_opt.path_separator;
-	if (opt.flags & OPT_EMBED_CRC) opt.sum_flags |= RHASH_CRC32;
+	if (opt.flags & OPT_EMBED_CRC) add_hash_id(&opt, RHASH_CRC32);
 	if (!opt.openssl_mask) opt.openssl_mask = conf_opt.openssl_mask;
 	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
 	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
@@ -1051,13 +1064,13 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
  *
  * @param progName the program name
  */
-static void set_default_sums_flags(const char* progName)
+static void set_default_hash_mask(const char* progName)
 {
 	const char* p;
 	char* buf;
 
 	/* do nothing if hash functions are already selected by command line or config */
-	if (opt.sum_flags != 0)
+	if (opt.hash_mask != 0)
 		return;
 
 	/* remove directory name from the path */
@@ -1077,41 +1090,43 @@ static void set_default_sums_flags(const char* progName)
 	if (strstr(buf, "ed2k-link") && opt.fmt == 0) opt.fmt |= FMT_ED2K_LINK;
 	if (strstr(buf, "one") && opt.fmt == 0) opt.fmt = FMT_ONE_HASH;
 
-	if (strstr(buf, "crc32c")) opt.sum_flags |= RHASH_CRC32C;
-	else if (strstr(buf, "crc32")) opt.sum_flags |= RHASH_CRC32;
-	if (strstr(buf, "md4"))   opt.sum_flags |= RHASH_MD4;
-	if (strstr(buf, "md5"))   opt.sum_flags |= RHASH_MD5;
-	if (strstr(buf, "sha1"))  opt.sum_flags |= RHASH_SHA1;
-	if (strstr(buf, "sha256")) opt.sum_flags |= RHASH_SHA256;
-	if (strstr(buf, "sha512")) opt.sum_flags |= RHASH_SHA512;
-	if (strstr(buf, "sha224")) opt.sum_flags |= RHASH_SHA224;
-	if (strstr(buf, "sha384")) opt.sum_flags |= RHASH_SHA384;
-	if (strstr(buf, "sha3-256")) opt.sum_flags |= RHASH_SHA3_256;
-	if (strstr(buf, "sha3-512")) opt.sum_flags |= RHASH_SHA3_512;
-	if (strstr(buf, "sha3-224")) opt.sum_flags |= RHASH_SHA3_224;
-	if (strstr(buf, "sha3-384")) opt.sum_flags |= RHASH_SHA3_384;
-	if (strstr(buf, "tiger")) opt.sum_flags |= RHASH_TIGER;
-	if (strstr(buf, "tth"))   opt.sum_flags |= RHASH_TTH;
-	if (strstr(buf, "btih"))  opt.sum_flags |= RHASH_BTIH;
-	if (strstr(buf, "aich"))  opt.sum_flags |= RHASH_AICH;
-	if (strstr(buf, "gost12-256"))  opt.sum_flags |= RHASH_GOST12_256;
-	if (strstr(buf, "gost12-512"))  opt.sum_flags |= RHASH_GOST12_512;
-	if (strstr(buf, "gost94-cryptopro"))  opt.sum_flags |= RHASH_GOST94_CRYPTOPRO;
-	else if (strstr(buf, "gost94"))  opt.sum_flags |= RHASH_GOST94;
-	if (strstr(buf, "has160"))  opt.sum_flags |= RHASH_HAS160;
-	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160"))  opt.sum_flags |= RHASH_RIPEMD160;
-	if (strstr(buf, "whirlpool")) opt.sum_flags |= RHASH_WHIRLPOOL;
-	if (strstr(buf, "edonr256"))  opt.sum_flags |= RHASH_EDONR256;
-	if (strstr(buf, "edonr512"))  opt.sum_flags |= RHASH_EDONR512;
-	if (strstr(buf, "blake2s"))   opt.sum_flags |= RHASH_BLAKE2S;
-	if (strstr(buf, "blake2b"))   opt.sum_flags |= RHASH_BLAKE2B;
-	if (strstr(buf, "snefru256")) opt.sum_flags |= RHASH_SNEFRU128;
-	if (strstr(buf, "snefru128")) opt.sum_flags |= RHASH_SNEFRU256;
-	else if (strstr(buf, "ed2k")) opt.sum_flags |= RHASH_ED2K;
+	if (strstr(buf, "crc32c")) add_hash_id(&opt, RHASH_CRC32C);
+	else if (strstr(buf, "crc32")) add_hash_id(&opt, RHASH_CRC32);
+	if (strstr(buf, "md4"))   add_hash_id(&opt, RHASH_MD4);
+	if (strstr(buf, "md5"))   add_hash_id(&opt, RHASH_MD5);
+	if (strstr(buf, "sha1"))  add_hash_id(&opt, RHASH_SHA1);
+	if (strstr(buf, "sha256")) add_hash_id(&opt, RHASH_SHA256);
+	if (strstr(buf, "sha512")) add_hash_id(&opt, RHASH_SHA512);
+	if (strstr(buf, "sha224")) add_hash_id(&opt, RHASH_SHA224);
+	if (strstr(buf, "sha384")) add_hash_id(&opt, RHASH_SHA384);
+	if (strstr(buf, "sha3-256")) add_hash_id(&opt, RHASH_SHA3_256);
+	if (strstr(buf, "sha3-512")) add_hash_id(&opt, RHASH_SHA3_512);
+	if (strstr(buf, "sha3-224")) add_hash_id(&opt, RHASH_SHA3_224);
+	if (strstr(buf, "sha3-384")) add_hash_id(&opt, RHASH_SHA3_384);
+	if (strstr(buf, "tiger")) add_hash_id(&opt, RHASH_TIGER);
+	if (strstr(buf, "tth"))   add_hash_id(&opt, RHASH_TTH);
+	if (strstr(buf, "btih"))  add_hash_id(&opt, RHASH_BTIH);
+	if (strstr(buf, "aich"))  add_hash_id(&opt, RHASH_AICH);
+	if (strstr(buf, "gost12-256"))  add_hash_id(&opt, RHASH_GOST12_256);
+	if (strstr(buf, "gost12-512"))  add_hash_id(&opt, RHASH_GOST12_512);
+	if (strstr(buf, "gost94-cryptopro"))  add_hash_id(&opt, RHASH_GOST94_CRYPTOPRO);
+	else if (strstr(buf, "gost94"))  add_hash_id(&opt, RHASH_GOST94);
+	if (strstr(buf, "has160"))  add_hash_id(&opt, RHASH_HAS160);
+	if (strstr(buf, "ripemd160") || strstr(buf, "rmd160")) add_hash_id(&opt, RHASH_RIPEMD160);
+	if (strstr(buf, "whirlpool")) add_hash_id(&opt, RHASH_WHIRLPOOL);
+	if (strstr(buf, "edonr256"))  add_hash_id(&opt, RHASH_EDONR256);
+	if (strstr(buf, "edonr512"))  add_hash_id(&opt, RHASH_EDONR512);
+	if (strstr(buf, "blake2s"))   add_hash_id(&opt, RHASH_BLAKE2S);
+	if (strstr(buf, "blake2b"))   add_hash_id(&opt, RHASH_BLAKE2B);
+	if (strstr(buf, "snefru256")) add_hash_id(&opt, RHASH_SNEFRU128);
+	if (strstr(buf, "snefru128")) add_hash_id(&opt, RHASH_SNEFRU256);
+	else if (strstr(buf, "ed2k")) add_hash_id(&opt, RHASH_ED2K);
 
-	if (!opt.sum_flags && opt.fmt == FMT_MAGNET)
-		opt.sum_flags = RHASH_TTH | RHASH_ED2K | RHASH_AICH;
-
+	if (!opt.hash_mask && opt.fmt == FMT_MAGNET) {
+		add_hash_id(&opt, RHASH_TTH);
+		add_hash_id(&opt, RHASH_ED2K);
+		add_hash_id(&opt, RHASH_AICH);
+	}
 	free(buf);
 }
 
@@ -1167,7 +1182,7 @@ static void make_final_options_checks(void)
 	else if (!opt.mode)
 		opt.mode = MODE_DEFAULT;
 	if (IS_MODE(MODE_TORRENT))
-		opt.sum_flags |= RHASH_BTIH;
+		add_hash_id(&opt, RHASH_BTIH);
 
 	/* check options compatibility for program mode and output format */
 	if (opt.mode & ~(MODE_CHECK | MODE_UPDATE))
@@ -1224,5 +1239,5 @@ void read_options(int argc, char* argv[])
 	cmd_line_destroy();
 
 	make_final_options_checks();
-	set_default_sums_flags(argv[0]); /* detect default hash functions from program name */
+	set_default_hash_mask(argv[0]); /* detect default hash functions from program name */
 }
