@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 /* Hash function identifiers and bit masks */
-#define bit64_to_hash_id(hash_id) ((uint64_t)(hash_id))
+#define bit64_to_hash_id(bit64) ((uint64_t)(bit64))
 #define hash_id_to_bit64(hash_id) ((unsigned)(hash_id))
 
 int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
@@ -49,12 +49,12 @@ int save_torrent_to(file_t* torrent_file, struct rhash_context* rctx);
 #define BENCHMARK_RAW 2
 
 /**
- * Benchmark a hash algorithm.
+ * Benchmark hash functions.
  *
- * @param hash_id hash algorithm identifier
+ * @param hash_mask bit mask for hash functions to benchmark
  * @param flags benchmark flags, can contain BENCHMARK_CPB, BENCHMARK_RAW
  */
-void run_benchmark(unsigned hash_id, unsigned flags);
+void run_benchmark(uint64_t hash_mask, unsigned flags);
 
 #ifdef __cplusplus
 } /* extern "C" */

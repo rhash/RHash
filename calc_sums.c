@@ -163,19 +163,15 @@ static void re_init_rhash_context(struct file_info* info)
 		uint64_t hash_mask = (uint64_t)info->sums_flags;
 		if (rhash_data.last_hash_mask != hash_mask) {
 			unsigned count = 0;
-			if (hash_mask_to_hash_ids(hash_mask, 64, rhash_data.hash_ids, &count) < 0) {
-				log_error("failed to convert hash ids\n"); /* almost impossible case */
-				rsh_exit(2);
-			}
+			if (hash_mask_to_hash_ids(hash_mask, 64, rhash_data.hash_ids, &count) < 0)
+				die("failed to convert hash ids\n"); /* almost impossible case */
 			rhash_data.hash_ids_count = count;
 			rhash_data.last_hash_mask = hash_mask;
 		}
 		rhash_data.rctx = rhash_init_multi(rhash_data.hash_ids_count, rhash_data.hash_ids);
 		info->rctx = rhash_data.rctx;
-		if (!rhash_data.rctx) {
-			log_error("failed to initialize hash context\n"); /* almost impossible case */
-			rsh_exit(2);
-		}
+		if (!rhash_data.rctx)
+			die("failed to initialize hash context\n"); /* almost impossible case */
 	}
 
 	if (info->sums_flags & RHASH_BTIH) {
@@ -490,28 +486,30 @@ int calculate_and_print_sums(FILE* out, file_t* out_file, file_t* file)
  *=========================================================================*/
 
 /**
- * Hash a repeated message chunk by specified hash function.
+ * Calculate message digest of specified hash function(s) for a repeated message chunk.
  *
- * @param hash_id hash function identifier
+ * @param hash_ids_count count of hash functions
+ * @param hash_ids array hash function identifiers
  * @param message a message chunk to hash
  * @param msg_size message chunk size
  * @param count number of chunks
  * @param out computed hash
  * @return 1 on success, 0 on error
  */
-static int benchmark_loop(unsigned hash_id, const unsigned char* message, size_t msg_size, int count, unsigned char* out)
+static int benchmark_loop(unsigned hash_ids_count, unsigned hash_ids[],
+	const unsigned char* message, size_t msg_size, int count, unsigned char* out)
 {
 	int i;
-	struct rhash_context* context = rhash_init(hash_id);
-	if (!context)
+	rhash ctx = rhash_init_multi(hash_ids_count, hash_ids);
+	if (!ctx)
 		return 0;
 
 	/* process the repeated message buffer */
 	for (i = 0; i < count && !rhash_data.stop_flags; i++) {
-		rhash_update(context, message, msg_size);
+		rhash_update(ctx, message, msg_size);
 	}
-	rhash_final(context, out);
-	rhash_free(context);
+	rhash_final(ctx, out);
+	rhash_free(ctx);
 	return 1;
 }
 
@@ -542,7 +540,7 @@ static uint64_t read_tsc(void) {
 #endif /* _MSC_VER, __GNUC__ */
 #endif /* x86/amd64 arch */
 
-void run_benchmark(unsigned hash_id, unsigned flags)
+void run_benchmark(uint64_t hash_mask, unsigned flags)
 {
 	unsigned char ALIGN_DATA(64) message[8192]; /* 8 KiB */
 	timedelta_t timer;
@@ -550,7 +548,9 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 	size_t sz_mb, msg_size;
 	uint64_t time, total_time = 0;
 	const int rounds = 4;
-	const char* hash_name;
+	const char* hash_name = "";
+	unsigned hash_ids[64];
+	unsigned hash_ids_count = 0;
 	unsigned char out[130];
 #ifdef HAVE_TSC
 	double cpb = 0;
@@ -560,26 +560,31 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 	set_benchmark_cpu_affinity(); /* set CPU affinity to improve test results */
 #endif
 	if (!(flags & BENCHMARK_RAW))
-		print_verbose_algorithms(rhash_data.out, hash_id);
+		print_verbose_algorithms(rhash_data.out, hash_mask);
 
 	/* set message size for fast and slow hash functions */
 	msg_size = 1073741824 / 2;
-	if (hash_id & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
+	if (hash_mask & (RHASH_WHIRLPOOL | RHASH_SNEFRU128 | RHASH_SNEFRU256 | RHASH_SHA3_224 | RHASH_SHA3_256 | RHASH_SHA3_384 | RHASH_SHA3_512)) {
 		msg_size /= 8;
-	} else if (hash_id & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
+	} else if (hash_mask & (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO | RHASH_SHA384 | RHASH_SHA512)) {
 		msg_size /= 2;
 	}
 	sz_mb = msg_size / (1 << 20); /* size in MiB */
-	hash_name = rhash_get_name(hash_id);
-	if (!hash_name)
-		hash_name = ""; /* benchmarking several hash functions */
+
+	if (hash_mask && (hash_mask & (hash_mask - 1)) == 0) {
+		hash_name = rhash_get_name(hash_id_to_bit64(hash_mask));
+		if (!hash_name) hash_name = ""; /* unsupported hash function */
+	}
+	if (hash_mask_to_hash_ids(hash_mask, 64, hash_ids, &hash_ids_count) < 0)
+		die("failed to convert hash ids\n"); /* almost impossible case */
 
 	for (i = 0; i < (int)sizeof(message); i++)
 		message[i] = i & 0xff;
 
 	for (j = 0; j < rounds && !rhash_data.stop_flags; j++) {
 		rsh_timer_start(&timer);
-		benchmark_loop(hash_id, message, sizeof(message), (int)(msg_size / sizeof(message)), out);
+		benchmark_loop(hash_ids_count, hash_ids, message, sizeof(message),
+			(int)(msg_size / sizeof(message)), out);
 
 		time = rsh_timer_stop(&timer);
 		total_time += time;
@@ -601,10 +606,10 @@ void run_benchmark(unsigned hash_id, unsigned flags)
 		/* make 200 tries */
 		for (i = 0; i < 200; i++) {
 			cy0 = read_tsc();
-			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_ids_count, hash_ids, message, sizeof(message), msg_size / sizeof(message), out);
 			cy1 = read_tsc();
-			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
-			benchmark_loop(hash_id, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_ids_count, hash_ids, message, sizeof(message), msg_size / sizeof(message), out);
+			benchmark_loop(hash_ids_count, hash_ids, message, sizeof(message), msg_size / sizeof(message), out);
 			cy2 = read_tsc();
 
 			cy2 -= cy1;
