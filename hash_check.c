@@ -152,8 +152,7 @@ static uint64_t hash_bitmask_by_digest_size(int digest_size)
 		unsigned hash_ids[64];
 		size_t count = rhash_get_all_algorithms(64, hash_ids);
 		size_t i;
-		if (count == RHASH_ERROR)
-			fatal_error("failed to get all hash ids\n");
+		RSH_REQUIRE(count != RHASH_ERROR, "failed to get all hash ids\n");
 		for (i = 0; i < count; i++) {
 			code = code_digest_size(rhash_get_digest_size(hash_ids[i]));
 			assert(0 <= code && code <= 7);

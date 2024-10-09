@@ -347,8 +347,7 @@ void rsh_exit(int code)
 void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 {
 	void* res = malloc(size);
-	if (!res)
-		fatal_error_impl(srcfile, srcline, "%malloc(%u) failed\n", (unsigned)size);
+	RSH_REQUIRE_IMPL(res, srcfile, srcline, "%malloc(%u) failed\n", (unsigned)size);
 	return res;
 }
 
@@ -364,8 +363,7 @@ void* rhash_malloc(size_t size, const char* srcfile, int srcline)
 void* rhash_calloc(size_t num, size_t size, const char* srcfile, int srcline)
 {
 	void* res = calloc(num, size);
-	if (!res)
-		fatal_error_impl(srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
+	RSH_REQUIRE_IMPL(res, srcfile, srcline, "calloc(%u, %u) failed\n", (unsigned)num, (unsigned)size);
 	return res;
 }
 
@@ -386,9 +384,7 @@ char* rhash_strdup(const char* str, const char* srcfile, int srcline)
 	char* res = (char*)malloc(strlen(str)+1);
 	if (res) strcpy(res, str);
 #endif
-
-	if (!res)
-		fatal_error_impl(srcfile, srcline, "strdup(\"%s\") failed\n", str);
+	RSH_REQUIRE_IMPL(res, srcfile, srcline, "strdup(\"%s\") failed\n", str);
 	return res;
 }
 
@@ -409,9 +405,7 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 	wchar_t* res = (wchar_t*)malloc((wcslen(str) + 1) * sizeof(wchar_t));
 	if (res) wcscpy(res, str);
 #endif
-
-	if (!res)
-		fatal_error_impl(srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
+	RSH_REQUIRE_IMPL(res, srcfile, srcline, "wcsdup(\"%u\") failed\n", (wcslen(str) + 1));
 	return res;
 }
 #endif
@@ -428,8 +422,7 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline)
 void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 {
 	void* res = realloc(mem, size);
-	if (!res)
-		fatal_error_impl(srcfile, srcline, "realloc(%p, %u) failed\n", mem, (unsigned)size);
+	RSH_REQUIRE_IMPL(res, srcfile, srcline, "realloc(%p, %u) failed\n", mem, (unsigned)size);
 	return res;
 }
 

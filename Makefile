@@ -159,8 +159,8 @@ calc_sums.o: calc_sums.c calc_sums.h common_func.h file.h hash_check.h \
  win_utils.h librhash/rhash.h librhash/rhash_torrent.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-common_func.o: common_func.c common_func.h parse_cmdline.h version.h \
- win_utils.h
+common_func.o: common_func.c common_func.h output.h parse_cmdline.h \
+ version.h win_utils.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 file.o: file.c file.h common_func.h parse_cmdline.h platform.h \

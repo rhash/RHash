@@ -16,8 +16,9 @@ extern "C" {
 
 int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
 	unsigned* hash_ids, unsigned* out_count);
-uint64_t get_openssl_supported_hash_mask(void);
 int set_openssl_enabled_hash_mask(uint64_t hash_mask);
+uint64_t get_openssl_supported_hash_mask(void);
+uint64_t get_all_supported_hash_mask(void);
 
 /* Hash function calculation */
 

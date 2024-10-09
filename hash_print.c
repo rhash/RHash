@@ -656,9 +656,9 @@ void init_hash_info_table(void)
 	print_hash_info* info = hash_info_table;
 
 	/* prevent crash on incompatible librhash */
-	if (rhash_count() < RHASH_HASH_COUNT) {
-		fatal_error("incompatible librhash version is loaded: %s\n", get_librhash_version());
-	} else if (RHASH_HASH_COUNT != rhash_count())
+	RSH_REQUIRE(rhash_count() >= RHASH_HASH_COUNT,
+		"incompatible librhash version is loaded: %s\n", get_librhash_version());
+	if (RHASH_HASH_COUNT != rhash_count())
 		log_warning("inconsistent librhash version is loaded: %s\n", get_librhash_version());
 
 	memset(hash_info_table, 0, sizeof(hash_info_table));

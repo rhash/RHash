@@ -905,10 +905,7 @@ static void parse_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 
 #ifdef _WIN32
 	parg = cmd_line->warg = CommandLineToArgvW(GetCommandLineW(), &argc);
-	if ( NULL == parg || argc < 1) {
-		/* this very rare system message should not be translated */
-		fatal_error("CommandLineToArgvW failed\n");
-	}
+	RSH_REQUIRE(parg && argc >= 1, "CommandLineToArgvW failed\n");
 #else
 	argc = cmd_line->argc;
 	parg = cmd_line->argv;
