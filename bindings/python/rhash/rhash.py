@@ -115,6 +115,11 @@ if _HAS_INIT_MULTI:
     _LIBRHASH.rhash_import.argtypes = [c_char_p, c_size_t]
     _LIBRHASH.rhash_import.restype = c_void_p
 
+_HAS_RHASH_CTRL = hasattr(_LIBRHASH, "rhash_ctrl")
+if _HAS_RHASH_CTRL:
+    _LIBRHASH.rhash_ctrl.argtypes = [c_void_p, c_int, c_size_t, c_void_p]
+    _LIBRHASH.rhash_ctrl.restype = c_size_t
+
 # conversion of a string to binary data with Python 2/3 compatibility
 if sys.version < "3":
 
@@ -391,9 +396,16 @@ def make_magnet(filepath, *hash_ids):
     return handle.magnet(filepath)
 
 
+def get_librhash_version_int():
+    """Return the version of the loaded LibRHash library as integer."""
+    if _HAS_RHASH_CTRL:
+        return _LIBRHASH.rhash_ctrl(None, _RMSG_GET_LIBRHASH_VERSION, 0, None)
+    return _LIBRHASH.rhash_transmit(_RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
+
+
 def get_librhash_version():
     """Return the version of the loaded LibRHash library."""
-    ver = _LIBRHASH.rhash_transmit(_RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
+    ver = get_librhash_version_int()
     return "{}.{}.{}".format(ver >> 24, (ver >> 16) & 255, (ver >> 8) & 255)
 
 
