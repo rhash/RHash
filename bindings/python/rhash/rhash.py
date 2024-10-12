@@ -96,6 +96,8 @@ _LIBRHASH.rhash_library_init()
 # function prototypes
 _LIBRHASH.rhash_init.argtypes = [c_uint]
 _LIBRHASH.rhash_init.restype = c_void_p
+_LIBRHASH.rhash_init_multi.argtypes = [c_size_t, POINTER(c_uint)]
+_LIBRHASH.rhash_init_multi.restype = c_void_p
 _LIBRHASH.rhash_free.argtypes = [c_void_p]
 _LIBRHASH.rhash_reset.argtypes = [c_void_p]
 _LIBRHASH.rhash_update.argtypes = [c_void_p, c_char_p, c_size_t]
@@ -104,21 +106,25 @@ _LIBRHASH.rhash_print.argtypes = [c_char_p, c_void_p, c_uint, c_int]
 _LIBRHASH.rhash_print.restype = c_size_t
 _LIBRHASH.rhash_print_magnet.argtypes = [c_char_p, c_char_p, c_void_p, c_uint, c_int]
 _LIBRHASH.rhash_print_magnet.restype = c_size_t
+_LIBRHASH.rhash_export.argtypes = [c_void_p, c_char_p, c_size_t]
+_LIBRHASH.rhash_export.restype = c_size_t
+_LIBRHASH.rhash_import.argtypes = [c_char_p, c_size_t]
+_LIBRHASH.rhash_import.restype = c_void_p
 _LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
-
-_HAS_INIT_MULTI = hasattr(_LIBRHASH, "rhash_init_multi")
-if _HAS_INIT_MULTI:
-    _LIBRHASH.rhash_init_multi.argtypes = [c_size_t, POINTER(c_uint)]
-    _LIBRHASH.rhash_init_multi.restype = c_void_p
-    _LIBRHASH.rhash_export.argtypes = [c_void_p, c_char_p, c_size_t]
-    _LIBRHASH.rhash_export.restype = c_size_t
-    _LIBRHASH.rhash_import.argtypes = [c_char_p, c_size_t]
-    _LIBRHASH.rhash_import.restype = c_void_p
 
 _HAS_RHASH_CTRL = hasattr(_LIBRHASH, "rhash_ctrl")
 if _HAS_RHASH_CTRL:
     _LIBRHASH.rhash_ctrl.argtypes = [c_void_p, c_int, c_size_t, c_void_p]
     _LIBRHASH.rhash_ctrl.restype = c_size_t
+
+    def _run_rhash_ctrl(ctx, command):
+        return _LIBRHASH.rhash_ctrl(ctx, command, 0, None)
+
+else:
+
+    def _run_rhash_ctrl(ctx, command):
+        return _LIBRHASH.rhash_transmit(command, ctx, 0, 0)
+
 
 # conversion of a string to binary data with Python 2/3 compatibility
 if sys.version < "3":
@@ -198,8 +204,8 @@ _RHPR_UPPERCASE = 8
 _RHPR_NO_MAGNET = 0x20
 _RHPR_FILESIZE = 0x40
 
-_RMSG_SET_AUTOFINAL = 5
-_RMSG_GET_LIBRHASH_VERSION = 20
+_CTLR_SET_AUTOFINAL = 5
+_CTLR_GET_LIBRHASH_VERSION = 20
 
 
 class InvalidArgumentError(ValueError):
@@ -215,7 +221,7 @@ class RHash(object):
         """Construct RHash object."""
         if len(hash_ids) == 2 and hash_ids[0] == RHash.__context_key:
             self._ctx = hash_ids[1]
-        elif _HAS_INIT_MULTI and RHash._are_good_ids(hash_ids):
+        elif RHash._are_good_ids(hash_ids):
             uint_ids = (c_uint * len(hash_ids))(*hash_ids)
             self._ctx = _LIBRHASH.rhash_init_multi(len(hash_ids), uint_ids)
         else:
@@ -223,7 +229,7 @@ class RHash(object):
         if not self._ctx:
             raise RuntimeError("No RHash context")
         # switching off the auto-final feature
-        _LIBRHASH.rhash_transmit(_RMSG_SET_AUTOFINAL, self._ctx, 0, 0)
+        _run_rhash_ctrl(self._ctx, _CTLR_SET_AUTOFINAL)
 
     def __enter__(self):
         """Enter the runtime context related to the RHash object."""
@@ -251,7 +257,7 @@ class RHash(object):
     def _are_good_ids(hash_ids):
         for alg_id in hash_ids:
             if not isinstance(alg_id, int) or alg_id <= 0:
-                raise ValueError("Invalid argument")
+                raise InvalidArgumentError("Invalid value of hash_ids")
             if (alg_id & ALL) != alg_id or ((alg_id - 1) & alg_id) != 0:
                 return False
         return True
@@ -263,7 +269,7 @@ class RHash(object):
             hash_mask = hash_mask | hash_id
         if hash_mask > 0:
             return hash_mask
-        raise ValueError("Invalid argument")
+        raise InvalidArgumentError("Invalid value of hash_ids")
 
     def reset(self):
         """Reset this object to initial state."""
@@ -349,8 +355,6 @@ class RHash(object):
 
     def store(self):
         """Store RHash context into a block of bytes."""
-        if not hasattr(_LIBRHASH, "rhash_export"):
-            raise NotImplementedError("Unsupported method")
         size = _LIBRHASH.rhash_export(self._ctx, None, 0)
         if size > 0:
             buf = create_string_buffer(size)
@@ -362,10 +366,8 @@ class RHash(object):
     @staticmethod
     def load(data):
         """Load a previously stored RHash context from a block of bytes."""
-        if not hasattr(_LIBRHASH, "rhash_import"):
-            raise NotImplementedError("Unsupported method")
         if not isinstance(data, bytes):
-            raise ValueError("Invalid argument")
+            raise InvalidArgumentError("Invalid argument type")
         ctx = _LIBRHASH.rhash_import(data, len(data))
         if ctx:
             return RHash(RHash.__context_key, ctx)
@@ -398,13 +400,11 @@ def make_magnet(filepath, *hash_ids):
 
 def get_librhash_version_int():
     """Return the version of the loaded LibRHash library as integer."""
-    if _HAS_RHASH_CTRL:
-        return _LIBRHASH.rhash_ctrl(None, _RMSG_GET_LIBRHASH_VERSION, 0, None)
-    return _LIBRHASH.rhash_transmit(_RMSG_GET_LIBRHASH_VERSION, None, 0, 0)
+    return _run_rhash_ctrl(None, _CTLR_GET_LIBRHASH_VERSION)
 
 
 def get_librhash_version():
-    """Return the version of the loaded LibRHash library."""
+    """Return the version of the loaded LibRHash library as string."""
     ver = get_librhash_version_int()
     return "{}.{}.{}".format(ver >> 24, (ver >> 16) & 255, (ver >> 8) & 255)
 
