@@ -55,9 +55,18 @@ enum rhash_ids
 	RHASH_BLAKE2B   = 0x40000000,
 
 	/**
+	 * The number of supported hash functions.
+	 */
+	RHASH_HASH_COUNT = 31,
+
+	/* bit-flag for extra hash identifiers */
+	RHASH_EXTENDED_BIT = (int)0x80000000,
+
+	/**
 	 * The bit-mask containing all supported hash functions.
 	 */
-	RHASH_ALL_HASHES = RHASH_CRC32 | RHASH_CRC32C | RHASH_MD4 | RHASH_MD5 |
+	RHASH_ALL_HASHES =
+		RHASH_CRC32 | RHASH_CRC32C | RHASH_MD4 | RHASH_MD5 |
 		RHASH_ED2K | RHASH_SHA1 |RHASH_TIGER | RHASH_TTH |
 		RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO | RHASH_GOST12_256 | RHASH_GOST12_512 |
 		RHASH_BTIH | RHASH_AICH | RHASH_WHIRLPOOL | RHASH_RIPEMD160 |
@@ -67,15 +76,7 @@ enum rhash_ids
 		RHASH_EDONR256 | RHASH_EDONR512 | RHASH_BLAKE2S | RHASH_BLAKE2B,
 
 	RHASH_GOST = RHASH_GOST94, /* deprecated constant name */
-	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO, /* deprecated constant name */
-
-	/* bit-flag for extra hash identifiers */
-	RHASH_EXTENDED_BIT = (int)0x80000000,
-
-	/**
-	 * The number of supported hash functions.
-	 */
-	RHASH_HASH_COUNT = 31
+	RHASH_GOST_CRYPTOPRO = RHASH_GOST94_CRYPTOPRO /* deprecated constant name */
 };
 
 /**

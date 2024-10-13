@@ -160,8 +160,8 @@ void rhash_init_algorithms(unsigned mask)
 {
 	(void)mask; /* unused now */
 
-	/* verify that RHASH_HASH_COUNT is the index of the major bit of RHASH_ALL_HASHES */
-	assert(1 == (RHASH_ALL_HASHES >> (RHASH_HASH_COUNT - 1)));
+	/* check RHASH_HASH_COUNT */
+	assert(rhash_popcount(RHASH_ALL_HASHES) == RHASH_HASH_COUNT);
 
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
 	rhash_gost94_init_table();
@@ -181,6 +181,34 @@ const rhash_info* rhash_info_by_id(unsigned hash_id)
 	/* check that one and only one bit is set */
 	if (!hash_id || (hash_id & (hash_id - 1)) != 0) return NULL;
 	return rhash_info_table[rhash_ctz(hash_id)].info;
+}
+
+/**
+ * Return array of hash identifiers of supported hash functions.
+ * If the all_id is different from RHASH_ALL_HASHES,
+ * then return hash identifiers of legacy hash functions
+ * to support old library clients.
+ *
+ * @param all_id constant used to get all hash identifiers
+ * @param count pointer to store the number of returned ids to
+ * @return array of hash identifiers
+ */
+const unsigned* rhash_get_all_hash_ids(size_t* count)
+{
+	static const unsigned all_ids[] = {
+		RHASH_CRC32, RHASH_MD4, RHASH_MD5, RHASH_SHA1,
+		RHASH_TIGER, RHASH_TTH, RHASH_BTIH, RHASH_ED2K,
+		RHASH_AICH, RHASH_WHIRLPOOL, RHASH_RIPEMD160,
+		RHASH_GOST94, RHASH_GOST94_CRYPTOPRO, RHASH_HAS160,
+		RHASH_GOST12_256, RHASH_GOST12_512,
+		RHASH_SHA224, RHASH_SHA256, RHASH_SHA384, RHASH_SHA512,
+		RHASH_EDONR256, RHASH_EDONR512,
+		RHASH_SHA3_224, RHASH_SHA3_256, RHASH_SHA3_384, RHASH_SHA3_512,
+		RHASH_CRC32C, RHASH_SNEFRU128, RHASH_SNEFRU256,
+		RHASH_BLAKE2S, RHASH_BLAKE2B
+	};
+	*count = RHASH_HASH_COUNT;
+	return all_ids;
 }
 
 /* CRC32 helper functions */

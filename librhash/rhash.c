@@ -94,6 +94,8 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 		errno = EINVAL;
 		return NULL;
 	}
+	if (count == 1 && hash_ids[0] == RHASH_ALL_HASHES)
+		hash_ids = rhash_get_all_hash_ids(&count);
 	for (i = 0; i < count; i++) {
 		unsigned hash_index;
 		if (!IS_VALID_HASH_ID(hash_ids[i])) {
@@ -156,6 +158,11 @@ RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
 
 RHASH_API rhash rhash_init(unsigned hash_id)
 {
+	if (hash_id == RHASH_ALL_HASHES) {
+		size_t count;
+		const unsigned* hash_ids = rhash_get_all_hash_ids(&count);
+		return rhash_init_multi(count, hash_ids);
+	}
 	if (!IS_VALID_HASH_MASK(hash_id)) {
 		errno = EINVAL;
 		return NULL;
@@ -478,7 +485,6 @@ RHASH_API void rhash_set_callback(rhash ctx, rhash_callback_t callback, void* ca
 RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, unsigned char* result)
 {
 	rhash ctx;
-	hash_id &= RHASH_ALL_HASHES;
 	ctx = rhash_init(hash_id);
 	if (ctx == NULL) return -1;
 	rhash_update(ctx, message, length);
@@ -536,19 +542,13 @@ RHASH_API int rhash_file(unsigned hash_id, const char* filepath, unsigned char* 
 	rhash ctx;
 	int res;
 
-	hash_id &= RHASH_ALL_HASHES;
-	if (hash_id == 0) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	fd = fopen(filepath, FOPEN_MODE);
-	if (!fd)
-		return -1;
-
 	ctx = rhash_init(hash_id);
 	if (!ctx) {
-		fclose(fd);
+		return -1;
+	}
+	fd = fopen(filepath, FOPEN_MODE);
+	if (!fd) {
+		rhash_free(ctx);
 		return -1;
 	}
 	res = rhash_file_update(ctx, fd); /* hash the file */
@@ -568,19 +568,13 @@ RHASH_API int rhash_wfile(unsigned hash_id, const wchar_t* filepath, unsigned ch
 	rhash ctx;
 	int res;
 
-	hash_id &= RHASH_ALL_HASHES;
-	if (hash_id == 0) {
-		errno = EINVAL;
-		return -1;
-	}
-
-	fd = _wfsopen(filepath, L"rbS", _SH_DENYWR);
-	if (!fd)
-		return -1;
-
 	ctx = rhash_init(hash_id);
 	if (!ctx) {
-		fclose(fd);
+		return -1;
+	}
+	fd = _wfsopen(filepath, L"rbS", _SH_DENYWR);
+	if (!fd) {
+		rhash_free(ctx);
 		return -1;
 	}
 	res = rhash_file_update(ctx, fd); /* hash the file */
@@ -627,10 +621,10 @@ RHASH_API const char* rhash_get_magnet_name(unsigned hash_id)
 }
 
 static size_t rhash_get_magnet_url_size(const char* filepath,
-	rhash context, unsigned hash_mask, int flags)
+	rhash_context_ext* ectx, unsigned hash_mask, int flags)
 {
 	size_t size = 0; /* count terminating '\0' */
-	unsigned bit, hash = context->hash_id & hash_mask;
+	unsigned bit;
 
 	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
 	if ((flags & RHPR_NO_MAGNET) == 0) {
@@ -638,7 +632,7 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	}
 
 	if ((flags & RHPR_FILESIZE) != 0) {
-		uint64_t num = context->msg_size;
+		uint64_t num = ectx->rc.msg_size;
 
 		size += 4;
 		if (num == 0) size++;
@@ -650,15 +644,18 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	if (filepath) {
 		size += 4 + rhash_urlencode(NULL, filepath, strlen(filepath), 0);
 	}
+	if (!hash_mask) {
+		return size;
+	}
 
 	/* loop through hash values */
-	for (bit = hash & -(int)hash; bit <= hash; bit <<= 1) {
+	for (bit = hash_mask & -(int)hash_mask; bit <= hash_mask; bit <<= 1) {
 		const char* name;
-		if ((bit & hash) == 0) continue;
+		if ((bit & hash_mask) == 0) continue;
 		if ((name = rhash_get_magnet_name(bit)) == 0) continue;
 
 		size += (7 + 2) + strlen(name);
-		size += rhash_print(NULL, context, bit,
+		size += rhash_print(NULL, &ectx->rc, bit,
 			(bit & RHASH_SHA1 ? RHPR_BASE32 : 0));
 	}
 
@@ -668,11 +665,12 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	rhash context, unsigned hash_mask, int flags)
 {
+	rhash_context_ext* const ectx = (rhash_context_ext*)context;
 	int i;
 	const char* begin = output;
 
 	if (output == NULL)
-		return rhash_get_magnet_url_size(filepath, context, hash_mask, flags);
+		return rhash_get_magnet_url_size(filepath, ectx, hash_mask, flags);
 
 	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
 	if ((flags & RHPR_NO_MAGNET) == 0) {
@@ -695,12 +693,12 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 		*(output++) = '&';
 	}
 
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i <= 1; i++) {
 		unsigned bit;
-		unsigned hash = context->hash_id & hash_mask;
-		hash = (i == 0 ? hash & (RHASH_ED2K | RHASH_AICH)
-			: hash & ~(RHASH_ED2K | RHASH_AICH));
-		if (!hash) continue;
+		static const unsigned print_first = (RHASH_ED2K | RHASH_AICH);
+		unsigned hash = (!i ? hash_mask & print_first : hash_mask & ~print_first);
+		if (!hash)
+			continue;
 
 		/* loop through hash values */
 		for (bit = hash & -(int)hash; bit <= hash; bit <<= 1) {
@@ -836,25 +834,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
 /* Helper macro */
 #define ENSURE_THAT(condition) while(!(condition)) { return RHASH_ERROR; }
 
-static rhash_uptr_t rhash_get_algorithms_impl(const rhash_context_ext* ctx, size_t count, void* ptr)
+static rhash_uptr_t rhash_get_algorithms_impl(const rhash_context_ext* ctx, size_t count, unsigned* data)
 {
-	unsigned* buffer = (unsigned*)(ptr);
 	size_t i;
-	if (ctx != 0) {
-		if (count != 0 && buffer != 0) {
-			ENSURE_THAT(ctx->hash_vector_size <= count);
-			for (i = 0; i < ctx->hash_vector_size; i++)
-				buffer[i] = ctx->vector[i].hash_info->info->hash_id;
-		}
-		return ctx->hash_vector_size;
-	} else {
-		if (count != 0 && buffer != 0) {
-			ENSURE_THAT((size_t)RHASH_HASH_COUNT <= count);
-			for (i = 0; i < (size_t)RHASH_HASH_COUNT; i++)
-				buffer[i] = 1 << i;
-		}
-		return (rhash_uptr_t)RHASH_HASH_COUNT;
+	if (count != 0 && data != 0) {
+		ENSURE_THAT(ctx->hash_vector_size <= count);
+		for (i = 0; i < ctx->hash_vector_size; i++)
+			data[i] = ctx->vector[i].hash_info->info->hash_id;
 	}
+	return ctx->hash_vector_size;
 }
 
 static size_t hash_bitmask_to_array(unsigned bitmask, size_t count, unsigned* data)
@@ -918,7 +906,13 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data)
 		break;
 
 	case RMSG_GET_ALL_ALGORITHMS:
-		return rhash_get_algorithms_impl(NULL, size, (unsigned*)data);
+		if (data && size) {
+			const unsigned* hash_ids;
+			ENSURE_THAT(size >= RHASH_HASH_COUNT);
+			hash_ids = rhash_get_all_hash_ids(&size);
+			memcpy(data, hash_ids, size * sizeof(*hash_ids));
+		}
+		return RHASH_HASH_COUNT;
 	case RMSG_GET_CTX_ALGORITHMS:
 		ENSURE_THAT(ctx);
 		return rhash_get_algorithms_impl(ctx, size, (unsigned*)data);

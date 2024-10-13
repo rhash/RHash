@@ -144,6 +144,7 @@ extern rhash_info info_edr512;
 
 void rhash_init_algorithms(unsigned mask);
 const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
+const unsigned* rhash_get_all_hash_ids(size_t* count);
 
 #if !defined(NO_IMPORT_EXPORT)
 size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size);
