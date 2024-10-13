@@ -671,9 +671,13 @@ static char* hash_data_by_chunks(unsigned hash_id, const char* data, size_t chun
 	}
 
 	ctx = rhash_init(hash_id);
-
-	if ((hash_id & RHASH_BTIH) && (flags & CHDT_SET_FILENAME)) {
-		rhash_torrent_add_file(ctx, "test.txt", (unsigned long long)total_size);
+	if (!ctx) {
+		log_error1("got NULL context for hash_id=0x%08x\n", hash_id);
+		return "";
+	}
+	if ((hash_id == RHASH_BTIH || hash_id == RHASH_ALL_HASHES) && (flags & CHDT_SET_FILENAME)) {
+		CHECK_NE(0, rhash_torrent_add_file(ctx, "test.txt", (unsigned long long)total_size),
+			"failed to add filename");
 	}
 	if (!!(flags & CHDT_REPEAT_SMALL_CHUNK)) {
 		/* repeat the small chunk of data until the total_size is reached */
@@ -959,12 +963,17 @@ static void test_results_consistency(void)
 static void test_unaligned_messages_consistency(void)
 {
 	int start, alignment_size;
-	unsigned hash_id;
+	unsigned all_hash_ids[RHASH_HASH_COUNT];
+	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, all_hash_ids);
+	size_t i;
 	dbg("test unaligned messages consistency\n");
+	REQUIRE_NE(RHASH_ERROR, count, "failed to get all algorithms\n");
 
 	/* loop by hash algorithms */
-	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
+	for (i = 0; i < count; i++) {
+		unsigned hash_id = all_hash_ids[i];
 		char expected_hash[130];
+		REQUIRE_NE(0, hash_id, "bad hash_id == 0\n");
 		REQUIRE_TRUE(rhash_get_digest_size(hash_id) < (int)sizeof(expected_hash), "too big digest size\n");
 
 		alignment_size = (hash_id & (RHASH_TTH | RHASH_TIGER | RHASH_WHIRLPOOL | RHASH_SHA512) ? 8 : 4);
@@ -994,15 +1003,18 @@ static void test_unaligned_messages_consistency(void)
 static void test_chunk_size_consistency(void)
 {
 	char buffer[8192];
-	unsigned hash_id;
-	size_t i;
+	unsigned all_hash_ids[RHASH_HASH_COUNT];
+	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, all_hash_ids);
+	size_t i , j;
 	dbg("test chunk size consistency\n");
+	REQUIRE_NE(RHASH_ERROR, count, "failed to get all algorithms\n");
 
 	for (i = 0; i < sizeof(buffer); i++)
 		buffer[i] = (char)(unsigned char)(i % 255);
 
 	/* loop by hash algorithms */
-	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
+	for (j = 0; j < count; j++) {
+		unsigned hash_id = all_hash_ids[j];
 		char expected_hash[130];
 		strcpy(expected_hash, hash_data(hash_id, buffer, sizeof(buffer), 0)); /* save hash value */
 		for (i = 0; i < 2; i++) {
@@ -1064,11 +1076,11 @@ static void test_version_sanity(void)
  */
 static void test_generic_assumptions(void)
 {
-	unsigned mask = (1u << RHASH_HASH_COUNT) - 1u;
 	dbg("test generic assumptions\n");
-	if (mask != RHASH_ALL_HASHES) {
-		log_error2("wrong algorithms count %d for the mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
+	if (RHASH_HASH_COUNT < rhash_popcount(RHASH_ALL_HASHES)) {
+		log_error2("wrong algorithms count %d for low mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
 	}
+	CHECK_TRUE(!(RHASH_EXTENDED_BIT & RHASH_ALL_HASHES), "bad RHASH_ALL_HASHES value");
 	test_endianness();
 	test_version_sanity();
 }
@@ -1183,7 +1195,7 @@ static void test_get_context(void)
 static void test_import_export(void)
 {
 #if !defined(NO_IMPORT_EXPORT)
-	unsigned hash_mask = RHASH_ALL_HASHES;
+	unsigned export_id = RHASH_ALL_HASHES;
 	uint8_t data[241];
 	size_t i;
 	size_t min_sizes[3] = { 0, 1024, 8192 };
@@ -1196,12 +1208,17 @@ static void test_import_export(void)
 		size_t required_size;
 		size_t exported_size;
 		void* exported_data;
-		rhash ctx = rhash_init(hash_mask);
+		unsigned imported_ids[RHASH_HASH_COUNT];
+		size_t imported_ids_count;
+		size_t j;
+		rhash ctx = rhash_init(export_id);
 		rhash imported_ctx;
-		unsigned hash_id;
+		size_t exported_ids_count = rhash_get_ctx_algorithms(ctx, 0, 0);
+		CHECK_TRUE(exported_ids_count > 0, "wrong number of exported algorithms");
+
 		for (; size < min_size; size += sizeof(data))
 			rhash_update(ctx, data, sizeof(data));
-		if ((hash_mask & RHASH_BTIH) != 0) {
+		if (export_id == RHASH_BTIH || export_id == RHASH_ALL_HASHES) {
 			rhash_torrent_set_program_name(ctx, "test");
 			rhash_torrent_add_announce(ctx, "url1");
 			rhash_torrent_add_announce(ctx, "url2");
@@ -1235,19 +1252,20 @@ static void test_import_export(void)
 		rhash_final(ctx, 0);
 		dbg2("- call rhash_final imported_ctx\n");
 		rhash_final(imported_ctx, 0);
-		dbg2("- verify results\n");
 		exported_data = NULL;
-		for (hash_id = 1; hash_id < hash_mask; hash_id <<= 1) {
-			if ((hash_id & hash_mask) != 0) {
-				static char out1[240], out2[240];
-				rhash_print(out1, ctx, hash_id, RHPR_UPPERCASE);
-				rhash_print(out2, imported_ctx, hash_id, RHPR_UPPERCASE);
-				if (strcmp(out1, out2) != 0) {
-					const char* hash_name = rhash_get_name(hash_id);
-					log_error4("import failed, wrong hash %s != %s for %s,  block size=%u\n",
-						out1, out2, hash_name, (unsigned)size);
-					return;
-				}
+		imported_ids_count = rhash_get_ctx_algorithms(ctx, RHASH_HASH_COUNT, imported_ids);
+		CHECK_EQ(exported_ids_count, imported_ids_count, "wrong number of imported algorithms");
+		dbg2("- verify results\n");
+		for (j = 0; j < imported_ids_count; j++) {
+			unsigned hash_id = imported_ids[j];
+			static char out1[240], out2[240];
+			REQUIRE_NE(0, rhash_print(out1, ctx, hash_id, RHPR_UPPERCASE), "rhash_print failed");
+			REQUIRE_NE(0, rhash_print(out2, imported_ctx, hash_id, RHPR_UPPERCASE), "rhash_print failed");
+			if (strcmp(out1, out2) != 0) {
+				const char* hash_name = rhash_get_name(hash_id);
+				log_error4("import failed, wrong hash %s != %s for %s,  block size=%u\n",
+					out1, out2, hash_name, (unsigned)size);
+				return;
 			}
 		}
 		rhash_free(ctx);
@@ -1264,20 +1282,25 @@ static void test_import_export(void)
 static void assert_magnet(const char* expected,
 	rhash ctx, unsigned mask, int flags)
 {
-	static char out[240];
+	static char out[2800];
 	const char* path = (flags & TEST_PATH ? "test.txt" : NULL);
-	size_t size;
+	size_t size_calculated = rhash_print_magnet(NULL, path, ctx, mask, flags);
+	size_t size_printed;
+	REQUIRE_TRUE(size_calculated < sizeof(out), "too small buffer for magnet link\n");
+
 	flags &= ~TEST_PATH;
-	size = rhash_print_magnet(out, path, ctx, mask, flags);
+	size_printed = rhash_print_magnet(out, path, ctx, mask, flags);
 
 	if (expected && strcmp(expected, out) != 0) {
 		log_error2("\"%s\" != \"%s\"\n", expected, out);
 	} else {
-		size_t size2 = strlen(out) + 1;
-		if (size != size2) {
-			log_error3("rhash_print_magnet returns wrong length %d != %d for \"%s\"\n", (int)size, (int)size2, out);
-		} else if (size != (size2 = rhash_print_magnet(NULL, path, ctx, mask, flags))) {
-			log_error3("rhash_print_magnet(NULL, ...) returns wrong length %d != %d for \"%s\"\n", (int)size2, (int)size, out);
+		size_t length = strlen(out) + 1;
+		if (size_printed != length) {
+			log_error3("rhash_print_magnet returns wrong length %u != %u for \"%s\"\n",
+				(unsigned)size_printed, (unsigned)length, out);
+		} else if (size_printed != size_calculated) {
+			log_error3("rhash_print_magnet(NULL, ...) returns wrong length %u != %u for \"%s\"\n",
+				(unsigned)size_calculated, (unsigned)size_printed, out);
 		}
 	}
 }
@@ -1287,7 +1310,9 @@ static void assert_magnet(const char* expected,
  */
 static void test_magnet(void)
 {
-	unsigned bit;
+	unsigned all_hash_ids[RHASH_HASH_COUNT];
+	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, all_hash_ids);
+	size_t i;
 	rhash ctx;
 	dbg("test magnet link\n");
 	ctx	= rhash_init(RHASH_ALL_HASHES);
@@ -1300,10 +1325,11 @@ static void test_magnet(void)
 		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
 
 	/* verify length calculation for all hashes */
-	for (bit = 1; bit < RHASH_ALL_HASHES; bit <<= 1) {
-		assert_magnet(NULL, ctx, bit, RHPR_FILESIZE | RHPR_NO_MAGNET);
+	for (i = 0; i < count; i++) {
+		unsigned hash_id = all_hash_ids[i];
+		assert_magnet(NULL, ctx, hash_id, RHPR_FILESIZE | RHPR_NO_MAGNET);
 	}
-
+	assert_magnet(NULL, ctx, RHASH_ALL_HASHES, RHPR_FILESIZE | RHPR_NO_MAGNET);
 	rhash_free(ctx);
 }
 
