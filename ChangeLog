@@ -1,3 +1,6 @@
+Tue 15 Oct 2024 Aleksey Kravchenko
+	* Bugfix: Fix building by gcc 7
+
 Mon 14 Oct 2024 Aleksey Kravchenko
 	* === Version 1.4.5 ===
 

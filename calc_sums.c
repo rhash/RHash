@@ -77,6 +77,8 @@ int set_openssl_enabled_hash_mask(uint64_t hash_mask)
 	return (res != RHASH_ERROR ? (int)res : -1);
 }
 
+#define unknown_bit 0x8000000000000000
+
 /**
  * Return hash_mask for algorithms supported by openssl.
  ^
@@ -84,7 +86,6 @@ int set_openssl_enabled_hash_mask(uint64_t hash_mask)
  */
 uint64_t get_openssl_supported_hash_mask(void)
 {
-	const uint64_t unknown_bit = 0x8000000000000000;
 	static uint64_t supported = unknown_bit;
 	if (supported == unknown_bit) {
 		unsigned hash_ids[64];
@@ -103,7 +104,6 @@ uint64_t get_openssl_supported_hash_mask(void)
  */
 uint64_t get_all_supported_hash_mask(void)
 {
-	const uint64_t unknown_bit = 0x8000000000000000;
 	static uint64_t hash_mask = unknown_bit;
 	if (hash_mask == unknown_bit) {
 		unsigned hash_ids[64];
