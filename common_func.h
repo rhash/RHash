@@ -142,6 +142,10 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
 #define rsh_tstrdup(str) rsh_strdup(str)
 #endif
 
+#ifndef __has_builtin
+# define __has_builtin(x) 0
+#endif
+
 /* get_ctz - count traling zero bits */
 #if (defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))) || \
     (defined(__clang__) && __has_builtin(__builtin_ctz))
