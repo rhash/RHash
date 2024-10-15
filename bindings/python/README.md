@@ -56,10 +56,12 @@ and output them in different formats
     <rhash.rhash.RHash object at 0x7fc512d90670>
     >>> h.hex(rhash.MD5)
     '900150983cd24fb0d6963f7d28e17f72'
-    >>> h.HEX(rhash.MD5)
+    >>> h.hex_upper(rhash.MD5)
     '900150983CD24FB0D6963F7D28E17F72'
     >>> h.base32(rhash.SHA1)
     'vgmt4nsha2awvor6evyxqugcnsonbwe5'
+    >>> h.base32_upper(rhash.SHA1)
+    'VGMT4NSHA2AWVOR6EVYXQUGCNSONBWE5'
     >>> h.base64(rhash.BLAKE2S)
     'UIxejDJ8FOLhpyujTutFLzdFiyCe1jopTZmbTIZnWYI='
 
