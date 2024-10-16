@@ -110,20 +110,20 @@ _LIBRHASH.rhash_export.argtypes = [c_void_p, c_char_p, c_size_t]
 _LIBRHASH.rhash_export.restype = c_size_t
 _LIBRHASH.rhash_import.argtypes = [c_char_p, c_size_t]
 _LIBRHASH.rhash_import.restype = c_void_p
-_LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_size_t]
+_LIBRHASH.rhash_transmit.argtypes = [c_uint, c_void_p, c_size_t, c_void_p]
 
 _HAS_RHASH_CTRL = hasattr(_LIBRHASH, "rhash_ctrl")
 if _HAS_RHASH_CTRL:
     _LIBRHASH.rhash_ctrl.argtypes = [c_void_p, c_int, c_size_t, c_void_p]
     _LIBRHASH.rhash_ctrl.restype = c_size_t
 
-    def _run_rhash_ctrl(ctx, command):
-        return _LIBRHASH.rhash_ctrl(ctx, command, 0, None)
+    def _run_rhash_ctrl(ctx, command, count=0, data=None):
+        return _LIBRHASH.rhash_ctrl(ctx, command, count, data)
 
 else:
 
-    def _run_rhash_ctrl(ctx, command):
-        return _LIBRHASH.rhash_transmit(command, ctx, 0, 0)
+    def _run_rhash_ctrl(ctx, command, count=0, data=0):
+        return _LIBRHASH.rhash_transmit(command, ctx, count, data)
 
 
 # conversion of a string to binary data with Python 2/3 compatibility
@@ -205,6 +205,7 @@ _RHPR_NO_MAGNET = 0x20
 _RHPR_FILESIZE = 0x40
 
 _CTLR_SET_AUTOFINAL = 5
+_CTLR_GET_CTX_ALGORITHMS = 15
 _CTLR_GET_LIBRHASH_VERSION = 20
 
 
@@ -342,11 +343,22 @@ class RHash(object):
 
     def magnet(self, filepath):
         """Return magnet link with all message digests computed by this object."""
+        hash_mask = ALL
+        if get_librhash_version_int() == 0x01040500:
+            # Quickfix for rhash_print_magnet() in v1.4.5
+            uint_ids = (c_uint * 32)()
+            count = _run_rhash_ctrl(self._ctx, _CTLR_GET_CTX_ALGORITHMS, 32, uint_ids)
+            if 0 < count < 32:
+                hash_mask = 0
+                for hash_bit in uint_ids[0:count]:
+                    hash_mask = hash_mask | hash_bit
         size = _LIBRHASH.rhash_print_magnet(
-            None, _s2b(filepath), self._ctx, ALL, _RHPR_FILESIZE
+            None, _s2b(filepath), self._ctx, hash_mask, _RHPR_FILESIZE
         )
         buf = create_string_buffer(size)
-        _LIBRHASH.rhash_print_magnet(buf, _s2b(filepath), self._ctx, ALL, _RHPR_FILESIZE)
+        _LIBRHASH.rhash_print_magnet(
+            buf, _s2b(filepath), self._ctx, hash_mask, _RHPR_FILESIZE
+        )
         return buf[0:size - 1].decode("utf-8")
 
     def hash(self, hash_id=0):
@@ -385,7 +397,7 @@ def hash_msg(message, hash_id):
 
 
 def hash_file(filepath, hash_id):
-    """Compute and return the message digest (in its default format) of the file content."""
+    """Compute and return the message digest (in its default format) for file content."""
     handle = RHash(hash_id)
     handle.update_file(filepath).finish()
     return str(handle)
@@ -428,7 +440,5 @@ def hash_for_file(filepath, hash_id):
 
 def magnet_for_file(filepath, hash_mask):
     """Deprecated function to compute a magnet link for a file."""
-    _deprecation(
-        "Call to deprecated function magnet_for_file(), should use make_magnet()."
-    )
+    _deprecation("Deprecated function magnet_for_file() called, use make_magnet().")
     return make_magnet(filepath, hash_mask)

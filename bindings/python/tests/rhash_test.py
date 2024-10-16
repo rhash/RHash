@@ -22,6 +22,8 @@ import rhash
 class TestRHash(unittest.TestCase):
     """The test-case class for the rhash module."""
 
+    maxDiff = 1024
+
     def test_all_hashes(self):
         """Verify all hash functions."""
         ctx = rhash.RHash(rhash.ALL)
@@ -31,9 +33,7 @@ class TestRHash(unittest.TestCase):
         self.assertEqual("c1d04330", ctx.hash(rhash.CRC32C))
         self.assertEqual("bde52cb31de33e46245e05fbdbd6fb24", ctx.hash(rhash.MD4))
         self.assertEqual("0cc175b9c0f1b6a831c399e269772661", ctx.hash(rhash.MD5))
-        self.assertEqual(
-            "86f7e437faa5a7fce15d1ddcb9eaeaea377667b8", ctx.hash(rhash.SHA1)
-        )
+        self.assertEqual("86f7e437faa5a7fce15d1ddcb9eaeaea377667b8", ctx.hash(rhash.SHA1))
         self.assertEqual(
             "77befbef2e7ef8ab2ec8f93bf587a7fc613e247f5f247809", ctx.hash(rhash.TIGER)
         )
@@ -69,9 +69,7 @@ class TestRHash(unittest.TestCase):
         self.assertEqual(
             "4872bcbc4cd0f0a9dc7c2f7045e5b43b6c830db8", ctx.hash(rhash.HAS160)
         )
-        self.assertEqual(
-            "bf5ce540ae51bc50399f96746c5a15bd", ctx.hash(rhash.SNEFRU128)
-        )
+        self.assertEqual("bf5ce540ae51bc50399f96746c5a15bd", ctx.hash(rhash.SNEFRU128))
         self.assertEqual(
             "45161589ac317be0ceba70db2573ddda6e668a31984b39bf65e4b664b584c63d",
             ctx.hash(rhash.SNEFRU256),
