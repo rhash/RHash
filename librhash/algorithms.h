@@ -123,6 +123,8 @@ extern rhash_info info_sha3_512;
 extern rhash_info info_edr256;
 extern rhash_info info_edr512;
 
+#define IS_EXTENDED_RHASH_ID(hash_id) ((hash_id) & RHASH_EXTENDED_BIT)
+
 /* rhash_info flags */
 #define F_BS32 1   /* default output in base32 */
 #define F_SWAP32 2 /* big endian flag */

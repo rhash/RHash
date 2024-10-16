@@ -669,6 +669,10 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	int i;
 	const char* begin = output;
 
+	if (!IS_EXTENDED_RHASH_ID(ectx->rc.hash_id | hash_mask)) {
+		hash_mask &= context->hash_id;
+	}
+
 	if (output == NULL)
 		return rhash_get_magnet_url_size(filepath, ectx, hash_mask, flags);
 
