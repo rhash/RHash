@@ -1,3 +1,6 @@
+Wed 16 Oct 2024 Aleksey Kravchenko
+	* Bugfix: Fix librhash function rhash_print_magnet()
+
 Tue 15 Oct 2024 Aleksey Kravchenko
 	* Bugfix: Fix building by gcc 7
 

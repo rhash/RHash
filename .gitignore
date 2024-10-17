@@ -5,7 +5,9 @@
 /dist/rhash.1.win.html
 /dist/librhash.pc
 /librhash/exports.sym
+/librhash/librhash.so.*
 po/*.gmo
+po/compile-gmo.tag
 /rhash
 /rhash_shared
 /rhash_static
