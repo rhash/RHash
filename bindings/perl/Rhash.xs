@@ -51,7 +51,7 @@ BOOT:
 # perl bindings for Hi-level functions
 
 SV *
-rhash_msg_raw(hash_id, message)
+rhash_msg_wrapper(hash_id, message)
 		unsigned	hash_id
 	PROTOTYPE: $$
 	PREINIT:
@@ -64,14 +64,14 @@ rhash_msg_raw(hash_id, message)
 		verify_single_bit_hash_id(hash_id, cv);
 		res = rhash_msg(hash_id, message, length, out);
 		if(res < 0) {
-			croak("%s: %s", "rhash_msg_raw", strerror(errno));
+			croak("%s: %s", "rhash_msg_wrapper", strerror(errno));
 		}
 		RETVAL = newSVpv((char*)out, rhash_get_digest_size(hash_id));
 	OUTPUT:
 		RETVAL
 
 SV *
-rhash_file_raw(hash_id, filepath)
+rhash_file_wrapper(hash_id, filepath)
 		unsigned hash_id
 		char * filepath
 	PROTOTYPE: $$
@@ -129,7 +129,7 @@ rhash_free(ctx)
 	PROTOTYPE: $
 
 SV *
-rhash_print(ctx, hash_id, flags = 0)
+rhash_print_wrapper(ctx, hash_id, flags = 0)
 		struct rhash_context * ctx
 		unsigned hash_id
 		int flags
@@ -148,7 +148,7 @@ rhash_print(ctx, hash_id, flags = 0)
 		RETVAL
 
 SV *
-rhash_print_magnet(ctx, filename, hash_mask)
+rhash_print_magnet_wrapper(ctx, filename, hash_mask)
 		struct rhash_context * ctx
 		SV * filename
 		SV * hash_mask

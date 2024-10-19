@@ -29,7 +29,7 @@ require XSLoader;
 XSLoader::load('Crypt::Rhash', $VERSION);
 
 ##############################################################################
-# ids of hash functions
+# identifiers of hash functions
 use constant RHASH_CRC32 => 0x01;
 use constant RHASH_MD4   => 0x02;
 use constant RHASH_MD5   => 0x04;
@@ -69,10 +69,12 @@ use constant RHASH_ALL       => 0x7FFFFFFF;
 # Rhash object constructor
 sub new($$@)
 {
+	my ($class, @hash_ids) = @_;
 	my $hash_id = 0;
-	shift;
-	scalar(@_) > 0 or die "hash_id not specified";
-	for my $id (@_) {
+
+	# validate @hash_ids to be an array of hash identifiers
+	scalar(@hash_ids) > 0 or die "hash_id not specified\n";
+	for my $id (@hash_ids) {
 		$hash_id |= scalar($id);
 		if(!scalar($id) || (scalar($id) & RHASH_ALL) != $id) {
 			die "bad hash_id = " . scalar($id);
@@ -82,7 +84,7 @@ sub new($$@)
 	my $self = {
 		context => $context,
 	};
-	return bless $self;
+	return bless $self, $class;
 }
 
 # destructor
@@ -183,7 +185,7 @@ sub hash($;$$)
 	my $self = shift;
 	my $hash_id = scalar(shift) || 0;
 	my $print_flags = scalar(shift) || RHPR_DEFAULT;
-	return rhash_print($self->{context}, $hash_id, $print_flags);
+	return rhash_print_wrapper($self->{context}, $hash_id, $print_flags);
 }
 
 sub hash_base32($;$)
@@ -214,7 +216,7 @@ sub hash_raw($;$)
 sub magnet_link($;$$)
 {
 	my ($self, $filename, $hash_mask) = @_;
-	return rhash_print_magnet($self->{context}, $filename, $hash_mask);
+	return rhash_print_magnet_wrapper($self->{context}, $filename, $hash_mask);
 }
 
 our $AUTOLOAD;
@@ -224,13 +226,13 @@ sub AUTOLOAD
 {
 	my ($self, $field, $type, $pkg) = ($_[0], $AUTOLOAD, undef, __PACKAGE__);
 	$field =~ s/.*://;
-	die "function $field does not exist" if $field =~ /^(rhash_|raw2)/;
-	die "no arguments specified to $field()" if !@_;
-	die "the $field() argument is undefined" if !defined $self;
+	die "function $field does not exist\n" if $field =~ /^(rhash_|raw2)/;
+	die "no arguments specified to $field()\n" if !@_;
+	die "the $field() argument is undefined\n" if !defined $self;
 
-	($type = ref($self)) && $type eq $pkg || die "the $field() argument is not a $pkg reference";
+	($type = ref($self)) && $type eq $pkg || die "the $field() argument is not a $pkg reference\n";
 	my $text = (exists $self->{$field} ? "is not accessible" : "does not exist");
-	die "the method $field() $text in the class $pkg";
+	die "the method $field() $text in the class $pkg\n";
 }
 
 # static functions
@@ -238,7 +240,7 @@ sub AUTOLOAD
 sub msg($$)
 {
 	my ($hash_id, $msg) = @_;
-	my $raw = rhash_msg_raw($hash_id, $msg); # get a binary message digest
+	my $raw = rhash_msg_wrapper($hash_id, $msg); # get a binary message digest
 	return (is_base32($hash_id) ? raw2base32($raw) : raw2hex($raw));
 }
 
@@ -263,7 +265,7 @@ or
   # Calculate two hash functions simultaneously
   my $r = Crypt::Rhash->new(RHASH_SHA1, RHASH_SHA512);
   $res = $r->update_file($filepath);
-  defined($res) or die "failed to read $filepath: $!";
+  defined($res) or die "failed to read $filepath: $!\n";
   print "SHA1   = " . $r->hash(RHASH_SHA1) . "\n";
   print "SHA512 = " . $r->hash(RHASH_SHA512) . "\n";
 
@@ -356,12 +358,12 @@ or undef if there was an error (in the latter case $! is also set).
 
   use Crypt::Rhash;
   my $r = new Crypt::Rhash(RHASH_SHA1);
-  open(my $fd, "<", "input.txt") or die "cannot open < input.txt: $!";
+  open(my $fd, "<", "input.txt") or die "cannot open < input.txt: $!\n";
   while ((my $n = $r->update_fd($fd, undef, 1024) != 0)) {
       print "$n bytes hashed. The SHA1 is " . $r->final()->hash() . "\n";
       $r->reset();
   }
-  defined($n) or die "read error for input.txt: $!";
+  defined($n) or die "read error for input.txt: $!\n";
   close($fd);
 
 =item $rhash->final()
