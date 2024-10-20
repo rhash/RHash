@@ -6,7 +6,7 @@ BEGIN { use_ok('Crypt::Rhash') };
 
 $msg = "message digest";
 
-ok( $r = new Crypt::Rhash(RHASH_MD5 | RHASH_TTH));
+ok( $r = new Crypt::Rhash(RHASH_MD5, RHASH_TTH));
 ok( $r->update($msg) );
 
 is( $r->hash(), "f96b697d7cb7938d525a2f31aaf161d0"); # prints the first hash by default
@@ -51,10 +51,10 @@ unlink($file);
 # test magnet_link() method
 $r = new Crypt::Rhash(RHASH_ALL);
 $r->update("a")->final();
-is( $r->magnet_link("test.txt", RHASH_MD5 | RHASH_SHA1), "magnet:?xl=1&dn=test.txt&xt=urn:md5:0cc175b9c0f1b6a831c399e269772661&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y");
-is( $r->magnet_link(undef, RHASH_ED2K | RHASH_AICH | RHASH_TTH), "magnet:?xl=1&xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y");
+is( $r->magnet_link("test.txt", RHASH_MD5, RHASH_SHA1), "magnet:?xl=1&dn=test.txt&xt=urn:md5:0cc175b9c0f1b6a831c399e269772661&xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y");
+is( $r->magnet_link(undef, RHASH_ED2K, RHASH_AICH, RHASH_TTH), "magnet:?xl=1&xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y");
 
-$r = new Crypt::Rhash(RHASH_CRC32 | RHASH_MD4);
+$r = new Crypt::Rhash(RHASH_CRC32, RHASH_MD4);
 $r->update("abc")->final();
 is( $r->magnet_link(), "magnet:?xl=3&xt=urn:crc32:352441c2&xt=urn:md4:a448017aaf21d8525fc10ae87aa6729d");
 is( $r->magnet_link("t"), "magnet:?xl=3&dn=t&xt=urn:crc32:352441c2&xt=urn:md4:a448017aaf21d8525fc10ae87aa6729d");

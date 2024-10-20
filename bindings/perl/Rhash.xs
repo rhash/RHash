@@ -92,9 +92,27 @@ rhash_file_wrapper(hash_id, filepath)
 # perl bindings for Low-level functions
 
 struct rhash_context *
-rhash_init(hash_id)
-		unsigned hash_id
+rhash_init_multi_wrapper(AV* array)
 	PROTOTYPE: $
+	PREINIT:
+		unsigned hash_ids[64];
+		size_t length = 0;
+		int i;
+	CODE:
+		for (i = 0; i <= av_len(array); i++) {
+			SV** elem = av_fetch(array, i, 0);
+			if (elem != NULL) {
+				if (length >= (sizeof(hash_ids)/sizeof(*hash_ids)))
+					croak("too many hash identifiers passed");
+				hash_ids[length] = (unsigned)SvNV(*elem);
+				length++;
+			}
+		}
+		if (length == 0)
+			croak("at least one hash identifier must be passed");
+		RETVAL = rhash_init_multi(length, hash_ids);
+	OUTPUT:
+		RETVAL
 
 int
 rhash_update(ctx, message)

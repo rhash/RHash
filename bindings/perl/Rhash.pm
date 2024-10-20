@@ -70,17 +70,22 @@ use constant RHASH_ALL       => 0x7FFFFFFF;
 sub new($$@)
 {
 	my ($class, @hash_ids) = @_;
-	my $hash_id = 0;
 
 	# validate @hash_ids to be an array of hash identifiers
-	scalar(@hash_ids) > 0 or die "hash_id not specified\n";
+	scalar(@_) > 0 or die "hash_id not specified\n";
 	for my $id (@hash_ids) {
-		$hash_id |= scalar($id);
-		if(!scalar($id) || (scalar($id) & RHASH_ALL) != $id) {
-			die "bad hash_id = " . scalar($id);
+		if (ref($id) || !scalar($id) || (scalar($id) & RHASH_ALL) != $id) {
+			die "bad hash_id = " . scalar($id) . " " . ref($id) . "\n";
 		}
 	}
-	my $context = rhash_init($hash_id) or return undef;
+	# handle legacy initialization by a single bitmask
+	if (scalar(@hash_ids) == 1 && ($hash_ids[0] & ($hash_ids[0] - 1)) != 0) {
+		# Split the bit mask into the array of single bits
+		for (my $mask = shift(@hash_ids); $mask; $mask = $mask & ($mask - 1)) {
+			push(@hash_ids, $mask & -$mask);
+		}
+	}
+	my $context = rhash_init_multi_wrapper(\@hash_ids) or return undef;
 	my $self = {
 		context => $context,
 	};
@@ -213,9 +218,20 @@ sub hash_raw($;$)
 	hash($_[0], $_[1], RHPR_RAW);
 }
 
-sub magnet_link($;$$)
+sub magnet_link($;$@)
 {
-	my ($self, $filename, $hash_mask) = @_;
+	my ($self, $filename, @hash_ids) = @_;
+	my $hash_mask = 0;
+	if (scalar(@hash_ids)) {
+		for my $id (@hash_ids) {
+			if (ref($id) || !scalar($id) || (scalar($id) & RHASH_ALL) != $id) {
+				die "bad hash_id = " . scalar($id) . " " . ref($id) . "\n";
+			}
+			$hash_mask = $hash_mask | scalar($id);
+		}
+	} else {
+		$hash_mask = undef;
+	}
 	return rhash_print_magnet_wrapper($self->{context}, $filename, $hash_mask);
 }
 
