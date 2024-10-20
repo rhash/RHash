@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: configure
+      run: ./configure --disable-openssl --enable-gettext --enable-debug=-O0
+    - name: make
+      run: make
+    - name: make test-lib
+      run: make test-lib
+    - name: make test-full
+      run: make test-full
