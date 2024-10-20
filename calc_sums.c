@@ -127,7 +127,7 @@ uint64_t get_all_supported_hash_mask(void)
  */
 static void init_btih_data(struct file_info* info)
 {
-	assert((info->rctx->hash_id & RHASH_BTIH) != 0);
+	assert((info->rctx->hash_mask & RHASH_BTIH) != 0);
 
 	if (opt.flags & (OPT_BT_PRIVATE | OPT_BT_TRANSMISSION)) {
 		unsigned options = (opt.flags & OPT_BT_PRIVATE ? RHASH_TORRENT_OPT_PRIVATE : 0)
@@ -312,7 +312,7 @@ int rename_file_by_embeding_crc32(struct file_info* info)
 	if (FILE_ISSPECIAL(info->file))
 		return 0; /* do nothing on stdin or a command-line message */
 
-	assert((info->rctx->hash_id & RHASH_CRC32) != 0);
+	assert((info->rctx->hash_mask & RHASH_CRC32) != 0);
 	rhash_print(suffix + 2, info->rctx, RHASH_CRC32,
 		(opt.flags & OPT_LOWERCASE ? 0 : RHPR_UPPERCASE));
 

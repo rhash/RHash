@@ -30,7 +30,7 @@ typedef struct rhash_info
 	 */
 	unsigned hash_id;
 	/**
-	 * Flags bit-mask, including RHASH_INFO_BASE32 bit.
+	 * Flags bitmask, including RHASH_INFO_BASE32 bit.
 	 */
 	unsigned flags;
 	/**

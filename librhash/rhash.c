@@ -88,7 +88,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 	size_t ctx_size_sum = 0;   /* size of hash contexts to store in rctx */
 	size_t i;
 	char* phash_ctx;
-	unsigned hash_bitmask = 0;
+	uint64_t hash_bitmask = 0;
 
 	if (count < 1) {
 		errno = EINVAL;
@@ -102,7 +102,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 			errno = EINVAL;
 			return NULL;
 		}
-		hash_bitmask |= hash_ids[i];
+		hash_bitmask |= (uint64_t)hash_ids[i];
 		hash_index = rhash_ctz(hash_ids[i]);
 		assert(hash_index < RHASH_HASH_COUNT); /* correct until extended hash_ids are supported */
 		info = &rhash_info_table[hash_index];
@@ -118,7 +118,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 
 	/* initialize common fields of the rhash context */
 	memset(rctx, 0, header_size);
-	rctx->rc.hash_id = hash_bitmask;
+	rctx->rc.hash_mask = hash_bitmask;
 	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
 	rctx->hash_vector_size = count;
@@ -669,8 +669,8 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	int i;
 	const char* begin = output;
 
-	if (!IS_EXTENDED_RHASH_ID(ectx->rc.hash_id | hash_mask)) {
-		hash_mask &= context->hash_id;
+	if (!IS_EXTENDED_RHASH_ID(hash_mask)) {
+		hash_mask &= ectx->rc.hash_mask;
 	}
 
 	if (output == NULL)

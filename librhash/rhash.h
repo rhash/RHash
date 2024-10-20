@@ -90,9 +90,9 @@ struct rhash_context
 	unsigned long long msg_size;
 
 	/**
-	 * The bit-mask containing identifiers of the hash functions being calculated.
+	 * The bitmask for hash functions being calculated.
 	 */
-	unsigned hash_id;
+	unsigned long long hash_mask;
 };
 
 #ifndef LIBRHASH_RHASH_CTX_DEFINED
@@ -483,22 +483,22 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * Get a pointer to the context of the specified hash function.
  */
 #define rhash_get_context(ctx, hash_id, ptr) \
-	rhash_ctrl(ctx, RMSG_GET_CONTEXT, hash_id, ptr)
+	rhash_ctrl((ctx), RMSG_GET_CONTEXT, (hash_id), (ptr))
 /**
  * Cancel file processing.
  */
 #define rhash_cancel(ctx) \
-	rhash_ctrl(ctx, RMSG_CANCEL, 0, NULL)
+	rhash_ctrl((ctx), RMSG_CANCEL, 0, NULL)
 /**
  * Return non-zero if a message digest calculation was canceled, zero otherwise.
  */
 #define rhash_is_canceled(ctx) \
-	rhash_ctrl(ctx, RMSG_IS_CANCELED, 0, NULL)
+	rhash_ctrl((ctx), RMSG_IS_CANCELED, 0, NULL)
 /**
  * Return non-zero if rhash_final was called for rhash_context.
  */
 #define rhash_get_finalized(ctx) \
-	rhash_ctrl(ctx, RMSG_GET_FINALIZED, 0, NULL)
+	rhash_ctrl((ctx), RMSG_GET_FINALIZED, 0, NULL)
 
 /**
  * Turn on/off the auto-final flag for the given rhash_context. By default
@@ -506,7 +506,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * needed when a message digest is retrieved by rhash_print call.
  */
 #define rhash_set_autofinal(ctx, on) \
-	rhash_ctrl(ctx, RMSG_SET_AUTOFINAL, on, NULL)
+	rhash_ctrl((ctx), RMSG_SET_AUTOFINAL, (on), NULL)
 
 /**
  * Fill the hash_ids array by identifiers of all algorithms supported
@@ -517,7 +517,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * otherwise returns the number of algorithms.
  */
 #define rhash_get_all_algorithms(count, hash_ids) \
-	rhash_ctrl(NULL, RMSG_GET_ALL_ALGORITHMS, count, hash_ids)
+	rhash_ctrl(NULL, RMSG_GET_ALL_ALGORITHMS, (count), (hash_ids))
 
 /**
  * Fill the hash_ids array by identifiers of algorithms associated with the given
@@ -528,7 +528,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * otherwise returns the number of algorithms.
  */
 #define rhash_get_ctx_algorithms(ctx, count, hash_ids) \
-	rhash_ctrl(ctx, RMSG_GET_CTX_ALGORITHMS, count, hash_ids)
+	rhash_ctrl((ctx), RMSG_GET_CTX_ALGORITHMS, (count), (hash_ids))
 
 /**
  * Get array of ids of algorithms supported by the OpenSSL plugin.
@@ -538,7 +538,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * returns the number of supported algorithms otherwize.
  */
 #define rhash_get_openssl_supported(count, hash_ids) \
-	rhash_ctrl(NULL, RMSG_GET_OPENSSL_SUPPORTED, count, hash_ids)
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_SUPPORTED, (count), (hash_ids))
 
 /**
  * Get array of ids of algorithms available from OpenSSL library.
@@ -548,7 +548,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * returns the number of enabled algorithms otherwize.
  */
 #define rhash_get_openssl_available(count, hash_ids) \
-	rhash_ctrl(NULL, RMSG_GET_OPENSSL_AVAILABLE, count, hash_ids)
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_AVAILABLE, (count), (hash_ids))
 
 /**
  * Get array of ids of "enabled" OpenSSL algorithms, which means
@@ -558,7 +558,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * returns the number of enabled algorithms otherwize.
  */
 #define rhash_get_openssl_enabled(count, hash_ids) \
-	rhash_ctrl(NULL, RMSG_GET_OPENSSL_ENABLED, count, hash_ids)
+	rhash_ctrl(NULL, RMSG_GET_OPENSSL_ENABLED, (count), (hash_ids))
 
 /**
  * Set array of algorithms to be calculated by OpenSSL library.
@@ -567,7 +567,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  * Returns RHASH_ERROR if hash_ids is NULL and count is non-zero, 0 otherwise.
  */
 #define rhash_set_openssl_enabled(count, hash_ids) \
-	rhash_ctrl(NULL, RMSG_SET_OPENSSL_ENABLED, count, hash_ids)
+	rhash_ctrl(NULL, RMSG_SET_OPENSSL_ENABLED, (count), (hash_ids))
 
 /**
  * Return non-zero if LibRHash has been compiled with OpenSSL support,
