@@ -125,6 +125,7 @@ static void print_help(void)
 	print_help_line("      --sfv        ", _("Print message digests, using SFV format (default).\n"));
 	print_help_line("      --bsd        ", _("Print message digests, using BSD-like format.\n"));
 	print_help_line("      --simple     ", _("Print message digests, using simple format.\n"));
+	print_help_line("      --one-hash   ", _("Print one message digest per line without file information.\n"));
 	print_help_line("      --hex        ", _("Print message digests in hexadecimal format.\n"));
 	print_help_line("      --base32     ", _("Print message digests in Base32 format.\n"));
 	print_help_line("  -b, --base64     ", _("Print message digests in Base64 format.\n"));
