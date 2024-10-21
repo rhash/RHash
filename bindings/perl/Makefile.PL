@@ -63,7 +63,7 @@ sub copy_c_files($) {
 	my $from_dir = $_[0];
 	my @result = ();
 	(opendir my($dh), $from_dir) or die "Can't open $from_dir: $!";
-	my @files = grep { /(?<!\Atest_hashes)\.c$/ } readdir $dh;
+	my @files = grep { /(?<!\Atest_lib)\.c$/ } readdir $dh;
 	closedir $dh;
 	for (@files) {
 		my ($from, $to) = ("$from_dir/$_", "_$_");
