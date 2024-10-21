@@ -92,7 +92,10 @@ struct rhash_context
 	/**
 	 * The bitmask for hash functions being calculated.
 	 */
-	unsigned long long hash_mask;
+	union {
+		unsigned long long hash_mask;
+		unsigned long long hash_id; /* legacy name */
+	};
 };
 
 #ifndef LIBRHASH_RHASH_CTX_DEFINED
