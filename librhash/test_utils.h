@@ -26,9 +26,6 @@ extern "C" {
 /**
  * Benchmark a hash algorithm.
  *
- * @deprecated This function will be removed from the librhash API,
- * since it is not related to the hashing library main functionality.
- *
  * @param hash_id hash algorithm identifier
  * @param flags benchmark flags
  * @param output the stream to print results

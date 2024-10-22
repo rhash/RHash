@@ -712,7 +712,7 @@ static size_t rhash_print_magnet_impl(char* output, size_t out_size, const char*
 			const char* magnet_name = rhash_get_magnet_name(bit);
 			size_t name_length;
 			if (!magnet_name)
-				continue; /* silenly skip unsupported hash_id */
+				continue; /* silently skip unsupported hash_id */
 			name_length = strlen(magnet_name);
 			if (out_size != RHASH_ERROR) {
 				size_t hash_part_size = (7 + 2) + name_length +
