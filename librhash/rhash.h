@@ -403,7 +403,27 @@ RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id,
  * Print magnet link with given filepath and calculated message digest into the
  * output buffer. The hash_mask can limit which message digests will be printed.
  * The function returns the size of the required buffer.
- * If output is NULL the .
+ * If output is NULL then the size of the required buffer is returned.
+ *
+ * @param output a string buffer to receive the magnet link or NULL
+ * @param out_size size of the output string buffer
+ * @param filepath the file path to be printed or NULL
+ * @param context algorithms state
+ * @param flags   can be combination of bits RHPR_UPPERCASE, RHPR_NO_MAGNET,
+ *                RHPR_FILESIZE
+ * @param count the size of the hash_ids array
+ * @param hash_ids array of identifiers of message digests to add to the magnet link
+ * @return number of written characters, including terminating '\0' on success, 0 on fail
+ */
+RHASH_API size_t rhash_print_magnet_multi(char* output, size_t size, const char* filepath,
+	rhash context, int flags, size_t count, const unsigned hash_ids[]);
+
+/**
+ * Deprecated function.
+ * Print magnet link with given filepath and calculated message digest into the
+ * output buffer. The hash_mask can limit which message digests will be printed.
+ * The function returns the size of the required buffer.
+ * If output is NULL then the size of the required buffer is returned.
  *
  * @param output a string buffer to receive the magnet link or NULL
  * @param filepath the file path to be printed or NULL

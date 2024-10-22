@@ -30,6 +30,8 @@
 #include "rhash.h"
 #include "test_lib.h"
 
+#define COUNTOF(a) (sizeof(a) /  sizeof(*a))
+
 /*=========================================================================*
  *                              Test vectors                               *
  *=========================================================================*/
@@ -893,7 +895,7 @@ static void test_long_strings(void)
 	dbg("test long strings\n");
 
 	/* test all algorithms on 1,000,000 characters of 'a' */
-	for (count = 0; count < (sizeof(tests) / sizeof(id_to_hash_t)); count++) {
+	for (count = 0; count < COUNTOF(tests); count++) {
 		unsigned flags = (tests[count].hash_id == RHASH_BTIH ? CHDT_SET_FILENAME : CHDT_NO_FLAGS);
 		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash, flags);
 	}
@@ -1274,22 +1276,42 @@ static void test_import_export(void)
 #endif /* !defined(NO_IMPORT_EXPORT) */
 }
 
+static uint64_t make_hash_mask(size_t count, unsigned hash_ids[])
+{
+	uint64_t hash_mask = 0;
+	size_t i;
+	for (i = 0; i < count; i++) {
+		hash_mask |= hash_ids[i];
+	}
+	return hash_mask;
+}
+
 #define TEST_PATH 0x4000000
 
 /**
  * Verify a magnet link.
  */
-static void assert_magnet(const char* expected,
-	rhash ctx, unsigned mask, int flags)
+static void test_magnet(const char* expected,
+	rhash ctx, int flags, size_t count, unsigned hash_ids[])
 {
 	static char out[2800];
 	const char* path = (flags & TEST_PATH ? "test.txt" : NULL);
-	size_t size_calculated = rhash_print_magnet(NULL, path, ctx, mask, flags);
-	size_t size_printed;
+	uint64_t hash_mask = make_hash_mask(count, hash_ids);
+	size_t size_calculated = rhash_print_magnet_multi(NULL, 0, path, ctx, flags, count, hash_ids);
+	size_t size_calculated_legacy = rhash_print_magnet(NULL, path, ctx, (unsigned)hash_mask, flags);
+	size_t size_printed, size_printed_legacy;
 	REQUIRE_TRUE(size_calculated < sizeof(out), "too small buffer for magnet link\n");
+	CHECK_NE(0, size_calculated, "non zero buffer size expected to be returned\n");
+	CHECK_EQ(size_calculated, size_calculated_legacy, "wrong size_calculated_legacy\n");
 
 	flags &= ~TEST_PATH;
-	size_printed = rhash_print_magnet(out, path, ctx, mask, flags);
+	if (size_calculated > 0) {
+		size_printed = rhash_print_magnet_multi(out, size_calculated - 1, path, ctx, flags, count, hash_ids);
+		CHECK_EQ(0, size_printed, "too small buffer error expected, but not occurred\n");
+	}
+	size_printed = rhash_print_magnet_multi(out, size_calculated, path, ctx, flags, count, hash_ids);
+	size_printed_legacy = rhash_print_magnet(out, path, ctx, (unsigned)hash_mask, flags);
+	CHECK_EQ(size_printed, size_printed_legacy, "wrong size_calculated_legacy\n");
 
 	if (expected && strcmp(expected, out) != 0) {
 		log_error2("\"%s\" != \"%s\"\n", expected, out);
@@ -1308,44 +1330,48 @@ static void assert_magnet(const char* expected,
 /**
  * Test printing of magnet links.
  */
-static void test_magnet(void)
+static void test_magnet_links(void)
 {
-	unsigned all_hash_ids[RHASH_HASH_COUNT];
-	unsigned crc32_and_tth_ids[2] = { RHASH_CRC32, RHASH_TTH };
-	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, all_hash_ids);
+	unsigned hash_ids_all[RHASH_HASH_COUNT];
+	unsigned hash_ids_tth[] = { RHASH_TTH };
+	unsigned hash_ids_md5[] = { RHASH_MD5 };
+	unsigned hash_ids_special[] = { RHASH_ED2K, RHASH_AICH, RHASH_SHA1, RHASH_BTIH };
+	unsigned hash_ids_crc32_tth[2] = { RHASH_CRC32, RHASH_TTH };
+	unsigned hash_id_all_hashes = RHASH_ALL_HASHES;
+	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, hash_ids_all);
 	size_t i;
 	rhash ctx;
-	dbg("test magnet link\n");
-	ctx	= rhash_init(RHASH_ALL_HASHES);
+	dbg("test magnet links\n");
+	ctx	= rhash_init_multi(count, hash_ids_all);
 	rhash_update(ctx, "a", 1);
 	rhash_final(ctx, 0);
-	assert_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y",
-		ctx, RHASH_TTH, RHPR_FILESIZE | TEST_PATH);
-	assert_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661",
-		ctx, RHASH_MD5, RHPR_FILESIZE | RHPR_UPPERCASE);
-	assert_magnet(
+	test_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y",
+		ctx, RHPR_FILESIZE | TEST_PATH, COUNTOF(hash_ids_tth), hash_ids_tth);
+	test_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661",
+		ctx, RHPR_FILESIZE | RHPR_UPPERCASE, COUNTOF(hash_ids_md5), hash_ids_md5);
+	test_magnet(
 		"xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&"
 		"xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&"
 		"xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&"
 		"xt=urn:btih:827cd89846fc132e2e67e29c2784c65443bb4dc1",
-		ctx, RHASH_ED2K | RHASH_AICH | RHASH_SHA1 | RHASH_BTIH, RHPR_NO_MAGNET);
+		ctx, RHPR_NO_MAGNET, COUNTOF(hash_ids_special), hash_ids_special);
 
 	/* verify length calculation for all hashes */
 	for (i = 0; i < count; i++) {
-		unsigned hash_id = all_hash_ids[i];
-		assert_magnet(NULL, ctx, hash_id, RHPR_FILESIZE | RHPR_NO_MAGNET);
+		unsigned hash_id = hash_ids_all[i];
+		test_magnet(NULL, ctx, RHPR_FILESIZE | RHPR_NO_MAGNET, 1, &hash_id);
 	}
-	assert_magnet(NULL, ctx, RHASH_ALL_HASHES, RHPR_FILESIZE | RHPR_NO_MAGNET);
+	test_magnet(NULL, ctx, RHPR_FILESIZE | RHPR_NO_MAGNET, 1, &hash_id_all_hashes);
 	rhash_free(ctx);
 
 	/* test with two hash functions */
-	ctx	= rhash_init_multi(2, crc32_and_tth_ids);
+	ctx	= rhash_init_multi(COUNTOF(hash_ids_crc32_tth), hash_ids_crc32_tth);
 	rhash_update(ctx, "abc", 3);
 	rhash_final(ctx, 0);
-	assert_magnet(
+	test_magnet(
 		"magnet:?xl=3&xt=urn:crc32:352441c2&"
 		"xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia",
-		ctx, RHASH_ALL_HASHES, RHPR_FILESIZE);
+		ctx, RHPR_FILESIZE, 1, &hash_id_all_hashes);
 }
 
 /**
@@ -1465,7 +1491,7 @@ int main(int argc, char* argv[])
 		test_id_getters();
 		test_get_context();
 		test_import_export();
-		test_magnet();
+		test_magnet_links();
 		if (g_errors_count == 0)
 			printf("All sums are working properly!\n");
 		fflush(stdout);

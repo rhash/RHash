@@ -662,19 +662,24 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	return size;
 }
 
-RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
-	rhash context, unsigned hash_mask, int flags)
+static size_t rhash_print_magnet_impl(char* output, size_t out_size, const char* filepath,
+	rhash_context_ext* const ectx, int flags, uint64_t hash_mask)
 {
-	rhash_context_ext* const ectx = (rhash_context_ext*)context;
 	int i;
 	const char* begin = output;
+	hash_mask &= ectx->rc.hash_mask;
 
-	if (!IS_EXTENDED_RHASH_ID(hash_mask)) {
-		hash_mask &= ectx->rc.hash_mask;
-	}
-
-	if (output == NULL)
+	if (output == NULL) {
 		return rhash_get_magnet_url_size(filepath, ectx, hash_mask, flags);
+	}
+	if (out_size != RHASH_ERROR) {
+		size_t prefix_size = rhash_get_magnet_url_size(filepath, ectx, 0, flags);
+		if (out_size < prefix_size) {
+			errno = ENOMEM;
+			return 0;
+		}
+		out_size -= prefix_size;
+	}
 
 	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
 	if ((flags & RHPR_NO_MAGNET) == 0) {
@@ -685,7 +690,7 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	if ((flags & RHPR_FILESIZE) != 0) {
 		strcpy(output, "xl=");
 		output += 3;
-		output += rhash_sprintI64(output, context->msg_size);
+		output += rhash_sprintI64(output, ectx->rc.msg_size);
 		*(output++) = '&';
 	}
 
@@ -698,31 +703,74 @@ RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
 	}
 
 	for (i = 0; i <= 1; i++) {
-		unsigned bit;
-		static const unsigned print_first = (RHASH_ED2K | RHASH_AICH);
-		unsigned hash = (!i ? hash_mask & print_first : hash_mask & ~print_first);
-		if (!hash)
-			continue;
+		static const uint64_t print_first = (RHASH_ED2K | RHASH_AICH);
+		uint64_t hash = (!i ? hash_mask & print_first : hash_mask & ~print_first);
 
 		/* loop through hash values */
-		for (bit = hash & -(int)hash; bit <= hash; bit <<= 1) {
-			const char* name;
-			if ((bit & hash) == 0) continue;
-			if (!(name = rhash_get_magnet_name(bit))) continue;
-
+		for (; hash; hash = hash & (hash - 1)) {
+			uint64_t bit = hash & -(int)hash;
+			const char* magnet_name = rhash_get_magnet_name(bit);
+			size_t name_length;
+			if (!magnet_name)
+				continue; /* silenly skip unsupported hash_id */
+			name_length = strlen(magnet_name);
+			if (out_size != RHASH_ERROR) {
+				size_t hash_part_size = (7 + 2) + name_length +
+					rhash_print(NULL, &ectx->rc, bit,
+						(bit & RHASH_SHA1 ? RHPR_BASE32 : 0));
+				if (out_size < hash_part_size) {
+					errno = ENOMEM;
+					return 0;
+				}
+				out_size -= hash_part_size;
+			}
 			strcpy(output, "xt=urn:");
 			output += 7;
-			strcpy(output, name);
-			output += strlen(name);
+			strcpy(output, magnet_name);
+			output += name_length;
 			*(output++) = ':';
-			output += rhash_print(output, context, bit,
+			output += rhash_print(output, &ectx->rc, bit,
 				(bit & RHASH_SHA1 ? flags | RHPR_BASE32 : flags));
 			*(output++) = '&';
 		}
 	}
 	output[-1] = '\0'; /* terminate the line */
-
 	return (output - begin);
+}
+
+RHASH_API size_t rhash_print_magnet_multi(char* output, size_t out_size, const char* filepath,
+	rhash context, int flags, size_t count, const unsigned hash_ids[])
+{
+	uint64_t hash_mask = 0;
+	if (!context) {
+		errno = EINVAL;
+		return 0;
+	}
+	if (count == 0) {
+		hash_mask = RHASH_ALL_HASHES;
+	} else {
+		size_t i;
+		for (i = 0; i < count; i++) {
+			if (!IS_VALID_HASH_ID(hash_ids[i]) && (i != 0 || hash_ids[i] != RHASH_ALL_HASHES)) {
+				errno = EINVAL;
+				return 0;
+			}
+			hash_mask |= (uint64_t)hash_ids[i];
+		}
+	}
+	return rhash_print_magnet_impl(output, out_size, filepath,
+		(rhash_context_ext*)context, flags, hash_mask);
+}
+
+RHASH_API size_t rhash_print_magnet(char* output, const char* filepath,
+	rhash context, unsigned hash_mask, int flags)
+{
+	if (!context || IS_EXTENDED_RHASH_ID(hash_mask)) {
+		errno = EINVAL;
+		return 0;
+	}
+	return rhash_print_magnet_impl(output, RHASH_ERROR, filepath,
+		(rhash_context_ext*)context, flags, (uint64_t)hash_mask);
 }
 
 
