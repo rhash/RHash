@@ -194,6 +194,21 @@ RHASH_API rhash rhash_init(unsigned hash_id);
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
 
 /**
+ * Calculate message digests of a file or stream.
+ * Multiple message digests can be computed.
+ * First, inintialize ctx parameter with rhash_init() before calling
+ * rhash_update_fd(). Then use rhash_final() and rhash_print()
+ * to retrive message digests. Finaly call rhash_free() on ctx
+ * to free allocated memory or call rhash_reset() to reuse ctx.
+ * The file descriptor must correspond to an opened file or stream.
+ *
+ * @param ctx the rhash context
+ * @param fd descriptor of the file to process
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
+RHASH_API int rhash_update_fd(rhash ctx, int fd);
+
+/**
  * Process a file or stream. Multiple message digests can be computed.
  * First, inintialize ctx parameter with rhash_init() before calling
  * rhash_file_update(). Then use rhash_final() and rhash_print()
@@ -201,7 +216,7 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
  * to free allocated memory or call rhash_reset() to reuse ctx.
  *
  * @param ctx rhash context
- * @param fd descriptor of the file to hash
+ * @param fd descriptor of the file to process
  * @return 0 on success, -1 on fail with error code stored in errno
  */
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd);

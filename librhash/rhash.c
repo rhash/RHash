@@ -493,41 +493,71 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
 	return 0;
 }
 
-RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
-{
-	rhash_context_ext* const ectx = (rhash_context_ext*)ctx;
-	const size_t block_size = 8192;
+/* universal file context to read a file into a buffer */
+struct file_update_context {
+	union {
+		FILE* file_fd;
+		int int_fd;
+	};
 	unsigned char* buffer;
-	size_t length = 0;
-	int res = 0;
-	if (ectx->state != STATE_ACTIVE)
-		return 0; /* do nothing if canceled */
-	if (ctx == NULL) {
+	size_t buffer_size;
+};
+static ssize_t read_file_fd_impl(struct file_update_context *fctx)
+{
+	size_t read_size;
+	if (feof(fctx->file_fd))
+		return 0;
+	read_size = fread(fctx->buffer, 1, fctx->buffer_size, fctx->file_fd);
+	return (ferror(fctx->file_fd) ? -1 : (ssize_t)read_size);
+}
+static ssize_t read_int_fd_impl(struct file_update_context *fctx)
+{
+	return read(fctx->int_fd, fctx->buffer, fctx->buffer_size);
+}
+typedef ssize_t (*read_file_func)(struct file_update_context *fctx);
+
+static int rhash_file_update_impl(
+	struct rhash_context_ext* const ectx,
+	struct file_update_context* const fctx,
+	read_file_func read_func)
+{
+	const size_t buffer_size = 256 * 1024;
+	ssize_t length;
+	if (ectx == NULL) {
 		errno = EINVAL;
 		return -1;
 	}
-	buffer = (unsigned char*)rhash_aligned_alloc(DEFAULT_ALIGNMENT, block_size);
-	if (!buffer)
+	if (ectx->state != STATE_ACTIVE)
+		return 0; /* do nothing if canceled */
+	fctx->buffer_size = buffer_size;
+	fctx->buffer = (unsigned char*)rhash_aligned_alloc(DEFAULT_ALIGNMENT, buffer_size);
+	if (!fctx->buffer) {
 		return -1; /* errno is set to ENOMEM according to UNIX 98 */
-
-	while (!feof(fd)) {
-		if (ectx->state != STATE_ACTIVE)
-			break; /* stop if canceled */
-		length = fread(buffer, 1, block_size, fd);
-
-		if (ferror(fd)) {
-			res = -1; /* note: errno contains error code */
-			break;
-		} else if (length) {
-			rhash_update(ctx, buffer, length);
-
-			if (ectx->callback) {
-				((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
-			}
+	}
+	while ((length = read_func(fctx)) > 0 && ectx->state == STATE_ACTIVE) {
+		rhash_update(&ectx->rc, fctx->buffer, (size_t)length);
+		if (ectx->callback) {
+			((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
 		}
 	}
-	rhash_aligned_free(buffer);
-	return res;
+	rhash_aligned_free(fctx->buffer);
+	return (length < 0 ? -1 : 0);
+}
+
+RHASH_API int rhash_update_fd(rhash ctx, int fd)
+{
+	struct file_update_context fctx;
+	memset(&fctx, 0, sizeof(fctx));
+	fctx.int_fd = fd;
+	return rhash_file_update_impl((rhash_context_ext*)ctx, &fctx, read_int_fd_impl);
+}
+
+RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
+{
+	struct file_update_context fctx;
+	memset(&fctx, 0, sizeof(fctx));
+	fctx.file_fd = fd;
+	return rhash_file_update_impl((rhash_context_ext*)ctx, &fctx, read_file_fd_impl);
 }
 
 #ifdef _WIN32
