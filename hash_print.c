@@ -72,7 +72,7 @@ typedef struct print_item
 {
 	struct print_item* next;
 	unsigned flags;
-	unsigned hash_mask;
+	unsigned hash_id;
 	unsigned width;
 	const char* data;
 } print_item;
@@ -84,15 +84,15 @@ static print_item* parse_percent_item(const char** str);
  * Allocate new print_item.
  *
  * @param flags the print_item flags
- * @param hash_mask optional hash_mask
+ * @param hash_id optional hash_id
  * @param data optional string to store
  * @return allocated print_item
  */
-static print_item* new_print_item(unsigned flags, uint64_t hash_mask, const char* data)
+static print_item* new_print_item(unsigned flags, unsigned hash_id, const char* data)
 {
 	print_item* item = (print_item*)rsh_malloc(sizeof(print_item));
 	item->flags = flags;
-	item->hash_mask = hash_mask;
+	item->hash_id = hash_id;
 	item->width = 0;
 	item->data = (data ? rsh_strdup(data) : NULL);
 	item->next = NULL;
@@ -212,8 +212,13 @@ print_item* parse_print_string(const char* format, uint64_t* hash_mask)
 					if (esc_head->flags != esc_tail->flags)
 						esc_head->flags |= FLAG_HAS_MISC_PARTS;
 				}
-				if (item->hash_mask)
-					*hash_mask |= item->hash_mask;
+				if ((item->flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_LINK) {
+					static const uint64_t ed2k_aich_hash_mask =
+						hash_id_to_bit64(RHASH_ED2K) | hash_id_to_bit64(RHASH_AICH);
+					*hash_mask |= ed2k_aich_hash_mask;
+				} else if (item->hash_id) {
+					*hash_mask |= hash_id_to_bit64(item->hash_id);
+				}
 			}
 		}
 		if (p > buf || (!*format && list == NULL && item == NULL)) {
@@ -314,7 +319,7 @@ print_item* parse_percent_item(const char** str)
 {
 	const char* format = *str;
 	const char* p = NULL;
-	uint64_t hash_mask = 0;
+	unsigned hash_id = 0;
 	unsigned modifier_flags = 0;
 	int id_found = 0;
 	int width = 0;
@@ -362,8 +367,8 @@ print_item* parse_percent_item(const char** str)
 		for (; isalnum((unsigned char)*p) || (*p == '-'); p++);
 		if (*p == '}') {
 			unsigned flags = 0;
-			hash_mask = printf_name_to_id(format + 1, p - (format + 1), &flags);
-			if (hash_mask || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
+			hash_id = printf_name_to_id(format + 1, p - (format + 1), &flags);
+			if (hash_id || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= flags | (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -381,16 +386,12 @@ print_item* parse_percent_item(const char** str)
 		/* look for a known token */
 		if (upper && (p = strchr(short_hash, upper))) {
 			assert( (p - short_hash) < (int)(sizeof(hash_ids) / sizeof(unsigned)) );
-			hash_mask = hash_id_to_bit64(hash_ids[p - short_hash]);
+			hash_id = hash_ids[p - short_hash];
 			modifier_flags |= (*format & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 		}
 		else if ((p = strchr(short_other, *format))) {
-			static const uint64_t ed2k_aich_hash_mask =
-				hash_id_to_bit64(RHASH_ED2K) | hash_id_to_bit64(RHASH_AICH);
 			assert( (p - short_other) < (int)(sizeof(other_flags) / sizeof(unsigned)) );
 			modifier_flags |= other_flags[p - short_other];
-			if ((modifier_flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_LINK)
-				hash_mask = ed2k_aich_hash_mask;
 		} else if ((modifier_flags & PRINT_FLAG_URLENCODE) != 0) {
 			/* handle legacy token: '%u' -> '%uf' */
 			modifier_flags |= PRINT_BASENAME;
@@ -399,7 +400,7 @@ print_item* parse_percent_item(const char** str)
 			return 0; /* no valid token found */
 		}
 	}
-	item = new_print_item(modifier_flags, hash_mask, NULL);
+	item = new_print_item(modifier_flags, hash_id, NULL);
 	item->width = width;
 	*str = ++format;
 	return item;
@@ -494,6 +495,13 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 	return PRINTF_RES(rsh_fprintf(out, format, d[0], d[1], d[2], d[3], d[4], d[5]));
 }
 
+static int is_gost94(unsigned hash_id)
+{
+	static unsigned gost94_id = hash_id_to_extended(RHASH_GOST94);
+	static unsigned gost94_cryptopro_id = hash_id_to_extended(RHASH_GOST94_CRYPTOPRO);
+	return (hash_id == gost94_id || hash_id == gost94_cryptopro_id);
+}
+
 /**
  * Print formatted file information to the given output stream.
  *
@@ -522,17 +530,16 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 
 		/* output a hash function digest */
 		if (!print_type) {
-			unsigned hash_id = bit64_to_hash_id(list->hash_mask);
 			int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0)
 				| (list->flags & PRINT_FLAG_RAW ? RHPR_RAW : 0)
 				| (list->flags & PRINT_FLAG_BASE32 ? RHPR_BASE32 : 0)
 				| (list->flags & PRINT_FLAG_BASE64 ? RHPR_BASE64 : 0)
 				| (list->flags & PRINT_FLAG_HEX ? RHPR_HEX : 0)
 				| (list->flags & PRINT_FLAG_URLENCODE ? RHPR_URLENCODE : 0);
-			if ((hash_id == RHASH_GOST94 || hash_id == RHASH_GOST94_CRYPTOPRO) && (opt.flags & OPT_GOST_REVERSE))
+			if ((opt.flags & OPT_GOST_REVERSE) && is_gost94(list->hash_id))
 				print_flags |= RHPR_REVERSE;
-			assert(hash_id != 0);
-			len = rhash_print(buffer, info->rctx, hash_id, print_flags);
+			assert(list->hash_id != 0);
+			len = rhash_print(buffer, info->rctx, list->hash_id, print_flags);
 			assert(len < sizeof(buffer));
 			/* output the hash, continue on success */
 			if (rsh_fwrite(buffer, 1, len, out) == len || errno == 0)

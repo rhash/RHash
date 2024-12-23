@@ -151,8 +151,10 @@ wchar_t* rhash_wcsdup(const wchar_t* str, const char* srcfile, int srcline);
     (defined(__clang__) && __has_builtin(__builtin_ctz))
 /* macro if GCC >= 3.4 or has clang __builtin_ctz() */
 # define get_ctz(x) __builtin_ctz(x)
+# define get_ctz64(x) __builtin_ctzll(x)
 #else
-unsigned get_ctz(unsigned); /* define as function */
+unsigned get_ctz(unsigned);
+unsigned get_ctz64(uint64_t);
 #endif
 
 /* vector functions */

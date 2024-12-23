@@ -125,8 +125,10 @@ extern "C" {
 /* rhash_ctz - count traling zero bits */
 #if HAS_GNUC(3, 4) || HAS_CLANG_BUILTIN(__builtin_ctz)
 # define rhash_ctz(x) __builtin_ctz(x)
+# define rhash_ctz64(x) __builtin_ctzll(x)
 #else
-unsigned rhash_ctz(unsigned); /* define as function */
+unsigned rhash_ctz(unsigned);
+unsigned rhash_ctz64(uint64_t);
 #endif
 
 /* rhash_popcount - count the number of 1-bits */

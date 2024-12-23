@@ -75,37 +75,37 @@ static void rhash_crc32c_init(uint32_t* crc32);
 static void rhash_crc32c_update(uint32_t* crc32, const unsigned char* msg, size_t size);
 static void rhash_crc32c_final(uint32_t* crc32, unsigned char* result);
 
-rhash_info info_crc32  = { RHASH_CRC32,  F_BE32, 4, "CRC32", "crc32" };
-rhash_info info_crc32c = { RHASH_CRC32C, F_BE32, 4, "CRC32C", "crc32c" };
-rhash_info info_md4 = { RHASH_MD4, F_LE32, 16, "MD4", "md4" };
-rhash_info info_md5 = { RHASH_MD5, F_LE32, 16, "MD5", "md5" };
-rhash_info info_sha1 = { RHASH_SHA1,      F_BE32, 20, "SHA1", "sha1" };
-rhash_info info_tiger = { RHASH_TIGER,    F_LE64, 24, "TIGER", "tiger" };
-rhash_info info_tth  = { RHASH_TTH,       F_BS32 | F_SPCEXP, 24, "TTH", "tree:tiger" };
-rhash_info info_btih = { RHASH_BTIH,      F_SPCEXP, 20, "BTIH", "btih" };
-rhash_info info_ed2k = { RHASH_ED2K,      F_LE32, 16, "ED2K", "ed2k" };
-rhash_info info_aich = { RHASH_AICH,      F_BS32 | F_SPCEXP, 20, "AICH", "aich" };
-rhash_info info_whirlpool = { RHASH_WHIRLPOOL, F_BE64, 64, "WHIRLPOOL", "whirlpool" };
-rhash_info info_rmd160 = { RHASH_RIPEMD160,  F_LE32, 20, "RIPEMD-160", "ripemd160" };
-rhash_info info_gost12_256 = { RHASH_GOST12_256, F_LE64, 32, "GOST12-256", "gost12-256" };
-rhash_info info_gost12_512 = { RHASH_GOST12_512, F_LE64, 64, "GOST12-512", "gost12-512" };
-rhash_info info_gost94 = { RHASH_GOST94,       F_LE32, 32, "GOST94", "gost94" };
-rhash_info info_gost94pro = { RHASH_GOST94_CRYPTOPRO, F_LE32, 32, "GOST94-CRYPTOPRO", "gost94-cryptopro" };
-rhash_info info_has160 = { RHASH_HAS160,     F_LE32, 20, "HAS-160", "has160" };
-rhash_info info_snf128 = { RHASH_SNEFRU128,  F_BE32, 16, "SNEFRU-128", "snefru128" };
-rhash_info info_snf256 = { RHASH_SNEFRU256,  F_BE32, 32, "SNEFRU-256", "snefru256" };
-rhash_info info_sha224 = { RHASH_SHA224,     F_BE32, 28, "SHA-224", "sha224" };
-rhash_info info_sha256 = { RHASH_SHA256,     F_BE32, 32, "SHA-256", "sha256" };
-rhash_info info_sha384 = { RHASH_SHA384,     F_BE64, 48, "SHA-384", "sha384" };
-rhash_info info_sha512 = { RHASH_SHA512,     F_BE64, 64, "SHA-512", "sha512" };
-rhash_info info_edr256 = { RHASH_EDONR256,   F_LE32, 32, "EDON-R256", "edon-r256" };
-rhash_info info_edr512 = { RHASH_EDONR512,   F_LE64, 64, "EDON-R512", "edon-r512" };
-rhash_info info_blake2s = { RHASH_BLAKE2S,   F_LE32, 32, "BLAKE2S", "blake2s" };
-rhash_info info_blake2b = { RHASH_BLAKE2B,   F_LE64, 64, "BLAKE2B", "blake2b" };
-rhash_info info_sha3_224 = { RHASH_SHA3_224, F_LE64, 28, "SHA3-224", "sha3-224" };
-rhash_info info_sha3_256 = { RHASH_SHA3_256, F_LE64, 32, "SHA3-256", "sha3-256" };
-rhash_info info_sha3_384 = { RHASH_SHA3_384, F_LE64, 48, "SHA3-384", "sha3-384" };
-rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" };
+rhash_info info_crc32      = { EXTENDED_HASH_ID(0),  F_BE32, 4, "CRC32", "crc32" };
+rhash_info info_crc32c     = { EXTENDED_HASH_ID(26), F_BE32, 4, "CRC32C", "crc32c" };
+rhash_info info_md4        = { EXTENDED_HASH_ID(1),  F_LE32, 16, "MD4", "md4" };
+rhash_info info_md5        = { EXTENDED_HASH_ID(2),  F_LE32, 16, "MD5", "md5" };
+rhash_info info_sha1       = { EXTENDED_HASH_ID(3),  F_BE32, 20, "SHA1", "sha1" };
+rhash_info info_tiger      = { EXTENDED_HASH_ID(4),  F_LE64, 24, "TIGER", "tiger" };
+rhash_info info_tth        = { EXTENDED_HASH_ID(5),  F_BS32 | F_SPCEXP, 24, "TTH", "tree:tiger" };
+rhash_info info_btih       = { EXTENDED_HASH_ID(6),  F_SPCEXP, 20, "BTIH", "btih" };
+rhash_info info_ed2k       = { EXTENDED_HASH_ID(7),  F_LE32, 16, "ED2K", "ed2k" };
+rhash_info info_aich       = { EXTENDED_HASH_ID(8),  F_BS32 | F_SPCEXP, 20, "AICH", "aich" };
+rhash_info info_whirlpool  = { EXTENDED_HASH_ID(9),  F_BE64, 64, "WHIRLPOOL", "whirlpool" };
+rhash_info info_rmd160     = { EXTENDED_HASH_ID(10), F_LE32, 20, "RIPEMD-160", "ripemd160" };
+rhash_info info_gost94     = { EXTENDED_HASH_ID(11), F_LE32, 32, "GOST94", "gost94" };
+rhash_info info_gost94pro  = { EXTENDED_HASH_ID(12), F_LE32, 32, "GOST94-CRYPTOPRO", "gost94-cryptopro" };
+rhash_info info_has160     = { EXTENDED_HASH_ID(13), F_LE32, 20, "HAS-160", "has160" };
+rhash_info info_gost12_256 = { EXTENDED_HASH_ID(14), F_LE64, 32, "GOST12-256", "gost12-256" };
+rhash_info info_gost12_512 = { EXTENDED_HASH_ID(15), F_LE64, 64, "GOST12-512", "gost12-512" };
+rhash_info info_sha224     = { EXTENDED_HASH_ID(16), F_BE32, 28, "SHA-224", "sha224" };
+rhash_info info_sha256     = { EXTENDED_HASH_ID(17), F_BE32, 32, "SHA-256", "sha256" };
+rhash_info info_sha384     = { EXTENDED_HASH_ID(18), F_BE64, 48, "SHA-384", "sha384" };
+rhash_info info_sha512     = { EXTENDED_HASH_ID(19), F_BE64, 64, "SHA-512", "sha512" };
+rhash_info info_edr256     = { EXTENDED_HASH_ID(20), F_LE32, 32, "EDON-R256", "edon-r256" };
+rhash_info info_edr512     = { EXTENDED_HASH_ID(21), F_LE64, 64, "EDON-R512", "edon-r512" };
+rhash_info info_sha3_224   = { EXTENDED_HASH_ID(22), F_LE64, 28, "SHA3-224", "sha3-224" };
+rhash_info info_sha3_256   = { EXTENDED_HASH_ID(23), F_LE64, 32, "SHA3-256", "sha3-256" };
+rhash_info info_sha3_384   = { EXTENDED_HASH_ID(24), F_LE64, 48, "SHA3-384", "sha3-384" };
+rhash_info info_sha3_512   = { EXTENDED_HASH_ID(25), F_LE64, 64, "SHA3-512", "sha3-512" };
+rhash_info info_snf128     = { EXTENDED_HASH_ID(27), F_BE32, 16, "SNEFRU-128", "snefru128" };
+rhash_info info_snf256     = { EXTENDED_HASH_ID(28), F_BE32, 32, "SNEFRU-256", "snefru256" };
+rhash_info info_blake2s    = { EXTENDED_HASH_ID(29), F_LE32, 32, "BLAKE2S", "blake2s" };
+rhash_info info_blake2b    = { EXTENDED_HASH_ID(30), F_LE64, 64, "BLAKE2B", "blake2b" };
 
 /* some helper macros */
 #define dgshft(name) ((uintptr_t)((char*)&((name##_ctx*)0)->hash))
@@ -162,6 +162,7 @@ void rhash_init_algorithms(unsigned mask)
 	(void)mask; /* unused now */
 
 	/* check RHASH_HASH_COUNT */
+	RHASH_ASSERT((RHASH_LOW_HASHES_MASK >> RHASH_HASH_COUNT) == 0);
 	RHASH_ASSERT(RHASH_COUNTOF(rhash_hash_info_default) == RHASH_HASH_COUNT);
 
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
@@ -176,12 +177,21 @@ void rhash_init_algorithms(unsigned mask)
  * @param hash_id the id of hash algorithm
  * @return pointer to the rhash_info structure containing the information
  */
-const rhash_info* rhash_info_by_id(unsigned hash_id)
+const rhash_hash_info* rhash_hash_info_by_id(unsigned hash_id)
 {
-	hash_id &= RHASH_ALL_HASHES;
-	/* check that one and only one bit is set */
-	if (!hash_id || (hash_id & (hash_id - 1)) != 0) return NULL;
-	return rhash_info_table[rhash_ctz(hash_id)].info;
+	unsigned index;
+	if (IS_EXTENDED_HASH_ID(hash_id)) {
+		index = hash_id & ~RHASH_EXTENDED_BIT;
+		if (index >= RHASH_HASH_COUNT)
+			return NULL;
+	} else {
+		hash_id &= RHASH_LOW_HASHES_MASK;
+		/* check that one and only one bit is set */
+		if (!hash_id || (hash_id & (hash_id - 1)) != 0)
+			return NULL;
+		index = rhash_ctz(hash_id);
+	}
+	return &rhash_info_table[index];
 }
 
 /**
@@ -194,21 +204,21 @@ const rhash_info* rhash_info_by_id(unsigned hash_id)
  * @param count pointer to store the number of returned ids to
  * @return array of hash identifiers
  */
-const unsigned* rhash_get_all_hash_ids(size_t* count)
+const unsigned* rhash_get_all_hash_ids(unsigned all_id, size_t* count)
 {
 	static const unsigned all_ids[] = {
-		RHASH_CRC32, RHASH_MD4, RHASH_MD5, RHASH_SHA1,
-		RHASH_TIGER, RHASH_TTH, RHASH_BTIH, RHASH_ED2K,
-		RHASH_AICH, RHASH_WHIRLPOOL, RHASH_RIPEMD160,
-		RHASH_GOST94, RHASH_GOST94_CRYPTOPRO, RHASH_HAS160,
-		RHASH_GOST12_256, RHASH_GOST12_512,
-		RHASH_SHA224, RHASH_SHA256, RHASH_SHA384, RHASH_SHA512,
-		RHASH_EDONR256, RHASH_EDONR512,
-		RHASH_SHA3_224, RHASH_SHA3_256, RHASH_SHA3_384, RHASH_SHA3_512,
-		RHASH_CRC32C, RHASH_SNEFRU128, RHASH_SNEFRU256,
-		RHASH_BLAKE2S, RHASH_BLAKE2B
+		EXTENDED_HASH_ID(0), EXTENDED_HASH_ID(1), EXTENDED_HASH_ID(2), EXTENDED_HASH_ID(3),
+		EXTENDED_HASH_ID(4), EXTENDED_HASH_ID(5), EXTENDED_HASH_ID(6), EXTENDED_HASH_ID(7),
+		EXTENDED_HASH_ID(8), EXTENDED_HASH_ID(9), EXTENDED_HASH_ID(10), EXTENDED_HASH_ID(11),
+		EXTENDED_HASH_ID(12), EXTENDED_HASH_ID(13), EXTENDED_HASH_ID(14), EXTENDED_HASH_ID(15),
+		EXTENDED_HASH_ID(16), EXTENDED_HASH_ID(17), EXTENDED_HASH_ID(18), EXTENDED_HASH_ID(19),
+		EXTENDED_HASH_ID(20), EXTENDED_HASH_ID(21), EXTENDED_HASH_ID(22), EXTENDED_HASH_ID(23),
+		EXTENDED_HASH_ID(24), EXTENDED_HASH_ID(25), EXTENDED_HASH_ID(26), EXTENDED_HASH_ID(27),
+		EXTENDED_HASH_ID(28), EXTENDED_HASH_ID(29), EXTENDED_HASH_ID(30)
 	};
-	*count = RHASH_HASH_COUNT;
+	static const unsigned count_low = rhash_popcount(RHASH_LOW_HASHES_MASK);
+	RHASH_ASSERT(RHASH_COUNTOF(all_ids) == RHASH_HASH_COUNT);
+	*count = (all_id == RHASH_ALL_HASHES ? RHASH_HASH_COUNT : count_low);
 	return all_ids;
 }
 
@@ -309,6 +319,8 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
  */
 size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size)
 {
+	if (IS_EXTENDED_HASH_ID(hash_id))
+		hash_id = 1 << GET_EXTENDED_HASH_ID_INDEX(hash_id);
 	switch (hash_id)
 	{
 		case RHASH_TTH:
@@ -332,6 +344,8 @@ size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t siz
  */
 size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size)
 {
+	if (IS_EXTENDED_HASH_ID(hash_id))
+		hash_id = 1 << GET_EXTENDED_HASH_ID_INDEX(hash_id);
 	switch (hash_id)
 	{
 		case RHASH_TTH:

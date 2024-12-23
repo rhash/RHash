@@ -123,7 +123,9 @@ extern rhash_info info_sha3_512;
 extern rhash_info info_edr256;
 extern rhash_info info_edr512;
 
-#define IS_EXTENDED_RHASH_ID(hash_id) ((hash_id) & RHASH_EXTENDED_BIT)
+#define IS_EXTENDED_HASH_ID(hash_id) ((hash_id) & RHASH_EXTENDED_BIT)
+#define GET_EXTENDED_HASH_ID_INDEX(hash_id) ((unsigned)((hash_id) & ~RHASH_EXTENDED_BIT))
+#define EXTENDED_HASH_ID(index) ((unsigned)(RHASH_EXTENDED_BIT | (index)))
 
 /* rhash_info flags */
 #define F_BS32 1   /* default output in base32 */
@@ -145,8 +147,8 @@ extern rhash_info info_edr512;
 #endif
 
 void rhash_init_algorithms(unsigned mask);
-const rhash_info* rhash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
-const unsigned* rhash_get_all_hash_ids(size_t* count);
+const rhash_hash_info* rhash_hash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
+const unsigned* rhash_get_all_hash_ids(unsigned all_id, size_t* count);
 
 #if !defined(NO_IMPORT_EXPORT)
 size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size);

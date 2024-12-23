@@ -11,8 +11,11 @@ extern "C" {
 #endif
 
 /* Hash function identifiers and bit masks */
-#define bit64_to_hash_id(bit64) ((unsigned)(bit64))
-#define hash_id_to_bit64(hash_id) ((uint64_t)(hash_id))
+#define bit64_to_hash_id(bit64) ((unsigned)RHASH_EXTENDED_BIT ^ get_ctz64(bit64))
+#define hash_id_to_bit64(hash_id) ((hash_id) & RHASH_EXTENDED_BIT ? \
+	(uint64_t)1 << (unsigned)((hash_id) & ~RHASH_EXTENDED_BIT): (uint64_t)(hash_id))
+#define hash_id_to_extended(hash_id) ((hash_id) & RHASH_EXTENDED_BIT ? hash_id : \
+	(unsigned)RHASH_EXTENDED_BIT ^ get_ctz(hash_id))
 
 int hash_mask_to_hash_ids(uint64_t hash_mask, unsigned max_count,
 	unsigned* hash_ids, unsigned* out_count);

@@ -1077,10 +1077,11 @@ static void test_version_sanity(void)
 static void test_generic_assumptions(void)
 {
 	dbg("test generic assumptions\n");
-	if (RHASH_HASH_COUNT < rhash_popcount(RHASH_ALL_HASHES)) {
-		log_error2("wrong algorithms count %d for low mask 0x%x\n", RHASH_HASH_COUNT, RHASH_ALL_HASHES);
+	if (RHASH_HASH_COUNT < rhash_popcount(RHASH_LOW_HASHES_MASK)) {
+		log_error2("wrong algorithms count %d for low mask 0x%x\n", RHASH_HASH_COUNT, RHASH_LOW_HASHES_MASK);
 	}
-	CHECK_TRUE(!(RHASH_EXTENDED_BIT & RHASH_ALL_HASHES), "bad RHASH_ALL_HASHES value");
+	CHECK_TRUE(RHASH_EXTENDED_BIT & RHASH_ALL_HASHES, "bad RHASH_ALL_HASHES value");
+	CHECK_TRUE(!(RHASH_EXTENDED_BIT & RHASH_LOW_HASHES_MASK), "bad RHASH_LOW_HASHES_MASK value");
 	test_endianness();
 	test_version_sanity();
 }
@@ -1278,8 +1279,13 @@ static uint64_t make_hash_mask(size_t count, unsigned hash_ids[])
 {
 	uint64_t hash_mask = 0;
 	size_t i;
+	if (count == 1 && hash_ids[0] == RHASH_ALL_HASHES)
+		return RHASH_LOW_HASHES_MASK;
 	for (i = 0; i < count; i++) {
-		hash_mask |= hash_ids[i];
+		if ((RHASH_EXTENDED_BIT & hash_ids[i]) != 0)
+			hash_mask |= I64(1) << (unsigned)(hash_ids[i] & ~RHASH_EXTENDED_BIT);
+		else
+			hash_mask |= hash_ids[i];
 	}
 	return hash_mask;
 }
@@ -1296,11 +1302,14 @@ static void test_magnet(const char* expected,
 	const char* path = (flags & TEST_PATH ? "test.txt" : NULL);
 	uint64_t hash_mask = make_hash_mask(count, hash_ids);
 	size_t size_calculated = rhash_print_magnet_multi(NULL, 0, path, ctx, flags, count, hash_ids);
-	size_t size_calculated_legacy = rhash_print_magnet(NULL, path, ctx, (unsigned)hash_mask, flags);
+	size_t size_calculated_legacy = (hash_mask < (uint64_t)RHASH_EXTENDED_BIT ?
+		rhash_print_magnet(NULL, path, ctx, (unsigned)hash_mask, flags) : 0);
 	size_t size_printed, size_printed_legacy;
+
 	REQUIRE_TRUE(size_calculated < sizeof(out), "too small buffer for magnet link\n");
 	CHECK_NE(0, size_calculated, "non zero buffer size expected to be returned\n");
-	CHECK_EQ(size_calculated, size_calculated_legacy, "wrong size_calculated_legacy\n");
+	if (size_calculated_legacy)
+		CHECK_EQ(size_calculated, size_calculated_legacy, "wrong size_calculated_legacy\n");
 
 	flags &= ~TEST_PATH;
 	if (size_calculated > 0) {
@@ -1308,8 +1317,11 @@ static void test_magnet(const char* expected,
 		CHECK_EQ(0, size_printed, "too small buffer error expected, but not occurred\n");
 	}
 	size_printed = rhash_print_magnet_multi(out, size_calculated, path, ctx, flags, count, hash_ids);
-	size_printed_legacy = rhash_print_magnet(out, path, ctx, (unsigned)hash_mask, flags);
-	CHECK_EQ(size_printed, size_printed_legacy, "wrong size_calculated_legacy\n");
+	if (size_calculated_legacy)
+	{
+		size_printed_legacy = rhash_print_magnet(out, path, ctx, (unsigned)hash_mask, flags);
+		CHECK_EQ(size_printed, size_printed_legacy, "wrong size_printed_legacy\n");
+	}
 
 	if (expected && strcmp(expected, out) != 0) {
 		log_error2("\"%s\" != \"%s\"\n", expected, out);

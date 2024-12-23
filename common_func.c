@@ -440,11 +440,31 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
 unsigned get_ctz(unsigned x)
 {
 	/* array for conversion to bit position */
-	static unsigned char bit_pos[32] =  {
+	static unsigned bit_pos[32] =  {
 		0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
 		31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9
 	};
 	return bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
+}
+/**
+ * Returns index of the trailing bit of a 64-bit number.
+ * This is a plain C equivalent for GCC __builtin_ctzll() bit scan.
+ * Original author: Matt Taylor (2003).
+ *
+ * @param x the number to process
+ * @return zero-based index of the trailing bit
+ */
+unsigned get_ctz64(uint64_t x)
+{
+	/* array for conversion to bit position */
+	static unsigned bit_pos[64] =  {
+		63, 30,  3, 32, 59, 14, 11, 33, 60, 24, 50,  9, 55, 19, 21, 34,
+		61, 29,  2, 53, 51, 23, 41, 18, 56, 28,  1, 43, 46, 27,  0, 35,
+		62, 31, 58,  4,  5, 49, 54,  6, 15, 52, 12, 40,  7, 42, 45, 16,
+		25, 57, 48, 13, 10, 39,  8, 44, 20, 47, 38, 22, 17, 37, 36, 26
+	};
+	uint32_t folded = (uint32_t)(((x - 1) >> 32) ^ (x - 1));
+	return bit_pos[folded * 0x78291ACF >> 26];
 }
 #endif
 

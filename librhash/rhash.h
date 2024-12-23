@@ -63,9 +63,15 @@ enum rhash_ids
 	RHASH_EXTENDED_BIT = (int)0x80000000,
 
 	/**
-	 * The bitmask containing all supported hash functions.
+	 * Virtual hash id to initialize all supported hash functions.
 	 */
-	RHASH_ALL_HASHES =
+	RHASH_ALL_HASHES = 0xff000000,
+
+	/**
+	 * Legacy value.
+	 * The bit-mask containing supported hash functions prior to rhash 1.4.5.
+	 */
+	RHASH_LOW_HASHES_MASK =
 		RHASH_CRC32 | RHASH_CRC32C | RHASH_MD4 | RHASH_MD5 |
 		RHASH_ED2K | RHASH_SHA1 |RHASH_TIGER | RHASH_TTH |
 		RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO | RHASH_GOST12_256 | RHASH_GOST12_512 |
