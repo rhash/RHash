@@ -194,7 +194,7 @@ void rhash_free(rhash ctx)
 
 	/* clean the hash functions, which require additional clean up */
 	for (i = 0; i < ectx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		if (info->cleanup != 0) {
 			info->cleanup(ectx->vector[i].context);
 		}
@@ -212,7 +212,7 @@ RHASH_API void rhash_reset(rhash ctx)
 
 	/* re-initialize every hash in a loop */
 	for (i = 0; i < ectx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		if (info->cleanup != 0) {
 			info->cleanup(ectx->vector[i].context);
 		}
@@ -237,7 +237,7 @@ RHASH_API int rhash_update(rhash ctx, const void* message, size_t length)
 
 	/* call update method for every algorithm */
 	for (i = 0; i < ectx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		assert(info->update != 0);
 		info->update(ectx->vector[i].context, message, length);
 	}
@@ -258,7 +258,7 @@ RHASH_API int rhash_final(rhash ctx, unsigned char* first_result)
 
 	/* call final method for every algorithm */
 	for (i = 0; i < ectx->hash_vector_size; i++) {
-		struct rhash_hash_info* info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* info = ectx->vector[i].hash_info;
 		assert(info->final != 0);
 		assert(info->info->digest_size < sizeof(buffer));
 		info->final(ectx->vector[i].context, out);
@@ -322,7 +322,7 @@ RHASH_API size_t rhash_export(rhash ctx, void* out, size_t size)
 	}
 	for (i = 0; i < ectx->hash_vector_size; i++) {
 		void* src_context = ectx->vector[i].context;
-		struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
 		unsigned is_special = (hash_info->info->flags & F_SPCEXP);
 		size_t item_size;
 		if (out != NULL) {
@@ -388,7 +388,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 	ectx->rc.msg_size = header->msg_size;
 	for (i = 0; i < ectx->hash_vector_size; i++) {
 		void* dst_context = ectx->vector[i].context;
-		struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
+		const struct rhash_hash_info* hash_info = ectx->vector[i].hash_info;
 		unsigned is_special = (hash_info->info->flags & F_SPCEXP);
 		size_t item_size;
 
@@ -440,9 +440,8 @@ static rhash_vector_item* rhash_get_info(rhash_context_ext* ectx, unsigned hash_
 		return &ectx->vector[0]; /* get the first hash */
 	} else {
 		unsigned i;
-		rhash_vector_item* item;
 		for (i = 0; i < ectx->hash_vector_size; i++) {
-			item = &ectx->vector[i];
+			rhash_vector_item* item = &ectx->vector[i];
 			assert(item->hash_info != NULL);
 			assert(item->hash_info->info != NULL);
 			if (item->hash_info->info->hash_id == hash_id)
@@ -460,7 +459,7 @@ static rhash_vector_item* rhash_get_info(rhash_context_ext* ectx, unsigned hash_
  */
 static void rhash_put_digest(rhash_vector_item* item, unsigned char* result)
 {
-	struct rhash_hash_info* info = item->hash_info;
+	const struct rhash_hash_info* info = item->hash_info;
 	unsigned char* digest = ((unsigned char*)item->context + info->digest_diff);
 
 	if (info->info->flags & F_SWAP32) {
@@ -654,7 +653,6 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	rhash_context_ext* ectx, unsigned hash_mask, int flags)
 {
 	size_t size = 0; /* count terminating '\0' */
-	unsigned bit;
 
 	/* RHPR_NO_MAGNET, RHPR_FILESIZE */
 	if ((flags & RHPR_NO_MAGNET) == 0) {
@@ -679,13 +677,15 @@ static size_t rhash_get_magnet_url_size(const char* filepath,
 	}
 
 	/* loop through hash values */
-	for (bit = hash_mask & -(int)hash_mask; bit <= hash_mask; bit <<= 1) {
-		const char* name;
-		if ((bit & hash_mask) == 0) continue;
-		if ((name = rhash_get_magnet_name(bit)) == 0) continue;
+	for (; hash_mask; hash_mask = hash_mask & (hash_mask - 1)) {
+		unsigned bit = hash_mask & -(int)hash_mask;
+		unsigned hash_id = bit;
+		const char* name = rhash_get_magnet_name(hash_id);
+		if (!name)
+			continue;
 
 		size += (7 + 2) + strlen(name);
-		size += rhash_print(NULL, &ectx->rc, bit,
+		size += rhash_print(NULL, &ectx->rc, hash_id,
 			(bit & RHASH_SHA1 ? RHPR_BASE32 : 0));
 	}
 
@@ -965,7 +965,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data)
 			unsigned i;
 			ENSURE_THAT(data);
 			for (i = 0; i < ctx->hash_vector_size; i++) {
-				struct rhash_hash_info* info = ctx->vector[i].hash_info;
+				const struct rhash_hash_info* info = ctx->vector[i].hash_info;
 				if (info->info->hash_id == (unsigned)size) {
 					*(void**)data = ctx->vector[i].context;
 					return 0;

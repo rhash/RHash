@@ -71,7 +71,7 @@ typedef struct rhash_hash_info
  */
 typedef struct rhash_vector_item
 {
-	struct rhash_hash_info* hash_info;
+	const struct rhash_hash_info* hash_info;
 	void* context;
 } rhash_vector_item;
 

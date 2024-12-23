@@ -218,7 +218,7 @@ static int load_openssl_runtime(void)
 	UINT oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 	SetErrorMode(oldErrorMode | SEM_FAILCRITICALERRORS);
 
-	for (i = 0; !handle && i < (sizeof(libNames) / sizeof(*libNames)); i++)
+	for (i = 0; !handle && i < RHASH_COUNTOF(libNames); i++)
 		handle = LoadLibraryA(libNames[i]);
 
 	SetErrorMode(oldErrorMode); /* restore error mode */
@@ -233,7 +233,7 @@ static int load_openssl_runtime(void)
 	};
 	void* handle = 0;
 	size_t i;
-	for (i = 0; !handle && i < (sizeof(libNames) / sizeof(*libNames)); i++)
+	for (i = 0; !handle && i < RHASH_COUNTOF(libNames); i++)
 		handle = dlopen(libNames[i], RTLD_NOW);
 #endif /* defined(_WIN32) || defined(__CYGWIN__) */
 
@@ -287,7 +287,7 @@ int rhash_plug_openssl(void)
 	memcpy(rhash_updated_hash_info, rhash_info_table, sizeof(rhash_updated_hash_info));
 
 	/* replace internal rhash methods with the OpenSSL ones */
-	for (i = 0; i < (int)(sizeof(rhash_openssl_hash_info) / sizeof(rhash_hash_info)); i++)
+	for (i = 0; i < (int)RHASH_COUNTOF(rhash_openssl_hash_info); i++)
 	{
 		rhash_hash_info* method = &rhash_openssl_hash_info[i];
 		if (!method->init)

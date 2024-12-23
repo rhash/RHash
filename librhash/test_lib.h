@@ -295,6 +295,9 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef OPENSSL_RUNTIME
 	" OPENSSL_RUNTIME"
 #endif
+#ifdef NO_ATOMIC_BUILTINS
+	" NO_ATOMIC_BUILTINS"
+#endif
 #ifdef HAS_WIN32_ALIGNED_ALLOC
 	" HAS_WIN32_ALIGNED_ALLOC"
 #endif

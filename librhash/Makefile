@@ -70,9 +70,9 @@ aich.o: aich.c aich.h algorithms.h rhash.h byte_order.h ustd.h sha1.h \
 	$(CC) -c $(CFLAGS) $< -o $@
 
 algorithms.o: algorithms.c algorithms.h rhash.h byte_order.h ustd.h \
- aich.h sha1.h blake2b.h blake2s.h crc32.h ed2k.h md4.h edonr.h gost12.h \
- gost94.h has160.h md5.h ripemd-160.h snefru.h sha256.h sha512.h sha3.h \
- tiger.h torrent.h tth.h whirlpool.h
+ util.h aich.h sha1.h blake2b.h blake2s.h crc32.h ed2k.h md4.h edonr.h \
+ gost12.h gost94.h has160.h md5.h ripemd-160.h snefru.h sha256.h sha512.h \
+ sha3.h tiger.h torrent.h tth.h whirlpool.h plug_openssl.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 blake2b.o: blake2b.c blake2b.h ustd.h byte_order.h
@@ -111,7 +111,8 @@ md4.o: md4.c byte_order.h ustd.h md4.h
 md5.o: md5.c byte_order.h ustd.h md5.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-plug_openssl.o: plug_openssl.c
+plug_openssl.o: plug_openssl.c plug_openssl.h algorithms.h rhash.h \
+ byte_order.h ustd.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 rhash.o: rhash.c rhash.h algorithms.h byte_order.h ustd.h hex.h \

@@ -30,8 +30,6 @@
 #include "rhash.h"
 #include "test_lib.h"
 
-#define COUNTOF(a) (sizeof(a) /  sizeof(*a))
-
 /*=========================================================================*
  *                              Test vectors                               *
  *=========================================================================*/
@@ -895,7 +893,7 @@ static void test_long_strings(void)
 	dbg("test long strings\n");
 
 	/* test all algorithms on 1,000,000 characters of 'a' */
-	for (count = 0; count < COUNTOF(tests); count++) {
+	for (count = 0; count < RHASH_COUNTOF(tests); count++) {
 		unsigned flags = (tests[count].hash_id == RHASH_BTIH ? CHDT_SET_FILENAME : CHDT_NO_FLAGS);
 		assert_rep_hash(tests[count].hash_id, 'a', 1000000, tests[count].expected_hash, flags);
 	}
@@ -1345,18 +1343,21 @@ static void test_magnet_links(void)
 	ctx	= rhash_init_multi(count, hash_ids_all);
 	rhash_update(ctx, "a", 1);
 	rhash_final(ctx, 0);
+
+	dbg2("- test specific magnet links\n");
 	test_magnet("magnet:?xl=1&dn=test.txt&xt=urn:tree:tiger:czquwh3iyxbf5l3bgyugzhassmxu647ip2ike4y",
-		ctx, RHPR_FILESIZE | TEST_PATH, COUNTOF(hash_ids_tth), hash_ids_tth);
+		ctx, RHPR_FILESIZE | TEST_PATH, RHASH_COUNTOF(hash_ids_tth), hash_ids_tth);
 	test_magnet("magnet:?xl=1&xt=urn:md5:0CC175B9C0F1B6A831C399E269772661",
-		ctx, RHPR_FILESIZE | RHPR_UPPERCASE, COUNTOF(hash_ids_md5), hash_ids_md5);
+		ctx, RHPR_FILESIZE | RHPR_UPPERCASE, RHASH_COUNTOF(hash_ids_md5), hash_ids_md5);
 	test_magnet(
 		"xt=urn:ed2k:bde52cb31de33e46245e05fbdbd6fb24&"
 		"xt=urn:aich:q336in72uwt7zyk5dxolt2xk5i3xmz5y&"
 		"xt=urn:sha1:q336in72uwt7zyk5dxolt2xk5i3xmz5y&"
 		"xt=urn:btih:827cd89846fc132e2e67e29c2784c65443bb4dc1",
-		ctx, RHPR_NO_MAGNET, COUNTOF(hash_ids_special), hash_ids_special);
+		ctx, RHPR_NO_MAGNET, RHASH_COUNTOF(hash_ids_special), hash_ids_special);
 
 	/* verify length calculation for all hashes */
+	dbg2("- test magnet link length for all hash ids\n");
 	for (i = 0; i < count; i++) {
 		unsigned hash_id = hash_ids_all[i];
 		test_magnet(NULL, ctx, RHPR_FILESIZE | RHPR_NO_MAGNET, 1, &hash_id);
@@ -1365,13 +1366,15 @@ static void test_magnet_links(void)
 	rhash_free(ctx);
 
 	/* test with two hash functions */
-	ctx	= rhash_init_multi(COUNTOF(hash_ids_crc32_tth), hash_ids_crc32_tth);
+	dbg2("- test magnet link with two hash functions\n");
+	ctx	= rhash_init_multi(RHASH_COUNTOF(hash_ids_crc32_tth), hash_ids_crc32_tth);
 	rhash_update(ctx, "abc", 3);
 	rhash_final(ctx, 0);
 	test_magnet(
 		"magnet:?xl=3&xt=urn:crc32:352441c2&"
 		"xt=urn:tree:tiger:asd4ujseh5m47pdyb46kbtsqtsgdklbhyxomuia",
 		ctx, RHPR_FILESIZE, 1, &hash_id_all_hashes);
+	rhash_free(ctx);
 }
 
 /**

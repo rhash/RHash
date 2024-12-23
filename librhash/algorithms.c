@@ -17,6 +17,7 @@
 #include "algorithms.h"
 #include "byte_order.h"
 #include "rhash.h"
+#include "util.h"
 
 /* header files of all supported hash functions */
 #include "aich.h"
@@ -116,7 +117,7 @@ rhash_info info_sha3_512 = { RHASH_SHA3_512, F_LE64, 64, "SHA3-512", "sha3-512" 
 #define iuf2(name1, name2) ini(name1), upd(name2), fin(name2)
 
 /* information about all supported hash functions */
-rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT] =
+rhash_hash_info rhash_hash_info_default[] =
 {
 	{ &info_crc32, sizeof(uint32_t), 0, iuf(rhash_crc32), 0 }, /* 32 bit */
 	{ &info_md4, sizeof(md4_ctx), dgshft(md4), iuf(rhash_md4), 0 }, /* 128 bit */
@@ -161,7 +162,7 @@ void rhash_init_algorithms(unsigned mask)
 	(void)mask; /* unused now */
 
 	/* check RHASH_HASH_COUNT */
-	assert(rhash_popcount(RHASH_ALL_HASHES) == RHASH_HASH_COUNT);
+	RHASH_ASSERT(RHASH_COUNTOF(rhash_hash_info_default) == RHASH_HASH_COUNT);
 
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
 	rhash_gost94_init_table();
