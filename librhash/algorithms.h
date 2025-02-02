@@ -126,6 +126,9 @@ extern rhash_info info_edr512;
 #define IS_EXTENDED_HASH_ID(hash_id) ((hash_id) & RHASH_EXTENDED_BIT)
 #define GET_EXTENDED_HASH_ID_INDEX(hash_id) ((unsigned)((hash_id) & ~RHASH_EXTENDED_BIT))
 #define EXTENDED_HASH_ID(index) ((unsigned)(RHASH_EXTENDED_BIT | (index)))
+#define EXTENDED_SHA1 EXTENDED_HASH_ID(3)
+#define EXTENDED_BTIH EXTENDED_HASH_ID(6)
+#define EXTENDED_WHIRLPOOL EXTENDED_HASH_ID(9)
 
 /* rhash_info flags */
 #define F_BS32 1   /* default output in base32 */

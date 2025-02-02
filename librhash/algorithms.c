@@ -368,7 +368,7 @@ void rhash_load_sha1_methods(rhash_hashing_methods* methods, int methods_type)
 			use_openssl = 1;
 			break;
 		case METHODS_SELECTED:
-			assert(rhash_info_table[3].info->hash_id == RHASH_SHA1);
+			assert(rhash_info_table[3].info->hash_id == EXTENDED_SHA1);
 			use_openssl = ARE_OPENSSL_METHODS(rhash_info_table[3]);
 			break;
 		default:

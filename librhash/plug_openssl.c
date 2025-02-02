@@ -131,7 +131,7 @@ static void wrapWHIRLPOOL_Final(void* ctx, unsigned char* result)
 	memcpy(result, ((WHIRLPOOL_CTX*)ctx)->H.c, 64);
 }
 
-rhash_info info_ossl_whirlpool = { RHASH_WHIRLPOOL, 0, 64, "WHIRLPOOL", "whirlpool" };
+rhash_info info_ossl_whirlpool = { EXTENDED_WHIRLPOOL, 0, 64, "WHIRLPOOL", "whirlpool" };
 #endif
 
 #define NO_HASH_INFO { 0, 0, 0, 0, 0, 0, 0 }
@@ -273,6 +273,7 @@ static int load_openssl_runtime(void)
 int rhash_plug_openssl(void)
 {
 	size_t i;
+	uint64_t bit;
 	unsigned bit_index;
 
 	assert(rhash_info_size <= RHASH_HASH_COUNT); /* buffer-overflow protection */
@@ -293,10 +294,11 @@ int rhash_plug_openssl(void)
 		rhash_hash_info* method = &rhash_openssl_hash_info[i];
 		if (!method->init)
 			continue;
-		openssl_available_algorithms_hash_mask |= method->info->hash_id;
-		if ((openssl_enabled_hash_mask & method->info->hash_id) == 0)
+		bit_index = GET_EXTENDED_HASH_ID_INDEX(method->info->hash_id);
+		bit = I64(1) << bit_index;
+		openssl_available_algorithms_hash_mask |= bit;
+		if ((openssl_enabled_hash_mask & bit) == 0)
 			continue;
-		bit_index = rhash_ctz(method->info->hash_id);
 		assert(method->info->hash_id == rhash_updated_hash_info[bit_index].info->hash_id);
 		memcpy(&rhash_updated_hash_info[bit_index], method, sizeof(rhash_hash_info));
 	}

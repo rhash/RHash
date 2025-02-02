@@ -140,7 +140,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 		rctx->vector[i].context = phash_ctx;
 
 		/* BTIH initialization is a bit complicated, so store the context pointer for later usage */
-		if (info->info->hash_id == EXTENDED_HASH_ID(6))
+		if (info->info->hash_id == EXTENDED_BTIH)
 			rctx->bt_ctx = phash_ctx;
 		phash_ctx += GET_CTX_ALIGNED(info->context_size);
 
@@ -991,8 +991,14 @@ static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 {
 	unsigned bitmask = 0;
 	size_t i;
-	for (i = 0; i < count; i++)
-		bitmask |= data[i];
+	for (i = 0; i < count; i++) {
+		if (!IS_EXTENDED_HASH_ID(data[i]))
+			bitmask |= data[i];
+		else if (data[i] == RHASH_ALL_HASHES)
+			bitmask |= RHASH_LOW_HASHES_MASK;
+		else
+			bitmask |= 1 << GET_EXTENDED_HASH_ID_INDEX(data[i]);
+	}
 	return bitmask;
 }
 #endif
