@@ -4,6 +4,7 @@
 /* Fix #138: require to use MSVCRT implementation of *printf functions */
 #define __USE_MINGW_ANSI_STDIO 0
 #include "win_utils.h"
+# define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 /**

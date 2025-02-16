@@ -59,10 +59,11 @@ static uint64_t read_tsc(void) {
 /* TIMER FUNCTIONS */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
-#include <windows.h>
-#define get_timedelta(delta) QueryPerformanceCounter((LARGE_INTEGER*)delta)
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+# define get_timedelta(delta) QueryPerformanceCounter((LARGE_INTEGER*)delta)
 #else
-#define get_timedelta(delta) gettimeofday(delta, NULL)
+# define get_timedelta(delta) gettimeofday(delta, NULL)
 #endif
 
 /**

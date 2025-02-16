@@ -20,6 +20,7 @@ extern "C" {
 /* note: ICC on ia64 platform possibly require ia64intrin.h, need testing */
 # define atomic_compare_and_swap(ptr, oldval, newval) __sync_val_compare_and_swap(ptr, oldval, newval)
 #elif defined(_MSC_VER)
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 # define atomic_compare_and_swap(ptr, oldval, newval) InterlockedCompareExchange(ptr, newval, oldval)
 #elif defined(__sun)

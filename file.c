@@ -20,6 +20,7 @@
 #include <fcntl.h>  /* _O_RDONLY, _O_BINARY, posix_fadvise */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 #if !defined(__CYGWIN__)
 # include <share.h> /* for _SH_DENYWR */

@@ -935,7 +935,8 @@ RHASH_API size_t rhash_print(char* output, rhash context, unsigned hash_id, int 
 }
 
 #if (defined(_WIN32) || defined(__CYGWIN__)) && defined(RHASH_EXPORTS)
-#include <windows.h>
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved);
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved)
 {

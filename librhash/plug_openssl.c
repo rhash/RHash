@@ -59,6 +59,7 @@
 
 #if defined(OPENSSL_RUNTIME)
 #  if defined(_WIN32) || defined(__CYGWIN__)
+#    define WIN32_LEAN_AND_MEAN
 #    include <windows.h>
 #  else
 #    include <dlfcn.h>

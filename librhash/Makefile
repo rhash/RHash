@@ -111,7 +111,7 @@ md4.o: md4.c byte_order.h ustd.h md4.h
 md5.o: md5.c byte_order.h ustd.h md5.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-plug_openssl.o: plug_openssl.c plug_openssl.h algorithms.h rhash.h \
+plug_openssl.o: plug_openssl.c util.h plug_openssl.h algorithms.h rhash.h \
  byte_order.h ustd.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
