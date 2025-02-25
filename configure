@@ -6,6 +6,7 @@ OPT_STATIC=auto
 OPT_OPENSSL=auto
 OPT_OPENSSL_RUNTIME=auto
 OPT_GETTEXT=auto
+OPT_SHANI=auto
 OPT_CC=
 
 export LC_ALL=C
@@ -17,6 +18,9 @@ CMD_INSTALL=install
 BUILD_DEBUG=
 BUILD_EXTRA_CFLAGS=
 BUILD_EXTRA_LDFLAGS=
+RHASH_LOCALE_CFLAGS=
+RHASH_DEFINES=
+LIBRHASH_DEFINES=
 CHECK_LDFLAGS=
 WARN_CFLAGS="-Wall -W -Wstrict-prototypes -Wnested-externs -Winline -Wpointer-arith -Wbad-function-cast -Wmissing-prototypes -Wmissing-declarations"
 INSTALL_SYMLINKS="sfv-hash has160-hash gost12-256-hash gost12-512-hash edonr256-hash edonr512-hash tiger-hash tth-hash whirlpool-hash ed2k-link magnet-link"
@@ -161,6 +165,9 @@ for OPT do
       ;;
     --disable-gettext)
       OPT_GETTEXT=no
+      ;;
+    --disable-shani)
+      OPT_SHANI=no
       ;;
     --enable-openssl)
       OPT_OPENSSL=yes
@@ -383,9 +390,9 @@ compile_check() {
   echo "----- source file: $source -----" >> "$TMPLOG"
   cat "$source" >> "$TMPLOG"
   echo "----- end of file: $source -----" >> "$TMPLOG"
-  echo "$CC $OPTFLAGS $WARN_CFLAGS $CFLAGS $source $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o $TMPBIN $@" >> "$TMPLOG"
+  echo "$CC $OPTFLAGS $WARN_CFLAGS $source $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o $TMPBIN $@" >> "$TMPLOG"
   rm -f "$TMPBIN"
-  $CC $OPTFLAGS $WARN_CFLAGS $CFLAGS "$source" $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o "$TMPBIN" "$@" >> "$TMPLOG" 2>&1
+  $CC $OPTFLAGS $WARN_CFLAGS "$source" $BUILD_EXTRA_CFLAGS $BUILD_EXTRA_LDFLAGS $CHECK_LDFLAGS -o "$TMPBIN" "$@" >> "$TMPLOG" 2>&1
   TMPRES="$?"
   echo "Compilation result: $TMPRES" >> "$TMPLOG"
   echo >> "$TMPLOG"
@@ -758,6 +765,27 @@ elif test "$OPT_OPENSSL" = "auto" || test "$OPT_OPENSSL" = "runtime"; then
   finish_check "$ALLOW_RUNTIME_LINKING"
 fi
 
+HAS_SSE4=no
+HAS_X86_SSE4_SHANI="no"
+if test "$OPT_SHANI" = "auto"; then
+  start_check "sha1 intrinsics"
+  if cc_check_statement "x86intrin.h" \
+      "__m128i a = _mm_setzero_si128(); (void)_mm_extract_epi32(a, 0);" \
+      "-msse4"; then
+    HAS_SSE4=yes
+	# Now check for the SHANI extension
+    if cc_check_statement "x86intrin.h" \
+        "__m128i a = _mm_setzero_si128(); a = _mm_sha1rnds4_epu32(a, a, 0);" \
+        "-msse4 -msha";
+    then
+      HAS_X86_SSE4_SHANI=yes
+	  OPTFLAGS=$(join_params $OPTFLAGS -msse4 -msha)
+	  LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DRHASH_SSE4_SHANI)
+    fi
+  fi
+  finish_check "$HAS_X86_SSE4_SHANI"
+fi
+
 SHARED_VSCRIPT=
 if ! darwin; then
   start_check "linker support for --version-script"
@@ -808,9 +836,6 @@ fi
 test "x$LIBRHASH_SO_MAJ" != "x$LIBRHASH_SHARED" && LIBRHASH_RM_FILES="$LIBRHASH_RM_FILES $LIBRHASH_SO_MAJ"
 LIBRHASH_RM_FILES=$(join_params $LIBRHASH_RM_FILES $LIBRHASH_EXPORTS_TARGET $LIBRHASH_SOLINK_TARGET)
 
-RHASH_DEFINES=
-LIBRHASH_DEFINES=
-RHASH_LOCALE_CFLAGS=
 GETTEXT_LDFLAGS=
 OPENSSL_LDFLAGS=
 if test "$OPT_GETTEXT" != "no"; then

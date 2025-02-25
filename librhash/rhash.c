@@ -60,7 +60,7 @@
 
 RHASH_API void rhash_library_init(void)
 {
-	rhash_init_algorithms(RHASH_LOW_HASHES_MASK);
+	rhash_init_algorithms();
 #ifdef USE_OPENSSL
 	rhash_plug_openssl();
 #endif

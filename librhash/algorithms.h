@@ -93,7 +93,6 @@ typedef struct rhash_context_ext
 extern rhash_hash_info rhash_hash_info_default[RHASH_HASH_COUNT];
 extern rhash_hash_info* rhash_info_table;
 extern int rhash_info_size;
-extern unsigned rhash_uninitialized_algorithms;
 
 extern rhash_info info_crc32;
 extern rhash_info info_crc32c;
@@ -149,7 +148,7 @@ extern rhash_info info_edr512;
 #define F_BE64 0
 #endif
 
-void rhash_init_algorithms(unsigned mask);
+void rhash_init_algorithms(void);
 const rhash_hash_info* rhash_hash_info_by_id(unsigned hash_id); /* get hash sum info by hash id */
 const unsigned* rhash_get_all_hash_ids(unsigned all_id, size_t* count);
 

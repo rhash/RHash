@@ -190,15 +190,44 @@ void rhash_u32_mem_swap(unsigned* arr, int length)
 	}
 }
 
-#ifdef HAS_INTEL_CPUID
-#include <cpuid.h>
+#if !defined(has_cpu_feature)
+# if defined(HAS_GCC_INTEL_CPUID)
+#  include <cpuid.h>
+#  define RHASH_CPUID(id, regs) \
+        __get_cpuid(id, &(regs[0]), &(regs[1]), &(regs[2]), &(regs[3]));
+#  if HAS_GNUC(6, 3)
+#   define RHASH_CPUIDEX(id, sub_id, regs) \
+        __get_cpuid_count(id, sub_id, &regs[0], &regs[1], &regs[2], &regs[3]);
+#  endif
+# elif defined(HAS_MSVC_INTEL_CPUID)
+#  define RHASH_CPUID(id, regs) __cpuid((int*)regs, id)
+#  if _MSC_VER >= 1600
+#   define RHASH_CPUIDEX(id, sub_id, regs) __cpuidex((int*)regs, id, sub_id);
+#  endif
+# else
+#  error "Unsupported platform"
+#endif /* HAS_GCC_INTEL_CPUID */
 
 static uint64_t get_cpuid_features(void)
 {
-	uint32_t tmp, edx, ecx;
-	if (__get_cpuid(1, &tmp, &tmp, &ecx, &edx))
-		return ((((uint64_t)ecx) << 32) ^ edx);
-	return 0;
+	uint32_t cpu_info[4] = {0};
+	uint64_t result = 0;
+	/* Request basic CPU functions */
+	RHASH_CPUID(1, cpu_info);
+	/* Store features, but clear bit 29 to store SHANI bit later */
+	result = ((((uint64_t)cpu_info[2]) << 32) ^
+		(cpu_info[3] & ~(1 << 29)));
+#ifdef RHASH_CPUIDEX
+	/* Check if CPUID requests for feature_id >= 7 are supported */
+	RHASH_CPUID(0, cpu_info);
+	if (cpu_info[0] >= 7)
+	{
+		/* Request CPUID AX=7 CX=0 to get SHANI bit */
+        RHASH_CPUIDEX(7, 0, cpu_info);
+		result |= (cpu_info[1] & (1 << 29));
+	}
+#endif
+	return result;
 }
 
 int has_cpu_feature(unsigned feature_bit)
@@ -209,4 +238,4 @@ int has_cpu_feature(unsigned feature_bit)
 		features = (get_cpuid_features() | 1);
 	return !!(features & feature);
 }
-#endif
+#endif /* has_cpu_feature */

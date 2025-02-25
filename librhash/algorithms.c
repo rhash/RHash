@@ -33,6 +33,7 @@
 #include "md5.h"
 #include "ripemd-160.h"
 #include "snefru.h"
+#include "sha_ni.h"
 #include "sha1.h"
 #include "sha256.h"
 #include "sha512.h"
@@ -47,23 +48,7 @@
 #endif /* USE_OPENSSL */
 #include <assert.h>
 
-#ifdef USE_OPENSSL
-/* note: BTIH and AICH depends on the used SHA1 algorithm */
-# define NEED_OPENSSL_INIT (RHASH_MD4 | RHASH_MD5 | \
-	RHASH_SHA1 | RHASH_SHA224 | RHASH_SHA256 | RHASH_SHA384 | RHASH_SHA512 | \
-	RHASH_BTIH | RHASH_AICH | RHASH_RIPEMD160 | RHASH_WHIRLPOOL)
-#else
-# define NEED_OPENSSL_INIT 0
-#endif /* USE_OPENSSL */
-
-#ifdef GENERATE_GOST94_LOOKUP_TABLE
-# define NEED_GOST94_INIT (RHASH_GOST94 | RHASH_GOST94_CRYPTOPRO)
-#else
-# define NEED_GOST94_INIT 0
-#endif /* GENERATE_GOST94_LOOKUP_TABLE */
-
-#define RHASH_NEED_INIT_ALG (NEED_GOST94_INIT | NEED_OPENSSL_INIT)
-unsigned rhash_uninitialized_algorithms = RHASH_NEED_INIT_ALG;
+static unsigned algorithms_initialized_flag = 0;
 
 rhash_hash_info* rhash_info_table = rhash_hash_info_default;
 int rhash_info_size = RHASH_HASH_COUNT;
@@ -152,15 +137,33 @@ rhash_hash_info rhash_hash_info_default[] =
 	{ &info_blake2b, sizeof(blake2b_ctx),  dgshft(blake2b), iuf(rhash_blake2b), 0 },  /* 512 bit */
 };
 
+#if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
+static void table_init_sha_ext(void)
+{
+	if (has_cpu_feature(CPU_FEATURE_SHANI))
+	{
+		assert(rhash_hash_info_default[3].init == (pinit_t)rhash_sha1_init);
+		rhash_hash_info_default[3].update = (pupdate_t)rhash_sha1_ni_update;
+		rhash_hash_info_default[3].final = (pfinal_t)rhash_sha1_ni_final;
+		assert(rhash_hash_info_default[16].init == (pinit_t)rhash_sha224_init);
+		rhash_hash_info_default[16].update = (pupdate_t)rhash_sha256_ni_update;
+		rhash_hash_info_default[16].final = (pfinal_t)rhash_sha256_ni_final;
+		assert(rhash_hash_info_default[17].init == (pinit_t)rhash_sha256_init);
+		rhash_hash_info_default[17].update = (pupdate_t)rhash_sha256_ni_update;
+		rhash_hash_info_default[17].final = (pfinal_t)rhash_sha256_ni_final;
+	}
+}
+#else
+# define table_init_sha_ext() {}
+#endif
+
 /**
  * Initialize requested algorithms.
- *
- * @param mask ids of hash sums to initialize
  */
-void rhash_init_algorithms(unsigned mask)
+void rhash_init_algorithms(void)
 {
-	(void)mask; /* unused now */
-
+	if (algorithms_initialized_flag)
+		return;
 	/* check RHASH_HASH_COUNT */
 	RHASH_ASSERT((RHASH_LOW_HASHES_MASK >> RHASH_HASH_COUNT) == 0);
 	RHASH_ASSERT(RHASH_COUNTOF(rhash_hash_info_default) == RHASH_HASH_COUNT);
@@ -168,7 +171,8 @@ void rhash_init_algorithms(unsigned mask)
 #ifdef GENERATE_GOST94_LOOKUP_TABLE
 	rhash_gost94_init_table();
 #endif
-	rhash_uninitialized_algorithms = 0;
+	table_init_sha_ext();
+	atomic_compare_and_swap(&algorithms_initialized_flag, 0, 1);
 }
 
 /**

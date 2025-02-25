@@ -210,9 +210,13 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 #define ROTR64(qword, n) ((qword) >> (n) ^ ((qword) << (64 - (n))))
 
 #define CPU_FEATURE_SSE4_2 (52)
+#define CPU_FEATURE_SHANI (29)
 
-#if HAS_GNUC(4, 3) && (defined(CPU_X64) || defined(CPU_IA32))
-# define HAS_INTEL_CPUID
+#if (HAS_GNUC(3, 4) || defined(__clang__)) && (defined(CPU_X64) || defined(CPU_IA32))
+# define HAS_GCC_INTEL_CPUID
+int has_cpu_feature(unsigned feature_bit);
+#elif (_MSC_VER >= 1310) && (_M_IX86 || _M_AMD64)
+# define HAS_MSVC_INTEL_CPUID
 int has_cpu_feature(unsigned feature_bit);
 #else
 # define has_cpu_feature(x) (0)
