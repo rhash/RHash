@@ -724,7 +724,7 @@ elif darwin; then
   SHARED_EXT=".${RHASH_VERSION}.dylib"
   SO_MAJ_EXT=".${RHASH_VERSION_MAJOR}.dylib"
   SOLINK_EXT=".dylib"
-elif linux || bsd; then
+elif linux || bsd || gnu; then
   # use the full library version for the library file extension
   SHARED_EXT=".so.${RHASH_VERSION}"
 fi
