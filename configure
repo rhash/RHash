@@ -533,6 +533,7 @@ else
       wine) TARGET_OS=Wine ;;
       darwin*) TARGET_OS=Darwin ;;
       cygwin*) TARGET_OS=CYGWIN ;;
+      gnu) TARGET_OS=GNU ;;
     esac
   }
   TARGET_OS="UNKNOWN"
