@@ -312,6 +312,12 @@ char* compiler_flags = "Compile-time flags:"
 #endif
 
 /* cpu features */
+#ifdef HAS_GCC_INTEL_CPUID
+	" HAS_GCC_INTEL_CPUID"
+#endif
+#ifdef HAS_MSVC_INTEL_CPUID
+	" HAS_MSVC_INTEL_CPUID"
+#endif
 #ifdef CPU_X64
 	" CPU_X64"
 #endif
