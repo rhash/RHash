@@ -1038,6 +1038,8 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data)
 			ctx->flags |= RCTX_AUTO_FINAL;
 		break;
 
+	case RMSG_HAS_CPU_FEATURE:
+		return (size_t)has_cpu_feature((unsigned)size);
 	case RMSG_GET_ALL_ALGORITHMS:
 		if (data && size) {
 			const unsigned* hash_ids;

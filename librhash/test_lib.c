@@ -1412,6 +1412,16 @@ static unsigned find_hash(const char* name)
 }
 
 /**
+ * Detect and print CPU features.
+ */
+static void print_cpu_features(void)
+{
+	printf("CPU:%s%s\n",
+		(rhash_has_cpu_feature(CPU_FEATURE_SSE4_2) ? " SSE_4.2" : ""),
+		(rhash_has_cpu_feature(CPU_FEATURE_SHANI) ? " SHANI" : ""));
+}
+
+/**
  * Print status of OpenSSL plugin.
  */
 static void print_openssl_status(void)
@@ -1492,6 +1502,7 @@ int main(int argc, char* argv[])
 	test_generic_assumptions();
 	if (print_info) {
 		printf("%s", compiler_flags);
+		print_cpu_features();
 		print_openssl_status();
 	} else if (test_speed) {
 		test_known_strings(hash_id);

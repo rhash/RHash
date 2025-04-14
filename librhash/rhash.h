@@ -510,6 +510,7 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
 #define RMSG_IS_CANCELED 3
 #define RMSG_GET_FINALIZED 4
 #define RMSG_SET_AUTOFINAL 5
+#define RMSG_HAS_CPU_FEATURE 9
 #define RMSG_GET_ALL_ALGORITHMS 14
 #define RMSG_GET_CTX_ALGORITHMS 15
 #define RMSG_GET_OPENSSL_SUPPORTED 16
@@ -554,6 +555,12 @@ RHASH_API size_t rhash_ctrl(rhash context, int cmd, size_t size, void* data);
  */
 #define rhash_set_autofinal(ctx, on) \
 	rhash_ctrl((ctx), RMSG_SET_AUTOFINAL, (on), NULL)
+
+/**
+ * Check if the given feature is supported by CPU.
+ */
+#define rhash_has_cpu_feature(feature) \
+	rhash_ctrl(NULL, RMSG_HAS_CPU_FEATURE, (feature), NULL)
 
 /**
  * Fill the hash_ids array by identifiers of all algorithms supported
