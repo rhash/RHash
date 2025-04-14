@@ -8,16 +8,46 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    name: Build and test on the latest Ubuntu
 
     steps:
     - uses: actions/checkout@v4
+
     - name: configure
       run: ./configure --disable-openssl --enable-gettext --enable-debug=-O0
+
     - name: make
       run: make
-    - name: make test-lib
-      run: make test-lib
+
+    - name: make test-lib print-info
+      run: make test-lib print-info
+
+    - name: make test-full
+      run: make test-full
+
+  build-powerpc64:
+    runs-on: ubuntu-latest
+    name: Build and test on PowerPC 64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y qemu-user-static binfmt-support \
+          gcc-powerpc64-linux-gnu libc-dev-ppc64-cross
+
+    - name: configure
+      run: |
+        ./configure --disable-openssl --disable-gettext --enable-static \
+          --cc=powerpc64-linux-gnu-gcc
+
+    - name: make
+      run: make
+
+    - name: make test-lib print-info
+      run: make test-lib print-info
+
     - name: make test-full
       run: make test-full
