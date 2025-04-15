@@ -590,7 +590,7 @@ void run_benchmark(uint64_t hash_mask, unsigned flags)
 	sz_mb = msg_size / (1 << 20); /* size in MiB */
 
 	if (hash_mask && (hash_mask & (hash_mask - 1)) == 0) {
-		hash_name = rhash_get_name(hash_id_to_bit64(hash_mask));
+		hash_name = rhash_get_name(bit64_to_hash_id(hash_mask));
 		if (!hash_name) hash_name = ""; /* unsupported hash function */
 	}
 	RSH_REQUIRE(hash_mask_to_hash_ids(hash_mask, 64, hash_ids, &hash_ids_count) >= 0,

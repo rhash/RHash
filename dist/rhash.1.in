@@ -13,7 +13,8 @@ rhash \- calculate/check CRC32, MD5, SHA1, GOST, TTH, BTIH or other message dige
 computes and verifies various message digests and checksums of files.
 Supported hash algorithms include CRC32, CRC32C, MD4, MD5, SHA1,
 SHA256, SHA512, SHA3, Tiger, DC++ TTH, BTIH, AICH, ED2K, GOST R 34.11\-*,
-RIPEMD\-160, HAS\-160, BLAKE2s/BLAKE2b, EDON\-R 256/512, Whirlpool, Snefru\-128/256.
+RIPEMD\-160, HAS\-160, BLAKE2s/BLAKE2b, BLAKE3, EDON\-R 256/512,
+Whirlpool, Snefru\-128/256.
 
 The program can create and verify Magnet links
 and eDonkey ed2k:// links, see \-\-magnet and \-\-ed2k\-link options.
@@ -119,6 +120,8 @@ SNEFRU: Select SNEFRU\-128/256 hash function.
 EDON\-R: Select EDON\-R 256/512 hash function.
 .IP "\-\-blake2b, \-\-blake2s"
 BLAKE2: Select BLAKE2b/BLAKE2s hash function.
+.IP "\-\-blake3"
+BLAKE3: Select BLAKE3 hash function.
 
 .IP "\-a, \-\-all"
 Calculate all supported hash functions.
@@ -308,7 +311,7 @@ Whirlpool message digest.
  %{gost94}, %{gost94\-cryptopro}, %{gost12\-256}, %{gost12\-512},\
  %{sha\-224}, %{sha\-256}, %{sha\-384}, %{sha\-512},\
  %{sha3\-224}, %{sha3\-256}, %{sha3\-384}, %{sha3\-512},\
- %{edon\-r256}, %{edon\-r512}, %{blake2s}, %{blake2b},\
+ %{edon\-r256}, %{edon\-r512}, %{blake2s}, %{blake2b}, %{blake3},\
  %{snefru128}, %{snefru256}"
 Print the specified message digest. It is printed in uppercase, if the
 hash function name starts with a capital letter, e.g. %{TTH}, %{Sha-512}.
@@ -323,7 +326,7 @@ placing a hardlink/symlink to it with a filename containing strings `crc32',
 `sha3\-256', `sha3\-512', `sha3\-224', `sha3\-384', `tiger', `tth',
 `btih', `aich', `ed2k', `ed2k\-link', `gost12\-256', `gost12\-512',
 `gost94', `gost94\-cryptopro', `rmd160', `has160', `whirlpool',
-`edonr256', `edonr512', `blake2s', `blake2b',
+`edonr256', `edonr512', `blake2s', `blake2b', `blake3',
 `snefru128', `snefru256', `sfv' , `bsd' or `magnet'.
 
 .SH CONFIG FILE
