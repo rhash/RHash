@@ -309,9 +309,8 @@ TEST_EXPECTED="magnet:?xl=1024&dn=test1K.data&xt=urn:tree:tiger:4oqy25un2xhidqpv
 check "$TEST_RESULT" "$TEST_EXPECTED" .
 # also test that '--check' verifies files in the current directory
 mkdir magnet_dir && $rhash --magnet -a test1K.data > magnet_dir/t.magnet
-TEST_RESULT=$( $rhash -vc magnet_dir/t.magnet 2>&1 | grep test1K.data )
-TEST_EXPECTED="^test1K.data *OK"
-match "$TEST_RESULT" "$TEST_EXPECTED"
+TEST_RESULT=$( $rhash -c --skip-ok --brief magnet_dir/t.magnet )
+check "$TEST_RESULT" "Everything OK"
 
 new_test "test bsd format checking:   "
 TEST_RESULT=$( $rhash --bsd -a test1K.data | $rhash -c --skip-ok --brief - 2>&1 )

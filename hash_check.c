@@ -767,7 +767,7 @@ static int parse_magnet_url(struct hash_token* token)
 				break;
 			case THREEC2U('x', 't', '='): /* a file hash */
 				{
-					int i;
+					uint64_t hash_mask;
 					/* find last ':' character (hash name can be complex like tree:tiger) */
 					for (hf_end = param_end - 1; *hf_end != ':' && hf_end > token->begin; hf_end--);
 
@@ -778,13 +778,17 @@ static int parse_magnet_url(struct hash_token* token)
 							FOURC2U('u', 'r', 'n', ':'))
 						return ResFailed;
 					/* find hash by its magnet link specific URN name  */
-					for (i = 0; i < RHASH_HASH_COUNT; i++) {
-						const char* urn = rhash_get_magnet_name(1 << i);
+					for (hash_mask = get_all_supported_hash_mask(); hash_mask; hash_mask &= hash_mask - 1) {
+						uint64_t bit64 = hash_mask & -hash_mask;
+						unsigned hash_id = bit64_to_hash_id(bit64);
+						const char* urn = rhash_get_magnet_name(hash_id);
 						size_t len = hf_end - token->begin;
-						if (strncmp(token->begin, urn, len) == 0 && urn[len] == '\0')
+						if (strncmp(token->begin, urn, len) == 0 && urn[len] == '\0') {
+							token->expected_hash_id = hash_id;
 							break;
+						}
 					}
-					if (i >= RHASH_HASH_COUNT) {
+					if (!hash_mask) {
 						if (opt.verbose) {
 							*hf_end = '\0';
 							log_warning(_("unknown hash in magnet link: %s\n"), token->begin);
@@ -792,7 +796,6 @@ static int parse_magnet_url(struct hash_token* token)
 						return ResFailed;
 					}
 					token->begin = hf_end + 1;
-					token->expected_hash_id = 1 << i;
 					token->hash_type = (FmtHex | FmtBase32);
 					if (!match_hash_tokens(token, "\3", 0))
 						return ResFailed;

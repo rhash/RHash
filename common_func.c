@@ -643,6 +643,7 @@ void rsh_str_ensure_size(strbuf_t* str, size_t new_size)
  */
 void rsh_str_append_n(strbuf_t* str, const char* text, size_t length)
 {
+	assert(text);
 	rsh_str_ensure_length(str, str->len + length + 1);
 	memcpy(str->str + str->len, text, length);
 	str->len += length;
@@ -657,5 +658,6 @@ void rsh_str_append_n(strbuf_t* str, const char* text, size_t length)
  */
 void rsh_str_append(strbuf_t* str, const char* text)
 {
+	assert(text);
 	rsh_str_append_n(str, text, strlen(text));
 }

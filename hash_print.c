@@ -708,7 +708,7 @@ void init_hash_info_table(void)
 		}
 		*d = 0;
 		if ((bit64 & custom_bsd_name) != 0) {
-			switch (hash_id) {
+			switch ((unsigned)bit64) {
 				case RHASH_RIPEMD160:
 					info->bsd_name = "RMD160";
 					break;
@@ -730,9 +730,13 @@ void init_hash_info_table(void)
 				case RHASH_BLAKE2B:
 					info->bsd_name = "BLAKE2b";
 					break;
+				default:
+					assert(!"unknown custom bsd name");
+					break;
 			}
 		} else
 			info->bsd_name = info->name;
+		assert(info->bsd_name);
 		++info;
 	}
 	assert((info - hash_info_table) == RHASH_HASH_COUNT);
@@ -833,6 +837,7 @@ strbuf_t* init_printf_format(void)
 					rsh_str_append(out, rhash_get_magnet_name(info->hash_id));
 					break;
 				case 3:
+
 					rsh_str_append(out, info->bsd_name);
 					/* add some spaces after the hash BSD name */
 					i = (int)strlen(info->bsd_name);
