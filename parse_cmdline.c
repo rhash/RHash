@@ -81,6 +81,8 @@ static void print_help(void)
 	print_help_line("  -H, --sha1       ", digest_format, "SHA1");
 	print_help_line("      --sha224, --sha256, --sha384, --sha512 ", digest_format, "SHA2");
 	print_help_line("      --sha3-224, --sha3-256, --sha3-384, --sha3-512 ", digest_format, "SHA3");
+	print_help_line("      --blake2s,  --blake2b  ", digest_format, "BLAKE2S/BLAKE2B");
+	print_help_line("      --blake3     ", digest_format, "BLAKE3");
 	print_help_line("  -T, --tth        ", digest_format, "TTH");
 	print_help_line("      --btih       ", digest_format, "BitTorrent InfoHash");
 	print_help_line("  -A, --aich       ", digest_format, "AICH");
@@ -95,7 +97,6 @@ static void print_help(void)
 	print_help_line("      --gost94-cryptopro ", digest_format, _("GOST R 34.11-94 CryptoPro"));
 	print_help_line("      --ripemd160  ", digest_format, "RIPEMD-160");
 	print_help_line("      --has160     ", digest_format, "HAS-160");
-	print_help_line("      --blake2s,   --blake2b   ", digest_format, "BLAKE2S/BLAKE2B");
 	print_help_line("      --edonr256,  --edonr512  ", digest_format, "EDON-R 256/512");
 	print_help_line("      --snefru128, --snefru256 ", digest_format, "SNEFRU-128/256");
 	print_help_line("  -a, --all        ", _("Calculate all supported hash functions.\n"));
@@ -169,7 +170,10 @@ static void list_hashes(void)
  */
 static void add_hash_id(options_t* o, unsigned hash_id)
 {
-	o->hash_mask |= hash_id_to_bit64(hash_id);
+	if (hash_id == RHASH_ALL_HASHES)
+		o->hash_mask = get_all_supported_hash_mask();
+	else
+		o->hash_mask |= hash_id_to_bit64(hash_id);
 }
 
 /**
@@ -451,6 +455,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_VFNC,   0,   0, "edonr512",  (opt_handler_t)add_hash_id, 0, RHASH_EDONR512 },
 	{ F_VFNC,   0,   0, "blake2s",   (opt_handler_t)add_hash_id, 0, RHASH_BLAKE2S },
 	{ F_VFNC,   0,   0, "blake2b",   (opt_handler_t)add_hash_id, 0, RHASH_BLAKE2B },
+	{ F_VFNC,   0,   0, "blake3",    (opt_handler_t)add_hash_id, 0, RHASH_BLAKE3 },
 
 	/* output formats */
 	{ F_UFLG,   0,   0, "sfv",       0, &opt.fmt, FMT_SFV },
@@ -1114,6 +1119,7 @@ static void set_default_hash_mask(const char* progName)
 	if (strstr(buf, "edonr512"))  add_hash_id(&opt, RHASH_EDONR512);
 	if (strstr(buf, "blake2s"))   add_hash_id(&opt, RHASH_BLAKE2S);
 	if (strstr(buf, "blake2b"))   add_hash_id(&opt, RHASH_BLAKE2B);
+	if (strstr(buf, "blake3"))    add_hash_id(&opt, RHASH_BLAKE3);
 	if (strstr(buf, "snefru256")) add_hash_id(&opt, RHASH_SNEFRU128);
 	if (strstr(buf, "snefru128")) add_hash_id(&opt, RHASH_SNEFRU256);
 	else if (strstr(buf, "ed2k")) add_hash_id(&opt, RHASH_ED2K);

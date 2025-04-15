@@ -303,7 +303,6 @@ static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum Hash
 #define code2mask_size (19 * 2)
 	static unsigned code2mask[code2mask_size] = {
 		FOURC2U('A', 'I', 'C', 'H'), RHASH_AICH,
-		FOURC2U('B', 'L', 'A', 'K'), (RHASH_BLAKE2S | RHASH_BLAKE2B),
 		FOURC2U('B', 'T', 'I', 'H'), RHASH_BTIH,
 		FOURC2U('C', 'R', 'C', '3'), (RHASH_CRC32 | RHASH_CRC32C),
 		FOURC2U('E', 'D', '2', 'K'), RHASH_ED2K,
@@ -332,9 +331,15 @@ static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum Hash
 	/* quick fix to detect "RMD160" as RIPEMD160 */
 	if (code == FOURC2U('R', 'M', 'D', '1'))
 		return (length == 6 && name[4] == '6' && name[5] == '0' ? RHASH_RIPEMD160 : 0);
-	for (i = 0; code2mask[i] != code; i += 2)
-		if (i >= (code2mask_size - 2)) return 0;
-	hash_mask = code2mask[i + 1];
+	if (code == FOURC2U('B', 'L', 'A', 'K')) {
+		if (length == 6 && name[4] == 'E' && name[5] == '3')
+			return RHASH_BLAKE3;
+		hash_mask = RHASH_BLAKE2S | RHASH_BLAKE2B;
+	} else {
+		for (i = 0; code2mask[i] != code; i += 2)
+			if (i >= (code2mask_size - 2)) return 0;
+		hash_mask = code2mask[i + 1];
+	}
 	i = get_ctz(hash_mask);
 	if (length <= 4)
 	{
