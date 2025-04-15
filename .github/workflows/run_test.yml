@@ -29,6 +29,7 @@ jobs:
   build-powerpc64:
     runs-on: ubuntu-latest
     name: Build and test on PowerPC 64
+    needs: build
 
     steps:
     - uses: actions/checkout@v4

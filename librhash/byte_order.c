@@ -14,6 +14,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 #include "byte_order.h"
+#include <string.h>
 
 #ifndef rhash_ctz
 
@@ -125,6 +126,27 @@ void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t le
 		for (length += index; (size_t)index < length; index++)
 			((char*)to)[index ^ 3] = *(src++);
 	}
+}
+
+/**
+ * Fill a memory block by a character with changing byte order.
+ * The byte order is changed from little-endian 32-bit integers
+ * to big-endian (or vice-versa).
+ *
+ * @param to the pointer where to copy memory block
+ * @param index the index to start writing from
+ * @param c the character to fill the block with
+ * @param length length of the memory block
+ */
+void rhash_swap_memset_to_u32(void* to, int index, int c, size_t length)
+{
+	const size_t end = length + (size_t)index;
+	for (; (index & 3) && (size_t)index < end; index++)
+		((char*)to)[index ^ 3] = (char)c;
+	length = end - (size_t)index;
+	memset((char*)to + index, c, length & ~3);
+	for (; (size_t)index < end; index++)
+		((char*)to)[index ^ 3] = (char)c;
 }
 
 /**

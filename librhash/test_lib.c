@@ -481,6 +481,19 @@ const char* blake2b_tests[] = {
 	0
 };
 
+/* verified by b3sum from github.com/BLAKE3-team/BLAKE3 */
+const char* blake3_tests[] = {
+	"", "AF1349B9F5F9A1A6A0404DEA36DCC9499BCB25C9ADC112B7CC9A93CAE41F3262",
+	"a", "17762FDDD969A453925D65717AC3EEA21320B66B54342FDE15128D6CAF21215F",
+	"abc", "6437B3AC38465133FFB63B75273A8DB548C558465D79DB03FD359C6CD5BD9D85",
+	"message digest", "7BC2A2EEB95DDBF9B7ECF6ADCB76B453091C58DC43955E1D9482B1942F08D19B",
+	"abcdefghijklmnopqrstuvwxyz", "2468EEC8894ACFB4E4DF3A51EA916BA115D48268287754290AAE8E9E6228E85F",
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "8BEE3200BAA9F3A1ACD279F049F914F110E730555FF15109BD59CDD73895E239",
+	"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "F263ACF51621980B9C8DE5DA4A17D314984E05ABE4A21CC83A07FE3E1E366DD1",
+	"The quick brown fox jumps over the lazy dog", "2F1514181AADCCD913ABD94CFA592701A5686AB23F8DF1DFF1B74710FEBC6D4A",
+	0
+};
+
 /* BTIH calculated with filename = "test.txt", verified using uTorrent */
 const char* btih_with_filename_tests[] = {
 	"", "042C8E2D2780B0AFAE6599A02914D6C3F1515B12",
@@ -553,6 +566,7 @@ struct test_vectors_t short_test_vectors[] = {
 	{ RHASH_EDONR512, edonr512_tests },
 	{ RHASH_BLAKE2S, blake2s_tests },
 	{ RHASH_BLAKE2B, blake2b_tests },
+	{ RHASH_BLAKE3, blake3_tests },
 	{ 0, 0 }
 };
 
@@ -880,6 +894,7 @@ static void test_long_strings(void)
 		{ RHASH_EDONR512, "B4A5A255D67869C990FE79B5FCBDA69958794B8003F01FD11E90FEFEC35F22BD84FFA2E248E8B3C1ACD9B7EFAC5BC66616E234A6E938D3526DEE26BD0DE9C562" }, /* verified by eBASH SUPERCOP implementation */
 		{ RHASH_BLAKE2S, "BEC0C0E6CDE5B67ACB73B81F79A67A4079AE1C60DAC9D2661AF18E9F8B50DFA5" }, /* verified by b2sum utility */
 		{ RHASH_BLAKE2B, "98FB3EFB7206FD19EBF69B6F312CF7B64E3B94DBE1A17107913975A793F177E1D077609D7FBA363CBBA00D05F7AA4E4FA8715D6428104C0A75643B0FF3FD3EAF" }, /* verified by b2sum utility */
+		{ RHASH_BLAKE3, "616F575A1B58D4C9797D4217B9730AE5E6EB319D76EDEF6549B46F4EFE31FF8B" }, /* verified by b3sum utility */
 		{ RHASH_GOST12_256, "841AF1A0B2F92A800FB1B7E4AABC8E48763153C448A0FC57C90BA830E130F152" },
 		{ RHASH_GOST12_512, "D396A40B126B1F324465BFA7AA159859AB33FAC02DCDD4515AD231206396A266D0102367E4C544EF47D2294064E1A25342D0CD25AE3D904B45ABB1425AE41095" },
 #ifdef USE_KECCAK
@@ -1397,17 +1412,18 @@ static void test_magnet_links(void)
  */
 static unsigned find_hash(const char* name)
 {
-	char buf[30];
-	unsigned hash_id;
-	int i;
+	unsigned hash_ids_all[RHASH_HASH_COUNT];
+	char buf[32];
+	size_t count = rhash_get_all_algorithms(RHASH_HASH_COUNT, hash_ids_all);
+	size_t i;
 
 	if (strlen(name) > (sizeof(buf) - 1)) return 0;
 	for (i = 0; name[i]; i++) buf[i] = toupper(name[i]);
 	buf[i] = 0;
 
-	for (hash_id = 1; (hash_id & RHASH_ALL_HASHES); hash_id <<= 1) {
-		if (strcmp(buf, rhash_get_name(hash_id)) == 0) return hash_id;
-	}
+	for (i = 0; i < count; i++)
+		if (strcmp(buf, rhash_get_name(hash_ids_all[i])) == 0)
+			return hash_ids_all[i];
 	return 0;
 }
 

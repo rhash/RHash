@@ -23,6 +23,7 @@
 #include "aich.h"
 #include "blake2b.h"
 #include "blake2s.h"
+#include "blake3.h"
 #include "crc32.h"
 #include "ed2k.h"
 #include "edonr.h"
@@ -91,6 +92,7 @@ rhash_info info_snf128     = { EXTENDED_HASH_ID(27), F_BE32, 16, "SNEFRU-128", "
 rhash_info info_snf256     = { EXTENDED_HASH_ID(28), F_BE32, 32, "SNEFRU-256", "snefru256" };
 rhash_info info_blake2s    = { EXTENDED_HASH_ID(29), F_LE32, 32, "BLAKE2S", "blake2s" };
 rhash_info info_blake2b    = { EXTENDED_HASH_ID(30), F_LE64, 64, "BLAKE2B", "blake2b" };
+rhash_info info_blake3     = { EXTENDED_HASH_ID(31), F_LE32 | F_SPCEXP, 32, "BLAKE3", "blake3" };
 
 /* some helper macros */
 #define dgshft(name) ((uintptr_t)((char*)&((name##_ctx*)0)->hash))
@@ -135,6 +137,7 @@ rhash_hash_info rhash_hash_info_default[] =
 	{ &info_snf256, sizeof(snefru_ctx), dgshft(snefru), iuf2(rhash_snefru256, rhash_snefru), 0 }, /* 256 bit */
 	{ &info_blake2s, sizeof(blake2s_ctx),  dgshft(blake2s), iuf(rhash_blake2s), 0 },  /* 256 bit */
 	{ &info_blake2b, sizeof(blake2b_ctx),  dgshft(blake2b), iuf(rhash_blake2b), 0 },  /* 512 bit */
+	{ &info_blake3, sizeof(blake3_ctx),  dgshft2(blake3, root.hash), iuf(rhash_blake3), 0 }       /* 256 bit */
 };
 
 #if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
@@ -218,7 +221,7 @@ const unsigned* rhash_get_all_hash_ids(unsigned all_id, size_t* count)
 		EXTENDED_HASH_ID(16), EXTENDED_HASH_ID(17), EXTENDED_HASH_ID(18), EXTENDED_HASH_ID(19),
 		EXTENDED_HASH_ID(20), EXTENDED_HASH_ID(21), EXTENDED_HASH_ID(22), EXTENDED_HASH_ID(23),
 		EXTENDED_HASH_ID(24), EXTENDED_HASH_ID(25), EXTENDED_HASH_ID(26), EXTENDED_HASH_ID(27),
-		EXTENDED_HASH_ID(28), EXTENDED_HASH_ID(29), EXTENDED_HASH_ID(30)
+		EXTENDED_HASH_ID(28), EXTENDED_HASH_ID(29), EXTENDED_HASH_ID(30), EXTENDED_HASH_ID(31)
 	};
 	static const unsigned count_low = rhash_popcount(RHASH_LOW_HASHES_MASK);
 	RHASH_ASSERT(RHASH_COUNTOF(all_ids) == RHASH_HASH_COUNT);
@@ -311,6 +314,9 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
 }
 
 #if !defined(NO_IMPORT_EXPORT)
+#define EXTENDED_TTH EXTENDED_HASH_ID(5)
+#define EXTENDED_AICH EXTENDED_HASH_ID(8)
+
 /**
  * Export a hash function context to a memory region,
  * or calculate the size required for context export.
@@ -323,16 +329,19 @@ static void rhash_crc32c_final(uint32_t* crc32c, unsigned char* result)
  */
 size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t size)
 {
-	if (IS_EXTENDED_HASH_ID(hash_id))
-		hash_id = 1 << GET_EXTENDED_HASH_ID_INDEX(hash_id);
 	switch (hash_id)
 	{
 		case RHASH_TTH:
+		case EXTENDED_TTH:
 			return rhash_tth_export((const tth_ctx*)ctx, out, size);
 		case RHASH_BTIH:
+		case EXTENDED_BTIH:
 			return bt_export((const torrent_ctx*)ctx, out, size);
 		case RHASH_AICH:
+		case EXTENDED_AICH:
 			return rhash_aich_export((const aich_ctx*)ctx, out, size);
+		case RHASH_BLAKE3:
+			return rhash_blake3_export((const blake3_ctx*)ctx, out, size);
 	}
 	return 0;
 }
@@ -348,16 +357,19 @@ size_t rhash_export_alg(unsigned hash_id, const void* ctx, void* out, size_t siz
  */
 size_t rhash_import_alg(unsigned hash_id, void* ctx, const void* in, size_t size)
 {
-	if (IS_EXTENDED_HASH_ID(hash_id))
-		hash_id = 1 << GET_EXTENDED_HASH_ID_INDEX(hash_id);
 	switch (hash_id)
 	{
 		case RHASH_TTH:
+		case EXTENDED_TTH:
 			return rhash_tth_import((tth_ctx*)ctx, in, size);
 		case RHASH_BTIH:
+		case EXTENDED_BTIH:
 			return bt_import((torrent_ctx*)ctx, in, size);
 		case RHASH_AICH:
+		case EXTENDED_AICH:
 			return rhash_aich_import((aich_ctx*)ctx, in, size);
+		case RHASH_BLAKE3:
+			return rhash_blake3_import((blake3_ctx*)ctx, in, size);
 	}
 	return 0;
 }

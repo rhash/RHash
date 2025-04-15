@@ -139,6 +139,7 @@ unsigned rhash_popcount(unsigned); /* define as function */
 #endif
 
 void rhash_swap_copy_str_to_u32(void* to, int index, const void* from, size_t length);
+void rhash_swap_memset_to_u32(void* to, int index, int c, size_t length);
 void rhash_swap_copy_str_to_u64(void* to, int index, const void* from, size_t length);
 void rhash_swap_copy_u64_to_str(void* to, const void* from, size_t length);
 void rhash_u32_mem_swap(unsigned* p, int length_in_u32);
@@ -184,6 +185,8 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 
 # define be32_copy(to, index, from, length) memcpy((char*)(to) + (index), (from), (length))
 # define le32_copy(to, index, from, length) rhash_swap_copy_str_to_u32((to), (index), (from), (length))
+# define be32_memset(to, index, c, length) memset((char*)(to) + (index), (c), (length))
+# define le32_memset(to, index, c, length) rhash_swap_memset_to_u32((to), (index), (c), (length))
 # define be64_copy(to, index, from, length) memcpy((char*)(to) + (index), (from), (length))
 # define le64_copy(to, index, from, length) rhash_swap_copy_str_to_u64((to), (index), (from), (length))
 # define me64_to_be_str(to, from, length) memcpy((to), (from), (length))
@@ -197,6 +200,8 @@ static RHASH_INLINE uint64_t bswap_64(uint64_t x)
 
 # define be32_copy(to, index, from, length) rhash_swap_copy_str_to_u32((to), (index), (from), (length))
 # define le32_copy(to, index, from, length) memcpy((char*)(to) + (index), (from), (length))
+# define be32_memset(to, index, c, length) rhash_swap_memset_to_u32((to), (index), (c), (length))
+# define le32_memset(to, index, c, length) memset((char*)(to) + (index), (c), (length))
 # define be64_copy(to, index, from, length) rhash_swap_copy_str_to_u64((to), (index), (from), (length))
 # define le64_copy(to, index, from, length) memcpy((char*)(to) + (index), (from), (length))
 # define me64_to_be_str(to, from, length) rhash_swap_copy_u64_to_str((to), (from), (length))

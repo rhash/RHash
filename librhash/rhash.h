@@ -53,11 +53,12 @@ enum rhash_ids
 	RHASH_SNEFRU256 = 0x10000000,
 	RHASH_BLAKE2S   = 0x20000000,
 	RHASH_BLAKE2B   = 0x40000000,
+	RHASH_BLAKE3    = 0x8000001f,
 
 	/**
 	 * The number of supported hash functions.
 	 */
-	RHASH_HASH_COUNT = 31,
+	RHASH_HASH_COUNT = 32,
 
 	/* bit-flag for extra hash identifiers */
 	RHASH_EXTENDED_BIT = (int)0x80000000,
