@@ -13,14 +13,16 @@ LIBRHASH_FILES  = librhash/algorithms.c librhash/algorithms.h \
   librhash/byte_order.c librhash/byte_order.h librhash/plug_openssl.c librhash/plug_openssl.h \
   librhash/rhash.c librhash/rhash.h librhash/rhash_torrent.c librhash/rhash_torrent.h \
   librhash/aich.c librhash/aich.h librhash/blake2b.c librhash/blake2b.h \
-  librhash/blake2s.c librhash/blake2s.h librhash/crc32.c librhash/crc32.h \
+  librhash/blake2s.c librhash/blake2s.h librhash/blake3.c librhash/blake3.h \
+  librhash/crc32.c librhash/crc32.h \
   librhash/ed2k.c librhash/ed2k.h librhash/edonr.c librhash/edonr.h \
   librhash/gost12.c librhash/gost12.h librhash/gost94.c librhash/gost94.h \
   librhash/has160.c librhash/has160.h librhash/hex.c librhash/hex.h librhash/md4.c \
   librhash/md4.h librhash/md5.c librhash/md5.h librhash/ripemd-160.c librhash/ripemd-160.h \
   librhash/sha1.c librhash/sha1.h librhash/sha3.c librhash/sha3.h \
   librhash/sha256.c librhash/sha256.h librhash/sha512.c librhash/sha512.h \
-  librhash/snefru.c librhash/snefru.h librhash/tiger.c librhash/tiger.h librhash/tiger_sbox.c \
+  librhash/sha_ni.c librhash/sha_ni.h librhash/snefru.c librhash/snefru.h \
+  librhash/tiger.c librhash/tiger.h librhash/tiger_sbox.c \
   librhash/torrent.h librhash/torrent.c librhash/tth.c librhash/tth.h \
   librhash/whirlpool.c librhash/whirlpool.h librhash/whirlpool_sbox.c \
   librhash/test_lib.c librhash/test_lib.h librhash/test_utils.c librhash/test_utils.h \

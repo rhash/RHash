@@ -229,6 +229,7 @@
     <ClCompile Include="..\..\librhash\algorithms.c" />
     <ClCompile Include="..\..\librhash\blake2b.c" />
     <ClCompile Include="..\..\librhash\blake2s.c" />
+    <ClCompile Include="..\..\librhash\blake3.c" />
     <ClCompile Include="..\..\librhash\byte_order.c" />
     <ClCompile Include="..\..\librhash\crc32.c" />
     <ClCompile Include="..\..\librhash\ed2k.c" />
@@ -246,6 +247,7 @@
     <ClCompile Include="..\..\librhash\sha1.c" />
     <ClCompile Include="..\..\librhash\sha256.c" />
     <ClCompile Include="..\..\librhash\sha512.c" />
+    <ClCompile Include="..\..\librhash\sha_ni.c" />
     <ClCompile Include="..\..\librhash\sha3.c" />
     <ClCompile Include="..\..\librhash\snefru.c" />
     <ClCompile Include="..\..\librhash\test_lib.c">
@@ -276,11 +278,13 @@
     <ClInclude Include="..\..\librhash\rhash_torrent.h" />
     <ClInclude Include="..\..\librhash\sha256.h" />
     <ClInclude Include="..\..\librhash\sha512.h" />
+    <ClInclude Include="..\..\librhash\sha_ni.h" />
     <ClInclude Include="..\..\librhash\test_lib.h" />
     <ClInclude Include="..\..\librhash\test_utils.h" />
     <ClInclude Include="..\..\librhash\aich.h" />
     <ClInclude Include="..\..\librhash\blake2b.h" />
     <ClInclude Include="..\..\librhash\blake2s.h" />
+    <ClInclude Include="..\..\librhash\blake3.h" />
     <ClInclude Include="..\..\librhash\byte_order.h" />
     <ClInclude Include="..\..\librhash\crc32.h" />
     <ClInclude Include="..\..\librhash\ed2k.h" />
