@@ -1,3 +1,9 @@
+Tue 18 Mar 2025 Etienne Brateau
+	* Support GNU/Hurd platform for --target argument
+
+Tue 25 Feb 2025 Aleksey Kravchenko
+	* Support Intel SHA1 extension
+
 Wed 16 Oct 2024 Aleksey Kravchenko
 	* Bugfix: Fix librhash function rhash_print_magnet()
 
