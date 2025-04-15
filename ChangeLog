@@ -1,4 +1,5 @@
 Tue 15 Apr 2025 Aleksey Kravchenko
+	* Bugfix: Fix processing of ./ directory
 	* Support --blake3 option for the BLAKE3 hash function
 
 Tue 18 Mar 2025 Etienne Brateau

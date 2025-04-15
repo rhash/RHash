@@ -236,8 +236,13 @@ int file_init(file_t* file, ctpath_t path, unsigned init_flags)
 	tpath_t long_path = get_long_path_if_needed(path);
 #endif
 	memset(file, 0, sizeof(*file));
+	/* strip ./ from the start of the path */
 	if (path[0] == RSH_T('.') && IS_ANY_TSLASH(path[1]))
-		path += 2;
+	{
+		for (path += 2; IS_ANY_TSLASH(path[0]); path++);
+		if (!path[0])
+			path = RSH_T(".");
+	}
 	file->real_path = (tpath_t)path;
 	file->mode = (init_flags & FileMaskModeBits) | FileDontFreeRealPath;
 	if (((init_flags & FileMaskUpdatePrintPath) && opt.path_separator) IF_WINDOWS( || long_path))
