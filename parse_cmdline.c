@@ -101,9 +101,9 @@ static void print_help(void)
 	print_help_line("      --snefru128, --snefru256 ", digest_format, "SNEFRU-128/256");
 	print_help_line("  -a, --all        ", _("Calculate all supported hash functions.\n"));
 	print_help_line("  -c, --check      ", _("Check hash files specified by command line.\n"));
-	print_help_line("  -u, --update=<file> ", _("Update the specified hash file.\n"));
-	print_help_line("      --missing=<file> ", _("Read the hash file and print missing and inaccessible files.\n"));
-	print_help_line("      --unverified=<file> ", _("Print files that can't be verified by the hash file.\n"));
+	print_help_line("  -u, --update=<hashfile> ", _("Update the specified hash file.\n"));
+	print_help_line("      --missing=<hashfile> ", _("List files from hash file that are missing or inaccessible.\n"));
+	print_help_line("      --unverified=<hashfile> ", _("List command-line files missing from given hash file.\n"));
 	print_help_line("  -e, --embed-crc  ", _("Rename files by inserting crc32 sum into name.\n"));
 	print_help_line("  -k, --check-embedded  ", _("Verify files by crc32 sum embedded in their names.\n"));
 	print_help_line("      --list-hashes  ", _("List the names of supported hash functions, one per line.\n"));
