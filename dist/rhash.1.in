@@ -47,20 +47,17 @@ If detection fails, then all hash function of the same hash length are calculate
 and that significally slows down files verification. To speed up verification,
 in such case, explicitly specify the hash algorithm in the command line.
 .IP "\-u, \-\-update=<hash-file>"
-Update the hash file specified by the option.
-Message digests will be calculated for all files specified by the command line and
-not present in this hash file. The calculated Message digests will be appended to
-the updated hash file in the format specified by formatting options.
-The \-\-update option can be combined with \-\-recursive to update the hash file
-for whole directory trees. Also \-\-update option can be used with \-\-check
-to verify the hash file before updating it.
+Update the specified hash file by computing message digests for files
+listed in command arguments that aren't present in it.
+New digests are appended in the format specified by formatting options.
+
+With \-\-recursive, updates the hash file using files from entire directory trees.
+With \-\-check, verifies existing digests before updating.
 .IP "\-\-missing=<hash-file>"
-Read the hash file and print missing and inaccessible files, it contains.
+List files from the hash file that are missing or inaccessible in the filesystem.
 .IP "\-\-unverified=<hash-file>"
-Print files that can't be verified by the hash file.
-That means the files specified by the command line and not present in the hash file.
-The \-\-unverified option can be used with \-\-recursive to look for unverified
-files in whole directory trees.
+List command-line files missing from the given hash file (unverified files).
+With \-\-recursive, checks entire directory trees for unverified files.
 .IP "\-k, \-\-check\-embedded"
 Verify files by crc32 sum embedded in their names.
 .IP "\-\-torrent"
