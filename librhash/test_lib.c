@@ -14,21 +14,27 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-
+#include "test_lib.h"
 #include "byte_order.h"
-#include "rhash_torrent.h"
 #include "test_utils.h"
 
 #ifdef USE_RHASH_DLL
 # define RHASH_API __declspec(dllimport)
 #endif
 #include "rhash.h"
-#include "test_lib.h"
+#include "rhash_torrent.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#if defined(_WIN32)
+# include <io.h>
+#endif
 
 /*=========================================================================*
  *                              Test vectors                               *
@@ -177,10 +183,10 @@ const char* ripemd_tests[] = {
 };
 
 /*
-* Two important test-cases (some libraries calculate them incorrectly):
-* GOST94( <100000 characters of 'a'> ) = 5C00CCC2734CDD3332D3D4749576E3C1A7DBAF0E7EA74E9FA602413C90A129FA
-* GOST94( <128 characters of 'U'> ) = 53A3A3ED25180CEF0C1D85A074273E551C25660A87062A52D926A9E8FE5733A4
-*/
+ * Two important test-cases (some libraries calculate them incorrectly):
+ * GOST94( <100000 characters of 'a'> ) = 5C00CCC2734CDD3332D3D4749576E3C1A7DBAF0E7EA74E9FA602413C90A129FA
+ * GOST94( <128 characters of 'U'> ) = 53A3A3ED25180CEF0C1D85A074273E551C25660A87062A52D926A9E8FE5733A4
+ */
 
 /* test vectors from internet, verified by OpenSSL and some other programs */
 const char* gost94_tests[] = {
@@ -639,6 +645,8 @@ static void log_error_impl(int line, const char* format, ...)
 	(log_error_impl(__LINE__, (msg), (a), (b), (c)))
 #define log_error4(msg, a, b, c, d) \
 	(log_error_impl(__LINE__, (msg), (a), (b), (c), (d)))
+#define log_error5(msg, a, b, c, d, e) \
+	(log_error_impl(__LINE__, (msg), (a), (b), (c), (d), (e)))
 
 #define CHECK_NOOP {}
 #define CHECK_IMPL(failed, cmd, msg) \
@@ -1404,6 +1412,151 @@ static void test_magnet_links(void)
 	rhash_free(ctx);
 }
 
+/*=========================================================================*
+ *                           Test file functions                           *
+ *=========================================================================*/
+
+/**
+ * Create temporary file and return its path.
+ *
+ * @param filename the name of the file
+ * @param content the content of the file
+ * @return the path of the file
+ */
+static const char* write_temp_file(const char* filename, const char* content)
+{
+	static char file_path[1024];
+	const char *tmp_dir = NULL;
+	FILE *fd;
+	size_t content_length = strlen(content);
+	size_t length;
+	int count;
+#ifdef _WIN32
+# define TEST_PATH_SEPARATOR '\\'
+    tmp_dir = getenv("TEMP");
+    if (!tmp_dir) tmp_dir = getenv("TMP");
+#else
+# define TEST_PATH_SEPARATOR '/'
+    tmp_dir = getenv("TMPDIR");
+# ifdef P_tmpdir
+    if (!tmp_dir) tmp_dir = P_tmpdir;
+# endif
+    if (!tmp_dir) tmp_dir = "/tmp";
+#endif
+	if (!tmp_dir) {
+		printf("%s:%d: warning: can't detect temp dir\n", __FILE__, __LINE__);
+		return NULL;
+	}
+	length = strlen(tmp_dir);
+	if ((length + 1) >= sizeof(file_path))
+		return NULL;
+	memcpy(file_path, tmp_dir, length);
+	while (length > 0 && file_path[length - 1] == TEST_PATH_SEPARATOR)
+		file_path[--length] = '\0';
+	assert(length < sizeof(file_path));
+	count = snprintf(file_path + length, sizeof(file_path) - length,
+		"%c%s", TEST_PATH_SEPARATOR, filename);
+	if (count >= (int)(sizeof(file_path)))
+		return NULL;
+
+	fd = fopen(file_path, "w");
+	if (fd != NULL) {
+		length = fwrite(content, 1, content_length, fd);
+		fclose(fd);
+		if (length == content_length)
+			return file_path;
+		log_error1("failed to write to file: %s\n", file_path);
+	} else {
+		log_error1("failed to open file for writing: %s\n", file_path);
+	}
+	return NULL;
+}
+
+struct file_test_ctx {
+	FILE* file_fd;
+	int int_fd;
+	rhash rctx;
+	const char* path;
+};
+
+/**
+ * Test hashing of a file using rhash_file_update().
+ * Report error if calculated hash doesn't coincide with expected value.
+ *
+ * @param fctx the file test context
+ * @param offset the file offset to start hashing from
+ * @param expected the expected hash value
+ */
+static void test_update_by_file(struct file_test_ctx* fctx, size_t offset, const char* expected)
+{
+	static char result[130];
+	assert(fctx->file_fd && fctx->rctx);
+	rhash_reset(fctx->rctx);
+	fseek(fctx->file_fd, (long)offset, SEEK_SET);
+	rhash_file_update(fctx->rctx, fctx->file_fd);
+	rhash_final(fctx->rctx, 0);
+	rhash_print(result, fctx->rctx, 0, RHPR_UPPERCASE);
+	if (strcmp(result, expected) != 0)
+		log_error4("MD5(%s:%d) = %s, expected %s\n", fctx->path, (int)offset, result, expected);
+}
+
+/**
+ * Test hashing of a file using rhash_update_fd().
+ * Report error if calculated hash doesn't coincide with expected value.
+ *
+ * @param fctx the file test context
+ * @param offset the file offset to start hashing from
+ * @param data_size the number of bytes to hash
+ * @param expected the expected hash value
+ */
+static void test_update_by_fd(struct file_test_ctx* fctx, size_t offset, unsigned long long data_size, const char* expected)
+{
+	static char result[130];
+	rhash_reset(fctx->rctx);
+	assert(fctx->int_fd >= 0 && fctx->rctx);
+	lseek(fctx->int_fd, (off_t)offset, SEEK_SET);
+	rhash_update_fd(fctx->rctx, fctx->int_fd, data_size);
+	rhash_final(fctx->rctx, 0);
+	rhash_print(result, fctx->rctx, 0, RHPR_UPPERCASE);
+	if (strcmp(result, expected) != 0)
+		log_error5("MD5(%s:%d:%llu) = %s, expected %s\n", fctx->path, (int)offset, data_size, result, expected);
+}
+
+/**
+ * Test rhash_file_update() and rhash_update_fd().
+ */
+static void test_file_update(void)
+{
+	const char* test_file_content = "012abc";
+	struct file_test_ctx fctx;
+	memset(&fctx, 0 , sizeof(fctx));
+	if (!(fctx.rctx = rhash_init(RHASH_MD5))) {
+		log_error("got NULL context for MD5\n");
+		return;
+	}
+	if (!(fctx.path = write_temp_file("test_lib.txt", test_file_content)))
+		return;
+	fctx.file_fd = fopen(fctx.path, "r");
+	if (fctx.file_fd) {
+		test_update_by_file(&fctx, 0, "CF31AB6B6F7CA8250BB701ADAB94B579");
+		test_update_by_file(&fctx, 3, "900150983CD24FB0D6963F7D28E17F72");
+		test_update_by_file(&fctx, 5, "4A8A08F09D37B73795649038408B5F33");
+		test_update_by_file(&fctx, 6, "D41D8CD98F00B204E9800998ECF8427E");
+		fclose(fctx.file_fd);
+	}
+	fctx.int_fd = open(fctx.path, O_RDONLY);
+	if (fctx.int_fd > 0) {
+		test_update_by_fd(&fctx, 0, RHASH_MAX_FILE_SIZE, "CF31AB6B6F7CA8250BB701ADAB94B579");
+		test_update_by_fd(&fctx, 3, RHASH_MAX_FILE_SIZE, "900150983CD24FB0D6963F7D28E17F72");
+		test_update_by_fd(&fctx, 3, 1, "0CC175B9C0F1B6A831C399E269772661");
+		test_update_by_fd(&fctx, 3, 2, "187EF4436122D1CC2F40DC2B92F0EBA0");
+		test_update_by_fd(&fctx, 4, 1, "92EB5FFEE6AE2FEC3AD71C777531578F");
+		close(fctx.int_fd);
+	}
+	unlink(fctx.path);
+	rhash_free(fctx.rctx);
+}
+
 /**
  * Find a hash function id by its name.
  *
@@ -1432,9 +1585,11 @@ static unsigned find_hash(const char* name)
  */
 static void print_cpu_features(void)
 {
-	printf("CPU:%s%s\n",
+#if !defined(NO_HAS_CPU_FEATURE)
+	printf("CPU Features:%s%s\n",
 		(rhash_has_cpu_feature(CPU_FEATURE_SSE4_2) ? " SSE_4.2" : ""),
 		(rhash_has_cpu_feature(CPU_FEATURE_SHANI) ? " SHANI" : ""));
+#endif
 }
 
 /**
@@ -1534,6 +1689,7 @@ int main(int argc, char* argv[])
 		test_get_context();
 		test_import_export();
 		test_magnet_links();
+		test_file_update();
 		if (g_errors_count == 0)
 			printf("All sums are working properly!\n");
 		fflush(stdout);

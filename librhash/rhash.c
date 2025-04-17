@@ -448,7 +448,7 @@ static unsigned convert_to_extended_hash_id(unsigned hash_id)
  * Find rhash_vector_item by the given hash_id in rhash context.
  * The context must include the hash algorithm corresponding to the hash_id.
  *
- * @param ectx rhash context
+ * @param ectx extended rhash context
  * @param hash_id id of hash algorithm, or zero for the first hash algorithm in the rhash context
  * @return item of the rhash context if the hash algorithm has been found, NULL otherwise
  */
@@ -516,36 +516,76 @@ RHASH_API int rhash_msg(unsigned hash_id, const void* message, size_t length, un
 	return 0;
 }
 
-/* universal file context to read a file into a buffer */
+/**
+ * Universal file I/O context for buffered file reading.
+ */
 struct file_update_context {
 	union {
-		FILE* file_fd;
-		int int_fd;
+		FILE* file_fd; /* Standard C file stream pointer (for fopen/fread) */
+		int int_fd;    /* POSIX file descriptor (for open/read) */
 	};
-	unsigned char* buffer;
-	size_t buffer_size;
+	unsigned char* buffer; /* Data buffer for read operations */
+	size_t buffer_size;    /* Size of the data buffer */
 };
-static ssize_t read_file_fd_impl(struct file_update_context *fctx)
+
+/**
+ * Read data from a C file stream into the context buffer using fread().
+ *
+ * @param fctx file context containing a file descriptor and buffer
+ * @param data_size number of bytes to read
+ * @return number of bytes read on success, -1 on fail with error code stored in errno
+ */
+static ssize_t read_file_fd_impl(struct file_update_context *fctx, size_t data_size)
 {
 	size_t read_size;
 	if (feof(fctx->file_fd))
 		return 0;
-	read_size = fread(fctx->buffer, 1, fctx->buffer_size, fctx->file_fd);
+	assert(data_size <= fctx->buffer_size);
+	read_size = fread(fctx->buffer, 1, data_size, fctx->file_fd);
 	return (ferror(fctx->file_fd) ? -1 : (ssize_t)read_size);
 }
-static ssize_t read_int_fd_impl(struct file_update_context *fctx)
-{
-	return read(fctx->int_fd, fctx->buffer, fctx->buffer_size);
-}
-typedef ssize_t (*read_file_func)(struct file_update_context *fctx);
 
+/**
+ * Read data from a POSIX file descriptor into the context buffer using read().
+ *
+ * @param fctx file context containing a file descriptor and buffer
+ * @param data_size number of bytes to read
+ * @return number of bytes read on success, -1 on fail with error code stored in errno
+ */
+static ssize_t read_int_fd_impl(struct file_update_context *fctx, size_t data_size)
+{
+	assert(data_size <= fctx->buffer_size);
+	return read(fctx->int_fd, fctx->buffer, data_size);
+}
+
+/**
+ * File read operation callback signature.
+ *
+ * @param fctx file context with configured buffer and file handle
+ * @param data_size requested read size
+ * @return bytes read (0 = EOF), or -1 on error (must set errno)
+ */
+typedef ssize_t (*read_file_func)(struct file_update_context *fctx, size_t data_size);
+
+/**
+ * Internal implementation for hashing file/stream data.
+ * Used by rhash_update_fd() and rhash_file_update().
+ *
+ * @param ectx extended rhash context (must be initialized)
+ * @param fctx configured file context (buffer must be pre-allocated)
+ * @param read_func callback for reading data
+ * @param data_size maximum bytes to hash (RHASH_MAX_FILE_SIZE for entire file)
+ * @return 0 on success, -1 on fail with error code stored in errno
+ */
 static int rhash_file_update_impl(
 	struct rhash_context_ext* const ectx,
 	struct file_update_context* const fctx,
-	read_file_func read_func)
+	read_file_func read_func,
+	unsigned long long data_size)
 {
 	const size_t buffer_size = 256 * 1024;
-	ssize_t length;
+	size_t read_size = buffer_size;
+	ssize_t length = 0;
 	if (ectx == NULL) {
 		errno = EINVAL;
 		return -1;
@@ -557,7 +597,13 @@ static int rhash_file_update_impl(
 	if (!fctx->buffer) {
 		return -1; /* errno is set to ENOMEM according to UNIX 98 */
 	}
-	while ((length = read_func(fctx)) > 0 && ectx->state == STATE_ACTIVE) {
+	while (data_size > (size_t)length) {
+		data_size -= (size_t)length;
+		if (data_size < read_size)
+			read_size = (size_t)data_size;
+		length = read_func(fctx, read_size);
+		if (length <= 0 || ectx->state != STATE_ACTIVE)
+			break;
 		rhash_update(&ectx->rc, fctx->buffer, (size_t)length);
 		if (ectx->callback) {
 			((rhash_callback_t)ectx->callback)(ectx->callback_data, ectx->rc.msg_size);
@@ -567,12 +613,13 @@ static int rhash_file_update_impl(
 	return (length < 0 ? -1 : 0);
 }
 
-RHASH_API int rhash_update_fd(rhash ctx, int fd)
+RHASH_API int rhash_update_fd(rhash ctx, int fd, unsigned long long data_size)
 {
 	struct file_update_context fctx;
 	memset(&fctx, 0, sizeof(fctx));
 	fctx.int_fd = fd;
-	return rhash_file_update_impl((rhash_context_ext*)ctx, &fctx, read_int_fd_impl);
+	return rhash_file_update_impl((rhash_context_ext*)ctx,
+		&fctx, read_int_fd_impl, data_size);
 }
 
 RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
@@ -580,7 +627,8 @@ RHASH_API int rhash_file_update(rhash ctx, FILE* fd)
 	struct file_update_context fctx;
 	memset(&fctx, 0, sizeof(fctx));
 	fctx.file_fd = fd;
-	return rhash_file_update_impl((rhash_context_ext*)ctx, &fctx, read_file_fd_impl);
+	return rhash_file_update_impl((rhash_context_ext*)ctx,
+		&fctx, read_file_fd_impl, RHASH_MAX_FILE_SIZE);
 }
 
 #ifdef _WIN32

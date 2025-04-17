@@ -201,25 +201,31 @@ RHASH_API rhash rhash_init(unsigned hash_id);
 RHASH_API int rhash_update(rhash ctx, const void* message, size_t length);
 
 /**
+ * Special value meaning "read and hash until end of file".
+ */
+#define RHASH_MAX_FILE_SIZE ((unsigned long long)-1)
+
+ /**
  * Calculate message digests of a file or stream.
  * Multiple message digests can be computed.
- * First, inintialize ctx parameter with rhash_init() before calling
+ * First, initialize ctx parameter with rhash_init() before calling
  * rhash_update_fd(). Then use rhash_final() and rhash_print()
- * to retrive message digests. Finaly call rhash_free() on ctx
+ * to retrieve message digests. Finally, call rhash_free() on ctx
  * to free allocated memory or call rhash_reset() to reuse ctx.
  * The file descriptor must correspond to an opened file or stream.
  *
- * @param ctx the rhash context
+ * @param ctx the rhash context (must be initialized)
  * @param fd descriptor of the file to process
+ * @param data_size maximum bytes to process (RHASH_MAX_FILE_SIZE for entire file)
  * @return 0 on success, -1 on fail with error code stored in errno
  */
-RHASH_API int rhash_update_fd(rhash ctx, int fd);
+RHASH_API int rhash_update_fd(rhash ctx, int fd, unsigned long long data_size);
 
 /**
  * Process a file or stream. Multiple message digests can be computed.
  * First, inintialize ctx parameter with rhash_init() before calling
  * rhash_file_update(). Then use rhash_final() and rhash_print()
- * to retrive message digests. Finaly call rhash_free() on ctx
+ * to retrieve message digests. Finally, call rhash_free() on ctx
  * to free allocated memory or call rhash_reset() to reuse ctx.
  *
  * @param ctx rhash context

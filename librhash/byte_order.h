@@ -224,6 +224,7 @@ int has_cpu_feature(unsigned feature_bit);
 # define HAS_MSVC_INTEL_CPUID
 int has_cpu_feature(unsigned feature_bit);
 #else
+# define NO_HAS_CPU_FEATURE
 # define has_cpu_feature(x) (0)
 #endif
 
