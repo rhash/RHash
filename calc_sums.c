@@ -4,6 +4,7 @@
 #include "hash_print.h"
 #include "output.h"
 #include "parse_cmdline.h"
+#include "platform.h"
 #include "rhash_main.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
@@ -207,15 +208,15 @@ static void re_init_rhash_context(struct file_info* info)
  */
 int calc_sums(struct file_info* info)
 {
-	FILE* fd = 0;
+	int fd = -1;
 	int res;
 
 	assert(info->file);
 	if (FILE_ISSTDIN(info->file)) {
-		fd = stdin;
+		fd = 0;
 #ifdef _WIN32
 		/* using 0 instead of _fileno(stdin). _fileno() is undefined under 'gcc -ansi' */
-		if (setmode(0, _O_BINARY) < 0)
+		if (setmode(fd, _O_BINARY) < 0)
 			return -1;
 #endif
 	} else {
@@ -230,9 +231,9 @@ int calc_sums(struct file_info* info)
 			return 0;
 
 		if (!FILE_ISDATA(info->file)) {
-			fd = file_fopen(info->file, FOpenRead | FOpenBin);
+			fd = file_open(info->file, FOpenReadBin);
 			/* quietly skip unreadble files */
-			if (!fd)
+			if (fd < 0)
 				return -1;
 		}
 	}
@@ -248,7 +249,7 @@ int calc_sums(struct file_info* info)
 		if (percents_output->update != 0) {
 			rhash_set_callback(info->rctx, (rhash_callback_t)percents_output->update, info);
 		}
-		res = rhash_file_update(info->rctx, fd);
+		res = rhash_update_fd(info->rctx, fd, RHASH_MAX_FILE_SIZE);
 	}
 	if (res != -1 && !opt.bt_batch_file)
 		rhash_final(info->rctx, 0); /* finalize hashing */
@@ -257,8 +258,8 @@ int calc_sums(struct file_info* info)
 	info->size = info->rctx->msg_size - info->msg_offset;
 	rhash_data.total_size += info->size;
 
-	if (fd && !FILE_ISSTDIN(info->file))
-		fclose(fd);
+	if (fd >= 0 && !FILE_ISSTDIN(info->file))
+		close(fd);
 	return res;
 }
 

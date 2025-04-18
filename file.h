@@ -132,6 +132,7 @@ enum FileFOpenModes {
 	FOpenWriteBin = FOpenWrite | FOpenBin,
 	FOpenRWBin    = FOpenRW | FOpenBin,
 };
+int file_open(file_t* file, int open_flags);
 FILE* file_fopen(file_t* file, int fopen_flags);
 
 int file_rename(const file_t* from, const file_t* to);
