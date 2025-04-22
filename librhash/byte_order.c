@@ -37,11 +37,17 @@ unsigned rhash_ctz(unsigned x)
 #  else /* _MSC_VER >= 1300... */
 
 /**
- * Returns index of the trailing bit of a 32-bit number.
- * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
+ * Returns index of the least significant set bit in a 32-bit number.
+ * This operation is also known as Count Trailing Zeros (CTZ).
  *
- * @param x the number to process
- * @return zero-based index of the trailing bit
+ * The function is a portable, branch-free equivalent of GCC's __builtin_ctz(),
+ * using a De Bruijn sequence for constant-time lookup.
+ *
+ * @param x 32-bit unsigned integer to analyze (must not be zero)
+ * @return zero-based index of the least significant set bit (0 to 31)
+ *
+ * @note Undefined behavior when `x == 0`. The current implementation
+ *       returns 0, but this value must not be relied upon.
  */
 unsigned rhash_ctz(unsigned x)
 {
@@ -64,23 +70,40 @@ unsigned rhash_ctz(unsigned x)
 
 #ifndef rhash_ctz64
 /**
- * Returns index of the trailing bit of a 64-bit number.
- * This is a plain C equivalent for GCC __builtin_ctzll() bit scan.
- * Original author: Matt Taylor (2003).
+ * Returns the zero-based index of the least significant set bit in a 64-bit number.
+ * This operation is also known as Count Trailing Zeros (CTZ).
  *
- * @param x the number to process
- * @return zero-based index of the trailing bit
+ * The function is a portable, branch-free equivalent of GCC's __builtin_ctzll().
+ * Uses a 32-bit optimized implementation with magic constant `0x78291ACF`,
+ * based on Matt Taylor's original algorithm (2003).
+ *
+ * @param x 64-bit unsigned integer to analyze (must not be zero)
+ * @return zero-based index of the least significant set bit (0 to 63)
+ *
+ * @note Undefined behavior when `x == 0`. The current implementation
+ *       returns 63, but this value must not be relied upon.
+ * @see rhash_ctz() for 32-bit version.
  */
 unsigned rhash_ctz64(uint64_t x)
 {
-	/* array for conversion to bit position */
+	/* lookup table mapping hash values to bit position */
 	static unsigned char bit_pos[64] =  {
 		63, 30,  3, 32, 59, 14, 11, 33, 60, 24, 50,  9, 55, 19, 21, 34,
 		61, 29,  2, 53, 51, 23, 41, 18, 56, 28,  1, 43, 46, 27,  0, 35,
 		62, 31, 58,  4,  5, 49, 54,  6, 15, 52, 12, 40,  7, 42, 45, 16,
 		25, 57, 48, 13, 10, 39,  8, 44, 20, 47, 38, 22, 17, 37, 36, 26
 	};
-	uint32_t folded = (uint32_t)(((x - 1) >> 32) ^ (x - 1));
+	/* transform 0b01000 -> 0b01111 (isolate least significant bit) */
+	x ^= x - 1;
+	/* fold 64-bit value to 32-bit to be efficient on 32-bit systems */
+	uint32_t folded = (uint32_t)((x >> 32) ^ x);
+	/* Use Matt Taylor's multiplication trick (2003):
+	 * - multiply by (specially chosen) magic constant 0x78291ACF
+	 * - use top 6 bits of result (>>26) as table index
+	 * Original discussion:
+	 * https://groups.google.com/g/comp.lang.asm.x86/c/3pVGzQGb1ys/m/fPpKBKNi848J
+	 * https://groups.google.com/g/comp.lang.asm.x86/c/3pVGzQGb1ys/m/230qffQJYvQJ
+	 */
 	return bit_pos[folded * 0x78291ACF >> 26];
 }
 #endif /* rhash_ctz64 */
@@ -94,10 +117,10 @@ unsigned rhash_ctz64(uint64_t x)
  */
 unsigned rhash_popcount(unsigned x)
 {
-    x -= (x >>1) & 0x55555555;
-    x = ((x >> 2) & 0x33333333) + (x & 0x33333333);
-    x = ((x >> 4) + x) & 0x0f0f0f0f;
-    return (x * 0x01010101) >> 24;
+	x -= (x >>1) & 0x55555555;
+	x = ((x >> 2) & 0x33333333) + (x & 0x33333333);
+	x = ((x >> 4) + x) & 0x0f0f0f0f;
+	return (x * 0x01010101) >> 24;
 }
 #endif /* rhash_popcount */
 
@@ -216,10 +239,10 @@ void rhash_u32_mem_swap(unsigned* arr, int length)
 # if defined(HAS_GCC_INTEL_CPUID)
 #  include <cpuid.h>
 #  define RHASH_CPUID(id, regs) \
-        __get_cpuid(id, &(regs[0]), &(regs[1]), &(regs[2]), &(regs[3]));
+	__get_cpuid(id, &(regs[0]), &(regs[1]), &(regs[2]), &(regs[3]));
 #  if HAS_GNUC(6, 3)
 #   define RHASH_CPUIDEX(id, sub_id, regs) \
-        __get_cpuid_count(id, sub_id, &regs[0], &regs[1], &regs[2], &regs[3]);
+	__get_cpuid_count(id, sub_id, &regs[0], &regs[1], &regs[2], &regs[3]);
 #  endif
 # elif defined(HAS_MSVC_INTEL_CPUID)
 #  define RHASH_CPUID(id, regs) __cpuid((int*)regs, id)
@@ -245,7 +268,7 @@ static uint64_t get_cpuid_features(void)
 	if (cpu_info[0] >= 7)
 	{
 		/* Request CPUID AX=7 CX=0 to get SHANI bit */
-        RHASH_CPUIDEX(7, 0, cpu_info);
+		RHASH_CPUIDEX(7, 0, cpu_info);
 		result |= (cpu_info[1] & (1 << 29));
 	}
 #endif

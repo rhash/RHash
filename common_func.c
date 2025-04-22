@@ -431,12 +431,15 @@ void* rhash_realloc(void* mem, size_t size, const char* srcfile, int srcline)
  * Bit functions
  *=========================================================================*/
  #ifndef get_ctz
-/**
- * Returns index of the trailing bit of a 32-bit number.
- * This is a plain C equivalent for GCC __builtin_ctz() bit scan.
- *
- * @param x the number to process
- * @return zero-based index of the trailing bit
+ /**
+  * Returns index of the least significant set bit in a 32-bit number.
+  * This operation is also known as Count Trailing Zeros (CTZ).
+  *
+  * The function is a portable, branch-free equivalent of GCC's __builtin_ctz(),
+  * using a De Bruijn sequence for constant-time lookup.
+  *
+  * @param x 32-bit unsigned integer to analyze (must not be zero)
+  * @return zero-based index of the least significant set bit (0 to 31)
  */
 unsigned get_ctz(unsigned x)
 {
@@ -448,23 +451,27 @@ unsigned get_ctz(unsigned x)
 	return bit_pos[((uint32_t)((x & -x) * 0x077CB531U)) >> 27];
 }
 /**
- * Returns index of the trailing bit of a 64-bit number.
- * This is a plain C equivalent for GCC __builtin_ctzll() bit scan.
- * Original author: Matt Taylor (2003).
+ * Returns the zero-based index of the least significant set bit in a 64-bit number.
+ * This operation is also known as Count Trailing Zeros (CTZ).
  *
- * @param x the number to process
- * @return zero-based index of the trailing bit
+ * The function is a portable, branch-free equivalent of GCC's __builtin_ctzll().
+ * Uses a 32-bit optimized implementation with magic constant `0x78291ACF`,
+ * based on Matt Taylor's original algorithm (2003).
+ *
+ * @param x 64-bit unsigned integer to analyze (must not be zero)
+ * @return zero-based index of the least significant set bit (0 to 63)
  */
 unsigned get_ctz64(uint64_t x)
 {
-	/* array for conversion to bit position */
-	static unsigned bit_pos[64] =  {
+	/* lookup table mapping hash values to bit position */
+	static const unsigned bit_pos[64] =  {
 		63, 30,  3, 32, 59, 14, 11, 33, 60, 24, 50,  9, 55, 19, 21, 34,
 		61, 29,  2, 53, 51, 23, 41, 18, 56, 28,  1, 43, 46, 27,  0, 35,
 		62, 31, 58,  4,  5, 49, 54,  6, 15, 52, 12, 40,  7, 42, 45, 16,
 		25, 57, 48, 13, 10, 39,  8, 44, 20, 47, 38, 22, 17, 37, 36, 26
 	};
-	uint32_t folded = (uint32_t)(((x - 1) >> 32) ^ (x - 1));
+	x ^= x - 1;
+	uint32_t folded = (uint32_t)((x >> 32) ^ x);
 	return bit_pos[folded * 0x78291ACF >> 26];
 }
 #endif
