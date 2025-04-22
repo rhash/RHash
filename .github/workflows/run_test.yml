@@ -53,3 +53,32 @@ jobs:
 
     - name: make test-full
       run: make test-full
+
+
+  build-windows:
+    runs-on: windows-latest
+    name: Build and test on Windows
+    needs: build-ubuntu
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup MSBuild (VS 2022)
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
+
+    - name: Build solution (Release x64)
+      run: msbuild build\vc-2010\rhash.vcxproj /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
+
+    - name: Run tests
+      run: bash.exe tests/test_rhash.sh build/vc-2010/Release-x64/rhash.exe
+
+    - name: Upload build artifacts
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: |
+          build/vc-2010/Release-x64/**
+          !**/*.pdb
