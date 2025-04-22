@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-ubuntu:
     runs-on: ubuntu-latest
     name: Build and test on the latest Ubuntu
 
@@ -26,10 +26,11 @@ jobs:
     - name: make test-full
       run: make test-full
 
+
   build-powerpc64:
     runs-on: ubuntu-latest
     name: Build and test on PowerPC 64
-    needs: build
+    needs: build-ubuntu
 
     steps:
     - uses: actions/checkout@v4

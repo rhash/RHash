@@ -6,6 +6,8 @@
 #include "win_utils.h"
 # define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <limits.h>
+#include <stdlib.h>
 
 /**
  * Set process priority and affinity to use any CPU but the first one,
@@ -71,7 +73,12 @@ struct console_data_t console_data;
  */
 static wchar_t* cstr_to_wchar_buffer(const char* str, int codepage, wchar_t* buffer, size_t buf_size)
 {
-	if (MultiByteToWideChar(codepage, 0, str, -1, buffer, buf_size / sizeof(wchar_t)) != 0)
+	size_t length = buf_size / sizeof(wchar_t);
+	if (length > INT_MAX) {
+		errno = EINVAL;
+		return NULL;
+	}
+	if (MultiByteToWideChar(codepage, 0, str, -1, buffer, (int)length) != 0)
 		return buffer;
 	set_errno_from_last_file_error();
 	return NULL; /* conversion failed */

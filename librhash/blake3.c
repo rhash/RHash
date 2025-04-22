@@ -112,7 +112,7 @@ static const uint8_t permutations[7][16] = {
  * @param flags bit flags used to compress the current block
  */
 static void compress(uint32_t *output,
-		const uint32_t msg[static 16], const uint32_t hash[static 8],
+		const uint32_t msg[16], const uint32_t hash[8],
 		uint64_t counter, uint32_t length, uint32_t flags)
 {
 	uint32_t v[16] = {
@@ -151,7 +151,7 @@ static void compress(uint32_t *output,
 }
 
 /* Process a block of 64 bytes */
-static void process_block(struct blake3_ctx *ctx, const uint32_t msg[static 16])
+static void process_block(struct blake3_ctx *ctx, const uint32_t msg[16])
 {
 	uint32_t *cur_hash = ctx->stack + ctx->stack_depth * words_per_stack_entry;
 	uint64_t tail_index = ctx->length - 1;
