@@ -223,7 +223,12 @@ const unsigned* rhash_get_all_hash_ids(unsigned all_id, size_t* count)
 		EXTENDED_HASH_ID(24), EXTENDED_HASH_ID(25), EXTENDED_HASH_ID(26), EXTENDED_HASH_ID(27),
 		EXTENDED_HASH_ID(28), EXTENDED_HASH_ID(29), EXTENDED_HASH_ID(30), EXTENDED_HASH_ID(31)
 	};
+#if defined(rhash_popcount)
 	static const unsigned count_low = rhash_popcount(RHASH_LOW_HASHES_MASK);
+#else
+	RHASH_ASSERT(RHASH_LOW_HASHES_MASK == 0x7fffffff);
+	static const unsigned count_low = 31; /* popcount(RHASH_LOW_HASHES_MASK) */
+#endif
 	RHASH_ASSERT(RHASH_COUNTOF(all_ids) == RHASH_HASH_COUNT);
 	*count = (all_id == RHASH_ALL_HASHES ? RHASH_HASH_COUNT : count_low);
 	return all_ids;

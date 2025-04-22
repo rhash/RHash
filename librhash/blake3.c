@@ -178,7 +178,7 @@ static void process_block(struct blake3_ctx *ctx, const uint32_t msg[static 16])
 		cur_hash += words_per_stack_entry;
 		memcpy(cur_hash, blake3_IV, sizeof(blake3_IV));
 	}
-	ctx->stack_depth = (cur_hash - ctx->stack) / words_per_stack_entry;
+	ctx->stack_depth = (uint32_t)((cur_hash - ctx->stack) / words_per_stack_entry);
 }
 
 /**

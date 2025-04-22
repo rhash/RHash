@@ -298,7 +298,7 @@ enum HashNameMatchModes {
  *                   allowed.
  * @return id of hash function if found, zero otherwise
  */
-static unsigned bsd_hash_name_to_id(const char* name, unsigned length, enum HashNameMatchModes match_mode)
+static unsigned bsd_hash_name_to_id(const char* name, size_t length, enum HashNameMatchModes match_mode)
 {
 #define code2mask_size (19 * 2)
 	static unsigned code2mask[code2mask_size] = {
@@ -522,7 +522,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 				buf[len] = toupper(begin[len]);
 			}
 			buf[len] = '\0';
-			token->expected_hash_id = bsd_hash_name_to_id(buf, len, ExactMatch);
+			token->expected_hash_id = bsd_hash_name_to_id(buf, (size_t)len, ExactMatch);
 			if (!token->expected_hash_id)
 				return ResFailed;
 			token->hash_type = FmtAll;
@@ -1048,7 +1048,7 @@ unsigned get_crc32(struct rhash_context* ctx)
 static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* ctx)
 {
 	uint64_t hash_mask = parser->hash_mask;
-	unsigned unverified_mask;
+	uint64_t unverified_mask;
 	unsigned printed;
 	char hex[132], base32[104], base64[88];
 	int j;
@@ -1067,7 +1067,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 	if (parser->hashes_num == 0)
 		return !HP_FAILED(parser->bit_flags);
 
-	unverified_mask = (1 << parser->hashes_num) - 1;
+	unverified_mask = ((uint64_t)1 << parser->hashes_num) - 1;
 
 	while(hash_mask && unverified_mask) {
 		uint64_t bit64 = hash_mask & -hash_mask;
@@ -1084,7 +1084,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 			int comparision_mode;
 
 			/* skip already verified message digests and message digests of different size */
-			if (!(unverified_mask & (1 << j)) || !(hv->hash_mask & bit64))
+			if (!(unverified_mask & ((uint64_t)1 << j)) || !(hv->hash_mask & bit64))
 				continue;
 			comparision_mode = 0;
 			bit_length = rhash_get_digest_size(hash_id) * 8;
@@ -1127,7 +1127,7 @@ static int do_hash_sums_match(struct hash_parser* parser, struct rhash_context* 
 			if (!is_hash_string_equal(calculated_hash, expected_hash, hv->length, comparision_mode))
 				continue;
 
-			unverified_mask &= ~(1 << j); /* mark the j-th message digest as verified */
+			unverified_mask &= ~((uint64_t)1 << j); /* mark the j-th message digest as verified */
 			parser->found_hash_ids |= bit64;
 
 			/* end the loop if all message digests were successfully verified */

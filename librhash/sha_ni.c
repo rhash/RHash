@@ -397,7 +397,7 @@ static void rhash_sha256_ni_process_block(unsigned* state, const uint8_t* block,
         MSG1 = _mm_sha256msg1_epu32(MSG1, MSG2);
 
         /* Rounds 28-31 */
-        MSG = _mm_add_epi32(MSG3, _mm_set_epi64x(0x1429296706CA6351ULL,  0xD5A79147C6E00BF3ULL));
+        MSG = _mm_add_epi32(MSG3, _mm_set_epi64x(0x1429296706CA6351ULL, 0xD5A79147C6E00BF3ULL));
         STATE1 = _mm_sha256rnds2_epu32(STATE1, STATE0, MSG);
         TMP = _mm_alignr_epi8(MSG3, MSG2, 4);
         MSG0 = _mm_add_epi32(MSG0, TMP);

@@ -38,13 +38,15 @@ struct percents_output_info_t* percents_output = NULL;
  */
 static int count_printed_size(const char* format, const char* path, unsigned output_flags)
 {
-	size_t format_length = 0;
+	size_t format_length = 0, total_length;
 	if (format) {
 		assert(strstr(format, "%s") != NULL);
 		format_length = (IS_UTF8() ? count_utf8_symbols(format) : strlen(format)) - 2;
 	}
 	assert(path != NULL);
-	return format_length + (IS_UTF8() || (output_flags & OutForceUtf8) ? count_utf8_symbols(path) : strlen(path));
+	total_length = format_length + (IS_UTF8() || (output_flags & OutForceUtf8) ?
+		count_utf8_symbols(path) : strlen(path));
+	return (int)total_length;
 }
 
 /**
@@ -123,7 +125,7 @@ static int fprint_escaped(FILE* out, const char* str, unsigned output_flags)
 		pos = 0;
 	}
 	if ((output_flags & OutCountSymbols) != 0)
-		return escaped + count_printed_size(NULL, str, output_flags);
+		return (int)escaped + count_printed_size(NULL, str, output_flags);
 	return 0;
 }
 
@@ -397,8 +399,9 @@ static int print_verbose_hash_check_error(struct file_info* info)
 			struct hash_value* hv = &info->hp->hashes[i];
 			char* expected_hash = info->hp->line_begin + hv->offset;
 			uint64_t hid = hv->hash_mask;
+			uint32_t hash_id;
 			int pflags;
-			if ((info->hp->wrong_hashes & (1 << i)) == 0)
+			if ((info->hp->wrong_hashes & ((uint64_t)1 << i)) == 0)
 				continue;
 
 			assert(hid != 0);
@@ -414,13 +417,14 @@ static int print_verbose_hash_check_error(struct file_info* info)
 			}
 			assert(hid != 0 && (hid & (hid - 1)) == 0); /* single bit only */
 			reported |= hid;
+			hash_id = bit64_to_hash_id(hid);
 
-			pflags = (hv->length == (rhash_get_digest_size(hid) * 2) ?
+			pflags = (hv->length == (rhash_get_digest_size(hash_id) * 2) ?
 				(RHPR_HEX | RHPR_UPPERCASE) : (RHPR_BASE32 | RHPR_UPPERCASE));
-			rhash_print(actual, info->rctx, hid, pflags);
+			rhash_print(actual, info->rctx, hash_id, pflags);
 			/* TRANSLATORS: print a message like "CRC32 is ABC12345 should be BCA54321" */
 			if (rsh_fprintf(rhash_data.out, _(", %s is %s should be %s"),
-					rhash_get_name(hid), actual, expected_hash) < 0)
+					rhash_get_name(hash_id), actual, expected_hash) < 0)
 				return -1;
 		}
 	}

@@ -37,6 +37,10 @@
 #include <stddef.h>
 #include <string.h>
 
+#if defined(_WIN32)
+# include <io.h>
+#endif
+
 #define STATE_ACTIVE  0xb01dbabe
 #define STATE_STOPPED 0xdeadbeef
 #define STATE_DELETED 0xdecea5ed
@@ -106,7 +110,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 		}
 		assert(IS_EXTENDED_HASH_ID(info->info->hash_id));
 		assert(IS_VALID_EXTENDED_HASH_ID(info->info->hash_id));
-		hash_bitmask |= 1 << GET_EXTENDED_HASH_ID_INDEX(info->info->hash_id);
+		hash_bitmask |= I64(1) << GET_EXTENDED_HASH_ID_INDEX(info->info->hash_id);
 
 		/* align context sizes and sum up */
 		ctx_size_sum += GET_CTX_ALIGNED(info->context_size);
@@ -122,7 +126,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 	rctx->rc.hash_mask = hash_bitmask;
 	rctx->flags = RCTX_AUTO_FINAL; /* turn on auto-final by default */
 	rctx->state = STATE_ACTIVE;
-	rctx->hash_vector_size = count;
+	rctx->hash_vector_size = (unsigned)count;
 
 	/* calculate aligned pointer >= (&rctx->vector[count]) */
 	phash_ctx = (char*)rctx + header_size;
@@ -402,7 +406,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 			item_size = rhash_import_alg(hash_ids[i], dst_context, src_item, left_size);
 			imported_size += item_size;
 			if (!item_size || size < imported_size) {
-				ectx->hash_vector_size = i + 1; /* clean only initialized contextes */
+				ectx->hash_vector_size = (unsigned)i + 1; /* clean only initialized contextes */
 				rhash_free(&ectx->rc);
 				return import_error_einval();
 			}
@@ -411,7 +415,7 @@ RHASH_API rhash rhash_import(const void* in, size_t size)
 			item_size = hash_info->context_size;
 			imported_size += item_size;
 			if (size < imported_size) {
-				ectx->hash_vector_size = i + 1;
+				ectx->hash_vector_size = (unsigned)i + 1;
 				rhash_free(&ectx->rc);
 				return import_error_einval();
 			}
@@ -528,6 +532,14 @@ struct file_update_context {
 	size_t buffer_size;    /* Size of the data buffer */
 };
 
+#if defined(_WIN32)
+/* For Windows define ssize_t, which is Posix, but not in standard C */
+# define ssize_t intptr_t
+# define READ_SIZE_TYPE unsigned
+#else
+# define READ_SIZE_TYPE size_t
+#endif
+
 /**
  * Read data from a C file stream into the context buffer using fread().
  *
@@ -555,7 +567,7 @@ static ssize_t read_file_fd_impl(struct file_update_context *fctx, size_t data_s
 static ssize_t read_int_fd_impl(struct file_update_context *fctx, size_t data_size)
 {
 	assert(data_size <= fctx->buffer_size);
-	return read(fctx->int_fd, fctx->buffer, data_size);
+	return read(fctx->int_fd, fctx->buffer, (READ_SIZE_TYPE)data_size);
 }
 
 /**
@@ -723,13 +735,13 @@ RHASH_API int rhash_get_hash_length(unsigned hash_id)
 RHASH_API const char* rhash_get_name(unsigned hash_id)
 {
 	const rhash_info* info = rhash_info_by_id(hash_id);
-	return (info ? info->name : 0);
+	return (info ? info->name : NULL);
 }
 
 RHASH_API const char* rhash_get_magnet_name(unsigned hash_id)
 {
 	const rhash_info* info = rhash_info_by_id(hash_id);
-	return (info ? info->magnet_name : 0);
+	return (info ? info->magnet_name : NULL);
 }
 
 static size_t rhash_get_magnet_url_size(const char* filepath,

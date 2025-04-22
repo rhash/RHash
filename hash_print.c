@@ -497,8 +497,11 @@ static int print_time64(FILE* out, uint64_t time64, int sfv_format)
 
 static int is_gost94(unsigned hash_id)
 {
-	static unsigned gost94_id = hash_id_to_extended(RHASH_GOST94);
-	static unsigned gost94_cryptopro_id = hash_id_to_extended(RHASH_GOST94_CRYPTOPRO);
+	static unsigned gost94_id = 0, gost94_cryptopro_id = 0;
+	if (!gost94_id) {
+		gost94_id = hash_id_to_extended(RHASH_GOST94);
+		gost94_cryptopro_id = hash_id_to_extended(RHASH_GOST94_CRYPTOPRO);
+	}
 	return (hash_id == gost94_id || hash_id == gost94_cryptopro_id);
 }
 
@@ -687,6 +690,7 @@ void init_hash_info_table(void)
 			*(short_opt++) : 0);
 
 		info->name = rhash_get_name(hash_id);
+		RSH_REQUIRE(info->name != NULL, "rhash_get_name(0x%08x) failed\n", hash_id);
 		assert(strlen(info->name) < 19);
 		p = info->name;
 		d = info->short_name;
@@ -736,7 +740,7 @@ void init_hash_info_table(void)
 			}
 		} else
 			info->bsd_name = info->name;
-		assert(info->bsd_name);
+		RSH_REQUIRE(info->bsd_name, "No BSD name for hash id 0x%08x\n", hash_id);
 		++info;
 	}
 	assert((info - hash_info_table) == RHASH_HASH_COUNT);
