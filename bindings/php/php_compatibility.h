@@ -55,4 +55,9 @@ typedef size_t strsize_t;
 
 #endif
 
+#if PHP_MAJOR_VERSION >= 8
+#define TSRMLS_CC
+#define TSRMLS_DC
+#endif
+
 #endif /* PHP_PORTABLE_H */

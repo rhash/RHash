@@ -449,7 +449,7 @@ PHP_FUNCTION(rhash_file) {
 		RETURN_NULL();
 	}
 	if (!hash_id || !(context = rhash_init(hash_id))) {
-		RETURN_NULL()
+		RETURN_NULL();
 	}
 	res = _php_rhash_file(INTERNAL_FUNCTION_PARAM_PASSTHRU, context, path, -1, -1);
 	rhash_final(context, 0);
@@ -629,7 +629,7 @@ static void _php_get_hash(INTERNAL_FUNCTION_PARAMETERS, int print_flags)
 		RETURN_FALSE;
 	}
 	length = rhash_print(buffer, obj->rhash, hash_id, print_flags);
-	_RETURN_STRINGL(buffer, length)
+	_RETURN_STRINGL(buffer, length);
 }
 /* }}} */
 
