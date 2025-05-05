@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: rhash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2025-04-16 03:00+0300\n"
-"PO-Revision-Date: 2022-07-03 15:17-0500\n"
+"PO-Revision-Date: 2025-05-05 14:10-0500\n"
 "Last-Translator: 1024mb\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -164,7 +164,7 @@ msgstr ""
 
 #: output.c:815
 msgid "Calculating: "
-msgstr ""
+msgstr "Calculando: "
 
 #: output.c:849
 #, c-format
@@ -249,11 +249,11 @@ msgstr "Actualizar el archivo hash especificado.\n"
 
 #: parse_cmdline.c:105
 msgid "List files from hash file that are missing or inaccessible.\n"
-msgstr ""
+msgstr "Listar los archivos del archivo hash que faltan o son inaccesibles.\n"
 
 #: parse_cmdline.c:106
 msgid "List command-line files missing from given hash file.\n"
-msgstr ""
+msgstr "Listar los archivos de la línea de comandos que faltan en el archivo hash especificado.\n"
 
 #: parse_cmdline.c:107
 msgid "Rename files by inserting crc32 sum into name.\n"
@@ -350,7 +350,7 @@ msgstr "Mostrar sumas de comprobación usando un formato simple.\n"
 
 #: parse_cmdline.c:129
 msgid "Print one message digest per line without file information.\n"
-msgstr ""
+msgstr "Imprimir una suma de comprobación por línea sin la información del archivo.\n"
 
 #: parse_cmdline.c:130
 msgid "Print message digests in hexadecimal format.\n"
