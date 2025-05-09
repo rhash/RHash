@@ -9,15 +9,16 @@ msgstr ""
 "Project-Id-Version: RHash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2025-04-16 03:00+0300\n"
-"PO-Revision-Date: 2023-10-02 16:32-0300\n"
-"Last-Translator: Georger Araujo <georger_br@no.yahoo.spam.com.br>\n"
+"PO-Revision-Date: 2024-10-27 18:27-0300\n"
+"Last-Translator: Georger Araújo <georger underscore br at yahoo dot "
+"com dot br>\n"
 "Language-Team: Brazilian Portuguese\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.4.3\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #. TRANSLATORS: sample filename with embedded CRC32: file_[A1B2C3D4].mkv
 #: calc_sums.c:325
@@ -250,11 +251,14 @@ msgstr "Atualizar o arquivo de hash especificado.\n"
 #: parse_cmdline.c:105
 #, fuzzy
 msgid "List files from hash file that are missing or inaccessible.\n"
-msgstr "Ler o arquivo de hash e imprimir arquivos ausentes e inacessíveis.\n"
+msgstr "Listar arquivos do arquivo de hash que estão faltando ou inacessíveis.\n"
 
 #: parse_cmdline.c:106
+#, fuzzy
 msgid "List command-line files missing from given hash file.\n"
 msgstr ""
+"Listar os arquivos da linha de comando que não estão presentes no arquivo "
+"de hash.\n"
 
 #: parse_cmdline.c:107
 msgid "Rename files by inserting crc32 sum into name.\n"
@@ -328,7 +332,7 @@ msgstr "Arquivo de saída para registrar resultados de cálculo ou checagem.\n"
 
 #: parse_cmdline.c:125
 msgid "File to log errors and verbose information.\n"
-msgstr "Arquivo de log para registrar erros e informação verbosa.\n"
+msgstr "Arquivo de log para registrar erros e informações verbosas.\n"
 
 #: parse_cmdline.c:126
 msgid "Print message digests, using SFV format (default).\n"
@@ -345,6 +349,7 @@ msgstr "Imprimir sínteses de mensagem, usando formato simples.\n"
 #: parse_cmdline.c:129
 msgid "Print one message digest per line without file information.\n"
 msgstr ""
+"Imprimir uma síntese de mensagem por linha sem informações de arquivo.\n"
 
 #: parse_cmdline.c:130
 msgid "Print message digests in hexadecimal format.\n"
@@ -485,7 +490,3 @@ msgstr ""
 #, c-format
 msgid "Format string is: %s\n"
 msgstr "Cadeia de formato é: %s\n"
-
-#~ msgid "Print files that can't be verified by the hash file.\n"
-#~ msgstr ""
-#~ "Imprimir arquivos que não podem ser verificados pelo arquivo de hash.\n"
