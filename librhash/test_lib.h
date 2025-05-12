@@ -4,6 +4,7 @@
 
 #include "byte_order.h"
 #include "util.h"
+#include <limits.h>
 
 /* first some magic to convert a macro value to a string */
 #define STRINGIZE_ARG(x) #x
@@ -267,7 +268,6 @@ char* compiler_flags = "Compile-time flags:"
 	" __MACH__"
 #endif
 
-#include <limits.h>
 #ifdef __GLIBC__ /* GLIBC >= 6 */
 	" __GLIBC__"
 	" (__GLIBC__=" EXPAND_TO_STRING(__GLIBC__) ",__GLIBC_MINOR__=" EXPAND_TO_STRING(__GLIBC_MINOR__) ")"

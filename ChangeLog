@@ -1,3 +1,6 @@
+Tue 13 May 2025 Aleksey Kravchenko
+	* Bugfix: Compilation error with GCC 15
+
 Sat 19 Apr 2025 Aleksey Kravchenko
 	* Speed up file reading while hashing a file
 
