@@ -686,6 +686,7 @@ OPTFLAGS="-pipe -ffunction-sections -fdata-sections"
 check_set_contains "-fno-omit-frame-pointer" $BUILD_EXTRA_CFLAGS $BUILD_DEBUG \
   || OPTFLAGS="$OPTFLAGS -fomit-frame-pointer"
 OPTFLAGS=$(join_params $BUILD_DEBUG $OPTLEVEL $OPTNDEBUG $OPTFLAGS)
+LIBRHASH_OPTFLAGS=$OPTFLAGS
 
 # test that compiler works with options specified by command line
 log_start "compiler working with provided options"
@@ -780,7 +781,7 @@ if test "$OPT_SHANI" = "auto"; then
         "-msse4 -msha";
     then
       HAS_X86_SSE4_SHANI=yes
-	  OPTFLAGS=$(join_params $OPTFLAGS -msse4 -msha)
+	  LIBRHASH_OPTFLAGS=$(join_params $LIBRHASH_OPTFLAGS -msse4 -msha)
 	  LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DRHASH_SSE4_SHANI)
     fi
   fi
@@ -1009,7 +1010,7 @@ SHARED_LIB_MODE  = $SHARED_LIB_MODE
 EXTRA_INSTALL_LIBSHARED   = $EXTRA_INSTALL_LIBSHARED
 EXTRA_UNINSTALL_LIBSHARED = $EXTRA_UNINSTALL_LIBSHARED
 
-OPTFLAGS    = $OPTFLAGS
+OPTFLAGS    = $LIBRHASH_OPTFLAGS
 OPTLDFLAGS  = $WIN_LDFLAGS
 WARN_CFLAGS = $WARN_CFLAGS
 ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
