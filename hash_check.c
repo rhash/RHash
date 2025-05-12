@@ -1469,7 +1469,8 @@ static int hash_parser_process_file(struct hash_parser *parser, file_set* files)
 			if (files)
 			{
 				/* put UTF8-encoded file path into the file set */
-				const char* path = file_get_print_path(&parser->parsed_path, FPathUtf8);
+				const char* path = file_get_print_path(&parser->parsed_path,
+					FPathUtf8 | FileInitUpdatePrintPathToForwardSlashes);
 				if (path)
 					file_set_add_name(files, path);
 			}

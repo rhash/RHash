@@ -444,13 +444,16 @@ static const char* handle_rest_of_path_flags(file_t* file, const char* path, uns
 {
 	if (path == NULL)
 		return ((flags & FPathNotNull) ? (errno == EINVAL ? "(null)" : "(encoding error)") : NULL);
-	if ((flags & FileMaskUpdatePrintPath) != 0 && opt.path_separator) {
-		char* p = (char*)path - 1 + strlen(path);
-		for (; p >= path; p--) {
-			if (IS_ANY_SLASH(*p)) {
-				*p = opt.path_separator;
-				if ((flags & FileInitUpdatePrintPathLastSlash) != 0)
-					break;
+	if ((flags & FileMaskUpdatePrintPath) != 0) {
+		char path_separator = (flags & FileInitUpdatePrintPathToForwardSlashes ? '/' : opt.path_separator);
+		if (path_separator) {
+			char* p = (char*)path - 1 + strlen(path);
+			for (; p >= path; p--) {
+				if (IS_ANY_SLASH(*p)) {
+					*p = path_separator;
+					if ((flags & FileInitUpdatePrintPathLastSlash) != 0)
+						break;
+				}
 			}
 		}
 	}

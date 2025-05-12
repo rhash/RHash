@@ -163,6 +163,17 @@ int file_set_exist(file_set* set, const char* filepath)
 	search_filepath = (opt.flags & OPT_IGNORE_CASE ?
 		str_tolower(filepath) : (char*)filepath);
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+	/* replace backslash by forward slash before the search */
+	if (strchr(search_filepath, '\\')) {
+		char* p;
+		if (search_filepath == filepath)
+			search_filepath = rsh_strdup(filepath);
+		for (p = search_filepath; *p; p++)
+			if (*p == '\\') *p = '/';
+	}
+#endif
+
 	/* generate hash to speedup the search */
 	hash = file_set_make_hash(search_filepath);
 
@@ -186,6 +197,7 @@ int file_set_exist(file_set* set, const char* filepath)
 		if (cmp < 0) b = c;
 		else a = c;
 	}
-	if (search_filepath != filepath) free(search_filepath);
+	if (search_filepath != filepath)
+		free(search_filepath);
 	return res;
 }
