@@ -128,6 +128,10 @@ class TestRHash(unittest.TestCase):
             "d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c",
             ctx.hash(rhash.BLAKE2B),
         )
+        self.assertEqual(
+            "17762fddd969a453925d65717ac3eea21320b66b54342fde15128d6caf21215f",
+            ctx.hash(rhash.BLAKE3),
+        )
         # Test reset
         ctx.reset().finish()
         # Verify MD5( "" )

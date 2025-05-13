@@ -75,6 +75,7 @@ from ctypes import (
     c_int,
     c_size_t,
     c_uint,
+    c_ulonglong,
     c_void_p,
     create_string_buffer,
 )
@@ -124,6 +125,13 @@ else:
 
     def _run_rhash_ctrl(ctx, command, count=0, data=0):
         return _LIBRHASH.rhash_transmit(command, ctx, count, data)
+
+
+_HAS_RHASH_UPDATE_FD = hasattr(_LIBRHASH, "rhash_update_fd")
+_HAS_EXTENDED_HASH_IDS = _HAS_RHASH_UPDATE_FD
+if _HAS_RHASH_UPDATE_FD:
+    _LIBRHASH.rhash_update_fd.argtypes = [c_void_p, c_int, c_ulonglong]
+    _LIBRHASH.rhash_ctrl.restype = c_int
 
 
 # conversion of a string to binary data with Python 2/3 compatibility
@@ -187,7 +195,15 @@ SNEFRU128 = 0x08000000
 SNEFRU256 = 0x10000000
 BLAKE2S = 0x20000000
 BLAKE2B = 0x40000000
-ALL = 0x7FFFFFFF
+BLAKE3 = 0x8000001F
+if _HAS_EXTENDED_HASH_IDS:
+    ALL = 0xFF000000
+else:
+    ALL = 0x7FFFFFFF
+
+_LOW_HASH_MASK = 0x7FFFFFFF
+_EXTENDED_BIT = 0x80000000
+_MAX_HASH_COUNT = 256
 
 # four deprecated constants
 SHA224 = 0x10000
@@ -259,7 +275,14 @@ class RHash(object):
         for alg_id in hash_ids:
             if not isinstance(alg_id, int) or alg_id <= 0:
                 raise InvalidArgumentError("Invalid value of hash_ids")
-            if (alg_id & ALL) != alg_id or ((alg_id - 1) & alg_id) != 0:
+            if (alg_id & _EXTENDED_BIT) == 0:
+                if ((alg_id - 1) & alg_id) != 0:
+                    return False
+            elif not _HAS_EXTENDED_HASH_IDS:
+                raise InvalidArgumentError(
+                    "Hash_id is not supported by the installed librhash version"
+                )
+            elif (alg_id & _LOW_HASH_MASK) > _MAX_HASH_COUNT:
                 return False
         return True
 
@@ -307,7 +330,7 @@ class RHash(object):
         size = _LIBRHASH.rhash_print(buf, self._ctx, hash_id, flags)
         if not size:
             raise InvalidArgumentError(
-                "Requested message digest for an invalid hash_id = {}".format(hash_id)
+                "Requested message digest for an unsupported hash_id = {}".format(hash_id)
             )
         if (flags & 3) == _RHPR_RAW:
             return buf[0:size]
