@@ -829,7 +829,7 @@ if win32; then
   LIBRHASH_EXPORTS_SKIP="__NO_SKIP__"
 elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
-  LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBDIR)/$@'
+  LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBRHASH_SO_MAJ)/$@'
 else
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SO_MAJ)"
