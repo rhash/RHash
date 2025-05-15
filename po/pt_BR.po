@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: RHash\n"
 "Report-Msgid-Bugs-To: Aleksey <rhash.admin@gmail.com>\n"
 "POT-Creation-Date: 2025-05-13 23:49+0300\n"
-"PO-Revision-Date: 2024-10-27 18:27-0300\n"
+"PO-Revision-Date: 2025-05-15 20:42-0300\n"
 "Last-Translator: Georger Araújo <georger underscore br at yahoo dot com dot "
 "br>\n"
 "Language-Team: Brazilian Portuguese\n"
@@ -249,13 +249,11 @@ msgid "Update the specified hash file.\n"
 msgstr "Atualizar o arquivo de hash especificado.\n"
 
 #: parse_cmdline.c:105
-#, fuzzy
 msgid "List files from hash file that are missing or inaccessible.\n"
 msgstr ""
 "Listar arquivos do arquivo de hash que estão faltando ou inacessíveis.\n"
 
 #: parse_cmdline.c:106
-#, fuzzy
 msgid "List command-line files missing from given hash file.\n"
 msgstr ""
 "Listar os arquivos da linha de comando que não estão presentes no arquivo de "
