@@ -123,6 +123,15 @@ char* compiler_flags = "Compile-time flags:"
 #ifdef sparc
 	" sparc"
 #endif
+#ifdef __sw_64
+	" __sw_64"
+#endif
+#ifdef __sw_64__
+	" __sw_64__"
+#endif
+#ifdef sw_64
+	" sw_64"
+#endif
 #ifdef _ARCH_PPC
 	" _ARCH_PPC"
 #endif
