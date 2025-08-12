@@ -500,6 +500,7 @@ if test -z "$BUILD_TARGET"; then
           sh3|sh4|sh4a) HOST_ARCH=sh ;;
           s390) HOST_ARCH=s390 ;;
           s390x) HOST_ARCH=s390x ;;
+          sw_64) HOST_ARCH=sw_64 ;;
           *mips*) HOST_ARCH=mips ;;
           nios2) HOST_ARCH=nios2 ;;
           vax) HOST_ARCH=vax ;;
