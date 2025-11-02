@@ -33,7 +33,7 @@ For more complicated cases of installation see the [INSTALL.md] file.
 * Official Releases: https://github.com/rhash/RHash/releases/
 * Binary Windows Releases: https://sf.net/projects/rhash/files/rhash/
 * The table of the supported by RHash [hash functions](http://sf.net/p/rhash/wiki/HashFunctions/)
-* ECRYPT [The Hash Function Zoo](http://ehash.iaik.tugraz.at/wiki/The_Hash_Function_Zoo)
+* ECRYPT [The Hash Function Zoo](https://ehash.isec.tugraz.at/wiki/The_Hash_Function_Zoo.html)
 * ECRYPT [Benchmarking of hash functions](https://bench.cr.yp.to/results-hash.html)
 
 ## Contribution
