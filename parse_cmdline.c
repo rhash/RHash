@@ -394,7 +394,6 @@ enum option_type_t
 	F_TSTR = 3 | F_NEED_PARAM, /* store parameter as a tstr_t */
 	F_TOUT = 4 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 5, /* just call a function */
-	F_PFNC = 6 | F_NEED_PARAM, /* process option parameter by calling a handler */
 	F_TFNC = 7 | F_NEED_PARAM, /* process option parameter by calling a handler */
 	F_UFNC = 8 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
 	F_PRNT = 9, /* print a constant C-string and exit */
@@ -483,18 +482,18 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "speed",         0, &opt.flags, OPT_SPEED },
 	{ F_UFLG, 'e',   0, "embed-crc",     0, &opt.flags, OPT_EMBED_CRC },
 	{ F_CSTR,   0,   0, "embed-crc-delimiter", 0, &opt.embed_crc_delimiter, 0 },
-	{ F_PFNC,   0,   0, "path-separator", (opt_handler_t)set_path_separator, 0, 0 },
+	{ F_UFNC,   0,   0, "path-separator", (opt_handler_t)set_path_separator, 0, 0 },
 	{ F_TOUT, 'o',   0, "output",        0, &opt.output, 0 },
 	{ F_TOUT, 'l',   0, "log",           0, &opt.log,    0 },
-	{ F_PFNC, 'q',   0, "accept",        (opt_handler_t)add_file_suffix, 0, MASK_ACCEPT },
-	{ F_PFNC, 't',   0, "crc-accept",    (opt_handler_t)add_file_suffix, 0, MASK_CRC_ACCEPT },
-	{ F_PFNC,   0,   0, "exclude",       (opt_handler_t)add_file_suffix, 0, MASK_EXCLUDE },
+	{ F_UFNC, 'q',   0, "accept",        (opt_handler_t)add_file_suffix, 0, MASK_ACCEPT },
+	{ F_UFNC, 't',   0, "crc-accept",    (opt_handler_t)add_file_suffix, 0, MASK_CRC_ACCEPT },
+	{ F_UFNC,   0,   0, "exclude",       (opt_handler_t)add_file_suffix, 0, MASK_EXCLUDE },
 	{ F_VFNC,   0,   0, "video",         (opt_handler_t)accept_video, 0, 0 },
 	{ F_VFNC,   0,   0, "nya",           (opt_handler_t)nya, 0, 0 },
-	{ F_PFNC,   0,   0, "max-depth",      (opt_handler_t)set_max_depth, 0, 0 },
+	{ F_UFNC,   0,   0, "max-depth",      (opt_handler_t)set_max_depth, 0, 0 },
 	{ F_UFLG,   0,   0, "bt-private",    0, &opt.flags, OPT_BT_PRIVATE },
 	{ F_UFLG,   0,   0, "bt-transmission", 0, &opt.flags, OPT_BT_TRANSMISSION },
-	{ F_PFNC,   0,   0, "bt-piece-length", (opt_handler_t)set_bt_piece_length, 0, 0 },
+	{ F_UFNC,   0,   0, "bt-piece-length", (opt_handler_t)set_bt_piece_length, 0, 0 },
 	{ F_UFNC,   0,   0, "bt-announce",   (opt_handler_t)bt_announce, 0, 0 },
 	{ F_TSTR,   0,   0, "bt-batch",      0, &opt.bt_batch_file, 0 },
 	{ F_UFLG,   0,   0, "benchmark-raw", 0, &opt.flags, OPT_BENCH_RAW },
@@ -503,10 +502,10 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "hex",           0, &opt.flags, OPT_HEX },
 	{ F_UFLG,   0,   0, "base32",        0, &opt.flags, OPT_BASE32 },
 	{ F_UFLG, 'b',   0, "base64",        0, &opt.flags, OPT_BASE64 },
-	{ F_PFNC,   0,   0, "openssl",       (opt_handler_t)openssl_flags, 0, 0 },
+	{ F_UFNC,   0,   0, "openssl",       (opt_handler_t)openssl_flags, 0, 0 },
 
 	/* for compatibility */
-	{ F_PFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
+	{ F_UFNC,   0,   0, "maxdepth",      (opt_handler_t)set_max_depth, 0, 0 },
 
 #ifdef _WIN32 /* code pages (windows only) */
 	{ F_UENC,   0,   0, "utf8", 0, &opt.flags, OPT_UTF8 },
@@ -553,25 +552,35 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 
 	/* check if option requires a parameter */
 	if (is_param_required(option_type)) {
-		if (!option->parameter) {
+#ifdef _WIN32
+		int from_config = (opts == &conf_opt);
+#endif
+		rsh_tchar* tparam = (rsh_tchar*)option->parameter;
+		if (!tparam) {
 			die(_("argument is required for option %s\n"), option->name);
 		}
 
 #ifdef _WIN32
+		if (from_config) {
+			/* treat config lines as UTF-8 encoded and convert it to UTF-16 */
+			tparam = convert_str_to_wcs((char*)option->parameter, ConvertToUtf8);
+		}
 		if (option_type == F_TOUT || option_type == F_TFNC || option_type == F_TSTR) {
 			/* leave the value in UTF-16 */
-			value = (char*)rsh_wcsdup((wchar_t*)option->parameter);
+			value = (char*)rsh_wcsdup(tparam);
 		}
 		else if (option_type == F_UFNC) {
 			/* convert from UTF-16 to UTF-8 */
-			value = convert_wcs_to_str((wchar_t*)option->parameter, ConvertToUtf8 | ConvertExact);
+			value = convert_wcs_to_str(tparam, ConvertToUtf8 | ConvertExact);
 		} else {
 			/* convert from UTF-16 */
-			value = convert_wcs_to_str((wchar_t*)option->parameter, ConvertToPrimaryEncoding);
+			value = convert_wcs_to_str(tparam, ConvertToPrimaryEncoding);
 		}
 		rsh_vector_add_ptr(opt.mem, value);
+		if (from_config)
+			free(tparam);
 #else
-		value = (char*)option->parameter;
+		value = tparam;
 #endif
 	}
 
@@ -587,7 +596,6 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 		/* save the option parameter */
 		*(char**)((char*)opts + ((char*)o->ptr - (char*)&opt)) = value;
 		break;
-	case F_PFNC:
 	case F_TFNC:
 	case F_UFNC:
 		/* call option parameter handler */
@@ -741,7 +749,7 @@ static int read_config(void)
 	int res;
 
 	/* initialize conf_opt */
-	memset(&conf_opt, 0, sizeof(opt));
+	memset(&conf_opt, 0, sizeof(conf_opt));
 	conf_opt.find_max_depth = -1;
 
 	if (!find_conf_file()) return 0;
@@ -750,13 +758,18 @@ static int read_config(void)
 
 	fd = file_fopen(&rhash_data.config_file, FOpenRead);
 	if (!fd) return -1;
+	memset(&option, 0, sizeof(option));
 
 	while (fgets(buf, LINE_BUF_SIZE, fd)) {
 		size_t index;
 		cmdline_opt_t* t;
-		char* line = str_trim(buf);
+		char* line = buf;
 		char* name;
 		char* value;
+
+		if (STARTS_WITH_UTF8_BOM(line))
+			line += 3;
+		line = str_trim(line);
 
 		line_number++;
 		if (*line == 0 || IS_COMMENT(*line))

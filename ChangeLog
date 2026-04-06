@@ -1,3 +1,6 @@
+Mon 06 Apr 2026 Aleksey Kravchenko
+	* Bugfix: Fix parsing of config strings on Windows
+
 Wed 14 May 2025 Aleksey Kravchenko
 	* === Version 1.4.6 ===
 
