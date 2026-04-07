@@ -390,7 +390,6 @@ enum option_type_t
 	F_OUTPUT_OPT = 32, /* flag: option changes program output */
 	F_UFLG = 1, /* set a bit flag in a uint32_t field */
 	F_UENC = F_UFLG | F_OUTPUT_OPT, /* an encoding changing option */
-	F_CSTR = 2 | F_NEED_PARAM, /* store parameter as a C string */
 	F_TSTR = 3 | F_NEED_PARAM, /* store parameter as a tstr_t */
 	F_TOUT = 4 | F_NEED_PARAM | F_OUTPUT_OPT,
 	F_VFNC = 5, /* just call a function */
@@ -466,7 +465,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UFLG,   0,   0, "uppercase", 0, &opt.flags, OPT_UPPERCASE },
 	{ F_UFLG,   0,   0, "lowercase", 0, &opt.flags, OPT_LOWERCASE },
 	{ F_TSTR,   0,   0, "template",  0, &opt.template_file, 0 },
-	{ F_CSTR, 'p',   0, "printf",    0, &opt.printf_str, 0 },
+	{ F_TSTR, 'p',   0, "printf",    0, &opt.printf_str, 0 },
 
 	/* other options */
 	{ F_UFLG, 'r', 'R', "recursive",     0, &opt.flags, OPT_RECURSIVE },
@@ -481,7 +480,7 @@ cmdline_opt_t cmdline_opt[] =
 	{ F_UENC, 'P',   0, "percents",      0, &opt.flags, OPT_PERCENTS },
 	{ F_UFLG,   0,   0, "speed",         0, &opt.flags, OPT_SPEED },
 	{ F_UFLG, 'e',   0, "embed-crc",     0, &opt.flags, OPT_EMBED_CRC },
-	{ F_CSTR,   0,   0, "embed-crc-delimiter", 0, &opt.embed_crc_delimiter, 0 },
+	{ F_TSTR,   0,   0, "embed-crc-delimiter", 0, &opt.embed_crc_delimiter, 0 },
 	{ F_UFNC,   0,   0, "path-separator", (opt_handler_t)set_path_separator, 0, 0 },
 	{ F_TOUT, 'o',   0, "output",        0, &opt.output, 0 },
 	{ F_TOUT, 'l',   0, "log",           0, &opt.log,    0 },
@@ -571,7 +570,7 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 		}
 		else if (option_type == F_UFNC) {
 			/* convert from UTF-16 to UTF-8 */
-			value = convert_wcs_to_str(tparam, ConvertToUtf8 | ConvertExact);
+			value = convert_wcs_to_str(tparam, ConvertUtf8ToWcs | ConvertExact);
 		} else {
 			/* convert from UTF-16 */
 			value = convert_wcs_to_str(tparam, ConvertToPrimaryEncoding);
@@ -590,7 +589,6 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 	case F_UENC:
 		*(unsigned*)((char*)opts + ((char*)o->ptr - (char*)&opt)) |= o->param;
 		break;
-	case F_CSTR:
 	case F_TSTR:
 	case F_TOUT:
 		/* save the option parameter */
@@ -1068,6 +1066,18 @@ static void apply_cmdline_options(struct parsed_cmd_line_t* cmd_line)
 	if (opt.find_max_depth < 0) opt.find_max_depth = conf_opt.find_max_depth;
 	if (!(opt.flags & OPT_RECURSIVE)) opt.find_max_depth = 0;
 	opt.search_data->max_depth = opt.find_max_depth;
+
+#ifdef _WIN32
+	/* convert from UTF-16 to UTF-8, after choosing primary codepage */
+	if (opt.printf_str) {
+		opt.printf_str = convert_wcs_to_str((rsh_tchar*)opt.printf_str, ConvertToPrimaryEncoding);
+		rsh_vector_add_ptr(opt.mem, opt.printf_str);
+	}
+	if (opt.embed_crc_delimiter) {
+		opt.embed_crc_delimiter = convert_wcs_to_str((rsh_tchar*)opt.embed_crc_delimiter, ConvertToPrimaryEncoding);
+		rsh_vector_add_ptr(opt.mem, opt.embed_crc_delimiter);
+	}
+#endif
 
 	/* set defaults */
 	if (opt.embed_crc_delimiter == 0) opt.embed_crc_delimiter = " ";
