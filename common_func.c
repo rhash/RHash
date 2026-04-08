@@ -77,7 +77,9 @@ char* str_tolower(const char* str)
 	char* buf = rsh_strdup(str);
 	char* p;
 	if (buf) {
-		for (p = buf; *p; p++) *p = tolower(*p);
+		for (p = buf; *p; p++)
+			if ((0xC0 & (unsigned char)*p) == 0x40)
+				*p = tolower(*p);
 	}
 	return buf;
 }
