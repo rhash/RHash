@@ -1586,7 +1586,11 @@ static unsigned find_hash(const char* name)
 static void print_cpu_features(void)
 {
 #if !defined(NO_HAS_CPU_FEATURE)
-	printf("CPU Features:%s%s\n",
+	printf("CPU Features:%s%s%s%s%s%s\n",
+		(rhash_has_cpu_feature(CPU_FEATURE_SSE2) ? " SSE2" : ""),
+		(rhash_has_cpu_feature(CPU_FEATURE_SSE3) ? " SSE3" : ""),
+		(rhash_has_cpu_feature(CPU_FEATURE_SSSE3) ? " SSSE3" : ""),
+		(rhash_has_cpu_feature(CPU_FEATURE_SSE4_1) ? " SSE_4.1" : ""),
 		(rhash_has_cpu_feature(CPU_FEATURE_SSE4_2) ? " SSE_4.2" : ""),
 		(rhash_has_cpu_feature(CPU_FEATURE_SHANI) ? " SHANI" : ""));
 #endif

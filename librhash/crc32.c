@@ -612,7 +612,7 @@ unsigned rhash_crc32c_table[8][256] = { {
 	0xe54c35a1, 0xac704886, 0x7734cfef, 0x3e08b2c8, 0xc451b7cc, 0x8d6dcaeb, 0x56294d82, 0x1f1530a5
 } };
 
-#ifdef HAS_INTEL_CPUID
+#ifdef HAS_GCC_INTEL_CPUID
 static unsigned calculate_crc32c_choose_best(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size);
 static unsigned calculate_crc32c_sse42(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size);
 static unsigned (*calculate_crc32c_p)(unsigned crcinit, unsigned table[8][256], const unsigned char* msg, size_t size) = calculate_crc32c_choose_best;

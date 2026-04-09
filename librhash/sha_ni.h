@@ -6,7 +6,7 @@
 # if defined(__GNUC__) && defined(__SHA__)
 #  define RHASH_GCC_SHANI
 /* SHA extensions are supported by Visual Studio >= 2015 */
-# elif (_MSC_VER >= 1900)
+# elif (_MSC_VER >= 1900) && (_M_IX86 || _M_AMD64)
 #  define RHASH_MSVC_SHANI
 # else
 #  define RHASH_DISABLE_SHANI

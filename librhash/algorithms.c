@@ -143,7 +143,13 @@ rhash_hash_info rhash_hash_info_default[] =
 #if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
 static void table_init_sha_ext(void)
 {
-	if (has_cpu_feature(CPU_FEATURE_SHANI))
+	/* SHA-NI Implementation uses SHANI, SSE2, SSSE3, SSE4.1 instructions.
+	 * Checking for SSE4.1 requires to check for SSSE3, SSE3 and SSE2. */
+	if (has_cpu_feature(CPU_FEATURE_SHANI) &&
+		has_cpu_feature(CPU_FEATURE_SSE2) &&
+		has_cpu_feature(CPU_FEATURE_SSE3) &&
+		has_cpu_feature(CPU_FEATURE_SSSE3) &&
+		has_cpu_feature(CPU_FEATURE_SSE4_1))
 	{
 		assert(rhash_hash_info_default[3].init == (pinit_t)rhash_sha1_init);
 		rhash_hash_info_default[3].update = (pupdate_t)rhash_sha1_ni_update;
