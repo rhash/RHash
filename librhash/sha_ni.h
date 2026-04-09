@@ -3,7 +3,7 @@
 #define SHA_NI_H
 
 #if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
-# if defined(__GNUC__)
+# if defined(__GNUC__) && defined(__SHA__)
 #  define RHASH_GCC_SHANI
 /* SHA extensions are supported by Visual Studio >= 2015 */
 # elif (_MSC_VER >= 1900)
