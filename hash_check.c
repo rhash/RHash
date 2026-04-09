@@ -517,7 +517,7 @@ static int match_hash_tokens(struct hash_token* token, const char* format, unsig
 			/* the name should contain alphanumeric or '-' symbols, but */
 			/* actually the loop shall stop at characters [:& \(\t] */
 			for (; (begin[len] <= '9' ? begin[len] >= '0' || begin[len] == '-' : begin[len] >= 'A'); len++) {
-				if (len >= 20)
+				if ((size_t)len >= (sizeof(buf) - 1))
 					return ResFailed; /* limit name length */
 				buf[len] = toupper(begin[len]);
 			}
