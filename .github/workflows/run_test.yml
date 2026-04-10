@@ -37,6 +37,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y qemu-user-static binfmt-support \
           gcc-powerpc64-linux-gnu libc-dev-ppc64-cross
 
