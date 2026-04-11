@@ -32,13 +32,14 @@ Usage examples
  
  int main(int argc, char *argv[]) {
    rhash context;
-   char digest[64];
    char output[130];
    int i;
+   const size_t hash_count = 2;
+   const unsigned hash_ids[hash_count] = { RHASH_MD4, RHASH_MD5 };
  
    rhash_library_init(); /* initialize static data */
  
-   context = rhash_init(RHASH_MD4 | RHASH_MD5);
+   context = rhash_init_multi(hash_count, hash_ids);
    if(!context) {
      fprintf(stderr, "error: couldn't initialize rhash context\n");
      return 1;
@@ -72,7 +73,7 @@ Usage examples
  int main(int argc, char *argv[])
  {
    const char* msg = "message digest";
-   char digest[64];
+   unsigned char digest[64];
    char output[130];
  
    rhash_library_init(); /* initialize static data */
@@ -96,19 +97,20 @@ Usage examples
 
 ```c
  #include <errno.h>
+ #include <string.h>
  #include "rhash.h" /* LibRHash interface */
  
  int main(int argc, char *argv[])
  {
    const char* filepath = "test_file.txt";
-   char digest[64];
+   unsigned char digest[64];
    char output[130];
  
    rhash_library_init(); /* initialize static data */
  
    int res = rhash_file(RHASH_TTH, filepath, digest);
    if(res < 0) {
-     fprintf(stderr, "LibRHash error: %s: %s\n", filepath, strerror(errno));
+     fprintf(stderr, "rhash_file() failed for \"%s\": %s\n", filepath, strerror(errno));
      return 1;
    }
  
