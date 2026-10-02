@@ -13,7 +13,7 @@
 # endif
 #endif
 
-#if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
+#if defined(RHASH_SSE4_SHANI)
 #include "sha1.h"
 #include "sha256.h"
 

@@ -134,7 +134,7 @@ sha1.o: sha1.c byte_order.h ustd.h sha1.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 sha_ni.o: sha_ni.c sha_ni.h sha1.h ustd.h sha256.h byte_order.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(SHANI_CFLAGS) $< -o $@
 
 sha256.o: sha256.c byte_order.h ustd.h sha256.h
 	$(CC) -c $(CFLAGS) $< -o $@
