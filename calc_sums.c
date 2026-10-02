@@ -275,11 +275,16 @@ int calc_sums(struct file_info* info)
 int find_embedded_crc32(file_t* file, unsigned* crc32)
 {
 	const char* filepath = file_get_print_path(file, FPathUtf8 | FPathNotNull);
-	const char* e = filepath + strlen(filepath) - 10;
+	size_t filepath_length = strlen(filepath);
+	const char* e;
+	size_t pos;
 	unsigned char raw[4];
+	if (filepath_length < 10) return 0;
 
 	/* search for the sum enclosed in brackets */
-	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
+	for (pos = filepath_length - 10; ; pos--) {
+		e = filepath + pos;
+		if (IS_PATH_SEPARATOR(*e)) break;
 		if ((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
 			const char* p = e + 8;
 			for (; p > e && IS_HEX(*p); p--);
@@ -289,8 +294,10 @@ int find_embedded_crc32(file_t* file, unsigned* crc32)
 					((unsigned)raw[2] << 8) | (unsigned)raw[3];
 				return 1;
 			}
-			e -= 9;
+			if (pos < 9) break;
+			pos -= 9;
 		}
+		if (pos == 0) break;
 	}
 	return 0;
 }
@@ -402,7 +409,6 @@ static int save_torrent(struct file_info* info)
 	int res;
 	/* append .torrent extension to the file path */
 	file_t torrent_file;
-	file_modify_path(&torrent_file, info->file, ".torrent", FModifyAppendSuffix);
 	res = file_modify_path(&torrent_file, info->file, ".torrent", FModifyAppendSuffix);
 	if (res >= 0)
 		res = save_torrent_to(&torrent_file, info->rctx);

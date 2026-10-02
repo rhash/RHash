@@ -158,6 +158,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
 {
 	rhash_context_ext* ectx = rhash_alloc_multi(count, hash_ids, 1);
+	if (!ectx) return NULL;
 	return &ectx->rc; /* return initialized rhash context */
 }
 
@@ -1057,8 +1058,11 @@ static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 			bitmask |= data[i];
 		else if (data[i] == RHASH_ALL_HASHES)
 			bitmask |= RHASH_LOW_HASHES_MASK;
-		else
-			bitmask |= 1 << GET_EXTENDED_HASH_ID_INDEX(data[i]);
+		else {
+			unsigned index = GET_EXTENDED_HASH_ID_INDEX(data[i]);
+			if (index < RHASH_HASH_COUNT)
+				bitmask |= 1u << index;
+		}
 	}
 	return bitmask;
 }

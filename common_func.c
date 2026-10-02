@@ -92,8 +92,10 @@ char* str_tolower(const char* str)
  */
 char* str_trim(char* str)
 {
-	char* last = str + strlen(str) - 1;
+	char* last;
 	while (isspace((unsigned char)*str)) str++;
+	if (!*str) return str;
+	last = str + strlen(str) - 1;
 	while (isspace((unsigned char)*last) && last > str) *(last--) = 0;
 	return str;
 }
@@ -193,7 +195,7 @@ char* str_replace_n(const char* src, size_t start_pos, size_t end_pos, const cha
 int is_binary_string(const char* str)
 {
 	for (; *str; str++) {
-		if (((unsigned char)*str) < 32 && ((1 << (unsigned char)*str) & ~0x2600)) {
+		if (((unsigned char)*str) < 32 && ((1u << (unsigned char)*str) & ~0x2600u)) {
 			return 1;
 		}
 	}
