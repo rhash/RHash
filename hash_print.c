@@ -273,7 +273,8 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
 }
 
 /**
- * Convert given case-insensitive name to a printf directive id
+ * Convert given case-insensitive name to a printf directive id,
+ * ignoring dashes in the name.
  *
  * @param name printf directive name (not a 0-terminated)
  * @param length name length
@@ -283,13 +284,15 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
 static unsigned printf_name_to_id(const char* name, size_t length, unsigned* flags)
 {
 	char buf[20];
-	size_t i;
+	size_t i, normalized_length = 0;
 	print_hash_info* info = hash_info_table;
 
 	if (length > (sizeof(buf) - 1))
 		return 0;
-	for (i = 0; i < length; i++)
-		buf[i] = tolower(name[i]);
+	for (i = 0; i < length; i++) {
+		if (name[i] != '-')
+			buf[normalized_length++] = (char)tolower((unsigned char)name[i]);
+	}
 
 	/* check for legacy '%{urlname}' directive for compatibility */
 	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
@@ -302,8 +305,15 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 
 	/* loop by hash functions */
 	for (info = hash_info_table; info->hash_id; info++) {
-		if (memcmp(buf, info->short_name, length) == 0 &&
-				info->short_name[length] == 0)
+		const char* p = info->short_name;
+		size_t pos = 0;
+		for (; *p && pos < normalized_length; p++) {
+			if (*p != '-') {
+				if (buf[pos++] != *p) break;
+			}
+		}
+		while (*p == '-') p++;
+		if (pos == normalized_length && *p == 0)
 			return info->hash_id;
 	}
 	return 0;
