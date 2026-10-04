@@ -283,7 +283,7 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
  */
 static unsigned printf_name_to_id(const char* name, size_t length, unsigned* flags)
 {
-	char buf[20];
+	char buf[20] = { 0 };
 	size_t i, normalized_length = 0;
 	print_hash_info* info = hash_info_table;
 
