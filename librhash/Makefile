@@ -5,6 +5,7 @@ include config.mak
 HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_torrent.h aich.h blake2b.h blake2s.h blake3.h crc32.h ed2k.h edonr.h hex.h md4.h md5.h sha1.h sha_ni.h sha256.h sha512.h sha3.h ripemd-160.h gost12.h gost94.h has160.h snefru.h tiger.h tth.h torrent.h ustd.h util.h whirlpool.h
 SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_torrent.c aich.c blake2b.c blake2s.c blake3.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha_ni.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
 OBJECTS = $(SOURCES:.c=.o)
+SHARED_SOURCES = $(SOURCES:sha_ni.c=sha_ni_shared.o)
 LIB_HEADERS = rhash.h rhash_torrent.h
 TEST_STATIC = test_static$(EXEC_EXT)
 TEST_SHARED = test_shared$(EXEC_EXT)
@@ -136,6 +137,9 @@ sha1.o: sha1.c byte_order.h ustd.h sha1.h
 sha_ni.o: sha_ni.c sha_ni.h sha1.h ustd.h sha256.h byte_order.h
 	$(CC) -c $(CFLAGS) $(SHANI_CFLAGS) $< -o $@
 
+sha_ni_shared.o: sha_ni.c sha_ni.h sha1.h ustd.h sha256.h byte_order.h
+	$(CC) -c $(SHARED_CFLAGS) $(SHANI_CFLAGS) $(VERSION_CFLAGS) $< -o $@
+
 sha256.o: sha256.c byte_order.h ustd.h sha256.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -189,8 +193,8 @@ $(LIBRHASH_SOLINK):
 	rm -f $(LIBRHASH_SOLINK)
 	ln -s $(LIBRHASH_SO_MAJ) $(LIBRHASH_SOLINK)
 
-$(LIBRHASH_SHARED): $(SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
-	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SOURCES) $(SHARED_LDFLAGS) -o $@
+$(LIBRHASH_SHARED): $(SHARED_SOURCES) $(EXPORTS_TARGET) $(SOLINK_TARGET)
+	$(CC) $(SHARED_CFLAGS) $(VERSION_CFLAGS) $(SHARED_SOURCES) $(SHARED_LDFLAGS) -o $@
 
 # build static library
 $(LIBRHASH_STATIC): $(OBJECTS)
