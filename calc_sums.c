@@ -277,14 +277,12 @@ int find_embedded_crc32(file_t* file, unsigned* crc32)
 	const char* filepath = file_get_print_path(file, FPathUtf8 | FPathNotNull);
 	size_t filepath_length = strlen(filepath);
 	const char* e;
-	size_t pos;
 	unsigned char raw[4];
 	if (filepath_length < 10) return 0;
+	e = filepath + filepath_length - 10;
 
 	/* search for the sum enclosed in brackets */
-	for (pos = filepath_length - 10; ; pos--) {
-		e = filepath + pos;
-		if (IS_PATH_SEPARATOR(*e)) break;
+	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
 		if ((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
 			const char* p = e + 8;
 			for (; p > e && IS_HEX(*p); p--);
@@ -294,10 +292,10 @@ int find_embedded_crc32(file_t* file, unsigned* crc32)
 					((unsigned)raw[2] << 8) | (unsigned)raw[3];
 				return 1;
 			}
-			if (pos < 9) break;
-			pos -= 9;
+			if (e - filepath < 10) break;
+			e -= 9;
 		}
-		if (pos == 0) break;
+		if (e == filepath) break;
 	}
 	return 0;
 }
