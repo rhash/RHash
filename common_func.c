@@ -92,8 +92,10 @@ char* str_tolower(const char* str)
  */
 char* str_trim(char* str)
 {
-	char* last = str + strlen(str) - 1;
+	char* last;
 	while (isspace((unsigned char)*str)) str++;
+	if (!*str) return str;
+	last = str + strlen(str) - 1;
 	while (isspace((unsigned char)*last) && last > str) *(last--) = 0;
 	return str;
 }
