@@ -140,7 +140,7 @@ rhash_hash_info rhash_hash_info_default[] =
 	{ &info_blake3, sizeof(blake3_ctx),  dgshft2(blake3, root.hash), iuf(rhash_blake3), 0 }       /* 256 bit */
 };
 
-#if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
+#if defined(RHASH_SSE4_SHANI)
 static void table_init_sha_ext(void)
 {
 	/* SHA-NI Implementation uses SHANI, SSE2, SSSE3, SSE4.1 instructions.
