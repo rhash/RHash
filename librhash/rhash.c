@@ -158,6 +158,7 @@ static rhash_context_ext* rhash_alloc_multi(size_t count, const unsigned hash_id
 RHASH_API rhash rhash_init_multi(size_t count, const unsigned hash_ids[])
 {
 	rhash_context_ext* ectx = rhash_alloc_multi(count, hash_ids, 1);
+	if (!ectx) return NULL;
 	return &ectx->rc; /* return initialized rhash context */
 }
 
