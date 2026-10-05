@@ -248,7 +248,7 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
  */
 static int is_acceptable_bit_length(int length)
 {
-	if ((length & 31) == 0 && length <= 512)
+	if (length > 0 && (length & 31) == 0 && length <= 512)
 	{
 		int pow = get_ctz(length >> 5);
 		int code = ((length >> (pow + 6)) << 3) | pow;
