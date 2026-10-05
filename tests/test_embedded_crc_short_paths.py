@@ -11,6 +11,7 @@ with tempfile.TemporaryDirectory() as directory:
     Path(directory, "a").write_bytes(b"A")
     result = subprocess.run([binary, "--check-embedded", "a"], cwd=directory,
                             env=env, capture_output=True, text=True, timeout=10)
+    assert result.returncode == 1, (result.returncode, result.stderr)
     assert "file name doesn't contain a CRC32" in result.stderr, result.stderr
     assert "invalid-pointer-pair" not in result.stderr, result.stderr
 print("PASS: short filename is rejected without invalid pointer comparison")
