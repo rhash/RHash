@@ -1057,8 +1057,11 @@ static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 			bitmask |= data[i];
 		else if (data[i] == RHASH_ALL_HASHES)
 			bitmask |= RHASH_LOW_HASHES_MASK;
-		else
-			bitmask |= 1 << GET_EXTENDED_HASH_ID_INDEX(data[i]);
+		else {
+			unsigned index = GET_EXTENDED_HASH_ID_INDEX(data[i]);
+			if (index < RHASH_HASH_COUNT)
+				bitmask |= 1u << index;
+		}
 	}
 	return bitmask;
 }
