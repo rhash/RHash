@@ -6,7 +6,8 @@ import tempfile
 import zlib
 
 binary = str(Path(sys.argv[1]).resolve())
-crc = f"{zlib.crc32(b"A"):08X}"
+crc_value = zlib.crc32(b"A")
+crc = f"{crc_value:08X}"
 cases = [("a", False), ("123456789", False), ("1234567890", False),
          (f"[{crc}]", True), (f"({crc})", True),
          (f"prefix_[{crc}].data", True), (f"[{crc}][ZZZZZZZZ]", True),
