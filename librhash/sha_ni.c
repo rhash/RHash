@@ -38,7 +38,7 @@
  * @param hash algorithm state
  * @param block the message block to process
  */
-static void rhash_sha1_ni_process_block(unsigned* state, const uint8_t* block, size_t length)
+static RHASH_SHANI_TARGET void rhash_sha1_ni_process_block(unsigned* state, const uint8_t* block, size_t length)
 {
     __m128i ABCD, ABCD_SAVE, E0, E0_SAVE, E1;
     __m128i MSG0, MSG1, MSG2, MSG3;
@@ -304,7 +304,7 @@ void rhash_sha1_ni_final(sha1_ctx* ctx, unsigned char* result)
  * @param hash algorithm state
  * @param block the message block to process
  */
-static void rhash_sha256_ni_process_block(unsigned* state, const uint8_t* block, size_t length)
+static RHASH_SHANI_TARGET void rhash_sha256_ni_process_block(unsigned* state, const uint8_t* block, size_t length)
 {
     __m128i STATE0, STATE1;
     __m128i MSG, TMP;

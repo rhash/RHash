@@ -3,11 +3,13 @@
 #define SHA_NI_H
 
 #if defined(RHASH_SSE4_SHANI) && !defined(RHASH_DISABLE_SHANI)
-# if defined(__GNUC__) && defined(__SHA__)
+# if defined(__GNUC__)
 #  define RHASH_GCC_SHANI
+#  define RHASH_SHANI_TARGET __attribute((target("ssse3,sse4.1,sha")))
 /* SHA extensions are supported by Visual Studio >= 2015 */
 # elif (_MSC_VER >= 1900) && (_M_IX86 || _M_AMD64)
 #  define RHASH_MSVC_SHANI
+#  define RHASH_SHANI_TARGET
 # else
 #  define RHASH_DISABLE_SHANI
 # endif
