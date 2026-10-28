@@ -248,11 +248,11 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
  */
 static int is_acceptable_bit_length(int length)
 {
-	if ((length & 31) == 0 && length <= 512)
+	if (length > 0 && (length & 31) == 0 && length <= 512)
 	{
 		int pow = get_ctz(length >> 5);
 		int code = ((length >> (pow + 6)) << 3) | pow;
-		return (code < 32 && ((1 << code) & 0x101061d));
+		return (code < 32 && ((1u << code) & 0x101061du));
 	}
 	return 0;
 }
@@ -347,7 +347,7 @@ static unsigned bsd_hash_name_to_id(const char* name, size_t length, enum HashNa
 		return (length == strlen(hash_info_table[i].name) ? hash_mask : 0);
 	}
 	/* look for the hash_id in the hash_mask */
-	for (hash_id = 1 << i; hash_id && hash_id <= hash_mask; i++, hash_id <<= 1)
+	for (hash_id = 1u << i; hash_id && hash_id <= hash_mask; i++, hash_id <<= 1)
 	{
 		const char* a;
 		const char* b;
