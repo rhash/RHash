@@ -833,7 +833,7 @@ elif darwin; then
   LIBRHASH_SH_CFLAGS="-fpic"
   LIBRHASH_SH_LDFLAGS='-dynamiclib -Wl,-install_name,$(LIBRHASH_SO_MAJ)/$@'
 else
-  LIBRHASH_SH_CFLAGS="-fpic"
+  LIBRHASH_SH_CFLAGS="-fPIC"
   LIBRHASH_SH_LDFLAGS="-shared -Wl${SHARED_VSCRIPT},-soname,\$(LIBRHASH_SO_MAJ)"
   test -n "$SHARED_VSCRIPT" && LIBRHASH_EXPORTS_TARGET=$LIBRHASH_EXPORTS_FILE
 fi
