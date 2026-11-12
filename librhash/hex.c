@@ -134,7 +134,7 @@ size_t rhash_base64_url_encoded_helper(char* dst, const unsigned char* src, size
 
 /* RFC 3986: safe url characters are ascii alpha-numeric and "-._~", other characters should be percent-encoded */
 static unsigned url_safe_char_mask[4] = { 0, 0x03ff6000, 0x87fffffe, 0x47fffffe };
-#define IS_URL_GOOD_CHAR(c) ((unsigned)(c) < 128 && (url_safe_char_mask[c >> 5] & (1 << (c & 31))))
+#define IS_URL_GOOD_CHAR(c) ((unsigned)(c) < 128 && (url_safe_char_mask[c >> 5] & (1u << (c & 31))))
 
 /**
  * URL-encode specified binary string.
