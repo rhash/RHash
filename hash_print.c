@@ -273,23 +273,35 @@ static unsigned get_file_escaping_flags(file_t* file, unsigned esc_flags, unsign
 }
 
 /**
- * Convert given case-insensitive name to a printf directive id
+ * Convert the given printf directive name to a hash_id,
+ * case-insensitively, ignoring isolated dashes.
+ * A name with consecutive dashes (e.g. --) is rejected.
+ * 
+ * Special directives "urlname" and "mtime" are also recognized.
  *
- * @param name printf directive name (not a 0-terminated)
+ * @param name printf directive name (not required to be NUL-terminated)
  * @param length name length
- * @param flags pointer to unsigned variable to receive print flags
- * @return directive id on success, 0 on fail
+ * @param flags receives print flags, set only when a special directive
+ *   matches, left untouched otherwise
+ * @return hash_id on success, 0 on failure or for a special directive
+ *   (in which case @p flags is set and must be checked)
  */
 static unsigned printf_name_to_id(const char* name, size_t length, unsigned* flags)
 {
-	char buf[20];
-	size_t i;
-	print_hash_info* info = hash_info_table;
+	char buf[20] = { 0 };
+	size_t i, j;
+	print_hash_info* info;
 
 	if (length > (sizeof(buf) - 1))
 		return 0;
-	for (i = 0; i < length; i++)
-		buf[i] = tolower(name[i]);
+	for (i = 0, j = 0; i < length; i++) {
+		if (name[i] != '-')
+			buf[j++] = (char)tolower((unsigned char)name[i]);
+		else if ((i + 1) < length && name[i + 1] == '-')
+			return 0;
+	}
+	length = j;
+	assert(length < sizeof(buf));
 
 	/* check for legacy '%{urlname}' directive for compatibility */
 	if (length == 7 && memcmp(buf, "urlname", 7) == 0) {
@@ -302,8 +314,8 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 
 	/* loop by hash functions */
 	for (info = hash_info_table; info->hash_id; info++) {
-		if (memcmp(buf, info->short_name, length) == 0 &&
-				info->short_name[length] == 0)
+		if (memcmp(buf, info->cmp_name, length) == 0 &&
+				info->cmp_name[length] == 0)
 			return info->hash_id;
 	}
 	return 0;
@@ -679,9 +691,9 @@ void init_hash_info_table(void)
 	for (hash_mask = get_all_supported_hash_mask(); hash_mask; hash_mask &= hash_mask - 1) {
 		uint64_t bit64 = hash_mask & -hash_mask;
 		unsigned hash_id = bit64_to_hash_id(bit64);
-		const char* p;
-		char* e;
-		char* d;
+		const char* name;
+		char* short_name;
+		size_t i, j;
 
 		RSH_REQUIRE((info - hash_info_table) < RHASH_HASH_COUNT, "too many hash ids\n");
 
@@ -689,28 +701,31 @@ void init_hash_info_table(void)
 		info->short_char = ((bit64 & short_opt_mask) != 0 && *short_opt ?
 			*(short_opt++) : 0);
 
-		info->name = rhash_get_name(hash_id);
-		RSH_REQUIRE(info->name != NULL, "rhash_get_name(0x%08x) failed\n", hash_id);
-		assert(strlen(info->name) < 19);
-		p = info->name;
-		d = info->short_name;
-		e = info->short_name + 19; /* buffer overflow protection */
+		name = rhash_get_name(hash_id);
+		RSH_REQUIRE(name != NULL, "rhash_get_name(0x%08x) failed\n", hash_id);
+		assert(strlen(name) < 19);
+		info->name = name;
+		short_name = info->short_name;
 
-		if (memcmp(info->name, "SHA", 3) == 0 || memcmp(info->name, "GOST", 4) == 0) {
-			strcpy(d, p);
-			for (; *d && d < e; d++) {
-				if ('A' <= *d && *d <= 'Z') {
-					*d |= 0x20;
-				}
+		/* initialize short_name for printf directive %{short_name} */
+		for (i = 0, j = 0; name[i] && j < 19; i++, j++) {
+			char c = name[i];
+			if ('A' <= c && c <= 'Z') {
+				c = c | 0x20;
+				/* skip dash if if is in <leter>-<digit> sequence */
+				if (name[i + 1] == '-' && name[i + 2] <= '9') i++;
 			}
-		} else {
-			for (; *p && d < e; p++) {
-				if (*p != '-' || p[1] >= '9') {
-					*(d++) = (*p | 0x20);
-				}
-			}
+			short_name[j] = c;
 		}
-		*d = 0;
+		short_name[j] = 0;
+		
+		/* initialize info->cmp_name by dropping all dashes from short_name */
+		for (i = 0, j = 0; short_name[i] && j < 19; i++) {
+			if (short_name[i] != '-')
+				info->cmp_name[j++] = short_name[i];
+		}
+		info->cmp_name[j] = 0;
+
 		if ((bit64 & custom_bsd_name) != 0) {
 			switch ((unsigned)bit64) {
 				case RHASH_RIPEMD160:
