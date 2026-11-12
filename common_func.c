@@ -85,16 +85,18 @@ char* str_tolower(const char* str)
 }
 
 /**
- * Remove spaces from the begin and the end of the string.
+ * Trim leading and trailing whitespace from
+ * a modifiable NUL-terminated string, in place.
  *
- * @param str the modifiable buffer with the string
+ * @param str modifiable buffer; must not be NULL
  * @return trimmed string
  */
 char* str_trim(char* str)
 {
-	char* last = str + strlen(str) - 1;
+	char* end;
 	while (isspace((unsigned char)*str)) str++;
-	while (isspace((unsigned char)*last) && last > str) *(last--) = 0;
+	end = str + strlen(str);
+	while (end > str && isspace((unsigned char)end[-1])) *(--end) = '\0';
 	return str;
 }
 
