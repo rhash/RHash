@@ -1060,7 +1060,7 @@ static unsigned ids_array_to_hash_bitmask(size_t count, unsigned* data)
 			bitmask |= RHASH_LOW_HASHES_MASK;
 		else {
 			unsigned index = GET_EXTENDED_HASH_ID_INDEX(data[i]);
-			if (index < RHASH_HASH_COUNT)
+			if (index < 32)
 				bitmask |= 1u << index;
 		}
 	}
