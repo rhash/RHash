@@ -203,7 +203,7 @@ static int test_hash_char(char c)
  * @param p_len pointer to a number to store length of detected message digest
  * @return type of detected hash as combination of Fmt* flags
  */
-static int detect_hash_type(char** ptr, char* end, int* p_len)
+static int detect_hash_type(char** ptr, char* end, unsigned* p_len)
 {
 	char* p = *ptr;
 	size_t len = 0;
@@ -236,7 +236,7 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
 			char_type &= ~FmtBase64;
 	}
 	*ptr = p;
-	*p_len = (int)len;
+	*p_len = (unsigned)len;
 	return char_type;
 }
 
@@ -246,7 +246,7 @@ static int detect_hash_type(char** ptr, char* end, int* p_len)
  * @param length the bit length of a binary message digest value
  * @return 1 if a message digest of the specified bit length is supported, 0 otherwise
  */
-static int is_acceptable_bit_length(int length)
+static int is_acceptable_bit_length(unsigned length)
 {
 	if ((length & 31) == 0 && length <= 512)
 	{
@@ -268,7 +268,7 @@ static int is_acceptable_bit_length(int length)
  */
 static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
 {
-	int len = 0;
+	unsigned len = 0;
 	int char_type = detect_hash_type(ptr, end, &len);
 	unsigned char hash_type = 0;
 
@@ -279,7 +279,7 @@ static unsigned char test_hash_string(char** ptr, char* end, int* p_len)
 	if ((char_type & FmtBase64) && is_acceptable_bit_length(BASE64_BIT_SIZE(len)))
 		hash_type |= FmtBase64;
 	if (hash_type != 0)
-		*p_len = len;
+		*p_len = (int)len;
 	return hash_type;
 }
 
