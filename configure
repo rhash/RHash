@@ -782,9 +782,11 @@ if test "$OPT_SHANI" = "auto"; then
         "-msse4 -msha";
     then
       HAS_X86_SSE4_SHANI=yes
-      # Add all SHANI options to the LIBRHASH_OPTFLAGS, so it can be overriden by
-      # distro-specific OPTFLAGS, but only all together
-      LIBRHASH_OPTFLAGS=$(join_params $LIBRHASH_OPTFLAGS -DRHASH_SSE4_SHANI -msse4 -msha)
+      # Enable runtime dispatch globally, but compile only the SHA-NI
+      # implementation with ISA-specific flags. Other objects must remain
+      # runnable on CPUs without SSE4.1 and SHA-NI.
+      LIBRHASH_OPTFLAGS=$(join_params $LIBRHASH_OPTFLAGS -DRHASH_SSE4_SHANI)
+      LIBRHASH_SHANI_CFLAGS=$(join_params $LIBRHASH_SHANI_CFLAGS -msse4 -msha)
     fi
   fi
   finish_check "$HAS_X86_SSE4_SHANI"
@@ -1013,6 +1015,7 @@ EXTRA_INSTALL_LIBSHARED   = $EXTRA_INSTALL_LIBSHARED
 EXTRA_UNINSTALL_LIBSHARED = $EXTRA_UNINSTALL_LIBSHARED
 
 OPTFLAGS    = $LIBRHASH_OPTFLAGS
+SHANI_CFLAGS = $LIBRHASH_SHANI_CFLAGS
 OPTLDFLAGS  = $WIN_LDFLAGS
 WARN_CFLAGS = $WARN_CFLAGS
 ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
