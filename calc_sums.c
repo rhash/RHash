@@ -265,31 +265,43 @@ int calc_sums(struct file_info* info)
 
 /* functions to calculate and print file sums */
 
+#define CRC32_HEX_LEN 8
+#define CRC32_EMBEDDED_LEN (CRC32_HEX_LEN + 2)
+
 /**
- * Search for a crc32 checksum in the given file name.
+ * Search the file name for the last (the rightmost) embedded crc32 checksum
+ * in the format: "[CRC32_HEX]" or "(CRC32_HEX)".
  *
- * @param file the file, which filename is checked
- * @param crc32 pointer to integer to receive parsed checksum
+ * @param file the file, whose base name is checked; must not be NULL
+ * @param crc32 receives the parsed checksum on success;
+ *              left untouched on failure
  * @return non zero if crc32 was found, zero otherwise
  */
 int find_embedded_crc32(file_t* file, unsigned* crc32)
 {
-	const char* filepath = file_get_print_path(file, FPathUtf8 | FPathNotNull);
-	const char* e = filepath + strlen(filepath) - 10;
+	const char* filename = file_get_print_path(file, FPathUtf8 | FPathBaseName | FPathNotNull);
+	const size_t filename_length = strlen(filename);
+	size_t offset;
 	unsigned char raw[4];
 
-	/* search for the sum enclosed in brackets */
-	for (; e >= filepath && !IS_PATH_SEPARATOR(*e); e--) {
-		if ((*e == '[' && e[9] == ']') || (*e == '(' && e[9] == ')')) {
-			const char* p = e + 8;
-			for (; p > e && IS_HEX(*p); p--);
-			if (p == e) {
-				rhash_hex_to_byte(e + 1, raw, 8);
+	/* search filename backward (for the last embedded CRC32 pattern) */
+	for (offset = CRC32_EMBEDDED_LEN; offset <= filename_length;) {
+		const char* pattern_start = filename + filename_length - offset;
+		if ((*pattern_start == '[' && pattern_start[CRC32_EMBEDDED_LEN - 1] == ']') ||
+			(*pattern_start == '(' && pattern_start[CRC32_EMBEDDED_LEN - 1] == ')')) {
+			size_t i;
+			for (i = 1; i <= CRC32_HEX_LEN; i++)
+				if (!IS_HEX(pattern_start[i])) break;
+			if (i > CRC32_HEX_LEN) {
+				rhash_hex_to_byte(pattern_start + 1, raw, CRC32_HEX_LEN);
 				*crc32 = ((unsigned)raw[0] << 24) | ((unsigned)raw[1] << 16) |
 					((unsigned)raw[2] << 8) | (unsigned)raw[3];
 				return 1;
 			}
-			e -= 9;
+			/* skip the whole pattern */
+			offset += CRC32_EMBEDDED_LEN;
+		} else {
+			offset++;
 		}
 	}
 	return 0;
