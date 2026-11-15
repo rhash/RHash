@@ -169,11 +169,12 @@ static int load_printf_template(void)
 		len = fread(buffer, 1, 8192, fd);
 		if (ferror(fd)) break;
 
-		rsh_str_append_n(rhash_data.template_text, buffer, len);
-		if (rhash_data.template_text->len >= MAX_TEMPLATE_SIZE) {
+		if (len >= MAX_TEMPLATE_SIZE - rhash_data.template_text->len) {
 			log_msg_file_t(_("%s: template file is too big\n"), &file);
 			error = 1;
+			break;
 		}
+		rsh_str_append_n(rhash_data.template_text, buffer, len);
 	}
 
 	if (ferror(fd)) {
