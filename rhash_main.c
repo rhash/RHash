@@ -141,22 +141,26 @@ static void ctrl_c_handler(int signum)
 	}
 }
 
-#define MAX_TEMPLATE_SIZE 65536
+#define MAX_TEMPLATE_SIZE ((size_t)65536)
 
 /**
- * Load printf-template from file, specified by options or config.
+ * Load printf string from template file.
+ * UTF-8 BOM is stripped if present.
+ * File size is limited to MAX_TEMPLATE_SIZE bytes.
+ *
+ * @return 1 on success, 0 on failure
  */
 static int load_printf_template(void)
 {
-	FILE* fd;
+	FILE* fp;
 	file_t file;
 	char buffer[8192];
 	size_t len;
 	int error = 0;
 
 	file_init(&file, opt.template_file, FileInitReusePath);
-	fd = file_fopen(&file, FOpenRead | FOpenBin);
-	if (!fd)
+	fp = file_fopen(&file, FOpenRead | FOpenBin);
+	if (!fp)
 	{
 		log_error_file_t(&file);
 		file_cleanup(&file);
@@ -165,26 +169,39 @@ static int load_printf_template(void)
 
 	rhash_data.template_text = rsh_str_new();
 
-	while (!feof(fd)) {
-		len = fread(buffer, 1, 8192, fd);
-		if (ferror(fd)) break;
-
+	while ((len = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+		const char* data = buffer;
+		/* Skip UTF-8 BOM at the start of the file. */
+		if (rhash_data.template_text->len < 3) {
+			const size_t bom_need = 3 - rhash_data.template_text->len;
+			if (len >= bom_need) {
+				/* Copy bytes to handle BOM split across fread() calls. */
+				rsh_str_append_n(rhash_data.template_text, data, bom_need);
+				data += bom_need;
+				len -= bom_need;
+				if (STARTS_WITH_UTF8_BOM(rhash_data.template_text->str))
+					rsh_str_clear(rhash_data.template_text);
+				if (len == 0) continue;
+			}
+		}
+		/* Limit template file size */
 		if (len >= MAX_TEMPLATE_SIZE - rhash_data.template_text->len) {
 			log_msg_file_t(_("%s: template file is too big\n"), &file);
 			error = 1;
 			break;
 		}
-		rsh_str_append_n(rhash_data.template_text, buffer, len);
+		rsh_str_append_n(rhash_data.template_text, data, len);
 	}
 
-	if (ferror(fd)) {
+	if (ferror(fp)) {
 		log_error_file_t(&file);
 		error = 1;
 	}
 
-	fclose(fd);
+	fclose(fp);
 	file_cleanup(&file);
-	rhash_data.printf_str = rhash_data.template_text->str;
+	if (!error)
+		rhash_data.printf_str = rhash_data.template_text->str;
 	return !error;
 }
 

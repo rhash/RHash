@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Exercise public hash names through the compiled RHash CLI."""
 import hashlib
 import os
@@ -31,4 +32,4 @@ with tempfile.TemporaryDirectory() as temporary:
     assert run("--printf", "%{SHA-256}", str(sample)).lower() == hashlib.sha256(b"abc").hexdigest()
     assert run("--printf", "%{urlname}", str(sample)) == "a%20b"
     assert run("--printf", "%{mtime}", str(sample))
-    print(f"PASS {len(names)} canonical/alias hash pairs, SHA-256 known value and legacy urlname/mtime")
+    print(f"PASS: {len(names)} canonical/alias hash pairs, SHA-256 known value and legacy urlname/mtime")

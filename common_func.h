@@ -45,8 +45,12 @@ wchar_t* wcs_replace_n(const wchar_t* src, size_t start_pos, size_t end_pos, con
 
 /* check if character starts a commentary in the program config file */
 #define IS_COMMENT(c) ((c) == ';' || (c) == '#')
-/* test line for UTF8 mark: 0xEF, 0xBB, 0xBF */
-#define STARTS_WITH_UTF8_BOM(line) ((line)[0] == '\357' && (line)[1] == '\273' && (line)[2] == '\277')
+
+/* check for UTF-8 BOM; requires p[0..2] to be readable. */
+#define STARTS_WITH_UTF8_BOM(p) \
+    ((unsigned char)(p)[0] == 0xEF && \
+     (unsigned char)(p)[1] == 0xBB && \
+     (unsigned char)(p)[2] == 0xBF)
 
 #ifdef _WIN32
 typedef wchar_t rsh_tchar;
@@ -225,10 +229,10 @@ void rsh_str_ensure_size(strbuf_t* str, size_t new_size);
 void rsh_str_append_n(strbuf_t* str, const char* text, size_t len);
 void rsh_str_append(strbuf_t* str, const char* text);
 
-#define rsh_str_ensure_length(str, len) \
-	if ((size_t)(len) >= (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + 1);
-#define rsh_wstr_ensure_length(str, len) \
-	if ((size_t)((len) + sizeof(wchar_t)) > (size_t)(str)->allocated) rsh_str_ensure_size((str), (len) + sizeof(wchar_t));
+#define rsh_str_ensure_length(buf, len) \
+	if ((size_t)(len) >= (size_t)(buf)->allocated) rsh_str_ensure_size((buf), (len) + 1);
+#define rsh_str_clear(buf) \
+	((buf)->len = 0, (buf)->str[0] = '\0')
 
 #ifdef __cplusplus
 } /* extern "C" */
