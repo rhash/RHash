@@ -5,6 +5,10 @@ import subprocess
 import sys
 import tempfile
 
+if not hasattr(os, 'mkfifo'):
+    print("SKIP: mkfifo not available on this platform")
+    sys.exit(0)
+
 binary = str(Path(sys.argv[1]).resolve())
 with tempfile.TemporaryDirectory() as directory:
     template = Path(directory, "template.fmt")
