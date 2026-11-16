@@ -29,41 +29,65 @@ INSTALL_LIB_SHARED=auto
 INSTALL_PKGCONFIGDIR="$PKG_INSTALLDIR"
 SHARED_LIB_MODE=${SHARED_LIB_MODE:-755}
 
+INSTALL_EXEC_PREFIX_SET=
+INSTALL_BINDIR=
+INSTALL_MANDIR=
+INSTALL_SYSCONFDIR=
+INSTALL_INCDIR=
+INSTALL_LIBDIR=
+INSTALL_PKGCONFIGDIR=
+INSTALL_LOCALEDIR=
+
 #####################################################################
-# detect and prepare temp directory
-for DETECT_TMP in "$TMPDIR" "$TEMPDIR" "/tmp"; do
-  test -d "$DETECT_TMP" && break
-done
-RANDNUM=$RANDOM
-test -z "$RANDNUM" && jot -r 1 2>/dev/null >dev/null && RANDNUM=$(jot -r 1 1 32767) || RANDNUM=0
-BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
-mkdir $BUILD_TMPDIR || die "Unable to create tmp dir."
-TMPC="$BUILD_TMPDIR/tmp.c"
-TMPT="$BUILD_TMPDIR/tmp.txt"
-TMPBIN="$BUILD_TMPDIR/tmp"
+# create log file
 TMPLOG="config.log"
 rm -f "$TMPLOG"
-echo "Configuration parameters: \"$CFG_LINE\"" > "$TMPLOG"
+echo "Configuring rhash $(date '+%Y-%m-%d %H:%M:%S')" > "$TMPLOG"
+echo "Configuration parameters: \"$CFG_LINE\"" >> "$TMPLOG"
 echo "Symlinks to install: $INSTALL_SYMLINKS" >> "$TMPLOG"
-echo >> "$TMPLOG"
 
-remove_tmpdir()
-{
-  rm -rf "$BUILD_TMPDIR"
-}
-trap remove_tmpdir EXIT
-
-#####################################################################
 # display error message and exit
 die() {
   echo
   echo "Error: $@" >&2
   echo >&2
   test -f "$TMPLOG" && echo "Error: $@" >> "$TMPLOG"
-  rm -f "$TMPBIN" "$TMPC" "$TMPT"
   echo "Check \"$TMPLOG\" if you do not understand why it failed."
   exit 1
 }
+
+#####################################################################
+# detect and prepare temp directory
+for DETECT_TMP in "${TMPDIR%/}" "${TEMPDIR%/}" "/tmp"; do
+  test -d "$DETECT_TMP" && break
+done
+test -d "$DETECT_TMP" || die "No temporary directory"
+
+# Try mktemp(1) first: it is not in POSIX, but is present on Linux, *BSD, macOS
+BUILD_TMPDIR=$(mktemp -d "$DETECT_TMP/rhash-configure.XXXXXX" 2>/dev/null)
+if test -z "$BUILD_TMPDIR" || ! test -d "$BUILD_TMPDIR"; then
+  # Fall back to $RANDOM, then jot(1), then "<timestamp>-<pid>"
+  RANDNUM=$RANDOM
+  if test -z "$RANDNUM" && jot -r 1 >/dev/null 2>&1; then
+    RANDNUM=$(jot -r 1 1 32767 2>/dev/null)
+  fi
+  test -z "$RANDNUM" && RANDNUM=$(date +%Y%m%d%H%M%S)
+
+  BUILD_TMPDIR="$DETECT_TMP/rhash-configure-$RANDNUM-$$"
+  mkdir "$BUILD_TMPDIR" || die "Unable to create temporary directory"
+fi
+echo "Created temporary directory: $BUILD_TMPDIR" >> "$TMPLOG"
+echo >> "$TMPLOG"
+
+TMPC="$BUILD_TMPDIR/tmp.c"
+TMPT="$BUILD_TMPDIR/tmp.txt"
+TMPBIN="$BUILD_TMPDIR/tmp"
+
+remove_tmpdir()
+{
+  rm -rf "$BUILD_TMPDIR"
+}
+trap remove_tmpdir EXIT
 
 #####################################################################
 # helper functions for options parsing
@@ -123,11 +147,6 @@ check_set_contains()
   return 1
 }
 
-get_opt_value()
-{
-  echo $(echo $* | cut -d '=' -f 2-)
-}
-
 #####################################################################
 # parse the command line options passed to the configure script
 for OPT do
@@ -136,29 +155,37 @@ for OPT do
       print_help
       ;;
     --prefix=*)
-      INSTALL_PREFIX=$(get_opt_value $OPT)
+      INSTALL_PREFIX="${OPT#*=}"
+      test -n "$INSTALL_PREFIX" || die "--prefix requires a non-empty value"
       ;;
     --exec-prefix=*)
-      INSTALL_EXEC_PREFIX=$(get_opt_value $OPT)
+      INSTALL_EXEC_PREFIX="${OPT#*=}"
       INSTALL_EXEC_PREFIX_SET=yes
+      test -n "$INSTALL_EXEC_PREFIX" || die "--exec-prefix requires a non-empty value"
       ;;
     --bindir=*)
-      INSTALL_BINDIR=$(get_opt_value $OPT)
+      INSTALL_BINDIR="${OPT#*=}"
+      test -n "$INSTALL_BINDIR" || die "--bindir requires a non-empty value"
       ;;
     --mandir=*)
-      INSTALL_MANDIR=$(get_opt_value $OPT)
+      INSTALL_MANDIR="${OPT#*=}"
+      test -n "$INSTALL_MANDIR" || die "--mandir requires a non-empty value"
       ;;
     --sysconfdir=*)
-      INSTALL_SYSCONFDIR=$(get_opt_value $OPT)
+      INSTALL_SYSCONFDIR="${OPT#*=}"
+      test -n "$INSTALL_SYSCONFDIR" || die "--sysconfdir requires a non-empty value"
       ;;
     --libdir=*)
-      INSTALL_LIBDIR=$(get_opt_value $OPT)
+      INSTALL_LIBDIR="${OPT#*=}"
+      test -n "$INSTALL_LIBDIR" || die "--libdir requires a non-empty value"
       ;;
     --pkgconfigdir=*)
-      INSTALL_PKGCONFIGDIR=$(get_opt_value $OPT)
+      INSTALL_PKGCONFIGDIR="${OPT#*=}"
+      test -n "$INSTALL_PKGCONFIGDIR" || die "--pkgconfigdir requires a non-empty value"
       ;;
     --localedir=*)
-      INSTALL_LOCALEDIR=$(get_opt_value $OPT)
+      INSTALL_LOCALEDIR="${OPT#*=}"
+      test -n "$INSTALL_LOCALEDIR" || die "--localedir requires a non-empty value"
       ;;
     --enable-gettext)
       OPT_GETTEXT=yes
@@ -173,7 +200,7 @@ for OPT do
       OPT_OPENSSL=yes
       ;;
     --enable-openssl=*)
-      OPT_OPENSSL=$(get_opt_value $OPT)
+      OPT_OPENSSL="${OPT#*=}"
       check_set_contains "$OPT_OPENSSL" "runtime" || die "Unexpected option value: $OPT"
       ;;
     --disable-openssl)
@@ -181,21 +208,21 @@ for OPT do
       ;;
     --enable-openssl-runtime)
       OPT_OPENSSL=runtime # legacy option
-      echo "warning: use --enable-openssl=runtime instead of $OPT" >> "$TMPLOG"
+      echo "warning: use --enable-openssl=runtime instead of $OPT" >&2
       ;;
     --disable-openssl-runtime)
       OPT_OPENSSL=yes # legacy option
-      echo "warning: use --enable-openssl instead of $OPT" >> "$TMPLOG"
+      echo "warning: use --enable-openssl instead of $OPT" >&2
       ;;
     --target=*)
-      BUILD_TARGET=$(get_opt_value $OPT)
+      BUILD_TARGET="${OPT#*=}"
       ;;
     --cc=*)
-      CC=$(get_opt_value $OPT)
+      CC="${OPT#*=}"
       OPT_CC=1
       ;;
     --ar=*)
-      CMD_AR=$(get_opt_value $OPT)
+      CMD_AR="${OPT#*=}"
       ;;
     --enable-static)
       OPT_STATIC=yes
@@ -222,7 +249,7 @@ for OPT do
       # use default INSTALL_SYMLINKS list
       ;;
     --enable-symlinks=*)
-      INSTALL_SYMLINKS=$(get_opt_value $OPT)
+      INSTALL_SYMLINKS="${OPT#*=}"
       ;;
     --disable-symlinks)
       INSTALL_SYMLINKS=
@@ -231,26 +258,25 @@ for OPT do
       BUILD_DEBUG='-g'
       ;;
     --enable-debug=*)
-      BUILD_DEBUG='-g '$(get_opt_value $OPT)
+      BUILD_DEBUG='-g '"${OPT#*=}"
       ;;
     --disable-debug)
       BUILD_DEBUG=
       ;;
     --with-install=*)
-      CMD_INSTALL=$(get_opt_value $OPT)
+      CMD_INSTALL="${OPT#*=}"
       ;;
     --extra-cflags=*)
-      BUILD_EXTRA_CFLAGS="$BUILD_EXTRA_CFLAGS $(get_opt_value $OPT)"
+      BUILD_EXTRA_CFLAGS="$BUILD_EXTRA_CFLAGS "${OPT#*=}""
       ;;
     --extra-ldflags=*)
-      BUILD_EXTRA_LDFLAGS="$BUILD_EXTRA_LDFLAGS $(get_opt_value $OPT)"
+      BUILD_EXTRA_LDFLAGS="$BUILD_EXTRA_LDFLAGS "${OPT#*=}""
       ;;
     *)
       echo "unknown option $OPT"
       exit 1
       ;;
   esac
-  shift
 done
 
 #####################################################################
@@ -333,21 +359,21 @@ echo "RHASH_SRC=$RHASH_SRC, LIBRHASH_SRC=$LIBRHASH_SRC, BINDINGS_SRC=$BINDINGS_S
 
 #####################################################################
 # check RHash version
-good_version() { echo "$1" | grep -q '^[1-9]\.[1-9][0-9]*\.[0-9]' ; }
+good_version() { echo "$1" | grep '^[1-9]\.[1-9][0-9]*\.[0-9]' >/dev/null; }
 if test "$HAS_RHASH" = "yes" || test "$HAS_LIBRHASH" = "yes"; then
   test -f "${RHASH_SRC}version.h" || die "${RHASH_SRC}version.h not found"
-  RHASH_VERSION=$(cut -d'"' -f2 "${RHASH_SRC}version.h")
+  RHASH_VERSION=$(cut -d '"' -f2 "${RHASH_SRC}version.h")
   echo "RHASH_VERSION=$RHASH_VERSION" >> "$TMPLOG"
   good_version "$RHASH_VERSION" || die "wrong version: $RHASH_VERSION"
-  _v1=$(echo $RHASH_VERSION | cut -d '.' -f 1)
-  _v2=$(echo $RHASH_VERSION | cut -d '.' -f 2)
-  _v3=$(echo $RHASH_VERSION | cut -d '.' -f 3)
+  _v1=$(echo "$RHASH_VERSION" | cut -d '.' -f 1)
+  _v2=$(echo "$RHASH_VERSION" | cut -d '.' -f 2)
+  _v3=$(echo "$RHASH_VERSION" | cut -d '.' -f 3)
   RHASH_VERSION_MAJOR=$_v1
   RHASH_XVERSION=$(printf "0x%02x%02x%02x%02x" "$_v1" "$_v2" "$_v3" 0)
   test "$HAS_LIBRHASH" = "yes" && LIBRHASH_PC=dist/librhash.pc
 fi
 if test "$HAS_BINDINGS" = "yes"; then
-  BINDINGS_VERSION=$(cut -d = -f 2 "${BINDINGS_SRC}version.properties")
+  BINDINGS_VERSION=$(cut -d '=' -f 2 "${BINDINGS_SRC}version.properties")
   echo "BINDINGS_VERSION=$BINDINGS_VERSION" >> "$TMPLOG"
   good_version "$BINDINGS_VERSION" || die "wrong bindings version: $BINDINGS_VERSION"
   test -z "$RHASH_VERSION" && RHASH_VERSION="$BINDINGS_VERSION"
@@ -358,7 +384,7 @@ test "$SRC_FOUND" = "no" && die "sources not found"
 
 if test "$HAS_BINDINGS" = "yes" && test "$BINDINGS_VERSION" != "$RHASH_VERSION"; then
   echo "Updating ${BINDINGS_SRC}version.properties"
-  echo "version=$RHASH_VERSION" > ${BINDINGS_SRC}version.properties
+  echo "version=$RHASH_VERSION" > "${BINDINGS_SRC}version.properties"
 fi
 
 #####################################################################
@@ -400,53 +426,53 @@ compile_check() {
 }
 
 cc_check() {
-  compile_check $TMPC $@
+  compile_check "$TMPC" "$@"
 }
 
 create_c_file() {
   rm -f "$TMPC"
   if test -n "$1"; then
-    echo "#include <$1>" > $TMPC || die "Can't write to the $TMPC file"
+    echo "#include <$1>" > "$TMPC" || die "Can't write to the $TMPC file"
   fi
 }
 
 cc_check_macro() {
   create_c_file "$1"
-  cat >> $TMPC << EOF
+  cat >> "$TMPC" << EOF
 #ifndef $2
 #error condition not true: $2
 #endif
 int main(void) { return 0; }
 EOF
   shift 2
-  cc_check $@
+  cc_check "$@"
 }
 
 cc_check_cflag() {
-  echo "int main(void) { return 0; }" > $TMPC
-  cc_check $@
+  echo "int main(void) { return 0; }" > "$TMPC"
+  cc_check "$@"
 }
 
 cc_check_headers() {
   rm -f "$TMPC"
   while test -n "$1"; do
-    echo "#include <$1>" >> $TMPC
+    echo "#include <$1>" >> "$TMPC"
     shift
   done
-  echo "int main(void) { return 0; }" >> $TMPC
+  echo "int main(void) { return 0; }" >> "$TMPC"
   cc_check "-c"
 }
 
 cc_check_statement() {
   create_c_file "$1"
-  cat >> $TMPC << EOF
+  cat >> "$TMPC" << EOF
 int main(void) {
   $2
   return 0;
 }
 EOF
   shift 2
-  cc_check $@
+  cc_check "$@"
 }
 
 #####################################################################
@@ -518,7 +544,7 @@ else
   set_target_os() {
     component=$1
     part=$(echo $BUILD_TARGET | cut -d '-' -f $component)
-    case "$(echo $part | tr '[A-Z]' '[a-z]')" in
+    case "$(echo $part | tr 'A-Z' 'a-z')" in
       linux|uclinux) TARGET_OS=Linux ;;
       freebsd*) TARGET_OS=FreeBSD ;;
       gnu/kfreebsd) TARGET_OS=FreeBSD ;;
@@ -583,13 +609,14 @@ posix_make() { aix || bsdos || hpux || irix || qnx || sunos; }
 # Checking CC version...
 # Intel C++ Compilers (no autoselect, use CC=/some/binary ./configure)
 cc_vendor=
+cc_fail=
 if test "$(basename $CC)" = "icc" || test "$(basename $CC)" = "ecc"; then
   start_check "$CC version"
   cc_vendor=intel
   cc_name=$($CC -V 2>&1 | head -n 1 | cut -d ',' -f 1)
   cc_version=$($CC -V 2>&1 | head -n 1 | cut -d ',' -f 2 | cut -d ' ' -f 3)
-  _cc_major=$(echo $cc_version | cut -d '.' -f 1)
-  _cc_minor=$(echo $cc_version | cut -d '.' -f 2)
+  _cc_major=$(printf '%s' "$cc_version" | cut -d '.' -f 1)
+  _cc_minor=$(printf '%s' "$cc_version" | cut -d '.' -f 2)
   case $cc_version in
     '')
       cc_version="v. ?.??, bad"
@@ -614,14 +641,14 @@ else
     elif run_cmd "$CC --version"; then
       cc_name_tmp=$($CC --version 2>&1 | head -n 1 | cut -d ' ' -f 1)
     fi
-    if echo "$cc_name_tmp" | grep -q "gcc"; then
+    if printf '%s' "$cc_name_tmp" | grep "gcc" >/dev/null; then
       cc_name=$cc_name_tmp
       start_check "$CC version"
       cc_vendor=gnu
       cc_version=$($CC -dumpversion 2>&1)
-      if ! echo $cc_version | grep -q '^[0-9][0-9]*\.[0-9]'; then
+      if ! printf '%s' "$cc_version" | grep '^[0-9][0-9]*\.[0-9]' >/dev/null; then
         cc_v2=$($CC -dumpfullversion -dumpversion 2>/dev/null)
-        if echo $cc_v2 | grep -q '^[0-9][0-9]*\.[0-9]'; then
+        if printf '%s' "$cc_v2" | grep '^[0-9][0-9]*\.[0-9]' >/dev/null; then
           cc_version=$cc_v2
         fi
       fi
@@ -630,14 +657,14 @@ else
           cc_fail=yes
           ;;
         *)
-          _cc_major=$(echo $cc_version | cut -d '.' -f 1)
-          _cc_minor=$(echo $cc_version | cut -d '.' -f 2)
-          _cc_mini=$(echo $cc_version | cut -d '.' -f 3)
+          _cc_major=$(printf '%s' "$cc_version" | cut -d '.' -f 1)
+          _cc_minor=$(printf '%s' "$cc_version" | cut -d '.' -f 2)
+          _cc_mini=$(printf '%s' "$cc_version" | cut -d '.' -f 3)
           ;;
       esac
       finish_check "$cc_name $cc_version"
       break
-    elif $CC --version 2>&1 | grep -q "clang"; then
+    elif $CC --version 2>&1 | grep "clang" >/dev/null; then
       start_check "$CC version"
       cc_vendor=clang
       cc_version=$($CC -dumpversion 2>&1)
@@ -665,7 +692,7 @@ if ! cc_check_cflag; then
 fi
 log_finish
 
-if test "$cc_name" = "gcc" && test "$_cc_major" -gt 3; then
+if test "$cc_name" = "gcc" && test -n "$_cc_major" && test "$_cc_major" -gt 3; then
   WARN_CFLAGS="$WARN_CFLAGS -Wdeclaration-after-statement"
 fi
 
@@ -674,9 +701,9 @@ fi
 has_optimization()
 {
   # posix-compatible way to find -O<n> option
-  for OPT in $BUILD_EXTRA_CFLAGS $BUILD_DEBUG; do
-    case "$OPT" in
-      -O[0-3]|-O) return 0 ;;
+  for _opt in $BUILD_EXTRA_CFLAGS $BUILD_DEBUG; do
+    case "$_opt" in
+      -O[0-3sz]|-O) return 0 ;;
     esac
   done
   return 1
@@ -937,7 +964,7 @@ posix_make && Q_ASSIGN="=" || Q_ASSIGN="?="
 # write config.mak for the RHash makefile
 if test "$HAS_RHASH" = "yes"; then
   echo "Writing ${RHASH_SRC}config.mak"
-  cat > ${RHASH_SRC}config.mak << EOF
+  cat > "${RHASH_SRC}config.mak" << EOF
 # -------- Generated by configure -----------
 
 DESTDIR $Q_ASSIGN
@@ -980,7 +1007,7 @@ fi
 # write config.mak for the LibRHash makefile
 if test "$HAS_LIBRHASH" = "yes"; then
   echo "Writing ${LIBRHASH_SRC}config.mak"
-  cat > ${LIBRHASH_SRC}config.mak << EOF
+  cat > "${LIBRHASH_SRC}config.mak" << EOF
 # -------- Generated by configure -----------
 
 DESTDIR $Q_ASSIGN
@@ -1037,7 +1064,7 @@ if test -n "$LIBRHASH_PC"; then
   test "$PC_INC" = "${INSTALL_PREFIX}/include" && PC_INC='${prefix}/include'
   test "$PC_LIB" = "${INSTALL_EXEC_PREFIX}/lib" && PC_LIB='${exec_prefix}/lib'
   echo "Writing ${LIBRHASH_PC}"
-  cat > $LIBRHASH_PC << EOF
+  cat > "$LIBRHASH_PC" << EOF
 prefix=${INSTALL_PREFIX}
 exec_prefix=${PC_EXC}
 libdir=${PC_LIB}
@@ -1055,9 +1082,9 @@ fi
 
 #####################################################################
 # write man page
-MAN_PATH=${RHASH_SRC}dist/rhash.1
+MAN_PATH="${RHASH_SRC}dist/rhash.1"
 if test -f "${MAN_PATH}.in"; then
   SED_SYSCONFDIR=$(echo $INSTALL_SYSCONFDIR | sed -e 's/\([|\\&]\)/\\\1/g')
   echo "Writing ${MAN_PATH}"
-  sed -e "s|@SYSCONFDIR@|$SED_SYSCONFDIR|" ${MAN_PATH}.in > ${MAN_PATH}
+  sed -e "s|@SYSCONFDIR@|$SED_SYSCONFDIR|" "${MAN_PATH}.in" > ${MAN_PATH}
 fi
