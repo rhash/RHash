@@ -15,6 +15,7 @@ po/compile-gmo.tag
 /librhash/test_static
 config.mak
 *.[ao]
+*.lo
 *.exe
 *.dll
 *.def

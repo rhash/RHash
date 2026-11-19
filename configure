@@ -460,7 +460,7 @@ cc_check_headers() {
     shift
   done
   echo "int main(void) { return 0; }" >> "$TMPC"
-  cc_check "-c"
+  cc_check -c
 }
 
 cc_check_statement() {
@@ -769,7 +769,7 @@ fi
 
 if test -n "$LD_STATIC"; then
   start_check "linker support for $LD_STATIC"
-  if cc_check_cflag "$LD_STATIC"; then
+  if cc_check_cflag $LD_STATIC; then
     test "$OPT_STATIC" = "yes" && CHECK_LDFLAGS=$LD_STATIC
   else
     LD_STATIC=
@@ -788,7 +788,7 @@ elif test "$OPT_OPENSSL" = "auto" || test "$OPT_OPENSSL" = "runtime"; then
   ALLOW_RUNTIME_LINKING=no
   if cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);'; then
     ALLOW_RUNTIME_LINKING=yes
-  elif cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);' "-ldl"; then
+  elif cc_check_statement "dlfcn.h" 'dlopen("", RTLD_NOW);' -ldl; then
     ALLOW_RUNTIME_LINKING=yes
     LIBDL_LDFLAGS="-ldl"
   fi
@@ -797,21 +797,21 @@ fi
 
 HAS_SSE4=no
 HAS_X86_SSE4_SHANI="no"
+LIBRHASH_SHA_CFLAGS=
 if test "$OPT_SHANI" = "auto"; then
   start_check "sha1 intrinsics"
   if cc_check_statement "x86intrin.h" \
       "__m128i a = _mm_setzero_si128(); (void)_mm_extract_epi32(a, 0);" \
-      "-msse4"; then
+      -msse4; then
     HAS_SSE4=yes
     # Now check for the SHANI extension
     if cc_check_statement "x86intrin.h" \
         "__m128i a = _mm_setzero_si128(); a = _mm_sha1rnds4_epu32(a, a, 0);" \
-        "-msse4 -msha";
+        -msse4 -msha;
     then
       HAS_X86_SSE4_SHANI=yes
-      # Add all SHANI options to the LIBRHASH_OPTFLAGS, so it can be overriden by
-      # distro-specific OPTFLAGS, but only all together
-      LIBRHASH_OPTFLAGS=$(join_params $LIBRHASH_OPTFLAGS -DRHASH_SSE4_SHANI -msse4 -msha)
+      LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DRHASH_SSE4_SHANI)
+      LIBRHASH_SHA_CFLAGS="-msse4 -msha"
     fi
   fi
   finish_check "$HAS_X86_SSE4_SHANI"
@@ -821,7 +821,7 @@ SHARED_VSCRIPT=
 if ! darwin; then
   start_check "linker support for --version-script"
   echo "{ local: *; };" > $TMPT
-  cc_check_cflag "-Wl,--version-script,$TMPT -shared" &&
+  cc_check_cflag "-Wl,--version-script,$TMPT" -shared &&
     SHARED_VSCRIPT=",--version-script,exports.sym"
   finish_check $(yn_nonempty "$SHARED_VSCRIPT")
 fi
@@ -829,7 +829,7 @@ fi
 WIN_LDFLAGS=
 if win32; then
   start_check "linker support for --nxcompat --no-seh --dynamicbase"
-  cc_check_cflag "-Wl,--nxcompat,--no-seh,--dynamicbase" &&
+  cc_check_cflag -Wl,--nxcompat,--no-seh,--dynamicbase &&
     WIN_LDFLAGS="-Wl,--nxcompat,--no-seh,--dynamicbase"
   finish_check $(yn_nonempty "$WIN_LDFLAGS")
 fi
@@ -875,10 +875,10 @@ if test "$OPT_GETTEXT" != "no"; then
   if cc_check_headers "libintl.h"; then
     if cc_check_statement "libintl.h" "gettext(\"\");"; then
       GETTEXT_FOUND=found
-    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl"; then
+    elif cc_check_statement "libintl.h" "gettext(\"\");" -lintl; then
       GETTEXT_LDFLAGS="-lintl"
       GETTEXT_FOUND=found
-    elif cc_check_statement "libintl.h" "gettext(\"\");" "-lintl -liconv"; then
+    elif cc_check_statement "libintl.h" "gettext(\"\");" -lintl -liconv; then
       GETTEXT_LDFLAGS="-lintl -liconv"
       GETTEXT_FOUND=found
     fi
@@ -906,11 +906,11 @@ if test "$OPT_OPENSSL" != "no"; then
       OPENSSL_LDFLAGS="$LIBDL_LDFLAGS"
       # note: libdl should disable -static
       test -n "$LIBDL_LDFLAGS" && LD_STATIC=
-    elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-leay32"; then
+    elif win32 && cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" -leay32; then
       OPENSSL_FOUND=found
       LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-leay32"
-    elif cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" "-lcrypto"; then
+    elif cc_check_statement "openssl/md5.h" "MD5_Init(NULL);" -lcrypto; then
       OPENSSL_FOUND=found
       LIBRHASH_DEFINES=$(join_params $LIBRHASH_DEFINES -DUSE_OPENSSL)
       OPENSSL_LDFLAGS="-lcrypto"
@@ -1041,6 +1041,7 @@ EXTRA_UNINSTALL_LIBSHARED = $EXTRA_UNINSTALL_LIBSHARED
 
 OPTFLAGS    = $LIBRHASH_OPTFLAGS
 OPTLDFLAGS  = $WIN_LDFLAGS
+SHA_CFLAGS  = $LIBRHASH_SHA_CFLAGS
 WARN_CFLAGS = $WARN_CFLAGS
 ADDCFLAGS   = $BUILD_EXTRA_CFLAGS
 ADDLDFLAGS  = $BUILD_EXTRA_LDFLAGS
