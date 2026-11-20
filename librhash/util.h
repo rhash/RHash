@@ -22,7 +22,8 @@ extern "C" {
 #elif defined(_MSC_VER)
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
-# define atomic_compare_and_swap(ptr, oldval, newval) InterlockedCompareExchange(ptr, newval, oldval)
+# define atomic_compare_and_swap(ptr, oldval, newval) \
+	InterlockedCompareExchange((LONG volatile*)(ptr), (LONG)(newval), (LONG)(oldval))
 #elif defined(__sun)
 # include <atomic.h>
 # define atomic_compare_and_swap(ptr, oldval, newval) atomic_cas_32(ptr, oldval, newval)

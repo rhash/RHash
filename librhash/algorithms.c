@@ -181,6 +181,11 @@ void rhash_init_algorithms(void)
 	rhash_gost94_init_table();
 #endif
 	table_init_sha_ext();
+
+#if defined(_MSC_VER)
+	/* ensure that (LONG*)&algorithms_initialized_flag is valid */
+	RHASH_ASSERT(sizeof(LONG) == sizeof(unsigned));
+#endif
 	atomic_compare_and_swap(&algorithms_initialized_flag, 0, 1);
 }
 
