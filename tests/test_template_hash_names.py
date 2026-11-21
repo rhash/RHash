@@ -8,15 +8,22 @@ import subprocess
 import sys
 import tempfile
 
-binary = Path(sys.argv[1] if len(sys.argv) > 1 else "./rhash").resolve()
-environment = dict(os.environ)
-library = str(binary.parent / "librhash")
-environment["LD_LIBRARY_PATH"] = library + os.pathsep + environment.get("LD_LIBRARY_PATH", "")
+BINARY = Path(sys.argv[1] if len(sys.argv) > 1 else "./rhash").resolve()
+ENVIRONMENT = dict(os.environ)
+LIBRARY = str(BINARY.parent / "librhash")
+ENVIRONMENT["LD_LIBRARY_PATH"] = LIBRARY + os.pathsep + ENVIRONMENT.get("LD_LIBRARY_PATH", "")
 
 
 def run(*arguments):
-    return subprocess.run([str(binary), *arguments], env=environment,
-                          text=True, capture_output=True, check=True, timeout=10).stdout
+    """Run the RHash binary and return its stdout."""
+    return subprocess.run(
+        [str(BINARY), *arguments],
+        env=ENVIRONMENT,
+        text=True,
+        capture_output=True,
+        check=True,
+        timeout=10,
+    ).stdout
 
 
 with tempfile.TemporaryDirectory() as temporary:
@@ -29,7 +36,11 @@ with tempfile.TemporaryDirectory() as temporary:
         alias = run("--printf", "%{" + name.lower().replace("-", "") + "}", str(sample))
         assert re.fullmatch("[0-9A-Za-z]+", canonical), (name, canonical)
         assert canonical.lower() == alias.lower(), (name, canonical, alias)
-    assert run("--printf", "%{SHA-256}", str(sample)).lower() == hashlib.sha256(b"abc").hexdigest()
+    sha256 = run("--printf", "%{SHA-256}", str(sample)).lower()
+    assert sha256 == hashlib.sha256(b"abc").hexdigest()
     assert run("--printf", "%{urlname}", str(sample)) == "a%20b"
     assert run("--printf", "%{mtime}", str(sample))
-    print(f"PASS: {len(names)} canonical/alias hash pairs, SHA-256 known value and legacy urlname/mtime")
+    print(
+        f"PASS: {len(names)} canonical/alias hash pairs, "
+        "SHA-256 known-value check, and legacy urlname/mtime behavior"
+    )
