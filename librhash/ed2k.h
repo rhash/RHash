@@ -2,6 +2,7 @@
 #ifndef ED2K_H
 #define ED2K_H
 #include "md4.h"
+#include "rhash.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,7 @@ void rhash_ed2k_final(ed2k_ctx* ctx, unsigned char result[16]);
 void rhash_ed2k_cleanup(ed2k_ctx* ctx);
 
 int rhash_ed2k_hashset_realloc(ed2k_ctx* ctx, size_t chunk_count);
+RHASH_API size_t rhash_print_bytes_ed2k_hashset(char* output, const unsigned char* bytes, size_t size, int flags);
 
 #ifdef __cplusplus
 } /* extern "C" */

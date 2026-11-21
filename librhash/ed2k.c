@@ -28,9 +28,16 @@
  * See http://en.wikipedia.org/wiki/EDonkey_network for algorithm description.
  */
 
+/* modifier for Windows DLL */
+#if (defined(_WIN32) || defined(__CYGWIN__) ) && defined(RHASH_EXPORTS)
+# define RHASH_API __declspec(dllexport)
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include "ed2k.h"
+#include "hex.h"
+#include "rhash.h"
 
 /* each hashed file is divided into 9500 KiB sized chunks */
 #define ED2K_CHUNK_SIZE 9728000
@@ -173,4 +180,26 @@ void rhash_ed2k_cleanup(ed2k_ctx* ctx)
 	ctx->hashset = 0;
 	ctx->hashset_size = 0;
 	ctx->hashset_capacity = 0;
+}
+
+/* Print ed2k hashset bytes as a colon-separated hex string.
+ * The function follows the rhash_print_bytes() signature and usage,
+ * but only processes the RHPR_UPPERCASE flag and ignores the rest.
+ * Returns the length of the formatted string. */
+RHASH_API size_t rhash_print_bytes_ed2k_hashset(char* output, const unsigned char* bytes, size_t size, int flags)
+{
+	size_t i;
+	size_t hashset_size = size / 16;
+	char* dst = output;
+	int upper_case = (flags & RHPR_UPPERCASE);
+
+	for (i = 0; i < hashset_size; i++) {
+		rhash_byte_to_hex(dst, bytes + i * 16, 16, upper_case);
+		dst += 32;
+		if (i + 1 < hashset_size) {
+			*dst++ = ':';
+		}
+	}
+	*dst = '\0';
+	return (size_t)(dst - output);
 }
