@@ -28,8 +28,16 @@
  * See http://en.wikipedia.org/wiki/EDonkey_network for algorithm description.
  */
 
+/* modifier for Windows DLL */
+#if (defined(_WIN32) || defined(__CYGWIN__) ) && defined(RHASH_EXPORTS)
+# define RHASH_API __declspec(dllexport)
+#endif
+
+#include <stdlib.h>
 #include <string.h>
 #include "ed2k.h"
+#include "hex.h"
+#include "rhash.h"
 
 /* each hashed file is divided into 9500 KiB sized chunks */
 #define ED2K_CHUNK_SIZE 9728000
@@ -44,6 +52,25 @@ void rhash_ed2k_init(ed2k_ctx* ctx)
 	rhash_md4_init(&ctx->md4_context);
 	rhash_md4_init(&ctx->md4_context_inner);
 	ctx->not_emule = 0;
+	ctx->hashset_collect = 0;
+	ctx->hashset = 0;
+	ctx->hashset_size = 0;
+	ctx->hashset_capacity = 0;
+}
+
+static void rhash_ed2k_hashset_store_chunk(ed2k_ctx* ctx, const unsigned char hash[16])
+{
+	if (ctx->hashset_collect != 1) {
+		return;
+	}
+	if (ctx->hashset_size >= ctx->hashset_capacity) {
+		if (!rhash_ed2k_hashset_realloc(ctx, 0)) {
+			ctx->hashset_collect = -1;
+			return;
+		}
+	}
+	memcpy(ctx->hashset + ctx->hashset_size * 16, hash, 16);
+	ctx->hashset_size++;
 }
 
 /**
@@ -75,6 +102,7 @@ void rhash_ed2k_update(ed2k_ctx* ctx, const unsigned char* msg, size_t size)
 
 		/* just finished an ed2k chunk, updating md4_external context */
 		rhash_md4_final(&ctx->md4_context_inner, chunk_md4_hash);
+		rhash_ed2k_hashset_store_chunk(ctx, chunk_md4_hash);
 		rhash_md4_update(&ctx->md4_context, chunk_md4_hash, 16);
 		rhash_md4_init(&ctx->md4_context_inner);
 	}
@@ -105,6 +133,7 @@ void rhash_ed2k_final(ed2k_ctx* ctx, unsigned char result[16])
 			/* emule algorithm processes aditional block, even if it's empty */
 			unsigned char md4_digest_inner[16];
 			rhash_md4_final(&ctx->md4_context_inner, md4_digest_inner);
+			rhash_ed2k_hashset_store_chunk(ctx, md4_digest_inner);
 			rhash_md4_update(&ctx->md4_context, md4_digest_inner, 16);
 		}
 		/* first call final to flush md4 buffer and finalize the hash value */
@@ -115,4 +144,62 @@ void rhash_ed2k_final(ed2k_ctx* ctx, unsigned char result[16])
 		/* return just the message MD4 hash */
 		if (result) rhash_md4_final(&ctx->md4_context_inner, result);
 	}
+}
+
+/* Allocate or grow the hashset buffer. If chunk_count is 0, use the default
+ * auto-calculation. The buffer size is never decreased. Returns non-zero on
+ * success, 0 on failure. */
+int rhash_ed2k_hashset_realloc(ed2k_ctx* ctx, size_t chunk_count)
+{
+	unsigned char* new_hashset;
+
+	if (chunk_count == 0) {
+		chunk_count = (ctx->hashset_capacity == 0 ? 16 : ctx->hashset_capacity * 2);
+	} else if (chunk_count <= ctx->hashset_capacity) {
+		return 1;
+	}
+
+	new_hashset = (unsigned char*)realloc(ctx->hashset, chunk_count * 16);
+	if (!new_hashset) {
+		return 0;
+	}
+	ctx->hashset = new_hashset;
+	ctx->hashset_capacity = chunk_count;
+	return 1;
+}
+
+/**
+ * Free memory allocated for the algorithm context.
+ * The hashset buffer is released if it was allocated.
+ *
+ * @param ctx the algorithm context
+ */
+void rhash_ed2k_cleanup(ed2k_ctx* ctx)
+{
+	free(ctx->hashset);
+	ctx->hashset = 0;
+	ctx->hashset_size = 0;
+	ctx->hashset_capacity = 0;
+}
+
+/* Print ed2k hashset bytes as a colon-separated hex string.
+ * The function follows the rhash_print_bytes() signature and usage,
+ * but only processes the RHPR_UPPERCASE flag and ignores the rest.
+ * Returns the length of the formatted string. */
+RHASH_API size_t rhash_print_bytes_ed2k_hashset(char* output, const unsigned char* bytes, size_t size, int flags)
+{
+	size_t i;
+	size_t hashset_size = size / 16;
+	char* dst = output;
+	int upper_case = (flags & RHPR_UPPERCASE);
+
+	for (i = 0; i < hashset_size; i++) {
+		rhash_byte_to_hex(dst, bytes + i * 16, 16, upper_case);
+		dst += 32;
+		if (i + 1 < hashset_size) {
+			*dst++ = ':';
+		}
+	}
+	*dst = '\0';
+	return (size_t)(dst - output);
 }

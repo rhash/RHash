@@ -34,6 +34,7 @@ struct rhash_t
 	unsigned hash_ids[64];
 	size_t   hash_ids_count;
 	int is_sfv;
+	int need_ed2k_hashset;
 	int non_fatal_error;
 	unsigned stop_flags;
 

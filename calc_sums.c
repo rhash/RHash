@@ -9,6 +9,7 @@
 #include "win_utils.h"
 #include "librhash/rhash.h"
 #include "librhash/rhash_torrent.h"
+#include "librhash/ed2k.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -196,6 +197,13 @@ static void re_init_rhash_context(struct file_info* info)
 	if (info->hash_mask & hash_id_to_bit64(RHASH_BTIH)) {
 		/* re-initialize BitTorrent data */
 		init_btih_data(info);
+	}
+	if (rhash_data.need_ed2k_hashset && (info->hash_mask & hash_id_to_bit64(RHASH_ED2K))) {
+		ed2k_ctx* ed2k = NULL;
+		rhash_get_context(info->rctx, RHASH_ED2K, &ed2k);
+		if (ed2k) {
+			ed2k->hashset_collect = 1;
+		}
 	}
 }
 

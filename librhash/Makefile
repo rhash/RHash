@@ -6,7 +6,7 @@ HEADERS = algorithms.h byte_order.h plug_openssl.h rhash.h rhash_torrent.h aich.
 SOURCES = algorithms.c byte_order.c plug_openssl.c rhash.c rhash_torrent.c aich.c blake2b.c blake2s.c blake3.c crc32.c ed2k.c edonr.c hex.c md4.c md5.c sha1.c sha_ni.c sha256.c sha512.c sha3.c ripemd-160.c gost12.c gost94.c has160.c snefru.c tiger.c tiger_sbox.c tth.c torrent.c util.c whirlpool.c whirlpool_sbox.c
 OBJECTS = $(SOURCES:.c=.o)
 SHARED_OBJECTS = $(SOURCES:.c=.lo)
-LIB_HEADERS = rhash.h rhash_torrent.h
+LIB_HEADERS = rhash.h rhash_torrent.h ed2k.h
 TEST_STATIC = test_static$(EXEC_EXT)
 TEST_SHARED = test_shared$(EXEC_EXT)
 INSTALL_DATA = $(INSTALL) -m 644
