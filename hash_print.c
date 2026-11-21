@@ -887,8 +887,10 @@ strbuf_t* init_printf_format(void)
 int print_sfv_header_line(FILE* out, unsigned out_mode, file_t* file)
 {
 	char buf[24];
-	unsigned out_flags = (out_mode & FileContentIsUtf8 ?
-		OutForceUtf8 | OutEscapePrefixed : OutEscapePrefixed);
+	unsigned out_flags = (out_mode & FileContentIsUtf8 ? OutForceUtf8 : 0);
+#ifndef _WIN32
+	out_flags |= OutEscape;
+#endif
 	/* skip stdin stream and message-texts passed by command-line */
 	if (FILE_ISSPECIAL(file))
 		return 0;
@@ -899,7 +901,9 @@ int print_sfv_header_line(FILE* out, unsigned out_mode, file_t* file)
 	if (rsh_fprintf(out, "; %s  ", buf) < 0)
 		return -1;
 	print_time64(out, file->mtime, 1);
-	return PRINTF_RES(fprintf_file_t(out, " %s\n", file, out_flags));
+	if (rsh_fprintf(out, " ") < 0 || fprintf_file_t(out, NULL, file, out_flags) < 0)
+		return -1;
+	return PRINTF_RES(rsh_fprintf(out, "\n"));
 }
 
 /**
