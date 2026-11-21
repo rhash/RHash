@@ -260,6 +260,21 @@ if ! win32; then
     TEST_RESULT=$( printf '\\00000000 a/\\n2\n' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
     TEST_EXPECTED='\a/\n2OK'
     check "$TEST_RESULT" "$TEST_EXPECTED" .
+    NAME_B='a/back\slash'
+    touch "$NAME_B"
+    SFV_FILE="$RHASH_TMP/special.sfv"
+    $rhash --sfv "$NAME_R" "$NAME_N" "$NAME_B" > "$SFV_FILE"
+    check "$?" "0" .
+    TEST_RESULT=$( sed -n '/^; *0  /s/^; *0  [^ ]* [^ ]* //p' "$SFV_FILE" )
+    TEST_EXPECTED=$( printf '%s\n' 'a/\r1' 'a/\n2' 'a/back\\slash' )
+    check "$TEST_RESULT" "$TEST_EXPECTED" .
+    $rhash -c --brief "$SFV_FILE" >/dev/null 2>&1
+    check "$?" "0" .
+    SFV_FILE="$RHASH_TMP/update-special.sfv"
+    $rhash --sfv --update "$SFV_FILE" "$NAME_R" "$NAME_N" "$NAME_B" >/dev/null 2>&1
+    check "$?" "0" .
+    $rhash -c --brief "$SFV_FILE" >/dev/null 2>&1
+    check "$?" "0" .
   fi
 fi
 TEST_RESULT=$( $rhash -p '\63\1\277\x0f\x1\t\\ \x34\r' -m "" )
