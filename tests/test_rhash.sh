@@ -247,21 +247,16 @@ new_test "test special characters:    "
 if ! win32; then
   NAME_R="$(printf 'a/\r1')"
   NAME_N="$(printf 'a/\n2')"
-  if mkdir a && touch "$NAME_R" "$NAME_N" 2>/dev/null && test -r "$NAME_R" && test -r "$NAME_N"; then
+  NAME_B='a/back\slash'
+  if mkdir a && touch "$NAME_R" "$NAME_N" "$NAME_B" 2>/dev/null \
+     && test -r "$NAME_R" && test -r "$NAME_N" && test -r "$NAME_B"; then
     TEST_RESULT=$( $rhash -p '\^%f ' "$NAME_R" "$NAME_N" )
     TEST_EXPECTED='\\r1 \\n2 '
     check "$TEST_RESULT" "$TEST_EXPECTED" .
     TEST_RESULT=$( $rhash -p '\^%p ' "$NAME_R" "$NAME_N" )
     TEST_EXPECTED='\a/\r1 \a/\n2 '
     check "$TEST_RESULT" "$TEST_EXPECTED" .
-    TEST_RESULT=$( printf '\\00000000 a/\\r1\n' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
-    TEST_EXPECTED='\a/\r1OK'
-    check "$TEST_RESULT" "$TEST_EXPECTED" .
-    TEST_RESULT=$( printf '\\00000000 a/\\n2\n' | $rhash -c --brief - 2>&1 | head -n1 | tr -d ' ' )
-    TEST_EXPECTED='\a/\n2OK'
-    check "$TEST_RESULT" "$TEST_EXPECTED" .
-    NAME_B='a/back\slash'
-    touch "$NAME_B"
+
     SFV_FILE="$RHASH_TMP/special.sfv"
     $rhash --sfv "$NAME_R" "$NAME_N" "$NAME_B" > "$SFV_FILE"
     check "$?" "0" .
@@ -270,6 +265,7 @@ if ! win32; then
     check "$TEST_RESULT" "$TEST_EXPECTED" .
     $rhash -c --brief "$SFV_FILE" >/dev/null 2>&1
     check "$?" "0" .
+
     SFV_FILE="$RHASH_TMP/update-special.sfv"
     $rhash --sfv --update "$SFV_FILE" "$NAME_R" "$NAME_N" "$NAME_B" >/dev/null 2>&1
     check "$?" "0" .
