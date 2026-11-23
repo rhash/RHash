@@ -7,6 +7,7 @@
 #include "rhash_main.h"
 #include "win_utils.h"
 #include "librhash/rhash.h"
+#include "librhash/ed2k.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -59,6 +60,7 @@ enum {
 	PRINT_SIZE,
 	PRINT_MTIME, /*PRINT_ATIME, PRINT_CTIME*/
 	PRINT_ESCAPE_LINE,
+	PRINT_ED2K_HASHSET,
 	PRINT_BASENAME = PRINT_FILEPATH | PRINT_FLAG_BASENAME,
 	PRINT_DIRNAME = PRINT_FILEPATH | PRINT_FLAG_DIRNAME,
 	FLAG_HAS_MISC_PARTS = PRINT_FLAG_RAW,
@@ -216,6 +218,9 @@ print_item* parse_print_string(const char* format, uint64_t* hash_mask)
 					static const uint64_t ed2k_aich_hash_mask =
 						hash_id_to_bit64(RHASH_ED2K) | hash_id_to_bit64(RHASH_AICH);
 					*hash_mask |= ed2k_aich_hash_mask;
+				} else if ((item->flags & ~PRINT_FLAGS_ALL) == PRINT_ED2K_HASHSET) {
+					rhash_data.need_ed2k_hashset = 1;
+					*hash_mask |= hash_id_to_bit64(RHASH_ED2K);
 				} else if (item->hash_id) {
 					*hash_mask |= hash_id_to_bit64(item->hash_id);
 				}
@@ -310,6 +315,9 @@ static unsigned printf_name_to_id(const char* name, size_t length, unsigned* fla
 	} else if (length == 5 && memcmp(buf, "mtime", 5) == 0) {
 		*flags = PRINT_MTIME;
 		return 0;
+	} else if (length == 11 && memcmp(buf, "ed2khashset", 11) == 0) {
+		*flags = PRINT_ED2K_HASHSET;
+		return 0;
 	}
 
 	/* loop by hash functions */
@@ -380,7 +388,7 @@ print_item* parse_percent_item(const char** str)
 		if (*p == '}') {
 			unsigned flags = 0;
 			hash_id = printf_name_to_id(format + 1, p - (format + 1), &flags);
-			if (hash_id || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME) {
+			if (hash_id || (flags & PRINT_FLAG_URLENCODE) || flags == PRINT_MTIME || flags == PRINT_ED2K_HASHSET) {
 				/* set uppercase flag if the first letter of printf-entity is uppercase */
 				modifier_flags |= flags | (format[1] & 0x20 ? 0 : PRINT_FLAG_UPPERCASE);
 				format = p;
@@ -604,6 +612,30 @@ int print_line(FILE* out, unsigned out_mode, print_item* list, struct file_info*
 				break;
 			case PRINT_ED2K_LINK:
 				res = fprint_ed2k_url(out, info, list->flags);
+				break;
+			case PRINT_ED2K_HASHSET:
+				{
+					ed2k_ctx* ed2k = NULL;
+					size_t size;
+					char* ed2k_buf;
+					int print_flags = (list->flags & PRINT_FLAG_UPPERCASE ? RHPR_UPPERCASE : 0);
+					rhash_get_context(info->rctx, RHASH_ED2K, &ed2k);
+					if (!ed2k || ed2k->hashset_collect < 0) {
+						res = -1;
+						break;
+					}
+					size = ed2k->hashset_size * 32 + (ed2k->hashset_size ? ed2k->hashset_size - 1 : 0);
+					ed2k_buf = (char*)malloc(size + 1);
+					if (!ed2k_buf) {
+						res = -1;
+						break;
+					}
+					rhash_print_bytes_ed2k_hashset(ed2k_buf, ed2k->hashset, ed2k->hashset_size * 16, print_flags);
+					if (rsh_fwrite(ed2k_buf, 1, size, out) != size && errno != 0) {
+						res = -1;
+					}
+					free(ed2k_buf);
+				}
 				break;
 		}
 	}
