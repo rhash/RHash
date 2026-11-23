@@ -1,6 +1,6 @@
 /* parse_cmdline.h */
-#ifndef PARSE_CMD_LINE_H
-#define PARSE_CMD_LINE_H
+#ifndef PARSE_CMDLINE_H
+#define PARSE_CMDLINE_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -49,10 +49,10 @@ enum ProgramOptions {
 	OPT_BENCH_RAW  = 0x20000,
 	OPT_NO_DETECT_BY_EXT = 0x40000,
 	OPT_NO_PATH_ESCAPING = 0x80000,
-	OPT_GOST_REVERSE = 0x0100000,
-	OPT_HEX        = 0x0200000,
-	OPT_BASE32     = 0x0400000,
-	OPT_BASE64     = 0x0800000,
+	OPT_GOST_REVERSE = 0x100000,
+	OPT_HEX        = 0x200000,
+	OPT_BASE32     = 0x400000,
+	OPT_BASE64     = 0x800000,
 	OPT_FMT_MODIFIERS = OPT_HEX | OPT_BASE32 | OPT_BASE64,
 
 #ifdef _WIN32
@@ -119,12 +119,8 @@ extern struct options_t opt;
 void read_options(int argc, char* argv[]);
 void options_destroy(struct options_t*);
 
-#ifdef _WIN32
-int detect_encoding(wchar_t** wargv, int nArg);
-#endif
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */
 
-#endif /* PARSE_CMD_LINE_H */
+#endif /* PARSE_CMDLINE_H */

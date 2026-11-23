@@ -27,8 +27,10 @@ struct options_t opt;      /* command line options */
 static const char* get_full_program_version(void)
 {
 	static char version_buffer[64];
-	sprintf(version_buffer, "%s v%s\n", PROGRAM_NAME, get_version_string());
-	assert(strlen(version_buffer) < sizeof(version_buffer));
+	int len = snprintf(version_buffer, sizeof(version_buffer),
+		"%s v%s\n", PROGRAM_NAME, get_version_string());
+	assert(len > 0 && (size_t)len < sizeof(version_buffer));
+	(void)len;
 	return version_buffer;
 }
 
@@ -395,7 +397,6 @@ enum option_type_t
 	F_VFNC = 5, /* just call a function */
 	F_TFNC = 7 | F_NEED_PARAM, /* process option parameter by calling a handler */
 	F_UFNC = 8 | F_NEED_PARAM, /* pass UTF-8 encoded parameter to the handler */
-	F_PRNT = 9, /* print a constant C-string and exit */
 };
 
 #define is_param_required(option_type) ((option_type) & F_NEED_PARAM)
@@ -601,10 +602,6 @@ static void apply_option(options_t* opts, parsed_option_t* option)
 		break;
 	case F_VFNC:
 		( (void(*)(options_t*, unsigned))o->handler )(opts, o->param); /* call option handler */
-		break;
-	case F_PRNT:
-		log_msg("%s", (char*)o->ptr);
-		rsh_exit(0);
 		break;
 	default:
 		assert(0); /* impossible option type */
@@ -1111,8 +1108,11 @@ static void set_default_hash_mask(const char* progName)
 	if (strstr(buf, "sfv") && opt.fmt == 0) opt.fmt = FMT_SFV;
 	if (strstr(buf, "bsd") && opt.fmt == 0) opt.fmt = FMT_BSD;
 	if (strstr(buf, "magnet") && opt.fmt == 0) opt.fmt = FMT_MAGNET;
-	if (strstr(buf, "ed2k-link") && opt.fmt == 0) opt.fmt |= FMT_ED2K_LINK;
 	if (strstr(buf, "one") && opt.fmt == 0) opt.fmt = FMT_ONE_HASH;
+
+	/* special case: ed2k-link format should not imply ed2k hash*/
+	if (strstr(buf, "ed2k-link") && opt.fmt == 0) opt.fmt |= FMT_ED2K_LINK;
+	else if (strstr(buf, "ed2k")) add_hash_id(&opt, RHASH_ED2K);
 
 	if (strstr(buf, "crc32c")) add_hash_id(&opt, RHASH_CRC32C);
 	else if (strstr(buf, "crc32")) add_hash_id(&opt, RHASH_CRC32);
@@ -1143,9 +1143,8 @@ static void set_default_hash_mask(const char* progName)
 	if (strstr(buf, "blake2s"))   add_hash_id(&opt, RHASH_BLAKE2S);
 	if (strstr(buf, "blake2b"))   add_hash_id(&opt, RHASH_BLAKE2B);
 	if (strstr(buf, "blake3"))    add_hash_id(&opt, RHASH_BLAKE3);
-	if (strstr(buf, "snefru256")) add_hash_id(&opt, RHASH_SNEFRU128);
-	if (strstr(buf, "snefru128")) add_hash_id(&opt, RHASH_SNEFRU256);
-	else if (strstr(buf, "ed2k")) add_hash_id(&opt, RHASH_ED2K);
+	if (strstr(buf, "snefru128")) add_hash_id(&opt, RHASH_SNEFRU128);
+	if (strstr(buf, "snefru256")) add_hash_id(&opt, RHASH_SNEFRU256);
 
 	if (!opt.hash_mask && opt.fmt == FMT_MAGNET) {
 		add_hash_id(&opt, RHASH_TTH);
